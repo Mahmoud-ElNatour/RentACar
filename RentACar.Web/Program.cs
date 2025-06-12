@@ -47,6 +47,7 @@ builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<CustomerManager>(); // 🔥 Register CustomerManager
+builder.Services.AddScoped<CategoryManager>();
 builder.Services.AddScoped<RoleManager<IdentityRole>>();
 
 
