@@ -20,6 +20,9 @@
             <i class="fas fa-arrow-left"></i>
         </a>
         <h2 class="page-title mb-4 text-center">Categories</h2>
+        <div class="text-end mb-3">
+            <button class="btn btn-primary add-category">Add Category</button>
+        </div>
         <div class="category-grid">
             @foreach (var cat in Model)
             {
@@ -40,6 +43,13 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         $(function () {
+            $('.add-category').on('click', function () {
+                $.get('/Category/Create', function (data) {
+                    $('#categoryModalPlaceholder').html(data);
+                    var modal = new bootstrap.Modal(document.getElementById('addCategoryModal'));
+                    modal.show();
+                });
+            });
             $('.edit-category').on('click', function () {
                 var id = $(this).data('id');
                 $.get('/Category/Edit/' + id, function (data) {

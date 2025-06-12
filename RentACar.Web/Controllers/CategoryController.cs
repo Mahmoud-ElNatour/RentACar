@@ -23,6 +23,20 @@ namespace RentACar.Web.Controllers
         }
 
         [HttpGet]
+        public IActionResult Create()
+        {
+            return PartialView("_AddCategory", new CategoryDto());
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Create(CategoryDto dto)
+        {
+            var userId = _userManager.GetUserId(User) ?? string.Empty;
+            await _categoryManager.AddCategoryAsync(dto, userId);
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpGet]
         public async Task<IActionResult> Edit(int id)
         {
             var cat = await _categoryManager.GetCategoryByIdAsync(id);
