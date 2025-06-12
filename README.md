@@ -71,19 +71,9 @@ Each table follows best practices with normalization, relationship integrity, an
 | Name               | Responsibilities |
 |--------------------|------------------|
 | Mohamad Al Ayoubi | Team Lead, Full-stack |
-| Hasan Najdi        | UI/UX Design, Frontend, Logic |
-| Mohamad AL Jawhari | Full-stack |
+| Mohamad AL Jawhari | Infrastructure|
 | **Mahmoud Al Natour** | Backend, Database |
-| Mohamad Ali Rida   | All-round support |
 
-## 🗓️ Milestone Timeline
-
-| Week | Tasks |
-|------|-------|
-| 1    | Requirements, Azure setup |
-| 2    | Database schema coding |
-| 3    | Authentication system (Login, Signup, Email API) |
-| 4-9  | Implementation of Admin → Employee → Customer features |
 
 ## 📁 Project Structure:
 ### 📁 The project followes clean layered structure design pattern - MVC
