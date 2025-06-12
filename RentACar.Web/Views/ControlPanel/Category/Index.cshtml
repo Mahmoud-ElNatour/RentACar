@@ -1,0 +1,72 @@
+@model IEnumerable<RentACar.Application.DTOs.CategoryDto>
+@{
+    ViewData["Title"] = "Categories";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/categories.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
+</head>
+<body>
+    <div class="category-container">
+        <a href="../ControlPanel" class="btn btn-outline-warning mb-3 rounded-circle d-inline-flex align-items-center justify-content-center" style="width:40px;height:40px" title="Back">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <h2 class="page-title mb-4 text-center">Categories</h2>
+        <div class="text-end mb-3">
+            <button class="btn btn-primary add-category">Add Category</button>
+        </div>
+        <div class="category-grid">
+            @foreach (var cat in Model)
+            {
+                <div class="category-card" data-id="@cat.CategoryId">
+                    <span class="category-name">@cat.Name</span>
+                    <div class="actions">
+                        <a href="javascript:void(0);" class="edit-category" data-id="@cat.CategoryId"><i class="fas fa-pencil-alt"></i></a>
+                        <a href="javascript:void(0);" class="delete-category" data-id="@cat.CategoryId"><i class="fas fa-trash"></i></a>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div id="categoryModalPlaceholder"></div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        $(function () {
+            $('.add-category').on('click', function () {
+                $.get('/Category/Create', function (data) {
+                    $('#categoryModalPlaceholder').html(data);
+                    var modal = new bootstrap.Modal(document.getElementById('addCategoryModal'));
+                    modal.show();
+                });
+            });
+            $('.edit-category').on('click', function () {
+                var id = $(this).data('id');
+                $.get('/Category/Edit/' + id, function (data) {
+                    $('#categoryModalPlaceholder').html(data);
+                    var modal = new bootstrap.Modal(document.getElementById('editCategoryModal'));
+                    modal.show();
+                });
+            });
+            $('.delete-category').on('click', function () {
+                var id = $(this).data('id');
+                $.get('/Category/Delete/' + id, function (data) {
+                    $('#categoryModalPlaceholder').html(data);
+                    var modal = new bootstrap.Modal(document.getElementById('deleteCategoryModal'));
+                    modal.show();
+                });
+            });
+        });
+    </script>
+</body>
+</html>

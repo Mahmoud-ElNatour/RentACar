@@ -1,0 +1,145 @@
+@model List<RentACar.Application.DTOs.CarDto>
+@{
+    ViewData["Title"] = "Manage Cars";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - CarRental</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/cars.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
+</head>
+<body>
+    <div class="container car-container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <a href="../ControlPanel" class="btn btn-outline-warning rounded-circle d-inline-flex align-items-center justify-content-center" style="width:40px;height:40px;" title="Back to Control Panel">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <h2 class="flex-grow-1 text-center m-0">Manage Cars</h2>
+            <div style="width:40px;"></div>
+        </div>
+        <form method="get" class="row g-2 mb-4 align-items-end">
+            <div class="col">
+                <label class="form-label">Name</label>
+                <input type="text" name="name" value="@ViewBag.Name" class="form-control" placeholder="Model name" />
+            </div>
+            <div class="col">
+                <label class="form-label">Category</label>
+                <select name="categoryId" class="form-select">
+                    <option value="">All Categories</option>
+                    @foreach (var cat in (SelectList)ViewBag.Categories)
+                    {
+                        <option value="@cat.Value" selected="@(ViewBag.CategoryId?.ToString() == cat.Value)">@cat.Text</option>
+                    }
+                </select>
+            </div>
+            <div class="col">
+                <label class="form-label">Availability</label>
+                <select name="available" class="form-select">
+                    <option value="">Any</option>
+                    <option value="true" selected="@(ViewBag.Available == true)">Available</option>
+                    <option value="false" selected="@(ViewBag.Available == false)">Not Available</option>
+                </select>
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-secondary">Filter</button>
+            </div>
+            <div class="col-auto ms-auto">
+                <button type="button" id="addCar" class="btn btn-primary"><i class="fas fa-plus me-1"></i>Add Car</button>
+            </div>
+        </form>
+        <div class="mb-3">
+            <input type="text" id="tableSearch" class="form-control" placeholder="Search table..." />
+        </div>
+        <div class="table-responsive">
+            <table id="carTable" class="table table-striped table-dark align-middle">
+                <thead>
+                    <tr>
+                        <th>Plate #</th>
+                        <th>Model</th>
+                        <th>Year</th>
+                        <th>Color</th>
+                        <th>Price/Day</th>
+                        <th>Available</th>
+                        <th>Category</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var car in Model)
+                    {
+                        <tr>
+                            <td>@car.PlateNumber</td>
+                            <td>@car.ModelName</td>
+                            <td>@car.ModelYear</td>
+                            <td>@car.Color</td>
+                            <td>@car.PricePerDay?.ToString("C")</td>
+                            <td class="text-center">
+                                @if (car.IsAvailable)
+                                {
+                                    <i class="fas fa-check text-success"></i>
+                                }
+                                else
+                                {
+                                    <i class="fas fa-times text-danger"></i>
+                                }
+                            </td>
+                            <td>@car.CategoryId</td>
+                            <td>
+                                <a href="#" class="text-warning me-2 edit-car" data-id="@car.CarId"><i class="fas fa-pencil-alt"></i></a>
+                                <a href="#" class="text-danger delete-car" data-id="@car.CarId"><i class="fas fa-trash"></i></a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <nav>
+            <ul class="pagination">
+                @for (var i = 1; i <= (int)ViewBag.TotalPages; i++)
+                {
+                    <li class="page-item @(i == (int)ViewBag.Page ? "active" : "")">
+                        <a class="page-link" href="?page=@i&name=@ViewBag.Name&categoryId=@ViewBag.CategoryId&available=@ViewBag.Available">@i</a>
+                    </li>
+                }
+            </ul>
+        </nav>
+    </div>
+    <div id="modalContainer" class="modal fade" tabindex="-1"></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function loadModal(url, title) {
+            $.get(url, function (data) {
+                var modal = $('#modalContainer');
+                modal.html('<div class="modal-dialog"><div class="modal-content dark-modal">' +
+                    '<div class="modal-header"><h5 class="modal-title">' + title +
+                    '</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>' +
+                    '<div class="modal-body">' + data + '</div></div></div>');
+                var bsModal = new bootstrap.Modal(modal[0]);
+                bsModal.show();
+            });
+        }
+        $('#addCar').click(function () { loadModal('/Car/Add', 'Add Car'); });
+        $(document).on('click', '.edit-car', function (e) {
+            e.preventDefault();
+            loadModal('/Car/Edit/' + $(this).data('id'), 'Edit Car');
+        });
+        $(document).on('click', '.delete-car', function (e) {
+            e.preventDefault();
+            loadModal('/Car/Delete/' + $(this).data('id'), 'Delete Car');
+        });
+        $('#tableSearch').on('keyup', function () {
+            var value = $(this).val().toLowerCase();
+            $('#carTable tbody tr').filter(function () {
+                $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
+            });
+        });
+    </script>
+</body>
+</html>

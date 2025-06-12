@@ -1,0 +1,7 @@
+@model RentACar.Application.DTOs.CarDto
+<form asp-action="DeleteConfirmed" method="post">
+    <input type="hidden" asp-for="CarId" />
+    <p>Are you sure you want to delete car <strong>@Model.PlateNumber</strong>?</p>
+    <button type="submit" class="btn btn-danger">Delete</button>
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+</form>
