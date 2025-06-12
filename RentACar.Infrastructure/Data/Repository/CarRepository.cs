@@ -44,7 +44,9 @@ namespace RentACar.Infrastructure.Data.Repositories
 
         public async Task<List<Car>> SearchByFilterAsync(string? modelName = null, int? modelYear = null, int? categoryId = null, bool? isAvailable = null)
         {
-            var query = _dbContext.Cars.AsQueryable();
+            var query = _dbContext.Cars
+                .Include(c => c.Category)
+                .AsQueryable();
 
             if (!string.IsNullOrEmpty(modelName))
             {

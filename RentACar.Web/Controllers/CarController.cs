@@ -104,9 +104,9 @@ namespace RentACar.Web.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> DeleteConfirmed(int id)
+        public async Task<IActionResult> DeleteConfirmed(int carId)
         {
-            await _carRepository.DeleteAsync(id);
+            await _carRepository.DeleteAsync(carId);
             return RedirectToAction(nameof(Index));
         }
 

@@ -1,5 +1,6 @@
 @model RentACar.Application.DTOs.CarDto
 <form asp-action="@(Model.CarId == 0 ? "Add" : "Edit")" method="post">
+    <input type="hidden" asp-for="CarId" />
     <div class="mb-3">
         <label class="form-label">Plate Number</label>
         <input asp-for="PlateNumber" class="form-control" />
