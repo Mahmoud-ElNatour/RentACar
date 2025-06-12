@@ -1,0 +1,58 @@
+@model RentACar.Web.Models.ChangeRoleViewModel
+@{
+    ViewData["Title"] = "Change Role";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - CarRental</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/login-style.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
+</head>
+<body>
+    <div class="container1">
+        <div class="login-container">
+            <div class="logo-text">
+                <i class="fas fa-user-shield"></i>
+                <div>CarRental</div>
+            </div>
+            <h2>Change User Role</h2>
+            <form method="post" autocomplete="off">
+                <div asp-validation-summary="ModelOnly" class="validation-summary-errors text-danger"></div>
+                <div class="input mb-3">
+                    <input asp-for="UserName" class="form-control" placeholder="Username" />
+                    <span asp-validation-for="UserName" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" asp-for="Role" value="Admin" id="roleAdmin" />
+                        <label class="form-check-label" for="roleAdmin">Admin</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" asp-for="Role" value="Customer" id="roleCustomer" />
+                        <label class="form-check-label" for="roleCustomer">Customer</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" asp-for="Role" value="Employee" id="roleEmployee" />
+                        <label class="form-check-label" for="roleEmployee">Employee</label>
+                    </div>
+                    <span asp-validation-for="Role" class="text-danger"></span>
+                </div>
+                <button type="submit" class="login-btn w-100">Change Role</button>
+                @if (ViewBag.SuccessMessage != null)
+                {
+                    <div class="text-success mt-3">@ViewBag.SuccessMessage</div>
+                }
+            </form>
+        </div>
+    </div>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <partial name="_ValidationScriptsPartial" />
+</body>
+</html>
