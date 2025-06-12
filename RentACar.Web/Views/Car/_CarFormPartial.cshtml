@@ -1,0 +1,35 @@
+@model RentACar.Application.DTOs.CarDto
+<form asp-action="@(Model.CarId == 0 ? "Add" : "Edit")" method="post">
+    <div class="mb-3">
+        <label class="form-label">Plate Number</label>
+        <input asp-for="PlateNumber" class="form-control" />
+        <span asp-validation-for="PlateNumber" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Model Name</label>
+        <input asp-for="ModelName" class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Model Year</label>
+        <input asp-for="ModelYear" class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Color</label>
+        <input asp-for="Color" class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Price Per Day</label>
+        <input asp-for="PricePerDay" class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Category</label>
+        <select asp-for="CategoryId" class="form-select" asp-items="ViewBag.Categories">
+            <option value="">-- Select --</option>
+        </select>
+    </div>
+    <div class="form-check mb-3">
+        <input asp-for="IsAvailable" class="form-check-input" />
+        <label class="form-check-label" asp-for="IsAvailable">Available</label>
+    </div>
+    <button type="submit" class="btn btn-primary">Save</button>
+</form>
