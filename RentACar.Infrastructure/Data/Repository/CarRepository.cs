@@ -71,7 +71,9 @@ namespace RentACar.Infrastructure.Data.Repositories
 
         public async Task<List<Car>> BrowseAllCarsAsync()
         {
-            return await _dbContext.Cars.ToListAsync();
+            return await _dbContext.Cars
+                  .Include(c => c.Category)
+                  .ToListAsync();
         }
 
         public async Task UpdateCarAvailabilityAsync(int carId, bool isAvailable)
