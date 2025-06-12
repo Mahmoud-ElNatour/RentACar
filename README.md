@@ -85,35 +85,7 @@ Each table follows best practices with normalization, relationship integrity, an
 
 ## 📁 Project Structure (Example)
 
-RentACar/
-├── RentACar.Application/
-│   ├── Dependencies/
-│   ├── DTOs/
-│   └── Managers/
-│
-├── RentACar.Core/
-│   ├── Dependencies/
-│   ├── Entities/
-│   └── Repositories/
-│
-├── RentACar.Infrastructure/
-│   ├── Dependencies/
-│   ├── Data/
-│   ├── Migrations/
-│   └── scaffold command.txt
-│
-└── RentACar.Web/
-    ├── Connected Services/
-    ├── Dependencies/
-    ├── Properties/
-    ├── wwwroot/
-    ├── Areas/
-    ├── Controllers/
-    ├── Models/
-    ├── Views/
-    ├── appsettings.json
-    └── Program.cs
-
+<pre><code>```text RentACar/ ├── RentACar.Application/ │ ├── Dependencies/ │ ├── DTOs/ │ └── Managers/ ├── RentACar.Core/ │ ├── Dependencies/ │ ├── Entities/ │ └── Repositories/ ├── RentACar.Infrastructure/ │ ├── Dependencies/ │ ├── Data/ │ ├── Migrations/ │ └── scaffold command.txt └── RentACar.Web/ ├── Connected Services/ ├── Dependencies/ ├── Properties/ ├── wwwroot/ ├── Areas/ ├── Controllers/ ├── Models/ ├── Views/ ├── appsettings.json └── Program.cs ```</code></pre>
 
 yaml
 Copy
