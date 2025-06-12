@@ -1,0 +1,3 @@
+﻿** Make shoure you  change the Server name from "P6-G1" to your Server name!!! **
+
+Scaffold-DbContext "Server=(localdb)\\mssqllocaldb;Database=aspnet-CarRentalWebsite-57f8ae6c-7ed4-44af-ab2e-2286498ff0a8;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True" Microsoft.EntityFrameworkCore.SqlServer -Context RentACarDbContext -ContextDir "..\RentACar.Infrastructure\Data" -OutputDir "..\RentACar.Core\Entities" -Namespace "RentACar.Core.Entities" -ContextNamespace "RentACar.Infrastructure.Data" -DataAnnotations -NoOnConfiguring -Force
