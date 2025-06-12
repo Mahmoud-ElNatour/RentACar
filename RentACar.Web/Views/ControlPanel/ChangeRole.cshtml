@@ -1,4 +1,4 @@
-@model RentACar.Web.Models.ChangeRoleViewModel
+@model Microsoft.AspNetCore.Identity.IdentityUser
 @{
     ViewData["Title"] = "Change Role";
     Layout = null;
@@ -25,23 +25,21 @@
             <form method="post" autocomplete="off">
                 <div asp-validation-summary="ModelOnly" class="validation-summary-errors text-danger"></div>
                 <div class="input mb-3">
-                    <input asp-for="UserName" class="form-control" placeholder="Username" />
-                    <span asp-validation-for="UserName" class="text-danger"></span>
+                    <input name="userName" value="@Context.Request.Form["userName"]" class="form-control" placeholder="Username" />
                 </div>
                 <div class="mb-3">
                     <div class="form-check">
-                        <input class="form-check-input" type="radio" asp-for="Role" value="Admin" id="roleAdmin" />
+                        <input class="form-check-input" type="radio" name="role" value="Admin" id="roleAdmin" />
                         <label class="form-check-label" for="roleAdmin">Admin</label>
                     </div>
                     <div class="form-check">
-                        <input class="form-check-input" type="radio" asp-for="Role" value="Customer" id="roleCustomer" />
+                        <input class="form-check-input" type="radio" name="role" value="Customer" id="roleCustomer" />
                         <label class="form-check-label" for="roleCustomer">Customer</label>
                     </div>
                     <div class="form-check">
-                        <input class="form-check-input" type="radio" asp-for="Role" value="Employee" id="roleEmployee" />
+                        <input class="form-check-input" type="radio" name="role" value="Employee" id="roleEmployee" />
                         <label class="form-check-label" for="roleEmployee">Employee</label>
                     </div>
-                    <span asp-validation-for="Role" class="text-danger"></span>
                 </div>
                 <button type="submit" class="login-btn w-100">Change Role</button>
                 @if (ViewBag.SuccessMessage != null)

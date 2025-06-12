@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using RentACar.Web.Models;
 using System.Threading.Tasks;
 
 namespace RentACar.Web.Controllers
@@ -29,27 +28,28 @@ namespace RentACar.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ChangeRole(ChangeRoleViewModel model)
+        public async Task<IActionResult> ChangeRole(string userName, string role)
         {
-            if (!ModelState.IsValid)
+            if (string.IsNullOrWhiteSpace(userName) || string.IsNullOrWhiteSpace(role))
             {
-                return View(model);
+                ModelState.AddModelError(string.Empty, "Username and role are required.");
+                return View();
             }
 
-            var user = await _userManager.FindByNameAsync(model.UserName);
+            var user = await _userManager.FindByNameAsync(userName);
             if (user == null)
             {
                 ModelState.AddModelError(string.Empty, "User not found.");
-                return View(model);
+                return View();
             }
 
-            if (!await _roleManager.RoleExistsAsync(model.Role))
+            if (!await _roleManager.RoleExistsAsync(role))
             {
-                var createResult = await _roleManager.CreateAsync(new IdentityRole(model.Role));
+                var createResult = await _roleManager.CreateAsync(new IdentityRole(role));
                 if (!createResult.Succeeded)
                 {
                     ModelState.AddModelError(string.Empty, "Could not create role.");
-                    return View(model);
+                    return View();
                 }
             }
 
@@ -58,14 +58,14 @@ namespace RentACar.Web.Controllers
             if (!removeResult.Succeeded)
             {
                 ModelState.AddModelError(string.Empty, "Could not remove existing roles.");
-                return View(model);
+                return View();
             }
 
-            var addResult = await _userManager.AddToRoleAsync(user, model.Role);
+            var addResult = await _userManager.AddToRoleAsync(user, role);
             if (!addResult.Succeeded)
             {
                 ModelState.AddModelError(string.Empty, "Could not assign role.");
-                return View(model);
+                return View();
             }
 
             ViewBag.SuccessMessage = "Role updated successfully.";
