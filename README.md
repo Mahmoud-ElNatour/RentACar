@@ -84,8 +84,33 @@ Each table follows best practices with normalization, relationship integrity, an
 | 4-9  | Implementation of Admin → Employee → Customer features |
 
 ## 📁 Project Structure (Example)
+### 📁 Project Structure
 
-<pre><code>```text RentACar/ ├── RentACar.Application/ │ ├── Dependencies/ │ ├── DTOs/ │ └── Managers/ ├── RentACar.Core/ │ ├── Dependencies/ │ ├── Entities/ │ └── Repositories/ ├── RentACar.Infrastructure/ │ ├── Dependencies/ │ ├── Data/ │ ├── Migrations/ │ └── scaffold command.txt └── RentACar.Web/ ├── Connected Services/ ├── Dependencies/ ├── Properties/ ├── wwwroot/ ├── Areas/ ├── Controllers/ ├── Models/ ├── Views/ ├── appsettings.json └── Program.cs ```</code></pre>
+- RentACar/
+  - RentACar.Application/
+    - Dependencies/
+    - DTOs/
+    - Managers/
+  - RentACar.Core/
+    - Dependencies/
+    - Entities/
+    - Repositories/
+  - RentACar.Infrastructure/
+    - Dependencies/
+    - Data/
+    - Migrations/
+    - scaffold command.txt
+  - RentACar.Web/
+    - Connected Services/
+    - Dependencies/
+    - Properties/
+    - wwwroot/
+    - Areas/
+    - Controllers/
+    - Models/
+    - Views/
+    - appsettings.json
+    - Program.cs
 
 yaml
 Copy
