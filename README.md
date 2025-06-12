@@ -83,8 +83,8 @@ Each table follows best practices with normalization, relationship integrity, an
 | 3    | Authentication system (Login, Signup, Email API) |
 | 4-9  | Implementation of Admin → Employee → Customer features |
 
-## 📁 Project Structure (Example)
-### 📁 Project Structure
+## 📁 Project Structure:
+### 📁 The project followes clean layered structure design pattern - MVC
 
 - RentACar/
   - RentACar.Application/
