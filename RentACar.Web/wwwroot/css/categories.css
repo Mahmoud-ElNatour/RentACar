@@ -1,0 +1,61 @@
+:root {
+    --primary-dark: #0a0c0e;
+    --secondary-dark: #161819;
+    --accent-gold: #d4af37;
+    --accent-gold-hover: #e6c347;
+    --text-primary: #ffffff;
+}
+
+body {
+    background: var(--primary-dark);
+    min-height: 100vh;
+    font-family: 'Poppins', 'Segoe UI', Arial, sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    color: var(--text-primary);
+}
+
+.category-container {
+    background: var(--secondary-dark);
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05);
+    width: 100%;
+    max-width: 800px;
+}
+
+.category-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 20px;
+}
+
+.category-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    position: relative;
+}
+
+.category-name {
+    font-weight: 500;
+}
+
+.category-card .actions {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+}
+
+.category-card .actions a {
+    color: var(--accent-gold);
+    margin-left: 8px;
+}
+
+.category-card .actions a:hover {
+    color: var(--accent-gold-hover);
+}

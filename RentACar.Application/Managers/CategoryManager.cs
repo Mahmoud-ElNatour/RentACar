@@ -12,7 +12,7 @@ using AspNetUser = RentACar.Application.DTOs.AspNetUser;
 
 namespace RentACar.Application.Managers
 {
-    internal class CategoryManager
+    public class CategoryManager
     {
         private readonly ICategoryRepository _categoryRepository;
         private readonly IMapper _mapper;
