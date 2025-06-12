@@ -17,6 +17,11 @@
 <body>
     <div class="container1">
         <div class="login-container">
+            <a href="../ControlPanel" class="btn btn-outline-warning rounded-circle d-inline-flex align-items-center justify-content-center"
+               style="width: 40px; height: 40px;" title="Back to Control Panel">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+
             <div class="logo-text">
                 <i class="fas fa-user-shield"></i>
                 <div>CarRental</div>
@@ -29,20 +34,22 @@
                     <span asp-validation-for="UserName" class="text-danger"></span>
                 </div>
                 <div class="mb-3">
-                    <div class="form-check">
+                    <div class="form-check form-check-inline mr-3">
                         <input class="form-check-input" type="radio" asp-for="Role" value="Admin" id="roleAdmin" />
-                        <label class="form-check-label" for="roleAdmin">Admin</label>
+                        <label class="form-check-label" for="roleAdmin" style="color:white">Admin</label>
                     </div>
-                    <div class="form-check">
+                    <div class="form-check form-check-inline mr-3">
                         <input class="form-check-input" type="radio" asp-for="Role" value="Customer" id="roleCustomer" />
-                        <label class="form-check-label" for="roleCustomer">Customer</label>
+                        <label class="form-check-label" for="roleCustomer" style="color:white">Customer</label>
                     </div>
-                    <div class="form-check">
+                    <div class="form-check form-check-inline ">
                         <input class="form-check-input" type="radio" asp-for="Role" value="Employee" id="roleEmployee" />
-                        <label class="form-check-label" for="roleEmployee">Employee</label>
+                        <label class="form-check-label" for="roleEmployee" style="color:white">Employee</label>
                     </div>
+                    <br />
                     <span asp-validation-for="Role" class="text-danger"></span>
                 </div>
+
                 <button type="submit" class="login-btn w-100">Change Role</button>
                 @if (ViewBag.SuccessMessage != null)
                 {
