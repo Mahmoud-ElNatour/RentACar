@@ -19,21 +19,21 @@ namespace RentACar.Web.Controllers
             _userManager = userManager;
         }
 
-        [HttpGet("/Category")]
+        [HttpGet("~/Category")]
         [ApiExplorerSettings(IgnoreApi = true)]
         public IActionResult Index()
         {
             return View("~/Views/ControlPanel/Category/Index.cshtml");
         }
 
-        [HttpGet("/Category/Add")]
+        [HttpGet("~/Category/Add")]
         [ApiExplorerSettings(IgnoreApi = true)]
         public IActionResult AddForm()
         {
             return PartialView("~/Views/ControlPanel/Category/_AddCategory.cshtml", new CategoryDto());
         }
 
-        [HttpGet("/Category/Edit/{id}")]
+        [HttpGet("~/Category/Edit/{id}")]
         [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> EditForm(int id)
         {
@@ -42,7 +42,7 @@ namespace RentACar.Web.Controllers
             return PartialView("~/Views/ControlPanel/Category/_EditCategory.cshtml", cat);
         }
 
-        [HttpGet("/Category/Delete/{id}")]
+        [HttpGet("~/Category/Delete/{id}")]
         [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> DeleteForm(int id)
         {

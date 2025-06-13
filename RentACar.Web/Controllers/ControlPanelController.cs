@@ -18,14 +18,14 @@ namespace RentACar.Web.Controllers
             _roleManager = roleManager;
         }
 
-        [HttpGet("/ControlPanel")]
+        [HttpGet("~/ControlPanel")]
         [ApiExplorerSettings(IgnoreApi = true)]
         public IActionResult Index()
         {
             return View();
         }
 
-        [HttpGet("/ControlPanel/ChangeRole")]
+        [HttpGet("~/ControlPanel/ChangeRole")]
         [ApiExplorerSettings(IgnoreApi = true)]
         public IActionResult ChangeRole()
         {

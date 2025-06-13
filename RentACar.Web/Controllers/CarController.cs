@@ -28,14 +28,14 @@ namespace RentACar.Web.Controllers
             _mapper = mapper;
         }
 
-        [HttpGet("/Car")]
+        [HttpGet("~/Car")]
         [ApiExplorerSettings(IgnoreApi = true)]
         public IActionResult Index()
         {
             return View("~/Views/ControlPanel/Car/Index.cshtml");
         }
 
-        [HttpGet("/Car/Add")]
+        [HttpGet("~/Car/Add")]
         [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> AddForm()
         {
@@ -43,7 +43,7 @@ namespace RentACar.Web.Controllers
             return PartialView("~/Views/ControlPanel/Car/_CarFormPartial.cshtml", new CarDto { IsAvailable = true });
         }
 
-        [HttpGet("/Car/Edit/{id}")]
+        [HttpGet("~/Car/Edit/{id}")]
         [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> EditForm(int id)
         {
@@ -53,7 +53,7 @@ namespace RentACar.Web.Controllers
             return PartialView("~/Views/ControlPanel/Car/_CarFormPartial.cshtml", _mapper.Map<CarDto>(car));
         }
 
-        [HttpGet("/Car/Delete/{id}")]
+        [HttpGet("~/Car/Delete/{id}")]
         [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> DeleteForm(int id)
         {
