@@ -114,6 +114,12 @@
             const html = await res.text();
             const placeholder = document.getElementById('carModalPlaceholder');
             placeholder.innerHTML = html;
+            placeholder.querySelectorAll('script').forEach(scr => {
+                const s = document.createElement('script');
+                s.textContent = scr.textContent;
+                document.body.appendChild(s);
+                document.body.removeChild(s);
+            });
             const modalEl = placeholder.querySelector('.modal');
             const modal = new bootstrap.Modal(modalEl);
             modal.show();
