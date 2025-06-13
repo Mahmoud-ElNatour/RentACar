@@ -40,7 +40,7 @@
             </a>
             @if (User.IsInRole("Admin"))
             {
-                <a asp-controller="ControlPanel" asp-action="ChangeRole" class="panel-action">
+                <a href="/ControlPanel/ChangeRole" class="panel-action">
                     <i class="fas fa-user-shield"></i>
                     <div>Change Role</div>
                 </a>

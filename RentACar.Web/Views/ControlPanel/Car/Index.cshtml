@@ -1,4 +1,3 @@
-@model List<RentACar.Application.DTOs.CarDto>
 @{
     ViewData["Title"] = "Manage Cars";
     Layout = null;
@@ -23,27 +22,23 @@
             <h2 class="flex-grow-1 text-center m-0">Manage Cars</h2>
             <div style="width:40px;"></div>
         </div>
-        <form method="get" class="row g-2 mb-4 align-items-end">
+        <form id="filterForm" class="row g-2 mb-4 align-items-end">
             <div class="col">
                 <label class="form-label">Name</label>
-                <input type="text" name="name" value="@ViewBag.Name" class="form-control" placeholder="Model name" />
+                <input type="text" name="name" class="form-control" placeholder="Model name" />
             </div>
             <div class="col">
                 <label class="form-label">Category</label>
-                <select name="categoryId" class="form-select">
+                <select name="categoryId" id="categoryFilter" class="form-select">
                     <option value="">All Categories</option>
-                    @foreach (var cat in (SelectList)ViewBag.Categories)
-                    {
-                        <option value="@cat.Value" selected="@(ViewBag.CategoryId?.ToString() == cat.Value)">@cat.Text</option>
-                    }
                 </select>
             </div>
             <div class="col">
                 <label class="form-label">Availability</label>
                 <select name="available" class="form-select">
                     <option value="">Any</option>
-                    <option value="true" selected="@(ViewBag.Available == true)">Available</option>
-                    <option value="false" selected="@(ViewBag.Available == false)">Not Available</option>
+                    <option value="true">Available</option>
+                    <option value="false">Not Available</option>
                 </select>
             </div>
             <div class="col-auto">
@@ -70,74 +65,86 @@
                         <th></th>
                     </tr>
                 </thead>
-                <tbody>
-                    @foreach (var car in Model)
-                    {
-                        <tr>
-                            <td>@car.PlateNumber</td>
-                            <td>@car.ModelName</td>
-                            <td>@car.ModelYear</td>
-                            <td>@car.Color</td>
-                            <td>@car.PricePerDay?.ToString("C")</td>
-                            <td class="text-center">
-                                @if (car.IsAvailable)
-                                {
-                                    <i class="fas fa-check text-success"></i>
-                                }
-                                else
-                                {
-                                    <i class="fas fa-times text-danger"></i>
-                                }
-                            </td>
-                            <td>@car.CategoryName</td>
-                            <td>
-                                <a href="#" class="text-warning me-2 edit-car" data-id="@car.CarId"><i class="fas fa-pencil-alt"></i></a>
-                                <a href="#" class="text-danger delete-car" data-id="@car.CarId"><i class="fas fa-trash"></i></a>
-                            </td>
-                        </tr>
-                    }
+                <tbody id="carRows">
                 </tbody>
             </table>
         </div>
-        <nav>
-            <ul class="pagination">
-                @for (var i = 1; i <= (int)ViewBag.TotalPages; i++)
-                {
-                    <li class="page-item @(i == (int)ViewBag.Page ? "active" : "")">
-                        <a class="page-link" href="?page=@i&name=@ViewBag.Name&categoryId=@ViewBag.CategoryId&available=@ViewBag.Available">@i</a>
-                    </li>
-                }
-            </ul>
-        </nav>
+        <nav></nav>
     </div>
-    <div id="modalContainer" class="modal fade" tabindex="-1"></div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+    <div id="carModalPlaceholder"></div>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        function loadModal(url, title) {
-            $.get(url, function (data) {
-                var modal = $('#modalContainer');
-                modal.html('<div class="modal-dialog"><div class="modal-content dark-modal">' +
-                    '<div class="modal-header"><h5 class="modal-title">' + title +
-                    '</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>' +
-                    '<div class="modal-body">' + data + '</div></div></div>');
-                var bsModal = new bootstrap.Modal(modal[0]);
-                bsModal.show();
+        let categories = [];
+        async function loadCategories() {
+            const res = await fetch('/api/Category');
+            categories = await res.json();
+            const select = document.getElementById('categoryFilter');
+            categories.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.categoryId;
+                opt.textContent = c.name;
+                select.appendChild(opt);
             });
         }
-        $('#addCar').click(function () { loadModal('/Car/Add', 'Add Car'); });
-        $(document).on('click', '.edit-car', function (e) {
-            e.preventDefault();
-            loadModal('/Car/Edit/' + $(this).data('id'), 'Edit Car');
-        });
-        $(document).on('click', '.delete-car', function (e) {
-            e.preventDefault();
-            loadModal('/Car/Delete/' + $(this).data('id'), 'Delete Car');
-        });
-        $('#tableSearch').on('keyup', function () {
-            var value = $(this).val().toLowerCase();
-            $('#carTable tbody tr').filter(function () {
-                $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
+
+        async function loadCars() {
+            const params = new URLSearchParams(new FormData(document.getElementById('filterForm')));
+            const res = await fetch('/api/Car?' + params.toString());
+            const data = await res.json();
+            const tbody = document.getElementById('carRows');
+            tbody.innerHTML = '';
+            data.forEach(car => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${car.plateNumber}</td>
+                    <td>${car.modelName}</td>
+                    <td>${car.modelYear}</td>
+                    <td>${car.color || ''}</td>
+                    <td>${car.pricePerDay ?? ''}</td>
+                    <td class="text-center">${car.isAvailable ? '<i class="fas fa-check text-success"></i>' : '<i class="fas fa-times text-danger"></i>'}</td>
+                    <td>${car.categoryName || ''}</td>
+                    <td><a href="#" class="text-warning me-2 edit-car" data-id="${car.carId}"><i class="fas fa-pencil-alt"></i></a>
+                        <a href="#" class="text-danger delete-car" data-id="${car.carId}"><i class="fas fa-trash"></i></a></td>`;
+                tbody.appendChild(row);
+            });
+        }
+
+        async function loadModal(url) {
+            const res = await fetch(url);
+            const html = await res.text();
+            const placeholder = document.getElementById('carModalPlaceholder');
+            placeholder.innerHTML = html;
+            placeholder.querySelectorAll('script').forEach(scr => {
+                const s = document.createElement('script');
+                s.textContent = scr.textContent;
+                document.body.appendChild(s);
+                document.body.removeChild(s);
+            });
+            const modalEl = placeholder.querySelector('.modal');
+            const modal = new bootstrap.Modal(modalEl);
+            modal.show();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCategories().then(loadCars);
+            document.getElementById('filterForm').addEventListener('submit', e => { e.preventDefault(); loadCars(); });
+            document.getElementById('addCar').addEventListener('click', () => loadModal('/Car/Add'));
+            document.getElementById('carRows').addEventListener('click', e => {
+                const edit = e.target.closest('.edit-car');
+                const del = e.target.closest('.delete-car');
+                if (edit) {
+                    e.preventDefault();
+                    loadModal('/Car/Edit/' + edit.dataset.id);
+                } else if (del) {
+                    e.preventDefault();
+                    loadModal('/Car/Delete/' + del.dataset.id);
+                }
+            });
+            document.getElementById('tableSearch').addEventListener('keyup', function () {
+                const value = this.value.toLowerCase();
+                document.querySelectorAll('#carTable tbody tr').forEach(tr => {
+                    tr.style.display = tr.textContent.toLowerCase().includes(value) ? '' : 'none';
+                });
             });
         });
     </script>

@@ -1,4 +1,3 @@
-@model IEnumerable<RentACar.Application.DTOs.CategoryDto>
 @{
     ViewData["Title"] = "Categories";
     Layout = null;
@@ -23,48 +22,61 @@
         <div class="text-end mb-3">
             <button class="btn btn-primary add-category">Add Category</button>
         </div>
-        <div class="category-grid">
-            @foreach (var cat in Model)
-            {
-                <div class="category-card" data-id="@cat.CategoryId">
-                    <span class="category-name">@cat.Name</span>
-                    <div class="actions">
-                        <a href="javascript:void(0);" class="edit-category" data-id="@cat.CategoryId"><i class="fas fa-pencil-alt"></i></a>
-                        <a href="javascript:void(0);" class="delete-category" data-id="@cat.CategoryId"><i class="fas fa-trash"></i></a>
-                    </div>
-                </div>
-            }
+        <div class="category-grid" id="categoryGrid">
         </div>
     </div>
-
     <div id="categoryModalPlaceholder"></div>
 
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        $(function () {
-            $('.add-category').on('click', function () {
-                $.get('/Category/Create', function (data) {
-                    $('#categoryModalPlaceholder').html(data);
-                    var modal = new bootstrap.Modal(document.getElementById('addCategoryModal'));
-                    modal.show();
-                });
+        async function loadCategories() {
+            const res = await fetch('/api/Category');
+            const data = await res.json();
+            const grid = document.getElementById('categoryGrid');
+            grid.innerHTML = '';
+            data.forEach(cat => {
+                const div = document.createElement('div');
+                div.className = 'category-card';
+                div.dataset.id = cat.categoryId;
+                div.innerHTML = `<span class="category-name">${cat.name}</span>` +
+                    `<div class="actions">` +
+                    `<a href="#" class="edit-category" data-id="${cat.categoryId}"><i class="fas fa-pencil-alt"></i></a>` +
+                    `<a href="#" class="delete-category" data-id="${cat.categoryId}"><i class="fas fa-trash"></i></a>` +
+                    `</div>`;
+                grid.appendChild(div);
             });
-            $('.edit-category').on('click', function () {
-                var id = $(this).data('id');
-                $.get('/Category/Edit/' + id, function (data) {
-                    $('#categoryModalPlaceholder').html(data);
-                    var modal = new bootstrap.Modal(document.getElementById('editCategoryModal'));
-                    modal.show();
-                });
+        }
+
+        async function loadModal(url) {
+            const res = await fetch(url);
+            const html = await res.text();
+            const placeholder = document.getElementById('categoryModalPlaceholder');
+            placeholder.innerHTML = html;
+            placeholder.querySelectorAll('script').forEach(scr => {
+                const s = document.createElement('script');
+                s.textContent = scr.textContent;
+                document.body.appendChild(s);
+                document.body.removeChild(s);
             });
-            $('.delete-category').on('click', function () {
-                var id = $(this).data('id');
-                $.get('/Category/Delete/' + id, function (data) {
-                    $('#categoryModalPlaceholder').html(data);
-                    var modal = new bootstrap.Modal(document.getElementById('deleteCategoryModal'));
-                    modal.show();
-                });
+            const modalEl = placeholder.querySelector('.modal');
+            const modal = new bootstrap.Modal(modalEl);
+            modal.show();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCategories();
+            document.querySelector('.add-category').addEventListener('click', () => loadModal('/Category/Add'));
+
+            document.getElementById('categoryGrid').addEventListener('click', (e) => {
+                const edit = e.target.closest('.edit-category');
+                const del = e.target.closest('.delete-category');
+                if (edit) {
+                    e.preventDefault();
+                    loadModal('/Category/Edit/' + edit.dataset.id);
+                } else if (del) {
+                    e.preventDefault();
+                    loadModal('/Category/Delete/' + del.dataset.id);
+                }
             });
         });
     </script>
