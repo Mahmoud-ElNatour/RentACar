@@ -71,7 +71,7 @@
         </div>
         <nav></nav>
     </div>
-    <div id="modalContainer" class="modal fade" tabindex="-1"></div>
+    <div id="carModalPlaceholder"></div>
     <script>
         let categories = [];
         async function loadCategories() {
@@ -108,63 +108,31 @@
             });
         }
 
-        async function addCar() {
-            const plateNumber = prompt('Plate Number');
-            if (!plateNumber) return;
-            const modelName = prompt('Model Name');
-            if (!modelName) return;
-            const modelYear = parseInt(prompt('Model Year') || '0');
-            const color = prompt('Color') || '';
-            const pricePerDay = parseFloat(prompt('Price per day') || '0');
-            const categoryId = parseInt(prompt('Category ID:\n' + categories.map(c => c.categoryId + ': ' + c.name).join('\n')) || '0');
-            const isAvailable = confirm('Is available?');
-            await fetch('/api/Car', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ plateNumber, modelName, modelYear, color, pricePerDay, categoryId, isAvailable })
-            });
-            loadCars();
-        }
-
-        async function tableClick(e) {
-            const edit = e.target.closest('.edit-car');
-            const del = e.target.closest('.delete-car');
-            if (edit) {
-                e.preventDefault();
-                const id = edit.dataset.id;
-                const res = await fetch('/api/Car/' + id);
-                if (!res.ok) return;
-                const car = await res.json();
-                const plateNumber = prompt('Plate Number', car.plateNumber);
-                if (!plateNumber) return;
-                const modelName = prompt('Model Name', car.modelName);
-                if (!modelName) return;
-                const modelYear = parseInt(prompt('Model Year', car.modelYear));
-                const color = prompt('Color', car.color || '');
-                const pricePerDay = parseFloat(prompt('Price per day', car.pricePerDay || 0));
-                const categoryId = parseInt(prompt('Category ID:\n' + categories.map(c => c.categoryId + ': ' + c.name).join('\n'), car.categoryId || 0));
-                const isAvailable = confirm('Is available?');
-                await fetch('/api/Car/' + id, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ carId: id, plateNumber, modelName, modelYear, color, pricePerDay, categoryId, isAvailable })
-                });
-                loadCars();
-            } else if (del) {
-                e.preventDefault();
-                const id = del.dataset.id;
-                if (confirm('Delete this car?')) {
-                    await fetch('/api/Car/' + id, { method: 'DELETE' });
-                    loadCars();
-                }
-            }
+        async function loadModal(url) {
+            const res = await fetch(url);
+            const html = await res.text();
+            const placeholder = document.getElementById('carModalPlaceholder');
+            placeholder.innerHTML = html;
+            const modalEl = placeholder.querySelector('.modal');
+            const modal = new bootstrap.Modal(modalEl);
+            modal.show();
         }
 
         document.addEventListener('DOMContentLoaded', () => {
             loadCategories().then(loadCars);
             document.getElementById('filterForm').addEventListener('submit', e => { e.preventDefault(); loadCars(); });
-            document.getElementById('addCar').addEventListener('click', addCar);
-            document.getElementById('carRows').addEventListener('click', tableClick);
+            document.getElementById('addCar').addEventListener('click', () => loadModal('/Car/Add'));
+            document.getElementById('carRows').addEventListener('click', e => {
+                const edit = e.target.closest('.edit-car');
+                const del = e.target.closest('.delete-car');
+                if (edit) {
+                    e.preventDefault();
+                    loadModal('/Car/Edit/' + edit.dataset.id);
+                } else if (del) {
+                    e.preventDefault();
+                    loadModal('/Car/Delete/' + del.dataset.id);
+                }
+            });
             document.getElementById('tableSearch').addEventListener('keyup', function () {
                 const value = this.value.toLowerCase();
                 document.querySelectorAll('#carTable tbody tr').forEach(tr => {

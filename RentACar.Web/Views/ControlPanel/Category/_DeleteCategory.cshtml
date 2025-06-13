@@ -6,7 +6,7 @@
                 <h5 class="modal-title">Delete Category</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form asp-action="DeleteConfirmed" method="post">
+            <form id="deleteCategoryForm">
                 <div class="modal-body">
                     <input type="hidden" asp-for="CategoryId" />
                     <p>Are you sure you want to delete <strong>@Model.Name</strong>?</p>
@@ -16,6 +16,15 @@
                     <button type="submit" class="btn btn-danger">Delete</button>
                 </div>
             </form>
+            <script>
+                document.getElementById('deleteCategoryForm').addEventListener('submit', async function (e) {
+                    e.preventDefault();
+                    const id = this.CategoryId.value;
+                    await fetch('/api/Category/' + id, { method: 'DELETE' });
+                    bootstrap.Modal.getInstance(document.getElementById('deleteCategoryModal')).hide();
+                    if (window.loadCategories) loadCategories();
+                });
+            </script>
         </div>
     </div>
 </div>

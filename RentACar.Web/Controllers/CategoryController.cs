@@ -26,6 +26,31 @@ namespace RentACar.Web.Controllers
             return View("~/Views/ControlPanel/Category/Index.cshtml");
         }
 
+        [HttpGet("/Category/Add")]
+        [ApiExplorerSettings(IgnoreApi = true)]
+        public IActionResult AddForm()
+        {
+            return PartialView("~/Views/ControlPanel/Category/_AddCategory.cshtml", new CategoryDto());
+        }
+
+        [HttpGet("/Category/Edit/{id}")]
+        [ApiExplorerSettings(IgnoreApi = true)]
+        public async Task<IActionResult> EditForm(int id)
+        {
+            var cat = await _categoryManager.GetCategoryByIdAsync(id);
+            if (cat == null) return NotFound();
+            return PartialView("~/Views/ControlPanel/Category/_EditCategory.cshtml", cat);
+        }
+
+        [HttpGet("/Category/Delete/{id}")]
+        [ApiExplorerSettings(IgnoreApi = true)]
+        public async Task<IActionResult> DeleteForm(int id)
+        {
+            var cat = await _categoryManager.GetCategoryByIdAsync(id);
+            if (cat == null) return NotFound();
+            return PartialView("~/Views/ControlPanel/Category/_DeleteCategory.cshtml", cat);
+        }
+
         [HttpGet]
         public async Task<ActionResult<IEnumerable<CategoryDto>>> Get()
         {

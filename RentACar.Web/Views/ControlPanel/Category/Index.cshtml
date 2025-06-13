@@ -25,6 +25,7 @@
         <div class="category-grid" id="categoryGrid">
         </div>
     </div>
+    <div id="categoryModalPlaceholder"></div>
 
     <script>
         async function loadCategories() {
@@ -45,43 +46,29 @@
             });
         }
 
+        async function loadModal(url) {
+            const res = await fetch(url);
+            const html = await res.text();
+            const placeholder = document.getElementById('categoryModalPlaceholder');
+            placeholder.innerHTML = html;
+            const modalEl = placeholder.querySelector('.modal');
+            const modal = new bootstrap.Modal(modalEl);
+            modal.show();
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             loadCategories();
-            document.querySelector('.add-category').addEventListener('click', async () => {
-                const name = prompt('Category name');
-                if (!name) return;
-                await fetch('/api/Category', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name })
-                });
-                loadCategories();
-            });
+            document.querySelector('.add-category').addEventListener('click', () => loadModal('/Category/Add'));
 
-            document.getElementById('categoryGrid').addEventListener('click', async (e) => {
+            document.getElementById('categoryGrid').addEventListener('click', (e) => {
                 const edit = e.target.closest('.edit-category');
                 const del = e.target.closest('.delete-category');
                 if (edit) {
                     e.preventDefault();
-                    const id = edit.dataset.id;
-                    const res = await fetch('/api/Category/' + id);
-                    if (!res.ok) return;
-                    const cat = await res.json();
-                    const newName = prompt('Edit category name', cat.name);
-                    if (!newName) return;
-                    await fetch('/api/Category/' + id, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ categoryId: id, name: newName })
-                    });
-                    loadCategories();
+                    loadModal('/Category/Edit/' + edit.dataset.id);
                 } else if (del) {
                     e.preventDefault();
-                    const id = del.dataset.id;
-                    if (confirm('Delete this category?')) {
-                        await fetch('/api/Category/' + id, { method: 'DELETE' });
-                        loadCategories();
-                    }
+                    loadModal('/Category/Delete/' + del.dataset.id);
                 }
             });
         });

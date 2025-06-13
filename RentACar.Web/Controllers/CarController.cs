@@ -35,6 +35,33 @@ namespace RentACar.Web.Controllers
             return View("~/Views/ControlPanel/Car/Index.cshtml");
         }
 
+        [HttpGet("/Car/Add")]
+        [ApiExplorerSettings(IgnoreApi = true)]
+        public async Task<IActionResult> AddForm()
+        {
+            await PopulateCategories();
+            return PartialView("~/Views/ControlPanel/Car/_CarFormPartial.cshtml", new CarDto { IsAvailable = true });
+        }
+
+        [HttpGet("/Car/Edit/{id}")]
+        [ApiExplorerSettings(IgnoreApi = true)]
+        public async Task<IActionResult> EditForm(int id)
+        {
+            var car = await _carRepository.GetByIdAsync(id);
+            if (car == null) return NotFound();
+            await PopulateCategories();
+            return PartialView("~/Views/ControlPanel/Car/_CarFormPartial.cshtml", _mapper.Map<CarDto>(car));
+        }
+
+        [HttpGet("/Car/Delete/{id}")]
+        [ApiExplorerSettings(IgnoreApi = true)]
+        public async Task<IActionResult> DeleteForm(int id)
+        {
+            var car = await _carRepository.GetByIdAsync(id);
+            if (car == null) return NotFound();
+            return PartialView("~/Views/ControlPanel/Car/_DeleteCarPartial.cshtml", _mapper.Map<CarDto>(car));
+        }
+
         [HttpGet]
         public async Task<ActionResult<IEnumerable<CarDto>>> Get([FromQuery] string? name, [FromQuery] int? categoryId, [FromQuery] bool? available)
         {
@@ -76,6 +103,12 @@ namespace RentACar.Web.Controllers
         {
             await _carRepository.DeleteAsync(id);
             return NoContent();
+        }
+
+        private async Task PopulateCategories()
+        {
+            var cats = await _categoryRepository.GetAllAsync();
+            ViewBag.Categories = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(cats, "CategoryId", "Name");
         }
     }
 }
