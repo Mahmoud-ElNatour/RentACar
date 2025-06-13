@@ -27,7 +27,7 @@
                 <div>CarRental</div>
             </div>
             <h2>Change User Role</h2>
-            <form method="post" autocomplete="off">
+            <form id="changeRoleForm" autocomplete="off">
                 <div asp-validation-summary="ModelOnly" class="validation-summary-errors text-danger"></div>
                 <div class="input mb-3">
                     <input asp-for="UserName" class="form-control" placeholder="Username" />
@@ -51,15 +51,35 @@
                 </div>
 
                 <button type="submit" class="login-btn w-100">Change Role</button>
-                @if (ViewBag.SuccessMessage != null)
-                {
-                    <div class="text-success mt-3">@ViewBag.SuccessMessage</div>
-                }
+                <div id="resultMessage" class="mt-3"></div>
             </form>
         </div>
     </div>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.getElementById('changeRoleForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const form = e.target;
+            const formData = new FormData(form);
+            const obj = Object.fromEntries(formData.entries());
+            const resp = await fetch('/api/ControlPanel/ChangeRole', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(obj)
+            });
+            const msgEl = document.getElementById('resultMessage');
+            if (resp.ok) {
+                msgEl.textContent = 'Role updated successfully.';
+                msgEl.className = 'text-success mt-3';
+                form.reset();
+            } else {
+                let data;
+                try { data = await resp.json(); } catch { }
+                msgEl.textContent = data?.message || 'Error updating role.';
+                msgEl.className = 'text-danger mt-3';
+            }
+        });
+    </script>
 </body>
 </html>

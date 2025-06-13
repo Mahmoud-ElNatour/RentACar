@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 
 namespace RentACar.Web.Controllers
 {
+    [ApiController]
+    [Route("api/[controller]")]
     public class ControlPanelController : Controller
     {
         private readonly UserManager<IdentityUser> _userManager;
@@ -16,31 +18,32 @@ namespace RentACar.Web.Controllers
             _roleManager = roleManager;
         }
 
+        [HttpGet("/ControlPanel")]
+        [ApiExplorerSettings(IgnoreApi = true)]
         public IActionResult Index()
         {
             return View();
         }
 
-        [HttpGet]
+        [HttpGet("/ControlPanel/ChangeRole")]
+        [ApiExplorerSettings(IgnoreApi = true)]
         public IActionResult ChangeRole()
         {
             return View();
         }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ChangeRole(ChangeRoleViewModel model)
+        [HttpPost("ChangeRole")]
+        public async Task<IActionResult> ChangeRole([FromBody] ChangeRoleViewModel model)
         {
             if (!ModelState.IsValid)
             {
-                return View(model);
+                return BadRequest(ModelState);
             }
 
             var user = await _userManager.FindByNameAsync(model.UserName);
             if (user == null)
             {
-                ModelState.AddModelError(string.Empty, "User not found.");
-                return View(model);
+                return NotFound(new { message = "User not found." });
             }
 
             if (!await _roleManager.RoleExistsAsync(model.Role))
@@ -48,8 +51,7 @@ namespace RentACar.Web.Controllers
                 var createResult = await _roleManager.CreateAsync(new IdentityRole(model.Role));
                 if (!createResult.Succeeded)
                 {
-                    ModelState.AddModelError(string.Empty, "Could not create role.");
-                    return View(model);
+                    return BadRequest(new { message = "Could not create role." });
                 }
             }
 
@@ -57,20 +59,16 @@ namespace RentACar.Web.Controllers
             var removeResult = await _userManager.RemoveFromRolesAsync(user, currentRoles);
             if (!removeResult.Succeeded)
             {
-                ModelState.AddModelError(string.Empty, "Could not remove existing roles.");
-                return View(model);
+                return BadRequest(new { message = "Could not remove existing roles." });
             }
 
             var addResult = await _userManager.AddToRoleAsync(user, model.Role);
             if (!addResult.Succeeded)
             {
-                ModelState.AddModelError(string.Empty, "Could not assign role.");
-                return View(model);
+                return BadRequest(new { message = "Could not assign role." });
             }
 
-            ViewBag.SuccessMessage = "Role updated successfully.";
-            ModelState.Clear();
-            return View();
+            return Ok(new { message = "Role updated successfully." });
         }
     }
 }
