@@ -1,5 +1,13 @@
 @model RentACar.Application.DTOs.CarDto
-<form asp-action="@(Model.CarId == 0 ? "Add" : "Edit")" method="post">
+<div class="modal fade" id="carFormModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content dark-modal">
+            <div class="modal-header">
+                <h5 class="modal-title">@((Model.CarId == 0) ? "Add Car" : "Edit Car")</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="carForm">
     <input type="hidden" asp-for="CarId" />
     <div class="mb-3">
         <label class="form-label">Plate Number</label>
@@ -32,5 +40,35 @@
         <input asp-for="IsAvailable" class="form-check-input" />
         <label class="form-check-label" asp-for="IsAvailable">Available</label>
     </div>
-    <button type="submit" class="btn btn-primary">Save</button>
-</form>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    document.getElementById('carForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const form = e.target;
+        const data = {
+            carId: parseInt(form.CarId.value || '0'),
+            plateNumber: form.PlateNumber.value,
+            modelName: form.ModelName.value,
+            modelYear: parseInt(form.ModelYear.value || '0'),
+            color: form.Color.value,
+            pricePerDay: parseFloat(form.PricePerDay.value || '0'),
+            categoryId: parseInt(form.CategoryId.value || '0'),
+            isAvailable: form.IsAvailable.checked
+        };
+        const url = data.carId ? '/api/Car/' + data.carId : '/api/Car';
+        const method = data.carId ? 'PUT' : 'POST';
+        await fetch(url, {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        const modalEl = form.closest('.modal');
+        bootstrap.Modal.getInstance(modalEl).hide();
+        if (window.loadCars) loadCars();
+    });
+</script>

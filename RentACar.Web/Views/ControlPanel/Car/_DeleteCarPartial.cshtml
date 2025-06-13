@@ -1,7 +1,31 @@
 @model RentACar.Application.DTOs.CarDto
-<form asp-action="DeleteConfirmed" method="post">
-    <input type="hidden" name="carId" value="@Model.CarId" />
-    <p>Are you sure you want to delete car <strong>@Model.PlateNumber</strong>?</p>
-    <button type="submit" class="btn btn-danger">Delete</button>
-    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-</form>
+<div class="modal fade" id="deleteCarModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content dark-modal">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete Car</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="deleteCarForm">
+                <div class="modal-body">
+                    <input type="hidden" name="carId" value="@Model.CarId" />
+                    <p>Are you sure you want to delete car <strong>@Model.PlateNumber</strong>?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+    document.getElementById('deleteCarForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const id = this.querySelector('[name="carId"]').value;
+        await fetch('/api/Car/' + id, { method: 'DELETE' });
+        const modalEl = this.closest('.modal');
+        bootstrap.Modal.getInstance(modalEl).hide();
+        if (window.loadCars) loadCars();
+    });
+</script>
