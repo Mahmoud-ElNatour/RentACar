@@ -90,12 +90,18 @@ namespace RentACar.Application.Managers
 
         public async Task DeleteEmployee(int id)
         {
-            // Check if the employee exists
             var employee = await _employeeRepository.GetByIdAsync(id);
             if (employee == null)
             {
                 throw new KeyNotFoundException($"Employee with ID {id} not found.");
             }
+
+            var user = await _userManager.FindByIdAsync(employee.aspNetUserId);
+            if (user != null)
+            {
+                await _userManager.DeleteAsync(user);
+            }
+
             await _employeeRepository.DeleteAsync(id);
         }
 

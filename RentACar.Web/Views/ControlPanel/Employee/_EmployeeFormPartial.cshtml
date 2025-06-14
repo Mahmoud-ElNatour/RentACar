@@ -62,7 +62,7 @@
             phoneNumber: form.PhoneNumber.value,
             salary: parseFloat(form.Salary.value || '0'),
             address: form.Address.value,
-            isActive: form.IsActive.checked
+            isActive: form.querySelector('input[type=checkbox][name=IsActive]').checked
         };
         let url = '/api/Employee';
         let method = 'POST';
