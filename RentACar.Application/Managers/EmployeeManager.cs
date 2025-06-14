@@ -32,7 +32,8 @@ namespace RentACar.Application.Managers
             {
                 UserName = createDto.Username,
                 Email = createDto.Email,
-                PhoneNumber = createDto.PhoneNumber
+                PhoneNumber = createDto.PhoneNumber,
+                EmailConfirmed = true
             };
 
             var result = await _userManager.CreateAsync(user, createDto.Password);
@@ -47,6 +48,7 @@ namespace RentACar.Application.Managers
                 await _userManager.AddToRoleAsync(user, "Employee");
 
                 var employee = _mapper.Map<Employee>(createDto);
+                employee.IsActive = createDto.IsActive;
                 employee.aspNetUserId = user.Id;
                 await _employeeRepository.AddAsync(employee);
 

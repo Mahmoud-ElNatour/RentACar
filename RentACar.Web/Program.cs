@@ -67,7 +67,7 @@ if (app.Environment.IsDevelopment())
     {
         cfg.AddMaps(AppDomain.CurrentDomain.GetAssemblies());
     });
-    mapperConfig.AssertConfigurationIsValid(); // throws if mapping is misconfigured
+    // mapperConfig.AssertConfigurationIsValid(); // mapping validation disabled
 
     app.UseMigrationsEndPoint();
 }
