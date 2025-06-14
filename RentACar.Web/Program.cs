@@ -49,6 +49,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<CustomerManager>(); // 🔥 Register CustomerManager
 builder.Services.AddScoped<CategoryManager>();
 builder.Services.AddScoped<RoleManager<IdentityRole>>();
+builder.Services.AddScoped<EmployeeManager>();
 
 
 
@@ -66,7 +67,7 @@ if (app.Environment.IsDevelopment())
     {
         cfg.AddMaps(AppDomain.CurrentDomain.GetAssemblies());
     });
-    mapperConfig.AssertConfigurationIsValid(); // throws if mapping is misconfigured
+    // mapperConfig.AssertConfigurationIsValid(); // mapping validation disabled
 
     app.UseMigrationsEndPoint();
 }

@@ -6,19 +6,18 @@ using RentACar.Application.DTOs;
 using RentACar.Application.Managers;
 using RentACar.Core.Entities;
 using RentACar.Core.Repositories;
-using AspNetUser = RentACar.Application.DTOs.AspNetUser;
 
-namespace RentACar.Core.Managers
+namespace RentACar.Application.Managers
 {
     public class EmployeeManager
     {
-        private readonly UserManager<AspNetUser> _userManager;
+        private readonly UserManager<IdentityUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IEmployeeRepository _employeeRepository;
         private readonly IMapper _mapper;
         private readonly CustomerManager _customerManager; // To access CustomerManager methods
 
-        public EmployeeManager(UserManager<AspNetUser> userManager, RoleManager<IdentityRole> roleManager, IEmployeeRepository employeeRepository, IMapper mapper, CustomerManager customerManager)
+        public EmployeeManager(UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager, IEmployeeRepository employeeRepository, IMapper mapper, CustomerManager customerManager)
         {
             _userManager = userManager;
             _roleManager = roleManager;
@@ -27,19 +26,30 @@ namespace RentACar.Core.Managers
             _customerManager = customerManager;
         }
 
-        public async Task<EmployeeDto?> CreateEmployee(EmployeeDto createEmployeeDto,  string password)
+        public async Task<EmployeeDto?> CreateEmployee(EmployeeCreateDTO createDto)
         {
-            var user = new AspNetUser { UserName = createEmployeeDto.username, Email = createEmployeeDto.Email };
-            var result = await _userManager.CreateAsync(user, password);
+            var user = new IdentityUser
+            {
+                UserName = createDto.Username,
+                Email = createDto.Email,
+                PhoneNumber = createDto.PhoneNumber,
+                EmailConfirmed = true
+            };
+
+            var result = await _userManager.CreateAsync(user, createDto.Password);
 
             if (result.Succeeded)
             {
-                var employee = _mapper.Map<Employee>(createEmployeeDto);
-                employee.EmployeeId = createEmployeeDto.EmployeeId;
-                employee.IsActive = true;
-                employee.Name = createEmployeeDto.Name;
-                employee.Address = createEmployeeDto.Address;
-                employee.Salary = createEmployeeDto.Salary;
+                if (!await _roleManager.RoleExistsAsync("Employee"))
+                {
+                    await _roleManager.CreateAsync(new IdentityRole("Employee"));
+                }
+
+                await _userManager.AddToRoleAsync(user, "Employee");
+
+                var employee = _mapper.Map<Employee>(createDto);
+                employee.IsActive = createDto.IsActive;
+                employee.aspNetUserId = user.Id;
                 await _employeeRepository.AddAsync(employee);
 
                 return _mapper.Map<EmployeeDto>(employee);
@@ -65,6 +75,14 @@ namespace RentACar.Core.Managers
             var employeeEntity = await _employeeRepository.GetByIdAsync(employeeDto.EmployeeId);
             if (employeeEntity != null)
             {
+                var user = await _userManager.FindByIdAsync(employeeEntity.aspNetUserId);
+                if (user != null)
+                {
+                    user.Email = employeeDto.Email;
+                    user.UserName = employeeDto.username;
+                    user.PhoneNumber = employeeDto.PhoneNumber;
+                    await _userManager.UpdateAsync(user);
+                }
                 _mapper.Map(employeeDto, employeeEntity);
                 await _employeeRepository.UpdateAsync(employeeEntity);
             }
@@ -194,8 +212,11 @@ namespace RentACar.Core.Managers
             CreateMap<Employee, EmployeeDto>()
                 .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.User.Email))
                 .ForMember(dest => dest.username, opt => opt.MapFrom(src => src.User.UserName))
+                .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.User.PhoneNumber))
                 .ReverseMap()
                 .ForMember(dest => dest.User, opt => opt.Ignore()); // Prevent circular reference
+
+            CreateMap<EmployeeCreateDTO, Employee>();
         }
     }
 
