@@ -72,33 +72,11 @@ namespace RentACar.Web.Controllers
             return Ok(emp);
         }
 
-        private class EmployeeCreateRequest
-        {
-            public string Name { get; set; }
-            public decimal? Salary { get; set; }
-            public string Address { get; set; }
-            public string Email { get; set; }
-            public string Username { get; set; }
-            public string PhoneNumber { get; set; }
-            public string Password { get; set; }
-            public bool IsActive { get; set; }
-        }
-
         [HttpPost]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult<EmployeeDto>> Create([FromBody] EmployeeCreateRequest request)
+        public async Task<ActionResult<EmployeeDto>> Create([FromBody] EmployeeCreateDTO dto)
         {
-            var dto = new EmployeeDto
-            {
-                Name = request.Name,
-                Salary = request.Salary,
-                Address = request.Address,
-                Email = request.Email,
-                username = request.Username,
-                PhoneNumber = request.PhoneNumber,
-                IsActive = request.IsActive
-            };
-            var created = await _employeeManager.CreateEmployee(dto, request.Password);
+            var created = await _employeeManager.CreateEmployee(dto);
             if (created == null) return BadRequest();
             return CreatedAtAction(nameof(Get), new { id = created.EmployeeId }, created);
         }

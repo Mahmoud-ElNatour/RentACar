@@ -6,19 +6,18 @@ using RentACar.Application.DTOs;
 using RentACar.Application.Managers;
 using RentACar.Core.Entities;
 using RentACar.Core.Repositories;
-using AspNetUser = RentACar.Application.DTOs.AspNetUser;
 
-namespace RentACar.Core.Managers
+namespace RentACar.Application.Managers
 {
     public class EmployeeManager
     {
-        private readonly UserManager<AspNetUser> _userManager;
+        private readonly UserManager<IdentityUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IEmployeeRepository _employeeRepository;
         private readonly IMapper _mapper;
         private readonly CustomerManager _customerManager; // To access CustomerManager methods
 
-        public EmployeeManager(UserManager<AspNetUser> userManager, RoleManager<IdentityRole> roleManager, IEmployeeRepository employeeRepository, IMapper mapper, CustomerManager customerManager)
+        public EmployeeManager(UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager, IEmployeeRepository employeeRepository, IMapper mapper, CustomerManager customerManager)
         {
             _userManager = userManager;
             _roleManager = roleManager;
@@ -27,20 +26,28 @@ namespace RentACar.Core.Managers
             _customerManager = customerManager;
         }
 
-        public async Task<EmployeeDto?> CreateEmployee(EmployeeDto createEmployeeDto,  string password)
+        public async Task<EmployeeDto?> CreateEmployee(EmployeeCreateDTO createDto)
         {
-            var user = new AspNetUser { UserName = createEmployeeDto.username, Email = createEmployeeDto.Email, PhoneNumber = createEmployeeDto.PhoneNumber };
-            var result = await _userManager.CreateAsync(user, password);
+            var user = new IdentityUser
+            {
+                UserName = createDto.Username,
+                Email = createDto.Email,
+                PhoneNumber = createDto.PhoneNumber
+            };
+
+            var result = await _userManager.CreateAsync(user, createDto.Password);
 
             if (result.Succeeded)
             {
-                var employee = _mapper.Map<Employee>(createEmployeeDto);
-                employee.EmployeeId = createEmployeeDto.EmployeeId;
+                if (!await _roleManager.RoleExistsAsync("Employee"))
+                {
+                    await _roleManager.CreateAsync(new IdentityRole("Employee"));
+                }
+
+                await _userManager.AddToRoleAsync(user, "Employee");
+
+                var employee = _mapper.Map<Employee>(createDto);
                 employee.aspNetUserId = user.Id;
-                employee.IsActive = true;
-                employee.Name = createEmployeeDto.Name;
-                employee.Address = createEmployeeDto.Address;
-                employee.Salary = createEmployeeDto.Salary;
                 await _employeeRepository.AddAsync(employee);
 
                 return _mapper.Map<EmployeeDto>(employee);
@@ -206,6 +213,8 @@ namespace RentACar.Core.Managers
                 .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.User.PhoneNumber))
                 .ReverseMap()
                 .ForMember(dest => dest.User, opt => opt.Ignore()); // Prevent circular reference
+
+            CreateMap<EmployeeCreateDTO, Employee>();
         }
     }
 
