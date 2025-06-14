@@ -14,5 +14,6 @@ namespace RentACar.Application.DTOs
         public bool IsActive { get; set; }
         public string Email { get; internal set; }
         public string username { get; internal set; }
+        public string? PhoneNumber { get; set; }
     }
 }

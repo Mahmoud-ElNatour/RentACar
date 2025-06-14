@@ -49,6 +49,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<CustomerManager>(); // 🔥 Register CustomerManager
 builder.Services.AddScoped<CategoryManager>();
 builder.Services.AddScoped<RoleManager<IdentityRole>>();
+builder.Services.AddScoped<EmployeeManager>();
 
 
 

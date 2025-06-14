@@ -29,13 +29,14 @@ namespace RentACar.Core.Managers
 
         public async Task<EmployeeDto?> CreateEmployee(EmployeeDto createEmployeeDto,  string password)
         {
-            var user = new AspNetUser { UserName = createEmployeeDto.username, Email = createEmployeeDto.Email };
+            var user = new AspNetUser { UserName = createEmployeeDto.username, Email = createEmployeeDto.Email, PhoneNumber = createEmployeeDto.PhoneNumber };
             var result = await _userManager.CreateAsync(user, password);
 
             if (result.Succeeded)
             {
                 var employee = _mapper.Map<Employee>(createEmployeeDto);
                 employee.EmployeeId = createEmployeeDto.EmployeeId;
+                employee.aspNetUserId = user.Id;
                 employee.IsActive = true;
                 employee.Name = createEmployeeDto.Name;
                 employee.Address = createEmployeeDto.Address;
@@ -65,6 +66,14 @@ namespace RentACar.Core.Managers
             var employeeEntity = await _employeeRepository.GetByIdAsync(employeeDto.EmployeeId);
             if (employeeEntity != null)
             {
+                var user = await _userManager.FindByIdAsync(employeeEntity.aspNetUserId);
+                if (user != null)
+                {
+                    user.Email = employeeDto.Email;
+                    user.UserName = employeeDto.username;
+                    user.PhoneNumber = employeeDto.PhoneNumber;
+                    await _userManager.UpdateAsync(user);
+                }
                 _mapper.Map(employeeDto, employeeEntity);
                 await _employeeRepository.UpdateAsync(employeeEntity);
             }
@@ -194,6 +203,7 @@ namespace RentACar.Core.Managers
             CreateMap<Employee, EmployeeDto>()
                 .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.User.Email))
                 .ForMember(dest => dest.username, opt => opt.MapFrom(src => src.User.UserName))
+                .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.User.PhoneNumber))
                 .ReverseMap()
                 .ForMember(dest => dest.User, opt => opt.Ignore()); // Prevent circular reference
         }
