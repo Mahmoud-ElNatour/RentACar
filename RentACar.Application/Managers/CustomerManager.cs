@@ -187,6 +187,40 @@ namespace RentACar.Application.Managers
         {
             await _customerRepository.DeleteAsync(id);
         }
+
+        public async Task UpdateCustomer(CustomerDTO dto)
+        {
+            var customer = await _customerRepository.GetByIdAsync(dto.UserId);
+            if (customer != null)
+            {
+                var user = await _userManager.FindByIdAsync(customer.aspNetUserId);
+                if (user != null)
+                {
+                    user.Email = dto.Email;
+                    user.UserName = dto.username;
+                    user.PhoneNumber = dto.PhoneNumber;
+                    await _userManager.UpdateAsync(user);
+                }
+
+                customer.Name = dto.Name;
+                customer.Address = dto.Address;
+                customer.IsVerified = dto.IsVerified;
+                customer.Isactive = dto.Isactive;
+
+                await _customerRepository.UpdateAsync(customer);
+            }
+        }
+
+        public async Task<bool> ResetPassword(int customerId, string newPassword)
+        {
+            var customer = await _customerRepository.GetByIdAsync(customerId);
+            if (customer == null) return false;
+            var user = await _userManager.FindByIdAsync(customer.aspNetUserId);
+            if (user == null) return false;
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var result = await _userManager.ResetPasswordAsync(user, token, newPassword);
+            return result.Succeeded;
+        }
     }
 
     public class CustomerProfile : Profile
@@ -196,6 +230,7 @@ namespace RentACar.Application.Managers
             CreateMap<Customer, CustomerDTO>()
                 .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.User.Email))
                 .ForMember(dest => dest.username, opt => opt.MapFrom(src => src.User.UserName))
+                .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.User.PhoneNumber))
                 .ReverseMap()
                 .ForMember(dest => dest.User, opt => opt.Ignore()); // skip reverse mapping User
         }

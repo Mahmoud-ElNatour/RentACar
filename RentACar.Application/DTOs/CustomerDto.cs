@@ -18,6 +18,7 @@ namespace RentACar.Application.DTOs
         public string? Address { get; set; }
         public string Email { get; internal set; }
         public string username { get; internal set; }
+        public string? PhoneNumber { get; set; }
     }
     public class CustomerCreateDTO
     {

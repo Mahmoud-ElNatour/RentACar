@@ -1,0 +1,146 @@
+@{
+    ViewData["Title"] = "Customers";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/customers.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
+</head>
+<body>
+    <div class="customer-container container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <a href="../ControlPanel" class="btn btn-outline-warning rounded-circle d-inline-flex align-items-center justify-content-center" style="width:40px;height:40px" title="Back">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <h2 class="flex-grow-1 text-center m-0">Manage Customers</h2>
+            <div style="width:40px;"></div>
+        </div>
+        <form id="filterForm" class="row g-2 mb-4 align-items-end">
+            <div class="col">
+                <label class="form-label">Search</label>
+                <input type="text" name="search" class="form-control" placeholder="Name or ID" />
+            </div>
+            <div class="col">
+                <label class="form-label">Verified</label>
+                <select name="verified" class="form-select">
+                    <option value="">Any</option>
+                    <option value="true">Verified</option>
+                    <option value="false">Not Verified</option>
+                </select>
+            </div>
+            <div class="col">
+                <label class="form-label">Active</label>
+                <select name="active" class="form-select">
+                    <option value="">Any</option>
+                    <option value="true">Active</option>
+                    <option value="false">Inactive</option>
+                </select>
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-secondary">Filter</button>
+            </div>
+            <div class="col-auto ms-auto">
+                <button type="button" id="addCustomer" class="btn btn-primary"><i class="fas fa-plus me-1"></i>Add Customer</button>
+            </div>
+        </form>
+        <div class="mb-3">
+            <input type="text" id="tableSearch" class="form-control" placeholder="Search table..." />
+        </div>
+        <div class="table-responsive">
+            <table id="customerTable" class="table table-striped table-dark align-middle">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Verified</th>
+                        <th>Active</th>
+                        <th>Address</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="customerRows"></tbody>
+            </table>
+        </div>
+    </div>
+    <div id="customerModalPlaceholder"></div>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        async function loadCustomers() {
+            const params = new URLSearchParams(new FormData(document.getElementById('filterForm')));
+            const res = await fetch('/api/Customer?' + params.toString());
+            const data = await res.json();
+            const tbody = document.getElementById('customerRows');
+            tbody.innerHTML = '';
+            data.forEach(c => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${c.name}</td>
+                    <td>${c.username}</td>
+                    <td>${c.email}</td>
+                    <td>${c.phoneNumber ?? ''}</td>
+                    <td class="text-center">${c.isVerified ? '<i class="fas fa-check text-success"></i>' : '<i class="fas fa-times text-danger"></i>'}</td>
+                    <td class="text-center">${c.isactive ? '<i class="fas fa-check text-success"></i>' : '<i class="fas fa-times text-danger"></i>'}</td>
+                    <td>${c.address ?? ''}</td>
+                    <td>
+                        <a href="#" class="text-warning me-2 edit-customer" data-id="${c.userId}"><i class="fas fa-pencil-alt"></i></a>
+                        <a href="#" class="text-danger delete-customer" data-id="${c.userId}"><i class="fas fa-trash"></i></a>
+                        <a href="#" class="text-info reset-pass" data-id="${c.userId}" title="Reset Password"><i class="fas fa-key"></i></a>
+                    </td>`;
+                tbody.appendChild(row);
+            });
+        }
+        async function loadModal(url) {
+            const res = await fetch(url);
+            const html = await res.text();
+            const placeholder = document.getElementById('customerModalPlaceholder');
+            placeholder.innerHTML = html;
+            placeholder.querySelectorAll('script').forEach(scr => {
+                const s = document.createElement('script');
+                s.textContent = scr.textContent;
+                document.body.appendChild(s);
+                document.body.removeChild(s);
+            });
+            const modalEl = placeholder.querySelector('.modal');
+            const modal = new bootstrap.Modal(modalEl);
+            modal.show();
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCustomers();
+            document.getElementById('filterForm').addEventListener('submit', e => { e.preventDefault(); loadCustomers(); });
+            document.getElementById('addCustomer').addEventListener('click', () => loadModal('/Customer/Add'));
+            document.getElementById('customerRows').addEventListener('click', async e => {
+                const edit = e.target.closest('.edit-customer');
+                const del = e.target.closest('.delete-customer');
+                const reset = e.target.closest('.reset-pass');
+                if (edit) {
+                    e.preventDefault();
+                    loadModal('/Customer/Edit/' + edit.dataset.id);
+                } else if (del) {
+                    e.preventDefault();
+                    loadModal('/Customer/Delete/' + del.dataset.id);
+                } else if (reset) {
+                    e.preventDefault();
+                    if (confirm('Reset password for this customer?')) {
+                        await fetch('/api/Customer/' + reset.dataset.id + '/reset-password', { method: 'POST' });
+                    }
+                }
+            });
+            document.getElementById('tableSearch').addEventListener('keyup', function () {
+                const value = this.value.toLowerCase();
+                document.querySelectorAll('#customerTable tbody tr').forEach(tr => {
+                    tr.style.display = tr.textContent.toLowerCase().includes(value) ? '' : 'none';
+                });
+            });
+        });
+    </script>
+</body>
+</html>

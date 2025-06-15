@@ -1,0 +1,85 @@
+@model RentACar.Application.DTOs.CustomerDTO
+<div class="modal fade" id="customerFormModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content dark-modal">
+            <div class="modal-header">
+                <h5 class="modal-title">@((Model.UserId == 0) ? "Add Customer" : "Edit Customer")</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="customerForm">
+                    <input type="hidden" asp-for="UserId" />
+                    <div class="mb-3">
+                        <label class="form-label">Name</label>
+                        <input asp-for="Name" class="form-control" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input asp-for="Email" class="form-control" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Username</label>
+                        <input asp-for="username" class="form-control" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Phone Number</label>
+                        <input asp-for="PhoneNumber" class="form-control" />
+                    </div>
+                    @if (Model.UserId == 0)
+                    {
+                        <div class="mb-3">
+                            <label class="form-label">Password</label>
+                            <input type="password" name="Password" class="form-control" />
+                        </div>
+                    }
+                    <div class="mb-3">
+                        <label class="form-label">Address</label>
+                        <input asp-for="Address" class="form-control" />
+                    </div>
+                    <div class="form-check mb-3">
+                        <input asp-for="IsVerified" class="form-check-input" />
+                        <label class="form-check-label" asp-for="IsVerified">Verified</label>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input asp-for="Isactive" class="form-check-input" />
+                        <label class="form-check-label" asp-for="Isactive">Active</label>
+                    </div>
+                    <button type="submit" class="btn btn-primary">@(Model.UserId == 0 ? "Add" : "Save")</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    document.getElementById('customerForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const form = e.target;
+        const f = form.elements;
+        const data = {
+            userId: parseInt(form.querySelector('[name="UserId"]').value || '0'),
+            name: f['Name'].value,
+            email: f['Email'].value,
+            username: f['username'].value,
+            phoneNumber: f['PhoneNumber'].value,
+            address: f['Address'].value,
+            isVerified: form.querySelector('[name="IsVerified"]').checked,
+            isactive: form.querySelector('[name="Isactive"]').checked
+        };
+        let url = '/api/Customer';
+        let method = 'POST';
+        if (data.userId) {
+            url += '/' + data.userId;
+            method = 'PUT';
+        } else {
+            data.password = f['Password'].value;
+        }
+        await fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        const modalEl = form.closest('.modal');
+        bootstrap.Modal.getInstance(modalEl).hide();
+        if (window.loadCustomers) loadCustomers();
+    });
+</script>

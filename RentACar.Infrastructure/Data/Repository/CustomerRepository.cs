@@ -19,17 +19,24 @@ namespace RentACar.Infrastructure.Repositories
 
         public async Task<Customer?> GetByIdAsync(int id)
         {
-            return await _dbContext.Set<Customer>().FindAsync(id);
+            return await _dbContext.Set<Customer>()
+                                   .Include(c => c.User)
+                                   .FirstOrDefaultAsync(c => c.UserId == id);
         }
 
         public async Task<List<Customer>> GetAllAsync()
         {
-            return await _dbContext.Set<Customer>().ToListAsync();
+            return await _dbContext.Set<Customer>()
+                                   .Include(c => c.User)
+                                   .ToListAsync();
         }
 
         public async Task<List<Customer>> FindByNameAsync(string name)
         {
-            return await _dbContext.Set<Customer>().Where(c => c.Name.Contains(name)).ToListAsync();
+            return await _dbContext.Set<Customer>()
+                                   .Include(c => c.User)
+                                   .Where(c => c.Name.Contains(name))
+                                   .ToListAsync();
         }
 
         public async Task AddAsync(Customer customer)
@@ -57,6 +64,7 @@ namespace RentACar.Infrastructure.Repositories
         public async Task<Customer?> GetByIdAsync(string aspNetUserId)
         {
             var customer = await _dbContext.Set<Customer>()
+                                           .Include(c => c.User)
                                            .FirstOrDefaultAsync(c => c.aspNetUserId == aspNetUserId);
             return customer;
         }
