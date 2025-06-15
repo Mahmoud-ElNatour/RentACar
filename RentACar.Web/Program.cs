@@ -8,6 +8,7 @@ using RentACar.Infrastructure.Data.Repository;
 using RentACar.Infrastructure.Repositories;
 using AutoMapper;
 using RentACar.Infrastructure.Data.Repositories;
+using RentACar.Core.Managers;
 using RentACar.Application.Managers;
 var builder = WebApplication.CreateBuilder(args);
 
@@ -46,6 +47,7 @@ builder.Services.AddScoped<ICreditCardRepository, CreditCardRepository>();
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 builder.Services.AddScoped<IBlacklistRepository, BlacklistRepository>();
+builder.Services.AddScoped<IPromocodeRepository, PromocodeRepository>();
 builder.Services.AddHttpContextAccessor();
 // 🔥 Register Managers
 builder.Services.AddScoped<CustomerManager>();
@@ -54,6 +56,7 @@ builder.Services.AddScoped<RoleManager<IdentityRole>>();
 builder.Services.AddScoped<EmployeeManager>();
 builder.Services.AddScoped<CarManager>();
 builder.Services.AddScoped<BlacklistManager>();
+builder.Services.AddScoped<PromocodeManager>();
 
 
 
