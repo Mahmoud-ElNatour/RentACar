@@ -57,6 +57,7 @@ builder.Services.AddScoped<EmployeeManager>();
 builder.Services.AddScoped<CarManager>();
 builder.Services.AddScoped<BlacklistManager>();
 builder.Services.AddScoped<PromocodeManager>();
+builder.Services.AddScoped<CreditCardManager>();
 
 
 

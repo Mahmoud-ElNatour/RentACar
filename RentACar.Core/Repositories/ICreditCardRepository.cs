@@ -15,5 +15,6 @@ namespace RentACar.Core.Repositories
         Task AddCustomerCreditCardAsync(CustomerCreditCard customerCreditCard);
         Task RemoveCustomerCreditCardAsync(int userId, int creditCardId);
         Task RemoveCreditCardAsync(int userId, int creditCardId);
+        Task<(List<CreditCard> Cards, int Total)> SearchAsync(string? cardNumber, string? customer, int offset, int limit);
     }
 }
