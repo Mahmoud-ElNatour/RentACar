@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "nqxuDkhMuMQ=",
+  "dgSpecHash": "vaTHlJ4ltLs=",
   "success": true,
-  "projectFilePath": "C:\\Users\\Mohammad\\Downloads\\RentACar-codex-implement-blacklist-page-with-actions-and-design\\RentACar.Application\\RentACar.Application.csproj",
+  "projectFilePath": "C:\\Users\\Mohammad\\Downloads\\RentACar-j3q9i8-codex-fix-blacklist-user-permissions-and-auto-refresh-data\\RentACar.Application\\RentACar.Application.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Mohammad\\.nuget\\packages\\automapper\\14.0.0\\automapper.14.0.0.nupkg.sha512",
     "C:\\Users\\Mohammad\\.nuget\\packages\\microsoft.aspnetcore.cryptography.internal\\8.0.15\\microsoft.aspnetcore.cryptography.internal.8.0.15.nupkg.sha512",

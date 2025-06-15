@@ -32,7 +32,7 @@ namespace RentACar.Application.Managers
             _employeeRepository = employeeRepository;
         }
 
-        public async Task<BlacklistDto?> AddToBlacklistAsync(AddToBlacklistRequestDto requestDto, EmployeeDto loggedInEmployeeDto)
+        public async Task<OperationResult<BlacklistDto>> AddToBlacklistAsync(AddToBlacklistRequestDto requestDto, EmployeeDto loggedInEmployeeDto)
         {
             IdentityUser? userToBlacklist = null;
             if (requestDto.UseUsername)
@@ -46,29 +46,29 @@ namespace RentACar.Application.Managers
 
             if (userToBlacklist == null)
             {
-                return null; // Or throw UserNotFoundException
+                return OperationResult<BlacklistDto>.Failure("User not found");
             }
 
-            // Assuming EmployeeDto has EmployeeId\
+            // Assuming EmployeeDto has EmployeeId
             return await AddToBlacklistInternalAsync(userToBlacklist, requestDto.Reason, loggedInEmployeeDto.EmployeeId);
         }
-        private async Task<BlacklistDto?> AddToBlacklistInternalAsync(IdentityUser userToBlacklist, string reason, int loggedInEmployeeId)
+        private async Task<OperationResult<BlacklistDto>> AddToBlacklistInternalAsync(IdentityUser userToBlacklist, string reason, int loggedInEmployeeId)
         {
             if (string.IsNullOrWhiteSpace(reason))
             {
-                return null; // Or throw ArgumentException("Reason cannot be empty.");
+                return OperationResult<BlacklistDto>.Failure("Reason cannot be empty.");
             }
 
             var existingBlacklist = await _blacklistRepository.GetByUserIdAsync(userToBlacklist.Id);
             if (existingBlacklist != null)
             {
-                return _mapper.Map<BlacklistDto>(existingBlacklist); // Already blacklisted
+                return OperationResult<BlacklistDto>.Failure("User already blacklisted");
             }
 
             var loggedInEmployee = await _employeeRepository.GetByIdAsync(loggedInEmployeeId);
             if (loggedInEmployee?.User == null)
             {
-                return null; // Cannot verify who is blacklisting
+                return OperationResult<BlacklistDto>.Failure("Cannot verify employee");
             }
             var user = _userManager.FindByIdAsync(loggedInEmployee.aspNetUserId).Result;
             var isAdmin = await _userManager.IsInRoleAsync(user, "Admin");
@@ -77,7 +77,7 @@ namespace RentACar.Application.Managers
 
             if (isCustomer)
             {
-                return null; // Customers are not authorized to blacklist
+                return OperationResult<BlacklistDto>.Failure("Not authorized");
             }
 
             // Check target user's role
@@ -89,7 +89,7 @@ namespace RentACar.Application.Managers
             if (!isAdmin && isEmployee && (isTargetEmployee || isTargetAdmin))
             {
                 // Employees without admin role can only blacklist customers
-                return null;
+                return OperationResult<BlacklistDto>.Failure("Cannot blacklist admin or employee");
             }
 
             var blacklistEntry = new BlackList
@@ -122,10 +122,10 @@ namespace RentACar.Application.Managers
                 }
             }
 
-            return _mapper.Map<BlacklistDto>(addedEntity);
+            return OperationResult<BlacklistDto>.SuccessResult(_mapper.Map<BlacklistDto>(addedEntity), "Done");
         }
 
-        public async Task<bool> RemoveFromBlacklistAsync(RemoveFromBlacklistRequestDto requestDto, EmployeeDto loggedInEmployeeDto)
+        public async Task<OperationResult<bool>> RemoveFromBlacklistAsync(RemoveFromBlacklistRequestDto requestDto, EmployeeDto loggedInEmployeeDto)
         {
             IdentityUser? userToRemove = null;
             if (requestDto.UseUsername)
@@ -139,13 +139,13 @@ namespace RentACar.Application.Managers
 
             if (userToRemove == null)
             {
-                return false; // Or throw UserNotFoundException
+                return OperationResult<bool>.Failure("User not found");
             }
 
             var blacklistEntry = await _blacklistRepository.GetByUserIdAsync(userToRemove.Id);
             if (blacklistEntry == null)
             {
-                return false; // User is not blacklisted
+                return OperationResult<bool>.Failure("User is not blacklisted");
             }
 
             await _blacklistRepository.DeleteAsync(blacklistEntry);
@@ -187,17 +187,17 @@ namespace RentACar.Application.Managers
                     else
                     {
                         // Normal employee cannot remove admins or employees from blacklist
-                        return false; // Unauthorized
+                        return OperationResult<bool>.Failure("Cannot modify admin or employee");
                     }
                 }
                 else
                 {
                     // Could not retrieve logged-in employee's User information
-                    return false; // Or throw an appropriate exception
+                    return OperationResult<bool>.Failure("Cannot verify employee");
                 }
             }
 
-            return true;
+            return OperationResult<bool>.SuccessResult(true, "Done");
         }
 
         public async Task<BlacklistDto?> GetBlacklistByUserIdAsync(String userId)
@@ -268,11 +268,11 @@ namespace RentACar.Application.Managers
             }
         }
 
-        public async Task<bool> RemoveByIdAsync(int id, EmployeeDto loggedInEmployeeDto)
+        public async Task<OperationResult<bool>> RemoveByIdAsync(int id, EmployeeDto loggedInEmployeeDto)
         {
             var entry = await _blacklistRepository.GetByIdAsync(id);
             if (entry == null)
-                return false;
+                return OperationResult<bool>.Failure("Entry not found");
             var req = new RemoveFromBlacklistRequestDto { Identifier = entry.UserId, UseUsername = false };
             return await RemoveFromBlacklistAsync(req, loggedInEmployeeDto);
         }
