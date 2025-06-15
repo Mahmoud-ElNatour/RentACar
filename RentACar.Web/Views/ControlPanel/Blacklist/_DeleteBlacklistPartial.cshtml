@@ -1,0 +1,31 @@
+@model RentACar.Application.DTOs.BlacklistDto
+<div class="modal fade" id="blacklistDeleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content dark-modal">
+            <div class="modal-header">
+                <h5 class="modal-title">Unblock User</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="deleteBlacklistForm">
+                <div class="modal-body">
+                    <input type="hidden" name="id" value="@Model.BlacklistId" />
+                    <p>Unblock user <strong>@Model.UserId</strong>?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Unblock</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+    document.getElementById('deleteBlacklistForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const id = this.querySelector('[name="id"]').value;
+        await fetch('/api/Blacklist/' + id, { method: 'DELETE' });
+        const modalEl = this.closest('.modal');
+        bootstrap.Modal.getInstance(modalEl).hide();
+        if (window.loadBlacklist) loadBlacklist();
+    });
+</script>

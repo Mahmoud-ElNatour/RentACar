@@ -1,0 +1,47 @@
+@model RentACar.Application.DTOs.AddToBlacklistRequestDto
+<div class="modal fade" id="blacklistAddModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content dark-modal">
+            <div class="modal-header">
+                <h5 class="modal-title">Add To Blacklist</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addBlacklistForm">
+                    <div class="mb-3">
+                        <label class="form-label">Identifier (Username or UserId)</label>
+                        <input asp-for="Identifier" class="form-control" />
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input asp-for="UseUsername" class="form-check-input" />
+                        <label class="form-check-label" asp-for="UseUsername">Identifier is Username</label>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Reason</label>
+                        <input asp-for="Reason" class="form-control" />
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    document.getElementById('addBlacklistForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const form = e.target;
+        const data = {
+            identifier: form.Identifier.value,
+            reason: form.Reason.value,
+            useUsername: form.UseUsername.checked
+        };
+        await fetch('/api/Blacklist', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        const modalEl = form.closest('.modal');
+        bootstrap.Modal.getInstance(modalEl).hide();
+        if (window.loadBlacklist) loadBlacklist();
+    });
+</script>
