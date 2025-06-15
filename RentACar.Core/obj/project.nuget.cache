@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "Fa80erixciA=",
+  "dgSpecHash": "9xEkKTX3H5U=",
   "success": true,
-  "projectFilePath": "C:\\Users\\Mohammad\\Downloads\\RentACar-j3q9i8-codex-fix-blacklist-user-permissions-and-auto-refresh-data\\RentACar.Core\\RentACar.Core.csproj",
+  "projectFilePath": "C:\\Users\\Mohammad\\Downloads\\RentACar-codex-implement-promocode-management-page\\RentACar.Core\\RentACar.Core.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Mohammad\\.nuget\\packages\\microsoft.aspnetcore.cryptography.internal\\8.0.15\\microsoft.aspnetcore.cryptography.internal.8.0.15.nupkg.sha512",
     "C:\\Users\\Mohammad\\.nuget\\packages\\microsoft.aspnetcore.cryptography.keyderivation\\8.0.15\\microsoft.aspnetcore.cryptography.keyderivation.8.0.15.nupkg.sha512",

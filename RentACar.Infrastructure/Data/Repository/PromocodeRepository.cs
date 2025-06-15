@@ -12,7 +12,7 @@ using RentACar.Infrastructure.Data.Repository.Base;
 
 namespace RentACar.Infrastructure.Data.Repository
 {
-    class PromocodeRepository : Repository<Category>, IPromocodeRepository
+    public class PromocodeRepository : Repository<Category>, IPromocodeRepository
     {
         private RentACarDbContext _dbContext;
         public PromocodeRepository(RentACarDbContext dbContext) : base(dbContext)
