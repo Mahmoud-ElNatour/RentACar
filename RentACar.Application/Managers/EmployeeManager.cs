@@ -30,7 +30,7 @@ namespace RentACar.Application.Managers
         {
             var user = new IdentityUser
             {
-                UserName = createDto.Username,
+                UserName = createDto.Email,
                 Email = createDto.Email,
                 PhoneNumber = createDto.PhoneNumber,
                 EmailConfirmed = true
@@ -223,6 +223,35 @@ namespace RentACar.Application.Managers
             var employeeDtos = _mapper.Map<List<EmployeeDto>>(employees);
             return employeeDtos.FirstOrDefault(e => e.username == username);
         }
+
+        public async Task<List<EmployeeDisplayDto>> GetAllEmployeesWithRoles()
+        {
+            var employees = await _employeeRepository.GetAllAsync();
+            var result = new List<EmployeeDisplayDto>();
+
+            foreach (var emp in employees)
+            {
+                var user = await _userManager.FindByIdAsync(emp.aspNetUserId);
+                var roles = await _userManager.GetRolesAsync(user);
+
+                var displayDto = new EmployeeDisplayDto
+                {
+                    EmployeeId = emp.EmployeeId,
+                    Name = emp.Name,
+                    Email = user.Email,
+                    PhoneNumber = user.PhoneNumber,
+                    Salary = emp.Salary,
+                    Address = emp.Address,
+                    IsActive = emp.IsActive,
+                    Role = roles.FirstOrDefault() ?? "N/A"
+                };
+
+                result.Add(displayDto);
+            }
+
+            return result;
+        }
+
     }
     public class EmployeeProfile : Profile
     {

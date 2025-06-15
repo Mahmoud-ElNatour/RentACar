@@ -27,12 +27,12 @@ namespace RentACar.Application.Managers
         {
             var user = new IdentityUser
             {
-                UserName = createDto.Username,
+                UserName = createDto.Email,
                 Email = createDto.Email,
                 PhoneNumber = createDto.PhoneNumber
             };
 
-            var result = await _userManager.CreateAsync(user, createDto.Password);
+            var result = await _userManager.CreateAsync(user, "C@c123456");
             if (!result.Succeeded)
             {
                 // Log errors or handle them as needed
@@ -45,8 +45,20 @@ namespace RentACar.Application.Managers
                 await _roleManager.CreateAsync(new IdentityRole("Customer"));
             }
 
+            // ✅ Re-fetch user and set email confirmed
+            var createdUser = await _userManager.FindByEmailAsync(createDto.Email);
+            if (createdUser != null)
+            {
+                createdUser.EmailConfirmed = true;
+                await _userManager.UpdateAsync(createdUser);
+            }
+
+
             // Assign the user to "Customer" role
+
             await _userManager.AddToRoleAsync(user, "Customer");
+
+
             var customer = new Customer
             {
                 aspNetUserId = user.Id,
@@ -61,6 +73,7 @@ namespace RentACar.Application.Managers
             };
 
             await _customerRepository.AddAsync(customer);
+            //Reset the Password
 
             return _mapper.Map<CustomerDTO>(customer);
         }
@@ -185,7 +198,64 @@ namespace RentACar.Application.Managers
 
         public async Task DeleteCustomer(int id)
         {
+            var customer = await GetCustomerById(id);
+            if (customer == null)
+                throw new Exception("Customer not found");
+
+            var user = await _userManager.FindByIdAsync(customer.aspNetUserId);
+            if (user == null)
+                throw new Exception("User not found");
+
             await _customerRepository.DeleteAsync(id);
+            await _userManager.DeleteAsync(user);
+        }
+
+
+        public async Task UpdateCustomer(CustomerDTO dto)
+        {
+            var customer = await _customerRepository.GetByIdAsync(dto.UserId);
+            if (customer != null)
+            {
+                var user = await _userManager.FindByIdAsync(customer.aspNetUserId);
+                if (user != null)
+                {
+                    user.Email = dto.Email;
+                    user.UserName = dto.username;
+                    user.PhoneNumber = dto.PhoneNumber;
+                    await _userManager.UpdateAsync(user);
+                }
+
+                customer.Name = dto.Name;
+                customer.Address = dto.Address;
+                customer.IsVerified = dto.IsVerified;
+                customer.Isactive = dto.Isactive;
+
+                await _customerRepository.UpdateAsync(customer);
+            }
+        }
+
+        public async Task<bool> ResetPassword(int customerId, string newPassword)
+        {
+            var customer = await _customerRepository.GetByIdAsync(customerId);
+            if (customer == null) return false;
+            var user = await _userManager.FindByIdAsync(customer.aspNetUserId);
+            if (user == null) return false;
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var result = await _userManager.ResetPasswordAsync(user, token, newPassword);
+            return result.Succeeded;
+        }
+
+        public async Task UpdateCustomerDocuments(int customerId, CustomerDocumentsDto docs)
+        {
+            if (docs.DrivingLicenseFront != null && docs.DrivingLicenseBack != null)
+            {
+                await UpdateCustomerDrivingLicense(customerId, docs.DrivingLicenseFront, docs.DrivingLicenseBack);
+            }
+
+            if (docs.NationalIdfront != null && docs.NationalIdback != null)
+            {
+                await UpdateCustomerNationalId(customerId, docs.NationalIdfront, docs.NationalIdback);
+            }
         }
     }
 
@@ -196,6 +266,7 @@ namespace RentACar.Application.Managers
             CreateMap<Customer, CustomerDTO>()
                 .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.User.Email))
                 .ForMember(dest => dest.username, opt => opt.MapFrom(src => src.User.UserName))
+                .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.User.PhoneNumber))
                 .ReverseMap()
                 .ForMember(dest => dest.User, opt => opt.Ignore()); // skip reverse mapping User
         }
