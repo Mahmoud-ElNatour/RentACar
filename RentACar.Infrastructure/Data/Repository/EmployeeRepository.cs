@@ -19,12 +19,16 @@ namespace RentACar.Infrastructure.Repositories
 
         public async Task<Employee?> GetByIdAsync(int id)
         {
-            return await _dbContext.Set<Employee>().FindAsync(id);
+            return await _dbContext.Set<Employee>()
+                                   .Include(e => e.User)
+                                   .FirstOrDefaultAsync(e => e.EmployeeId == id);
         }
 
         public async Task<List<Employee>> GetAllAsync()
         {
-            return await _dbContext.Set<Employee>().ToListAsync();
+            return await _dbContext.Set<Employee>()
+                                   .Include(e => e.User)
+                                   .ToListAsync();
         }
 
         public async Task AddAsync(Employee employee)
@@ -51,9 +55,9 @@ namespace RentACar.Infrastructure.Repositories
 
         public async Task<Employee?> GetByIdAsync(string aspNetUserId)
         {
-            var Employee = await _dbContext.Set<Employee>()
-                                           .FirstOrDefaultAsync(c => c.aspNetUserId == aspNetUserId);
-            return Employee;
+            return await _dbContext.Set<Employee>()
+                                   .Include(e => e.User)
+                                   .FirstOrDefaultAsync(c => c.aspNetUserId == aspNetUserId);
         }
     }
 }
