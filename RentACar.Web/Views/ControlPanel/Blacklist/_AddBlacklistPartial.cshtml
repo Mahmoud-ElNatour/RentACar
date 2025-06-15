@@ -35,13 +35,17 @@
             reason: form.Reason.value,
             useUsername: form.UseUsername.checked
         };
-        await fetch('/api/Blacklist', {
+        const res = await fetch('/api/Blacklist', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
-        const modalEl = form.closest('.modal');
-        bootstrap.Modal.getInstance(modalEl).hide();
-        if (window.loadBlacklist) loadBlacklist(true);
+        const result = await res.json();
+        alert(result.message);
+        if (res.ok) {
+            const modalEl = form.closest('.modal');
+            bootstrap.Modal.getInstance(modalEl).hide();
+            if (window.loadBlacklist) loadBlacklist(true);
+        }
     });
 </script>
