@@ -8,7 +8,7 @@ namespace RentACar.Application.DTOs
         [Required]
         [MaxLength(50)]
         public string Name { get; set; }
-        public string aspNetUserId { get; set; }
+        public string? aspNetUserId { get; set; }
         public bool IsVerified { get; set; }
         public byte[]? DrivingLicenseFront { get; set; }
         public byte[]? DrivingLicenseBack { get; set; }
@@ -16,8 +16,8 @@ namespace RentACar.Application.DTOs
         public byte[]? NationalIdback { get; set; }
         public bool Isactive { get; set; }
         public string? Address { get; set; }
-        public string Email { get; internal set; }
-        public string username { get; internal set; }
+        public string Email { get; set; }
+        public string username { get; set; }
         public string? PhoneNumber { get; set; }
     }
     public class CustomerCreateDTO
