@@ -68,8 +68,8 @@
             params.append('offset', currentOffset.toString());
             const res = await fetch('/api/CreditCard?' + params.toString());
             const result = await res.json();
-            const data = result.cards || result.Cards || result; // for compatibility
-            const total = result.total || result.Total || 0;
+            const data = result.cards || result.Cards || result.item1 || result.Item1 || result;
+            const total = result.total || result.Total || result.item2 || result.Item2 || 0;
             const tbody = document.getElementById('cardRows');
             if (reset) tbody.innerHTML = '';
             data.forEach(c => {

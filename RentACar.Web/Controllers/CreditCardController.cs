@@ -71,7 +71,7 @@ namespace RentACar.Web.Controllers
         public async Task<ActionResult<object>> Get([FromQuery] string? cardNumber, [FromQuery] string? customer, [FromQuery] int? offset)
         {
             var result = await _creditCardManager.GetCardsAsync(cardNumber, customer, offset ?? 0);
-            return Ok(result);
+            return Ok(new { cards = result.Cards, total = result.Total });
         }
 
         [HttpPost]
