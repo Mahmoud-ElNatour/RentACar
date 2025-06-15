@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
+using RentACar.Application.Managers;
 
 namespace RentACar.Web.Areas.Identity.Pages.Account
 {
@@ -21,11 +22,18 @@ namespace RentACar.Web.Areas.Identity.Pages.Account
     {
         private readonly SignInManager<IdentityUser> _signInManager;
         private readonly ILogger<LoginModel> _logger;
+        private readonly UserManager<IdentityUser> _userManager;
+        private readonly BlacklistManager _blacklistManager;
 
-        public LoginModel(SignInManager<IdentityUser> signInManager, ILogger<LoginModel> logger)
+        public LoginModel(SignInManager<IdentityUser> signInManager,
+                          ILogger<LoginModel> logger,
+                          UserManager<IdentityUser> userManager,
+                          BlacklistManager blacklistManager)
         {
             _signInManager = signInManager;
             _logger = logger;
+            _userManager = userManager;
+            _blacklistManager = blacklistManager;
         }
 
         /// <summary>
@@ -109,6 +117,17 @@ namespace RentACar.Web.Areas.Identity.Pages.Account
 
             if (ModelState.IsValid)
             {
+                var user = await _userManager.FindByEmailAsync(Input.Email);
+                if (user != null)
+                {
+                    var bl = await _blacklistManager.GetBlacklistByUserIdAsync(user.Id);
+                    if (bl != null)
+                    {
+                        ModelState.AddModelError(string.Empty, "You are blacklisted.");
+                        return Page();
+                    }
+                }
+
                 // This doesn't count login failures towards account lockout
                 // To enable password failures to trigger account lockout, set lockoutOnFailure: true
                 var result = await _signInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
