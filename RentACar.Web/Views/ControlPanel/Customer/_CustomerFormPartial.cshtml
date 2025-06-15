@@ -31,6 +31,22 @@
                             <label class="form-label">Password</label>
                             <input type="password" name="Password" class="form-control" />
                         </div>
+                        <div class="mb-3">
+                            <label class="form-label">Driving License Front</label>
+                            <input type="file" name="DrivingLicenseFront" class="form-control" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Driving License Back</label>
+                            <input type="file" name="DrivingLicenseBack" class="form-control" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">National ID Front</label>
+                            <input type="file" name="NationalIdfront" class="form-control" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">National ID Back</label>
+                            <input type="file" name="NationalIdback" class="form-control" />
+                        </div>
                     }
                     <div class="mb-3">
                         <label class="form-label">Address</label>
@@ -51,6 +67,13 @@
     </div>
 </div>
 <script>
+    async function fileToBase64(file) {
+        const buffer = await file.arrayBuffer();
+        const bytes = new Uint8Array(buffer);
+        let binary = '';
+        bytes.forEach(b => binary += String.fromCharCode(b));
+        return btoa(binary);
+    }
     document.getElementById('customerForm').addEventListener('submit', async function (e) {
         e.preventDefault();
         const form = e.target;
@@ -72,6 +95,10 @@
             method = 'PUT';
         } else {
             data.password = f['Password'].value;
+            data.drivingLicenseFront = f['DrivingLicenseFront'].files[0] ? await fileToBase64(f['DrivingLicenseFront'].files[0]) : null;
+            data.drivingLicenseBack = f['DrivingLicenseBack'].files[0] ? await fileToBase64(f['DrivingLicenseBack'].files[0]) : null;
+            data.nationalIdfront = f['NationalIdfront'].files[0] ? await fileToBase64(f['NationalIdfront'].files[0]) : null;
+            data.nationalIdback = f['NationalIdback'].files[0] ? await fileToBase64(f['NationalIdback'].files[0]) : null;
         }
         await fetch(url, {
             method: method,

@@ -221,6 +221,19 @@ namespace RentACar.Application.Managers
             var result = await _userManager.ResetPasswordAsync(user, token, newPassword);
             return result.Succeeded;
         }
+
+        public async Task UpdateCustomerDocuments(int customerId, CustomerDocumentsDto docs)
+        {
+            if (docs.DrivingLicenseFront != null && docs.DrivingLicenseBack != null)
+            {
+                await UpdateCustomerDrivingLicense(customerId, docs.DrivingLicenseFront, docs.DrivingLicenseBack);
+            }
+
+            if (docs.NationalIdfront != null && docs.NationalIdback != null)
+            {
+                await UpdateCustomerNationalId(customerId, docs.NationalIdfront, docs.NationalIdback);
+            }
+        }
     }
 
     public class CustomerProfile : Profile

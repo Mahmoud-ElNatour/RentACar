@@ -55,6 +55,15 @@ namespace RentACar.Web.Controllers
             return PartialView("~/Views/ControlPanel/Customer/_DeleteCustomerPartial.cshtml", customer);
         }
 
+        [HttpGet("~/Customer/Documents/{id}")]
+        [ApiExplorerSettings(IgnoreApi = true)]
+        public async Task<IActionResult> DocumentsForm(int id)
+        {
+            var customer = await _customerManager.GetCustomerById(id);
+            if (customer == null) return NotFound();
+            return PartialView("~/Views/ControlPanel/Customer/_CustomerDocumentsPartial.cshtml", customer);
+        }
+
         [HttpGet]
         public async Task<ActionResult<IEnumerable<CustomerDTO>>> Get([FromQuery] string? search, [FromQuery] bool? verified, [FromQuery] bool? active)
         {
@@ -106,6 +115,13 @@ namespace RentACar.Web.Controllers
         {
             var success = await _customerManager.ResetPassword(id, "C@c123456");
             if (!success) return NotFound();
+            return NoContent();
+        }
+
+        [HttpPut("{id}/documents")]
+        public async Task<IActionResult> UpdateDocuments(int id, [FromBody] CustomerDocumentsDto dto)
+        {
+            await _customerManager.UpdateCustomerDocuments(id, dto);
             return NoContent();
         }
     }

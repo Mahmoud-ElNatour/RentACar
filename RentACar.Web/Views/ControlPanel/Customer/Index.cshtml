@@ -94,6 +94,7 @@
                         <a href="#" class="text-warning me-2 edit-customer" data-id="${c.userId}"><i class="fas fa-pencil-alt"></i></a>
                         <a href="#" class="text-danger delete-customer" data-id="${c.userId}"><i class="fas fa-trash"></i></a>
                         <a href="#" class="text-info reset-pass" data-id="${c.userId}" title="Reset Password"><i class="fas fa-key"></i></a>
+                        <a href="#" class="text-success ms-2 view-docs" data-id="${c.userId}" title="Documents"><i class="fas fa-file-image"></i></a>
                     </td>`;
                 tbody.appendChild(row);
             });
@@ -121,6 +122,7 @@
                 const edit = e.target.closest('.edit-customer');
                 const del = e.target.closest('.delete-customer');
                 const reset = e.target.closest('.reset-pass');
+                const docs = e.target.closest('.view-docs');
                 if (edit) {
                     e.preventDefault();
                     loadModal('/Customer/Edit/' + edit.dataset.id);
@@ -132,6 +134,9 @@
                     if (confirm('Reset password for this customer?')) {
                         await fetch('/api/Customer/' + reset.dataset.id + '/reset-password', { method: 'POST' });
                     }
+                } else if (docs) {
+                    e.preventDefault();
+                    loadModal('/Customer/Documents/' + docs.dataset.id);
                 }
             });
             document.getElementById('tableSearch').addEventListener('keyup', function () {
