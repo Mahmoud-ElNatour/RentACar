@@ -83,11 +83,13 @@ namespace RentACar.Application.Managers
             // Check target user's role
             var isTargetCustomer = await _userManager.IsInRoleAsync(userToBlacklist, "Customer");
             var isTargetEmployee = await _userManager.IsInRoleAsync(userToBlacklist, "Employee");
+            var isTargetAdmin = await _userManager.IsInRoleAsync(userToBlacklist, "Admin");
 
             // Authorization rules
-            if (isEmployee && isTargetEmployee && !isAdmin)
+            if (!isAdmin && isEmployee && (isTargetEmployee || isTargetAdmin))
             {
-                return null; // Non-admin employees can't blacklist employees
+                // Employees without admin role can only blacklist customers
+                return null;
             }
 
             var blacklistEntry = new BlackList
@@ -148,7 +150,11 @@ namespace RentACar.Application.Managers
 
             await _blacklistRepository.DeleteAsync(blacklistEntry);
 
-            if (await _userManager.IsInRoleAsync(userToRemove, "Customer"))
+            var targetIsCustomer = await _userManager.IsInRoleAsync(userToRemove, "Customer");
+            var targetIsEmployee = await _userManager.IsInRoleAsync(userToRemove, "Employee");
+            var targetIsAdmin = await _userManager.IsInRoleAsync(userToRemove, "Admin");
+
+            if (targetIsCustomer)
             {
                 var customerEntity = await _customerRepository.GetByIdAsync(userToRemove.Id);
                 if (customerEntity != null)
@@ -157,7 +163,7 @@ namespace RentACar.Application.Managers
                     await _customerRepository.UpdateAsync(customerEntity);
                 }
             }
-            else if (await _userManager.IsInRoleAsync(userToRemove, "Employee"))
+            else if (targetIsEmployee || targetIsAdmin)
             {
                 // Fetch the EmployeeEntity of the logged-in employee to access their User (AspNetUser)
                 var loggedInEmployeeEntity = await _employeeRepository.GetByIdAsync(loggedInEmployeeDto.EmployeeId);
@@ -167,17 +173,21 @@ namespace RentACar.Application.Managers
                     var isAdmin = await _userManager.IsInRoleAsync(user, "Admin");
                     if (isAdmin)
                     {
-                        var employeeEntity = await _employeeRepository.GetByIdAsync(userToRemove.Id);
-                        if (employeeEntity != null)
+                        if (targetIsEmployee)
                         {
-                            employeeEntity.IsActive = true;
-                            await _employeeRepository.UpdateAsync(employeeEntity);
+                            var employeeEntity = await _employeeRepository.GetByIdAsync(userToRemove.Id);
+                            if (employeeEntity != null)
+                            {
+                                employeeEntity.IsActive = true;
+                                await _employeeRepository.UpdateAsync(employeeEntity);
+                            }
                         }
+                        // If target is admin only, nothing to update besides blacklist entry
                     }
                     else
                     {
-                        // Normal employee cannot remove another employee from blacklist
-                        return false; // Or throw UnauthorizedAccessException
+                        // Normal employee cannot remove admins or employees from blacklist
+                        return false; // Unauthorized
                     }
                 }
                 else
