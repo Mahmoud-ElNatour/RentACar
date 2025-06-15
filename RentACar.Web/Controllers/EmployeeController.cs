@@ -58,11 +58,12 @@ namespace RentACar.Web.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<EmployeeDto>>> Get()
+        public async Task<ActionResult<IEnumerable<EmployeeDisplayDto>>> Get()
         {
-            var employees = await _employeeManager.GetAllEmployees();
+            var employees = await _employeeManager.GetAllEmployeesWithRoles();
             return Ok(employees);
         }
+
 
         [HttpGet("{id}")]
         public async Task<ActionResult<EmployeeDto>> Get(int id)

@@ -17,10 +17,7 @@
                         <label class="form-label">Email</label>
                         <input asp-for="Email" class="form-control" />
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Username</label>
-                        <input asp-for="username" class="form-control" />
-                    </div>
+
                     <div class="mb-3">
                         <label class="form-label">Phone Number</label>
                         <input asp-for="PhoneNumber" class="form-control" />
@@ -59,7 +56,6 @@
             employeeId: parseInt(form.querySelector('[name="EmployeeId"]')?.value || '0'),
             name: f['Name']?.value,
             email: f['Email']?.value,
-            username: f['username']?.value,
             phoneNumber: f['PhoneNumber']?.value,
             salary: parseFloat(f['Salary']?.value || '0'),
             address: f['Address']?.value,
