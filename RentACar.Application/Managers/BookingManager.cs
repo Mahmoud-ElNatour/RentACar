@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity;
 using RentACar.Application.DTOs;
 using RentACar.Core.Entities;
 using RentACar.Core.Repositories;
+using Microsoft.Extensions.Logging;
 
 using AspNetUserEntity = RentACar.Application.DTOs.AspNetUser; // Add this using directive
 
@@ -19,6 +20,7 @@ namespace RentACar.Core.Managers
         private readonly IPromocodeRepository _promocodeRepository;
         private readonly PaymentManager _paymentManager;
         private readonly IMapper _mapper;
+        private readonly ILogger<BookingManager> _logger;
 
         public BookingManager(
             IBookingRepository bookingRepository,
@@ -26,7 +28,8 @@ namespace RentACar.Core.Managers
             ICarRepository carRepository,
             IPromocodeRepository promocodeRepository,
             PaymentManager paymentManager,
-            IMapper mapper)
+            IMapper mapper,
+            ILogger<BookingManager> logger)
         {
             _bookingRepository = bookingRepository;
             _customerRepository = customerRepository;
@@ -34,6 +37,7 @@ namespace RentACar.Core.Managers
             _promocodeRepository = promocodeRepository;
             _paymentManager = paymentManager;
             _mapper = mapper;
+            _logger = logger;
         }
 
         public async Task<List<BookingDto>> GetBookingHistoryAsync(int customerId)
@@ -56,6 +60,7 @@ namespace RentACar.Core.Managers
 
         public async Task<BookingDto?> MakeBookingAsync(MakeBookingRequestDto requestDto, string loggedInUserId)
         {
+            _logger.LogInformation("Making booking for customer {CustomerId}", requestDto.CustomerId);
             var customer = await _customerRepository.GetByIdAsync(requestDto.CustomerId);
             if (customer == null || !customer.IsVerified || !customer.Isactive)
                 return null; // Or throw specific exceptions
@@ -185,6 +190,7 @@ namespace RentACar.Core.Managers
 
         public async Task<bool> DeleteBookingAsync(DeleteBookingRequestDto requestDto)
         {
+            _logger.LogInformation("Deleting booking {Id}", requestDto.BookingId);
             var booking = await _bookingRepository.GetBookingByIdAsync(requestDto.BookingId);
             if (booking == null)
                 return false;

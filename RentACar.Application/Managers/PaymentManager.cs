@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity;
 using RentACar.Application.DTOs;
 using RentACar.Core.Entities;
 using RentACar.Core.Repositories;
+using Microsoft.Extensions.Logging;
 using AspNetUserEntity = RentACar.Core.Entities.AspNetUser; // Add this using directive
 
 namespace RentACar.Core.Managers
@@ -17,24 +18,28 @@ namespace RentACar.Core.Managers
         private readonly ICreditCardRepository _creditCardRepository;
         private readonly UserManager<AspNetUserEntity> _userManager; // Inject UserManager
         private readonly IMapper _mapper;
+        private readonly ILogger<PaymentManager> _logger;
 
         public PaymentManager(
             IPaymentRepository paymentRepository,
             IBookingRepository bookingRepository,
             ICreditCardRepository creditCardRepository,
             UserManager<AspNetUserEntity> userManager, // Receive UserManager
-            IMapper mapper)
+            IMapper mapper,
+            ILogger<PaymentManager> logger)
         {
             _paymentRepository = paymentRepository;
             _bookingRepository = bookingRepository;
             _creditCardRepository = creditCardRepository;
             _userManager = userManager;
             _mapper = mapper;
+            _logger = logger;
         }
 
         // Used by authenticated customer (can only pay with credit card for their own booking)
         public async Task<bool> MakePaymentByCustomerAsync(MakePaymentRequestDto paymentDto, int customerUserId)
         {
+            _logger.LogInformation("Customer {Id} making payment for booking {Booking}", customerUserId, paymentDto.BookingId);
             var booking = await _bookingRepository.GetByIdAsync(paymentDto.BookingId);
             if (booking == null || booking.CustomerId != customerUserId)
                 return false;
@@ -66,6 +71,7 @@ namespace RentACar.Core.Managers
         // Used by authenticated employee (can only pay in cash for any valid booking)
         public async Task<bool> MakePaymentByEmployeeAsync(MakePaymentRequestDto paymentDto, string employeeUserId)
         {
+            _logger.LogInformation("Employee {Id} recording payment for booking {Booking}", employeeUserId, paymentDto.BookingId);
             var user = await _userManager.FindByIdAsync(employeeUserId);
             if (user == null || !await _userManager.IsInRoleAsync(user, "Employee")) // Check user role directly
                 return false;

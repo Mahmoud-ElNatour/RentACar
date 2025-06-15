@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RentACar.Application.DTOs;
 using RentACar.Application.Managers;
+using Microsoft.Extensions.Logging;
 
 namespace RentACar.Web.Controllers
 {
@@ -16,11 +17,13 @@ namespace RentACar.Web.Controllers
     {
         private readonly EmployeeManager _employeeManager;
         private readonly IMapper _mapper;
+        private readonly ILogger<EmployeeController> _logger;
 
-        public EmployeeController(EmployeeManager employeeManager, IMapper mapper)
+        public EmployeeController(EmployeeManager employeeManager, IMapper mapper, ILogger<EmployeeController> logger)
         {
             _employeeManager = employeeManager;
             _mapper = mapper;
+            _logger = logger;
         }
 
         [HttpGet("~/Employee")]
@@ -93,6 +96,7 @@ namespace RentACar.Web.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult<EmployeeDto>> Create([FromBody] EmployeeCreateDTO dto)
         {
+            _logger.LogInformation("Creating employee");
             var created = await _employeeManager.CreateEmployee(dto);
             if (created == null) return BadRequest();
             return CreatedAtAction(nameof(Get), new { id = created.EmployeeId }, created);
@@ -114,6 +118,8 @@ namespace RentACar.Web.Controllers
                 return BadRequest("Employee ID mismatch.");
             }
 
+            _logger.LogInformation("Updating employee {Id}", id);
+
             await _employeeManager.UpdateEmployee(dto);
             return NoContent(); // 204 success
         }
@@ -123,6 +129,7 @@ namespace RentACar.Web.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)
         {
+            _logger.LogInformation("Deleting employee {Id}", id);
             await _employeeManager.DeleteEmployee(id);
             return NoContent();
         }

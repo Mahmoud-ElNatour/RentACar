@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Identity;
 using RentACar.Application.DTOs;
 using RentACar.Core.Entities;
 using RentACar.Core.Repositories;
+using Microsoft.Extensions.Logging;
 
 namespace RentACar.Application.Managers
 {
@@ -16,16 +17,19 @@ namespace RentACar.Application.Managers
         private readonly UserManager<IdentityUser> _userManager;
         private readonly CustomerManager _customerManager;
         private readonly IMapper _mapper;
+        private readonly ILogger<CreditCardManager> _logger;
 
         public CreditCardManager(ICreditCardRepository repo,
                                  UserManager<IdentityUser> userManager,
                                  CustomerManager customerManager,
-                                 IMapper mapper)
+                                 IMapper mapper,
+                                 ILogger<CreditCardManager> logger)
         {
             _repo = repo;
             _userManager = userManager;
             _customerManager = customerManager;
             _mapper = mapper;
+            _logger = logger;
         }
 
         public async Task<(List<CreditCardDisplayDto> Cards, int Total)> GetCardsAsync(string? cardNumber, string? customer, int offset, int limit = 30)
@@ -58,6 +62,7 @@ namespace RentACar.Application.Managers
 
         public async Task<CreditCardDto?> AddCreditCardAsync(CreditCardDto dto, string customerEmail, string operatorUserId)
         {
+            _logger.LogInformation("Adding credit card for customer {Email}", customerEmail);
             var opUser = await _userManager.FindByIdAsync(operatorUserId);
             if (opUser == null) return null;
 
@@ -72,6 +77,7 @@ namespace RentACar.Application.Managers
 
         public async Task<CreditCardDto?> UpdateCreditCardAsync(CreditCardDto dto, string customerEmail, string operatorUserId)
         {
+            _logger.LogInformation("Updating credit card {Id}", dto.CreditCardId);
             var opUser = await _userManager.FindByIdAsync(operatorUserId);
             if (opUser == null) return null;
 
@@ -94,11 +100,13 @@ namespace RentACar.Application.Managers
 
             _mapper.Map(dto, existing);
             await _repo.UpdateAsync(existing);
+            _logger.LogInformation("Credit card {Id} updated", dto.CreditCardId);
             return _mapper.Map<CreditCardDto>(existing);
         }
 
         public async Task<bool> DeleteCreditCardAsync(int id, string operatorUserId)
         {
+            _logger.LogInformation("Deleting credit card {Id}", id);
             var user = await _userManager.FindByIdAsync(operatorUserId);
             if (user == null || !await _userManager.IsInRoleAsync(user, "Admin"))
                 return false;

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using RentACar.Application.DTOs;
 using RentACar.Application.Managers;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Logging;
 
 namespace RentACar.Web.Controllers
 {
@@ -14,11 +15,13 @@ namespace RentACar.Web.Controllers
     {
         private readonly CategoryManager _categoryManager;
         private readonly UserManager<IdentityUser> _userManager;
+        private readonly ILogger<CategoryController> _logger;
 
-        public CategoryController(CategoryManager categoryManager, UserManager<IdentityUser> userManager)
+        public CategoryController(CategoryManager categoryManager, UserManager<IdentityUser> userManager, ILogger<CategoryController> logger)
         {
             _categoryManager = categoryManager;
             _userManager = userManager;
+            _logger = logger;
         }
 
         [HttpGet("~/Category")]
@@ -78,6 +81,7 @@ namespace RentACar.Web.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult<CategoryDto>> Create([FromBody] CategoryDto dto)
         {
+            _logger.LogInformation("Creating category");
             var userId = _userManager.GetUserId(User) ?? string.Empty;
             var created = await _categoryManager.AddCategoryAsync(dto, userId);
             if (created == null) return BadRequest();
@@ -89,6 +93,7 @@ namespace RentACar.Web.Controllers
         public async Task<IActionResult> Update(int id, [FromBody] CategoryDto dto)
         {
             if (id != dto.CategoryId) return BadRequest();
+            _logger.LogInformation("Updating category {Id}", id);
             var userId = _userManager.GetUserId(User) ?? string.Empty;
             var updated = await _categoryManager.UpdateCategoryAsync(dto, userId);
             if (updated == null) return NotFound();
@@ -99,6 +104,7 @@ namespace RentACar.Web.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)
         {
+            _logger.LogInformation("Deleting category {Id}", id);
             var userId = _userManager.GetUserId(User) ?? string.Empty;
             var success = await _categoryManager.DeleteCategoryAsync(id, userId);
             if (!success) return NotFound();

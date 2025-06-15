@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Identity;
 using RentACar.Application.DTOs;
 using RentACar.Core.Entities;
 using RentACar.Core.Repositories;
+using Microsoft.Extensions.Logging;
 using AspNetUser = RentACar.Application.DTOs.AspNetUser;
 
 namespace RentACar.Application.Managers
@@ -15,16 +16,19 @@ namespace RentACar.Application.Managers
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly ICustomerRepository _customerRepository;
         private readonly IMapper _mapper;
+        private readonly ILogger<CustomerManager> _logger;
 
-        public CustomerManager(UserManager<IdentityUser> userManager,RoleManager<IdentityRole> roleManager,ICustomerRepository customerRepository,IMapper mapper)
+        public CustomerManager(UserManager<IdentityUser> userManager,RoleManager<IdentityRole> roleManager,ICustomerRepository customerRepository,IMapper mapper, ILogger<CustomerManager> logger)
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _customerRepository = customerRepository;
             _mapper = mapper;
+            _logger = logger;
         }
         public async Task<CustomerDTO?> CreateCustomer(CustomerCreateDTO createDto)
         {
+            _logger.LogInformation("Creating customer for {Email}", createDto.Email);
             var user = new IdentityUser
             {
                 UserName = createDto.Email,
@@ -35,7 +39,7 @@ namespace RentACar.Application.Managers
             var result = await _userManager.CreateAsync(user, "C@c123456");
             if (!result.Succeeded)
             {
-                // Log errors or handle them as needed
+                _logger.LogWarning("Failed to create user for {Email}", createDto.Email);
                 return null;
             }
 
@@ -73,8 +77,9 @@ namespace RentACar.Application.Managers
             };
 
             await _customerRepository.AddAsync(customer);
-            //Reset the Password
 
+            _logger.LogInformation("Customer created with id {Id}", customer.UserId);
+            
             return _mapper.Map<CustomerDTO>(customer);
         }
 
@@ -86,6 +91,7 @@ namespace RentACar.Application.Managers
 
         public async Task<CustomerDTO?> GetCustomerById(int id)
         {
+            _logger.LogInformation("Fetching customer {Id}", id);
             var customer = await _customerRepository.GetByIdAsync(id);
             return _mapper.Map<CustomerDTO>(customer);
         }
@@ -198,6 +204,7 @@ namespace RentACar.Application.Managers
 
         public async Task DeleteCustomer(int id)
         {
+            _logger.LogInformation("Deleting customer {Id}", id);
             var customer = await GetCustomerById(id);
             if (customer == null)
                 throw new Exception("Customer not found");
@@ -213,6 +220,7 @@ namespace RentACar.Application.Managers
 
         public async Task UpdateCustomer(CustomerDTO dto)
         {
+            _logger.LogInformation("Updating customer {Id}", dto.UserId);
             var customer = await _customerRepository.GetByIdAsync(dto.UserId);
             if (customer != null)
             {

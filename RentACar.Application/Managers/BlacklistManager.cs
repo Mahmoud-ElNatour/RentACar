@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity;
 using RentACar.Application.DTOs;
 using RentACar.Core.Entities;
 using RentACar.Core.Repositories;
+using Microsoft.Extensions.Logging;
 using AspNetUserDto = RentACar.Application.DTOs.AspNetUser; // Assuming you have this DTO
 using EmployeeDto = RentACar.Application.DTOs.EmployeeDto;        // Assuming you have this DTO
 using CustomerDto = RentACar.Application.DTOs.CustomerDTO;        // Assuming you have this DTO
@@ -22,18 +23,21 @@ namespace RentACar.Application.Managers
         private readonly IMapper _mapper;
         private readonly ICustomerRepository _customerRepository;
         private readonly IEmployeeRepository _employeeRepository;
+        private readonly ILogger<BlacklistManager> _logger;
 
-        public BlacklistManager(IBlacklistRepository blacklistRepository, UserManager<IdentityUser> userManager, IMapper mapper, ICustomerRepository customerRepository, IEmployeeRepository employeeRepository)
+        public BlacklistManager(IBlacklistRepository blacklistRepository, UserManager<IdentityUser> userManager, IMapper mapper, ICustomerRepository customerRepository, IEmployeeRepository employeeRepository, ILogger<BlacklistManager> logger)
         {
             _blacklistRepository = blacklistRepository;
             _userManager = userManager;
             _mapper = mapper;
             _customerRepository = customerRepository;
             _employeeRepository = employeeRepository;
+            _logger = logger;
         }
 
         public async Task<OperationResult<BlacklistDto>> AddToBlacklistAsync(AddToBlacklistRequestDto requestDto, EmployeeDto loggedInEmployeeDto)
         {
+            _logger.LogInformation("Adding user {Identifier} to blacklist", requestDto.Identifier);
             IdentityUser? userToBlacklist = null;
             if (requestDto.UseUsername)
             {
@@ -54,6 +58,7 @@ namespace RentACar.Application.Managers
         }
         private async Task<OperationResult<BlacklistDto>> AddToBlacklistInternalAsync(IdentityUser userToBlacklist, string reason, int loggedInEmployeeId)
         {
+            _logger.LogInformation("Blacklist internal for user {User}", userToBlacklist.Id);
             if (string.IsNullOrWhiteSpace(reason))
             {
                 return OperationResult<BlacklistDto>.Failure("Reason cannot be empty.");
@@ -127,6 +132,7 @@ namespace RentACar.Application.Managers
 
         public async Task<OperationResult<bool>> RemoveFromBlacklistAsync(RemoveFromBlacklistRequestDto requestDto, EmployeeDto loggedInEmployeeDto)
         {
+            _logger.LogInformation("Removing user {Identifier} from blacklist", requestDto.Identifier);
             IdentityUser? userToRemove = null;
             if (requestDto.UseUsername)
             {
@@ -270,6 +276,7 @@ namespace RentACar.Application.Managers
 
         public async Task<OperationResult<bool>> RemoveByIdAsync(int id, EmployeeDto loggedInEmployeeDto)
         {
+            _logger.LogInformation("Removing blacklist entry {Id}", id);
             var entry = await _blacklistRepository.GetByIdAsync(id);
             if (entry == null)
                 return OperationResult<bool>.Failure("Entry not found");

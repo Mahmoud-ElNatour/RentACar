@@ -6,6 +6,7 @@ using RentACar.Application.DTOs;
 using RentACar.Application.Managers;
 using RentACar.Core.Entities;
 using RentACar.Core.Repositories;
+using Microsoft.Extensions.Logging;
 
 namespace RentACar.Application.Managers
 {
@@ -16,18 +17,21 @@ namespace RentACar.Application.Managers
         private readonly IEmployeeRepository _employeeRepository;
         private readonly IMapper _mapper;
         private readonly CustomerManager _customerManager; // To access CustomerManager methods
+        private readonly ILogger<EmployeeManager> _logger;
 
-        public EmployeeManager(UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager, IEmployeeRepository employeeRepository, IMapper mapper, CustomerManager customerManager)
+        public EmployeeManager(UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager, IEmployeeRepository employeeRepository, IMapper mapper, CustomerManager customerManager, ILogger<EmployeeManager> logger)
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _employeeRepository = employeeRepository;
             _mapper = mapper;
             _customerManager = customerManager;
+            _logger = logger;
         }
 
         public async Task<EmployeeDto?> CreateEmployee(EmployeeCreateDTO createDto)
         {
+            _logger.LogInformation("Creating employee for {Email}", createDto.Email);
             var user = new IdentityUser
             {
                 UserName = createDto.Email,
@@ -51,10 +55,11 @@ namespace RentACar.Application.Managers
                 employee.IsActive = createDto.IsActive;
                 employee.aspNetUserId = user.Id;
                 await _employeeRepository.AddAsync(employee);
+                _logger.LogInformation("Employee created with id {Id}", employee.EmployeeId);
 
                 return _mapper.Map<EmployeeDto>(employee);
             }
-
+            _logger.LogWarning("Failed to create employee for {Email}", createDto.Email);
             return null;
         }
 
@@ -103,6 +108,7 @@ namespace RentACar.Application.Managers
 
         public async Task DeleteEmployee(int id)
         {
+            _logger.LogInformation("Deleting employee {Id}", id);
             var employee = await _employeeRepository.GetByIdAsync(id);
             if (employee == null)
             {
