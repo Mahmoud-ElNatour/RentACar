@@ -72,13 +72,14 @@ namespace RentACar.Web.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<BlacklistDto>> Create([FromBody] AddToBlacklistRequestDto dto)
+        public async Task<IActionResult> Create([FromBody] AddToBlacklistRequestDto dto)
         {
             var emp = await GetLoggedEmployee();
             if (emp == null) return Unauthorized();
-            var created = await _blacklistManager.AddToBlacklistAsync(dto, emp);
-            if (created == null) return BadRequest();
-            return CreatedAtAction(nameof(Get), new { id = created.BlacklistId }, created);
+            var result = await _blacklistManager.AddToBlacklistAsync(dto, emp);
+            if (!result.Success)
+                return BadRequest(new { message = result.Message });
+            return Ok(new { message = result.Message, data = result.Data });
         }
 
         [HttpPut("{id}")]
@@ -86,7 +87,7 @@ namespace RentACar.Web.Controllers
         {
             if (id != dto.BlacklistId) return BadRequest();
             await _blacklistManager.UpdateBlacklistAsync(dto);
-            return NoContent();
+            return Ok(new { message = "Done" });
         }
 
         [HttpDelete("{id}")]
@@ -94,9 +95,10 @@ namespace RentACar.Web.Controllers
         {
             var emp = await GetLoggedEmployee();
             if (emp == null) return Unauthorized();
-            var success = await _blacklistManager.RemoveByIdAsync(id, emp);
-            if (!success) return NotFound();
-            return NoContent();
+            var result = await _blacklistManager.RemoveByIdAsync(id, emp);
+            if (!result.Success)
+                return BadRequest(new { message = result.Message });
+            return Ok(new { message = result.Message });
         }
 
         private async Task<EmployeeDto?> GetLoggedEmployee()

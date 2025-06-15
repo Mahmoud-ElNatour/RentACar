@@ -23,9 +23,13 @@
     document.getElementById('deleteBlacklistForm').addEventListener('submit', async function (e) {
         e.preventDefault();
         const id = this.querySelector('[name="id"]').value;
-        await fetch('/api/Blacklist/' + id, { method: 'DELETE' });
-        const modalEl = this.closest('.modal');
-        bootstrap.Modal.getInstance(modalEl).hide();
-        if (window.loadBlacklist) loadBlacklist();
+        const res = await fetch('/api/Blacklist/' + id, { method: 'DELETE' });
+        const result = await res.json();
+        alert(result.message);
+        if (res.ok) {
+            const modalEl = this.closest('.modal');
+            bootstrap.Modal.getInstance(modalEl).hide();
+            if (window.loadBlacklist) loadBlacklist(true);
+        }
     });
 </script>
