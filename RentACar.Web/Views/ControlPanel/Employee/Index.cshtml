@@ -29,11 +29,11 @@
         <form id="filterForm" class="row g-2 mb-4 align-items-end">
             <div class="col">
                 <label class="form-label">Search</label>
-                <input type="text" name="search" class="form-control" placeholder="Name or ID" />
+                <input type="text" name="search" class="form-control" placeholder="Name or Email" />
             </div>
             <div class="col">
                 <label class="form-label">Role</label>
-                <select name="verified" class="form-select">
+                <select name="role" class="form-select">
                     <option value="">Any</option>
                     <option value="Admin">Admin</option>
                     <option value="Employee">Employee</option>
@@ -51,7 +51,7 @@
                 <button type="submit" class="btn btn-secondary">Filter</button>
             </div>
             <div class="col-auto ms-auto">
-                <button type="button" id="addCustomer" class="btn btn-primary"><i class="fas fa-plus me-1"></i>Add Customer</button>
+                <button type="button" id="addEmployee" class="btn btn-primary"><i class="fas fa-plus me-1"></i>Add Employee</button>
             </div>
         </form>
 
@@ -86,7 +86,7 @@
     <script>
         async function loadEmployees() {
         const params = new URLSearchParams(new FormData(document.getElementById('filterForm')));
-        const res = await fetch('/api/Employee');
+        const res = await fetch('/api/Employee?' + params.toString());
         const data = await res.json();
         const tbody = document.getElementById('employeeRows');
         tbody.innerHTML = '';
@@ -124,7 +124,7 @@
         }
         document.addEventListener('DOMContentLoaded', () => {
             loadEmployees();
-            document.getElementById('filterForm').addEventListener('submit', e => { e.preventDefault(); loadCustomers(); });
+            document.getElementById('filterForm').addEventListener('submit', e => { e.preventDefault(); loadEmployees(); });
             document.getElementById('addEmployee').addEventListener('click', () => loadModal('/Employee/Add'));
             document.getElementById('employeeRows').addEventListener('click', e => {
                 const edit = e.target.closest('.edit-employee');

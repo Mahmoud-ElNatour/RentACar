@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
@@ -58,9 +59,24 @@ namespace RentACar.Web.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<EmployeeDisplayDto>>> Get()
+        public async Task<ActionResult<IEnumerable<EmployeeDisplayDto>>> Get([FromQuery] string? search, [FromQuery] bool? active, [FromQuery] string? role)
         {
             var employees = await _employeeManager.GetAllEmployeesWithRoles();
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                employees = employees.Where(e =>
+                    (!string.IsNullOrEmpty(e.Name) && e.Name.Contains(search, System.StringComparison.OrdinalIgnoreCase)) ||
+                    (!string.IsNullOrEmpty(e.Email) && e.Email.Contains(search, System.StringComparison.OrdinalIgnoreCase))
+                ).ToList();
+            }
+            if (active.HasValue)
+            {
+                employees = employees.Where(e => e.IsActive == active.Value).ToList();
+            }
+            if (!string.IsNullOrWhiteSpace(role))
+            {
+                employees = employees.Where(e => string.Equals(e.Role, role, System.StringComparison.OrdinalIgnoreCase)).ToList();
+            }
             return Ok(employees);
         }
 
