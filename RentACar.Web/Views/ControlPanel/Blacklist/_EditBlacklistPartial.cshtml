@@ -1,0 +1,54 @@
+@model RentACar.Application.DTOs.BlacklistDto
+<div class="modal fade" id="blacklistEditModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content dark-modal">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Blacklist</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editBlacklistForm">
+                    <input type="hidden" asp-for="BlacklistId" />
+                    <div class="mb-3">
+                        <label class="form-label">User Id</label>
+                        <input asp-for="UserId" class="form-control" readonly />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Reason</label>
+                        <input asp-for="Reason" class="form-control" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Date Blocked</label>
+                        <input asp-for="DateBlocked" type="date" class="form-control" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Employee Id</label>
+                        <input asp-for="EmployeeDoneBlacklistId" class="form-control" />
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    document.getElementById('editBlacklistForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const form = e.target;
+        const data = {
+            blacklistId: parseInt(form.BlacklistId.value),
+            userId: form.UserId.value,
+            reason: form.Reason.value,
+            dateBlocked: form.DateBlocked.value,
+            employeeDoneBlacklistId: parseInt(form.EmployeeDoneBlacklistId.value || '0')
+        };
+        await fetch('/api/Blacklist/' + data.blacklistId, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        const modalEl = form.closest('.modal');
+        bootstrap.Modal.getInstance(modalEl).hide();
+        if (window.loadBlacklist) loadBlacklist();
+    });
+</script>

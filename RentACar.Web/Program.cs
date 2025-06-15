@@ -45,13 +45,15 @@ builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<ICreditCardRepository, CreditCardRepository>();
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
+builder.Services.AddScoped<IBlacklistRepository, BlacklistRepository>();
 builder.Services.AddHttpContextAccessor();
 // 🔥 Register Managers
 builder.Services.AddScoped<CustomerManager>();
 builder.Services.AddScoped<CategoryManager>();
 builder.Services.AddScoped<RoleManager<IdentityRole>>();
 builder.Services.AddScoped<EmployeeManager>();
-builder.Services.AddScoped<CarManager>(); 
+builder.Services.AddScoped<CarManager>();
+builder.Services.AddScoped<BlacklistManager>();
 
 
 
