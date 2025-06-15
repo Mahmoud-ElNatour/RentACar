@@ -47,3 +47,15 @@ C:\Users\Mohammad\Downloads\checked\RentACar-codex-implement-employee-management
 C:\Users\Mohammad\Downloads\checked\RentACar-codex-implement-employee-management-in-control-panel\RentACar.Core\obj\Debug\net8.0\refint\RentACar.Core.dll
 C:\Users\Mohammad\Downloads\checked\RentACar-codex-implement-employee-management-in-control-panel\RentACar.Core\obj\Debug\net8.0\RentACar.Core.pdb
 C:\Users\Mohammad\Downloads\checked\RentACar-codex-implement-employee-management-in-control-panel\RentACar.Core\obj\Debug\net8.0\ref\RentACar.Core.dll
+C:\Users\Mohammad\Downloads\RentACar-codex-implement-customer-management-in-control-panel\RentACar.Core\bin\Debug\net8.0\RentACar.Core.deps.json
+C:\Users\Mohammad\Downloads\RentACar-codex-implement-customer-management-in-control-panel\RentACar.Core\bin\Debug\net8.0\RentACar.Core.dll
+C:\Users\Mohammad\Downloads\RentACar-codex-implement-customer-management-in-control-panel\RentACar.Core\bin\Debug\net8.0\RentACar.Core.pdb
+C:\Users\Mohammad\Downloads\RentACar-codex-implement-customer-management-in-control-panel\RentACar.Core\obj\Debug\net8.0\RentACar.Core.csproj.AssemblyReference.cache
+C:\Users\Mohammad\Downloads\RentACar-codex-implement-customer-management-in-control-panel\RentACar.Core\obj\Debug\net8.0\RentACar.Core.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Mohammad\Downloads\RentACar-codex-implement-customer-management-in-control-panel\RentACar.Core\obj\Debug\net8.0\RentACar.Core.AssemblyInfoInputs.cache
+C:\Users\Mohammad\Downloads\RentACar-codex-implement-customer-management-in-control-panel\RentACar.Core\obj\Debug\net8.0\RentACar.Core.AssemblyInfo.cs
+C:\Users\Mohammad\Downloads\RentACar-codex-implement-customer-management-in-control-panel\RentACar.Core\obj\Debug\net8.0\RentACar.Core.csproj.CoreCompileInputs.cache
+C:\Users\Mohammad\Downloads\RentACar-codex-implement-customer-management-in-control-panel\RentACar.Core\obj\Debug\net8.0\RentACar.Core.dll
+C:\Users\Mohammad\Downloads\RentACar-codex-implement-customer-management-in-control-panel\RentACar.Core\obj\Debug\net8.0\refint\RentACar.Core.dll
+C:\Users\Mohammad\Downloads\RentACar-codex-implement-customer-management-in-control-panel\RentACar.Core\obj\Debug\net8.0\RentACar.Core.pdb
+C:\Users\Mohammad\Downloads\RentACar-codex-implement-customer-management-in-control-panel\RentACar.Core\obj\Debug\net8.0\ref\RentACar.Core.dll

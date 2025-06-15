@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "921Az5tfLsU=",
+  "dgSpecHash": "pGoW+sw4o3Y=",
   "success": true,
-  "projectFilePath": "C:\\Users\\Mohammad\\Downloads\\checked\\RentACar-codex-implement-employee-management-in-control-panel\\RentACar.Core\\RentACar.Core.csproj",
+  "projectFilePath": "C:\\Users\\Mohammad\\Downloads\\RentACar-codex-implement-customer-management-in-control-panel\\RentACar.Core\\RentACar.Core.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Mohammad\\.nuget\\packages\\microsoft.aspnetcore.cryptography.internal\\8.0.15\\microsoft.aspnetcore.cryptography.internal.8.0.15.nupkg.sha512",
     "C:\\Users\\Mohammad\\.nuget\\packages\\microsoft.aspnetcore.cryptography.keyderivation\\8.0.15\\microsoft.aspnetcore.cryptography.keyderivation.8.0.15.nupkg.sha512",
