@@ -63,6 +63,26 @@ namespace RentACar.Infrastructure.Data.Repository
                 throw new InvalidOperationException("Customer credit card not found.");
             }
         }
+
+        public async Task<(List<CreditCard> Cards, int Total)> SearchAsync(string? cardNumber, string? customer, int offset, int limit)
+        {
+            var query = _dbContext.CreditCards
+                .Include(cc => cc.CustomerCreditCards)
+                    .ThenInclude(ccc => ccc.User)
+                        .ThenInclude(c => c.User)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(cardNumber))
+                query = query.Where(c => c.CardNumber.Contains(cardNumber));
+
+            if (!string.IsNullOrWhiteSpace(customer))
+                query = query.Where(c => c.CustomerCreditCards.Any(ccc => ccc.User.Name.Contains(customer) ||
+                                                               (ccc.User.User.Email != null && ccc.User.User.Email.Contains(customer))));
+
+            var total = await query.CountAsync();
+            var list = await query.OrderBy(c => c.CreditCardId).Skip(offset).Take(limit).ToListAsync();
+            return (list, total);
+        }
     }
 
 

@@ -210,6 +210,32 @@ namespace RentACar.Core.Managers
             return _mapper.Map<List<CreditCardDto>>(creditCards);
         }
 
+        public async Task<(List<CreditCardDisplayDto> Cards, int Total)> SearchCreditCardsAsync(string userId, string? cardNumber, string? customer, int offset, int limit = 30)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            var isAllowed = user != null && (await _userManager.IsInRoleAsync(user, "Admin") || await _userManager.IsInRoleAsync(user, "Employee"));
+            if (!isAllowed)
+                return (new List<CreditCardDisplayDto>(), 0);
+
+            var (cards, total) = await _creditCardRepository.SearchAsync(cardNumber, customer, offset, limit);
+            var result = new List<CreditCardDisplayDto>();
+            foreach (var c in cards)
+            {
+                var cc = c.CustomerCreditCards.FirstOrDefault();
+                result.Add(new CreditCardDisplayDto
+                {
+                    CreditCardId = c.CreditCardId,
+                    CardNumber = c.CardNumber,
+                    CardHolderName = c.CardHolderName,
+                    ExpiryDate = c.ExpiryDate,
+                    CustomerName = cc?.User.Name ?? string.Empty,
+                    CustomerEmail = cc?.User.User.Email ?? string.Empty,
+                    CustomerId = cc?.User.UserId ?? 0
+                });
+            }
+            return (result, total);
+        }
+
         // Luhn Algorithm: Validates the format of a credit card number
         private bool IsValidCardNumber(string cardNumber)
         {
