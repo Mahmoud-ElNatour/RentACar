@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using RentACar.Application.DTOs;
-using RentACar.Core.Managers;
+using RentACar.Application.Managers;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 

@@ -45,7 +45,7 @@
                         discountPercentage: parseFloat(form.DiscountPercentage.value || '0'),
                         validUntil: form.ValidUntil.value || null,
                         description: form.Description.value,
-                        isActive: form.IsActive.checked
+                        isActive: form.querySelector('[name="IsActive"]')?.checked ?? false
                     };
                     await fetch('/api/Promocode/' + data.promocodeId, {
                         method: 'PUT',
