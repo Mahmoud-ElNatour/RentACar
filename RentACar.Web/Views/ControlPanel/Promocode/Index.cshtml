@@ -1,0 +1,88 @@
+@{
+    ViewData["Title"] = "Promo Codes";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/promocodes.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
+</head>
+<body>
+    <div class="promocode-container">
+        <a href="../ControlPanel" class="btn btn-outline-warning mb-3 rounded-circle d-inline-flex align-items-center justify-content-center" style="width:40px;height:40px" title="Back">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <h2 class="page-title mb-4 text-center">Promo Codes</h2>
+        <div class="text-end mb-3">
+            <button class="btn btn-primary add-promocode">Add Promocode</button>
+        </div>
+        <div class="promocode-grid" id="promocodeGrid">
+        </div>
+    </div>
+    <div id="promocodeModalPlaceholder"></div>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        async function loadPromocodes() {
+            const res = await fetch('/api/Promocode');
+            const data = await res.json();
+            const grid = document.getElementById('promocodeGrid');
+            grid.innerHTML = '';
+            data.forEach(p => {
+                const div = document.createElement('div');
+                div.className = 'promocode-card';
+                div.dataset.id = p.promocodeId;
+                const valid = p.validUntil ? p.validUntil : '';
+                div.innerHTML =
+                    `<div class="promocode-name">${p.name ?? ''}</div>` +
+                    `<div class="promocode-discount">Discount: ${p.discountPercentage}%</div>` +
+                    `<div class="promocode-valid">Valid Until: ${valid}</div>` +
+                    `<div class="promocode-active">${p.isActive ? '<i class=\'fas fa-check text-success\'></i>' : '<i class=\'fas fa-times text-danger\'></i>'}</div>` +
+                    `<div class="actions">` +
+                    `<a href="#" class="edit-promocode" data-id="${p.promocodeId}"><i class=\'fas fa-pencil-alt\'></i></a>` +
+                    `<a href="#" class="delete-promocode" data-id="${p.promocodeId}"><i class=\'fas fa-trash\'></i></a>` +
+                    `</div>`;
+                grid.appendChild(div);
+            });
+        }
+
+        async function loadModal(url) {
+            const res = await fetch(url);
+            const html = await res.text();
+            const placeholder = document.getElementById('promocodeModalPlaceholder');
+            placeholder.innerHTML = html;
+            placeholder.querySelectorAll('script').forEach(scr => {
+                const s = document.createElement('script');
+                s.textContent = scr.textContent;
+                document.body.appendChild(s);
+                document.body.removeChild(s);
+            });
+            const modalEl = placeholder.querySelector('.modal');
+            const modal = new bootstrap.Modal(modalEl);
+            modal.show();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadPromocodes();
+            document.querySelector('.add-promocode').addEventListener('click', () => loadModal('/Promocode/Add'));
+            document.getElementById('promocodeGrid').addEventListener('click', (e) => {
+                const edit = e.target.closest('.edit-promocode');
+                const del = e.target.closest('.delete-promocode');
+                if (edit) {
+                    e.preventDefault();
+                    loadModal('/Promocode/Edit/' + edit.dataset.id);
+                } else if (del) {
+                    e.preventDefault();
+                    loadModal('/Promocode/Delete/' + del.dataset.id);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
