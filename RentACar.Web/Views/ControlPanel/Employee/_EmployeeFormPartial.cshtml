@@ -1,0 +1,85 @@
+@model RentACar.Application.DTOs.EmployeeDto
+<div class="modal fade" id="employeeFormModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content dark-modal">
+            <div class="modal-header">
+                <h5 class="modal-title">@((Model.EmployeeId == 0) ? "Add Employee" : "Edit Employee")</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="employeeForm">
+                    <input type="hidden" asp-for="EmployeeId" />
+                    <div class="mb-3">
+                        <label class="form-label">Name</label>
+                        <input asp-for="Name" class="form-control" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input asp-for="Email" class="form-control" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Username</label>
+                        <input asp-for="username" class="form-control" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Phone Number</label>
+                        <input asp-for="PhoneNumber" class="form-control" />
+                    </div>
+                    @if (Model.EmployeeId == 0)
+                    {
+                        <div class="mb-3">
+                            <label class="form-label">Password</label>
+                            <input type="password" name="Password" class="form-control" />
+                        </div>
+                    }
+                    <div class="mb-3">
+                        <label class="form-label">Salary</label>
+                        <input asp-for="Salary" class="form-control" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Address</label>
+                        <input asp-for="Address" class="form-control" />
+                    </div>
+                    <div class="form-check mb-3">
+                        <input asp-for="IsActive" class="form-check-input" />
+                        <label class="form-check-label" asp-for="IsActive">Active</label>
+                    </div>
+                    <button type="submit" class="btn btn-primary">@(Model.EmployeeId == 0 ? "Add" : "Save")</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    document.getElementById('employeeForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const form = e.target;
+        const f = form.elements;
+        const data = {
+            employeeId: parseInt(form.querySelector('[name="EmployeeId"]')?.value || '0'),
+            name: f['Name']?.value,
+            email: f['Email']?.value,
+            username: f['username']?.value,
+            phoneNumber: f['PhoneNumber']?.value,
+            salary: parseFloat(f['Salary']?.value || '0'),
+            address: f['Address']?.value,
+            isActive: form.querySelector('[name="IsActive"]')?.checked ?? false
+            };
+        let url = '/api/Employee';
+        let method = 'POST';
+        if (data.employeeId) {
+            url += '/' + data.employeeId;
+            method = 'PUT';
+        } else {
+            data.password = f['Password']?.value;
+        }
+        await fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        const modalEl = form.closest('.modal');
+        bootstrap.Modal.getInstance(modalEl).hide();
+        if (window.loadEmployees) loadEmployees();
+    });
+</script>

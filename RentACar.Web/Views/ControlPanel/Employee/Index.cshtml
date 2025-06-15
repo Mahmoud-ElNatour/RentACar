@@ -1,0 +1,112 @@
+@{
+    ViewData["Title"] = "Employees";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/employees.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
+</head>
+<body>
+    <div class="employee-container container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <a href="../ControlPanel" class="btn btn-outline-warning rounded-circle d-inline-flex align-items-center justify-content-center" style="width:40px;height:40px" title="Back">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <h2 class="flex-grow-1 text-center m-0">Manage Employees</h2>
+            <div style="width:40px;"></div>
+        </div>
+        <div class="text-end mb-3">
+            <button type="button" id="addEmployee" class="btn btn-primary"><i class="fas fa-plus me-1"></i>Add Employee</button>
+        </div>
+        <div class="mb-3">
+            <input type="text" id="tableSearch" class="form-control" placeholder="Search table..." />
+        </div>
+        <div class="table-responsive">
+            <table id="employeeTable" class="table table-striped table-dark align-middle">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Salary</th>
+                        <th>Address</th>
+                        <th>Active</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="employeeRows"></tbody>
+            </table>
+        </div>
+    </div>
+    <div id="employeeModalPlaceholder"></div>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        async function loadEmployees() {
+            const res = await fetch('/api/Employee');
+            const data = await res.json();
+            const tbody = document.getElementById('employeeRows');
+            tbody.innerHTML = '';
+            data.forEach(emp => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${emp.name}</td>
+                    <td>${emp.username}</td>
+                    <td>${emp.email}</td>
+                    <td>${emp.phoneNumber ?? ''}</td>
+                    <td>${emp.salary ?? ''}</td>
+                    <td>${emp.address ?? ''}</td>
+                    <td class="text-center">${emp.isActive ? '<i class="fas fa-check text-success"></i>' : '<i class="fas fa-times text-danger"></i>'}</td>
+                    <td>
+                        <a href="#" class="text-warning me-2 edit-employee" data-id="${emp.employeeId}"><i class="fas fa-pencil-alt"></i></a>
+                        <a href="#" class="text-danger delete-employee" data-id="${emp.employeeId}"><i class="fas fa-trash"></i></a>
+                    </td>`;
+                tbody.appendChild(row);
+            });
+        }
+        async function loadModal(url) {
+            const res = await fetch(url);
+            const html = await res.text();
+            const placeholder = document.getElementById('employeeModalPlaceholder');
+            placeholder.innerHTML = html;
+            placeholder.querySelectorAll('script').forEach(scr => {
+                const s = document.createElement('script');
+                s.textContent = scr.textContent;
+                document.body.appendChild(s);
+                document.body.removeChild(s);
+            });
+            const modalEl = placeholder.querySelector('.modal');
+            const modal = new bootstrap.Modal(modalEl);
+            modal.show();
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+            loadEmployees();
+            document.getElementById('addEmployee').addEventListener('click', () => loadModal('/Employee/Add'));
+            document.getElementById('employeeRows').addEventListener('click', e => {
+                const edit = e.target.closest('.edit-employee');
+                const del = e.target.closest('.delete-employee');
+                if (edit) {
+                    e.preventDefault();
+                    loadModal('/Employee/Edit/' + edit.dataset.id);
+                } else if (del) {
+                    e.preventDefault();
+                    loadModal('/Employee/Delete/' + del.dataset.id);
+                }
+            });
+            document.getElementById('tableSearch').addEventListener('keyup', function () {
+                const value = this.value.toLowerCase();
+                document.querySelectorAll('#employeeTable tbody tr').forEach(tr => {
+                    tr.style.display = tr.textContent.toLowerCase().includes(value) ? '' : 'none';
+                });
+            });
+        });
+    </script>
+</body>
+</html>

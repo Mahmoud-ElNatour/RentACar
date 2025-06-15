@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using RentACar.Application.DTOs;
-using RentACar.Core.Entities;
+using RentACar.Application.Managers;
 using RentACar.Core.Repositories;
 
 namespace RentACar.Web.Controllers
@@ -17,16 +17,14 @@ namespace RentACar.Web.Controllers
     [Route("api/[controller]")]
     public class CarController : Controller
     {
-        private readonly ICarRepository _carRepository;
-        private readonly ICategoryRepository _categoryRepository;
-        private readonly IMapper _mapper;
+        private readonly CarManager _carManager;
+        private readonly CategoryManager _categoryManager;
 
-        public CarController(ICarRepository carRepository, ICategoryRepository categoryRepository, IMapper mapper)
-        {
-            _carRepository = carRepository;
-            _categoryRepository = categoryRepository;
-            _mapper = mapper;
-        }
+            public CarController(CarManager carManager, CategoryManager categoryManager)
+            {
+                _carManager = carManager;
+                _categoryManager = categoryManager;
+            }
 
         [HttpGet("~/Car")]
         [ApiExplorerSettings(IgnoreApi = true)]
@@ -37,7 +35,6 @@ namespace RentACar.Web.Controllers
 
         [HttpGet("~/Car/Add")]
         [Authorize(Roles = "Admin")]
-
         [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> AddForm()
         {
@@ -47,52 +44,51 @@ namespace RentACar.Web.Controllers
 
         [HttpGet("~/Car/Edit/{id}")]
         [Authorize(Roles = "Admin")]
-
         [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> EditForm(int id)
         {
-            var car = await _carRepository.GetByIdAsync(id);
+            var car = await _carManager.GetCarByIdAsync(id);
             if (car == null) return NotFound();
             await PopulateCategories();
-            return PartialView("~/Views/ControlPanel/Car/_CarFormPartial.cshtml", _mapper.Map<CarDto>(car));
+            return PartialView("~/Views/ControlPanel/Car/_CarFormPartial.cshtml", car);
         }
 
         [HttpGet("~/Car/Delete/{id}")]
         [Authorize(Roles = "Admin")]
-
         [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> DeleteForm(int id)
         {
-            var car = await _carRepository.GetByIdAsync(id);
+            var car = await _carManager.GetCarByIdAsync(id);
             if (car == null) return NotFound();
-            return PartialView("~/Views/ControlPanel/Car/_DeleteCarPartial.cshtml", _mapper.Map<CarDto>(car));
+            return PartialView("~/Views/ControlPanel/Car/_DeleteCarPartial.cshtml", car);
         }
 
         [HttpGet]
-
         public async Task<ActionResult<IEnumerable<CarDto>>> Get([FromQuery] string? name, [FromQuery] int? categoryId, [FromQuery] bool? available)
         {
-            var cars = await _carRepository.SearchByFilterAsync(name, null, categoryId, available);
-            var carDtos = cars.Select(c => _mapper.Map<CarDto>(c)).ToList();
+            var carDtos = await _carManager.SearchCarsByFilterAsync(name, null, categoryId, available);
             return Ok(carDtos);
         }
 
         [HttpGet("{id}")]
         public async Task<ActionResult<CarDto>> Get(int id)
         {
-            var car = await _carRepository.GetByIdAsync(id);
+            var car = await _carManager.GetCarByIdAsync(id);
             if (car == null) return NotFound();
-            return Ok(_mapper.Map<CarDto>(car));
+            return Ok(car);
         }
 
         [HttpPost]
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult<CarDto>> Create([FromBody] CarDto dto)
         {
-            var entity = _mapper.Map<Car>(dto);
-            await _carRepository.AddAsync(entity);
-            var result = _mapper.Map<CarDto>(entity);
-            return CreatedAtAction(nameof(Get), new { id = result.CarId }, result);
+            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (userId == null) return Unauthorized();
+
+            var createdCar = await _carManager.AddCarAsync(dto, userId);
+            if (createdCar == null) return BadRequest("Unable to add car. Check if user is admin or plate number already exists.");
+
+            return CreatedAtAction(nameof(Get), new { id = createdCar.CarId }, createdCar);
         }
 
         [HttpPut("{id}")]
@@ -100,10 +96,7 @@ namespace RentACar.Web.Controllers
         public async Task<IActionResult> Update(int id, [FromBody] CarDto dto)
         {
             if (id != dto.CarId) return BadRequest();
-            var car = await _carRepository.GetByIdAsync(id);
-            if (car == null) return NotFound();
-            _mapper.Map(dto, car);
-            await _carRepository.UpdateAsync(car);
+            await _carManager.UpdateCarAsync(dto);
             return NoContent();
         }
 
@@ -111,13 +104,13 @@ namespace RentACar.Web.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)
         {
-            await _carRepository.DeleteAsync(id);
+            await _carManager.DeleteCarAsync(id);
             return NoContent();
         }
 
         private async Task PopulateCategories()
         {
-            var cats = await _categoryRepository.GetAllAsync();
+            var cats = await _categoryManager.GetAllCategoriesAsync();
             ViewBag.Categories = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(cats, "CategoryId", "Name");
         }
     }

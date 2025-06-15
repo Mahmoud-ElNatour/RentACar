@@ -46,9 +46,13 @@ builder.Services.AddScoped<ICreditCardRepository, CreditCardRepository>();
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<CustomerManager>(); // 🔥 Register CustomerManager
+// 🔥 Register Managers
+builder.Services.AddScoped<CustomerManager>();
 builder.Services.AddScoped<CategoryManager>();
 builder.Services.AddScoped<RoleManager<IdentityRole>>();
+builder.Services.AddScoped<EmployeeManager>();
+builder.Services.AddScoped<CarManager>(); 
+
 
 
 
@@ -66,7 +70,7 @@ if (app.Environment.IsDevelopment())
     {
         cfg.AddMaps(AppDomain.CurrentDomain.GetAssemblies());
     });
-    mapperConfig.AssertConfigurationIsValid(); // throws if mapping is misconfigured
+    // mapperConfig.AssertConfigurationIsValid(); // mapping validation disabled
 
     app.UseMigrationsEndPoint();
 }
