@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Identity;
@@ -8,21 +9,21 @@ using RentACar.Core.Repositories;
 using AspNetUserDto = RentACar.Application.DTOs.AspNetUser; // Assuming you have this DTO
 using EmployeeDto = RentACar.Application.DTOs.EmployeeDto;        // Assuming you have this DTO
 using CustomerDto = RentACar.Application.DTOs.CustomerDTO;        // Assuming you have this DTO
-using AspNetUserEntity = RentACar.Core.Entities.AspNetUser;
+//using AspNetUserEntity = RentACar.Core.Entities.AspNetUser;
 using EmployeeEntity = RentACar.Core.Entities.Employee;
 using CustomerEntity = RentACar.Core.Entities.Customer;
 
-namespace RentACar.Core.Managers
+namespace RentACar.Application.Managers
 {
     public class BlacklistManager
     {
         private readonly IBlacklistRepository _blacklistRepository;
-        private readonly UserManager<AspNetUserEntity> _userManager;
+        private readonly UserManager<IdentityUser> _userManager;
         private readonly IMapper _mapper;
         private readonly ICustomerRepository _customerRepository;
         private readonly IEmployeeRepository _employeeRepository;
 
-        public BlacklistManager(IBlacklistRepository blacklistRepository, UserManager<AspNetUserEntity> userManager, IMapper mapper, ICustomerRepository customerRepository, IEmployeeRepository employeeRepository)
+        public BlacklistManager(IBlacklistRepository blacklistRepository, UserManager<IdentityUser> userManager, IMapper mapper, ICustomerRepository customerRepository, IEmployeeRepository employeeRepository)
         {
             _blacklistRepository = blacklistRepository;
             _userManager = userManager;
@@ -33,7 +34,7 @@ namespace RentACar.Core.Managers
 
         public async Task<BlacklistDto?> AddToBlacklistAsync(AddToBlacklistRequestDto requestDto, EmployeeDto loggedInEmployeeDto)
         {
-            AspNetUserEntity? userToBlacklist = null;
+            IdentityUser? userToBlacklist = null;
             if (requestDto.UseUsername)
             {
                 userToBlacklist = await _userManager.FindByNameAsync(requestDto.Identifier);
@@ -51,7 +52,7 @@ namespace RentACar.Core.Managers
             // Assuming EmployeeDto has EmployeeId\
             return await AddToBlacklistInternalAsync(userToBlacklist, requestDto.Reason, loggedInEmployeeDto.EmployeeId);
         }
-        private async Task<BlacklistDto?> AddToBlacklistInternalAsync(AspNetUserEntity userToBlacklist, string reason, int loggedInEmployeeId)
+        private async Task<BlacklistDto?> AddToBlacklistInternalAsync(IdentityUser userToBlacklist, string reason, int loggedInEmployeeId)
         {
             if (string.IsNullOrWhiteSpace(reason))
             {
@@ -69,10 +70,10 @@ namespace RentACar.Core.Managers
             {
                 return null; // Cannot verify who is blacklisting
             }
-
-            var isAdmin = await _userManager.IsInRoleAsync(loggedInEmployee.User, "Admin");
-            var isEmployee = await _userManager.IsInRoleAsync(loggedInEmployee.User, "Employee");
-            var isCustomer = await _userManager.IsInRoleAsync(loggedInEmployee.User, "Customer");
+            var user = _userManager.FindByIdAsync(loggedInEmployee.aspNetUserId).Result;
+            var isAdmin = await _userManager.IsInRoleAsync(user, "Admin");
+            var isEmployee = await _userManager.IsInRoleAsync(user, "Employee");
+            var isCustomer = await _userManager.IsInRoleAsync(user, "Customer");
 
             if (isCustomer)
             {
@@ -124,7 +125,7 @@ namespace RentACar.Core.Managers
 
         public async Task<bool> RemoveFromBlacklistAsync(RemoveFromBlacklistRequestDto requestDto, EmployeeDto loggedInEmployeeDto)
         {
-            AspNetUserEntity? userToRemove = null;
+            IdentityUser? userToRemove = null;
             if (requestDto.UseUsername)
             {
                 userToRemove = await _userManager.FindByNameAsync(requestDto.Identifier);
@@ -162,7 +163,8 @@ namespace RentACar.Core.Managers
                 var loggedInEmployeeEntity = await _employeeRepository.GetByIdAsync(loggedInEmployeeDto.EmployeeId);
                 if (loggedInEmployeeEntity?.User != null)
                 {
-                    var isAdmin = await _userManager.IsInRoleAsync(loggedInEmployeeEntity.User, "Admin");
+                    var user = _userManager.FindByIdAsync(loggedInEmployeeEntity.aspNetUserId).Result;
+                    var isAdmin = await _userManager.IsInRoleAsync(user, "Admin");
                     if (isAdmin)
                     {
                         var employeeEntity = await _employeeRepository.GetByIdAsync(userToRemove.Id);
@@ -192,6 +194,77 @@ namespace RentACar.Core.Managers
         {
             var blacklistEntry = await _blacklistRepository.GetByUserIdAsync(userId);
             return _mapper.Map<BlacklistDto>(blacklistEntry);
+        }
+
+        public async Task<BlacklistDto?> GetByIdAsync(int id)
+        {
+            var entry = await _blacklistRepository.GetByIdAsync(id);
+            return entry == null ? null : _mapper.Map<BlacklistDto>(entry);
+        }
+
+        public async Task<List<BlacklistDisplayDto>> GetAllAsync(string? type = null, string? search = null, int offset = 0, int limit = 30)
+        {
+            var all = await _blacklistRepository.GetAllAsync();
+            var result = new List<BlacklistDisplayDto>();
+
+            foreach (var item in all)
+            {
+                var user = await _userManager.FindByIdAsync(item.UserId);
+                if (user == null) continue;
+                var emp = await _employeeRepository.GetByIdAsync(item.EmployeeDoneBlacklistId);
+
+                var isCustomer = await _userManager.IsInRoleAsync(user, "Customer");
+                var isEmployee = await _userManager.IsInRoleAsync(user, "Employee");
+                var userType = isCustomer ? "Customer" : isEmployee ? "Employee" : "Unknown";
+
+                if (!string.IsNullOrEmpty(type) && !string.Equals(type, userType, StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                var display = new BlacklistDisplayDto
+                {
+                    BlacklistId = item.BlacklistId,
+                    UserId = item.UserId,
+                    Username = user.UserName ?? string.Empty,
+                    Reason = item.Reason,
+                    DateBlocked = item.DateBlocked,
+                    EmployeeDoneBlacklistId = item.EmployeeDoneBlacklistId,
+                    EmployeeName = emp?.Name ?? string.Empty,
+                    UserType = userType
+                };
+
+                if (!string.IsNullOrWhiteSpace(search))
+                {
+                    var searchLower = search.ToLowerInvariant();
+                    var match = (display.Username?.ToLowerInvariant().Contains(searchLower) ?? false) ||
+                                (display.Reason?.ToLowerInvariant().Contains(searchLower) ?? false);
+                    if (!match) continue;
+                }
+
+                result.Add(display);
+            }
+
+            return result.Skip(offset).Take(limit).ToList();
+        }
+
+        public async Task UpdateBlacklistAsync(BlacklistDto dto)
+        {
+            var entry = await _blacklistRepository.GetByIdAsync(dto.BlacklistId);
+            if (entry != null)
+            {
+                entry.Reason = dto.Reason;
+                entry.DateBlocked = dto.DateBlocked;
+                entry.EmployeeDoneBlacklistId = dto.EmployeeDoneBlacklistId;
+                await _blacklistRepository.UpdateAsync(entry);
+            }
+        }
+
+        public async Task<bool> RemoveByIdAsync(int id, EmployeeDto loggedInEmployeeDto)
+        {
+            var entry = await _blacklistRepository.GetByIdAsync(id);
+            if (entry == null)
+                return false;
+            var req = new RemoveFromBlacklistRequestDto { Identifier = entry.UserId, UseUsername = false };
+            return await RemoveFromBlacklistAsync(req, loggedInEmployeeDto);
         }
     }
 

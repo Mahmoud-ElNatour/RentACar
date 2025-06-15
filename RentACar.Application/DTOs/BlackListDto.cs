@@ -17,8 +17,7 @@ namespace RentACar.Application.DTOs
         public DateOnly DateBlocked { get; set; }
 
         [Required]
-        [StringLength(450)]
-        public string EmployeeDoneBlacklistId { get; set; } = null!;
+        public int EmployeeDoneBlacklistId { get; set; }
     }
 
     public class AddToBlacklistRequestDto
