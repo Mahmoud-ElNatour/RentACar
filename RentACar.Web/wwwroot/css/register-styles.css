@@ -179,3 +179,14 @@ hr {
         grid-template-columns: 1fr;
     }
 }
+
+@media (max-width: 576px) {
+    .login-container {
+        padding: 30px;
+    }
+
+    .signup-btn {
+        padding: 14px;
+        font-size: 15px;
+    }
+}

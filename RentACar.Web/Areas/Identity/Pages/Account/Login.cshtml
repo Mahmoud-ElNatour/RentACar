@@ -13,19 +13,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - CarRental</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/control-panel.css" />
     <link rel="stylesheet" href="~/css/login-style.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
 </head>
 <body>
     <div class="container1">
-        <div class="login-container">
+        <div class="login-container panel-container">
             <div class="logo-text">
                 <i class="fas fa-car-side"></i>
                 <div>CarRental</div>
             </div>
 
-            <h2>Welcome Back</h2>
+            <h2 class="panel-title">Welcome Back</h2>
 
             <form id="account" method="post" autocomplete="off">
                 <div asp-validation-summary="ModelOnly" class="validation-summary-errors text-danger" role="alert"></div>

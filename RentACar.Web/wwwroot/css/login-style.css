@@ -384,3 +384,18 @@ hr {
 .login-page .navbar {
     display: none !important;
 }
+
+@media (max-width: 576px) {
+    .login-container {
+        padding: 30px;
+    }
+
+    .login-btn {
+        padding: 14px;
+        font-size: 15px;
+    }
+
+    input.form-control {
+        font-size: 14px;
+    }
+}
