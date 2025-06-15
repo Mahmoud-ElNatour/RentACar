@@ -6,15 +6,15 @@ using RentACar.Core.Entities;
 using RentACar.Core.Repositories;
 using AspNetUser = RentACar.Core.Entities.AspNetUser;
 
-namespace RentACar.Core.Managers
+namespace RentACar.Application.Managers
 {
     public class CarManager
     {
         private readonly ICarRepository _carRepository;
         private readonly IMapper _mapper;
-        private readonly UserManager<AspNetUser> _userManager; // Inject UserManager for role checking
+        private readonly UserManager<IdentityUser> _userManager; // Inject UserManager for role checking
 
-        public CarManager(ICarRepository carRepository, IMapper mapper, UserManager<AspNetUser> userManager)
+        public CarManager(ICarRepository carRepository, IMapper mapper, UserManager<IdentityUser> userManager)
         {
             _carRepository = carRepository;
             _mapper = mapper;

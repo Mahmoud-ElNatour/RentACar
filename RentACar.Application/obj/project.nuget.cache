@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "XVAEh9T+KIk=",
+  "dgSpecHash": "6xSCzob7vYw=",
   "success": true,
-  "projectFilePath": "C:\\Users\\Mohammad\\Downloads\\RentACar-codex-convert-category-and-cars-controllers-to-rest-api\\RentACar.Application\\RentACar.Application.csproj",
+  "projectFilePath": "C:\\Users\\Mohammad\\Downloads\\checked\\RentACar-codex-implement-employee-management-in-control-panel\\RentACar.Application\\RentACar.Application.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Mohammad\\.nuget\\packages\\automapper\\14.0.0\\automapper.14.0.0.nupkg.sha512",
     "C:\\Users\\Mohammad\\.nuget\\packages\\microsoft.aspnetcore.cryptography.internal\\8.0.15\\microsoft.aspnetcore.cryptography.internal.8.0.15.nupkg.sha512",
