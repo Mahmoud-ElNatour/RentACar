@@ -7,15 +7,15 @@ using RentACar.Core.Entities;
 using RentACar.Core.Repositories;
 using AspNetUser = RentACar.Application.DTOs.AspNetUser;
 
-namespace RentACar.Core.Managers
+namespace RentACar.Application.Managers
 {
     public class PromocodeManager
     {
         private readonly IPromocodeRepository _promocodeRepository;
         private readonly IMapper _mapper;
-        private readonly UserManager<AspNetUser> _userManager;
+        private readonly UserManager<IdentityUser> _userManager;
 
-        public PromocodeManager(IPromocodeRepository promocodeRepository, IMapper mapper, UserManager<AspNetUser> userManager)
+        public PromocodeManager(IPromocodeRepository promocodeRepository, IMapper mapper, UserManager<IdentityUser> userManager)
         {
             _promocodeRepository = promocodeRepository;
             _mapper = mapper;
