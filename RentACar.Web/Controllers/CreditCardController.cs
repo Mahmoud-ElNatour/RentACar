@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using RentACar.Application.DTOs;
 using RentACar.Application.Managers;
 using System.Linq;
+using Microsoft.Extensions.Logging;
 
 namespace RentACar.Web.Controllers
 {
@@ -14,11 +15,13 @@ namespace RentACar.Web.Controllers
     {
         private readonly CreditCardManager _creditCardManager;
         private readonly UserManager<IdentityUser> _userManager;
+        private readonly ILogger<CreditCardController> _logger;
 
-        public CreditCardController(CreditCardManager creditCardManager, UserManager<IdentityUser> userManager)
+        public CreditCardController(CreditCardManager creditCardManager, UserManager<IdentityUser> userManager, ILogger<CreditCardController> logger)
         {
             _creditCardManager = creditCardManager;
             _userManager = userManager;
+            _logger = logger;
         }
 
         [HttpGet("~/CreditCard")]
@@ -77,6 +80,7 @@ namespace RentACar.Web.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreditCardDisplayDto dto)
         {
+            _logger.LogInformation("Creating credit card");
             var userId = _userManager.GetUserId(User)!;
             var cardDto = new CreditCardDto
             {
@@ -94,6 +98,7 @@ namespace RentACar.Web.Controllers
         public async Task<IActionResult> Update(int id, [FromBody] CreditCardDisplayDto dto)
         {
             if (id != dto.CreditCardId) return BadRequest();
+            _logger.LogInformation("Updating credit card {Id}", id);
             var userId = _userManager.GetUserId(User)!;
             var updated = await _creditCardManager.UpdateCreditCardAsync(new CreditCardDto
             {
@@ -110,6 +115,7 @@ namespace RentACar.Web.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
+            _logger.LogInformation("Deleting credit card {Id}", id);
             var userId = _userManager.GetUserId(User)!;
             var result = await _creditCardManager.DeleteCreditCardAsync(id, userId);
             if (!result) return BadRequest(new { message = "Failed" });

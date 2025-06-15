@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RentACar.Application.DTOs;
 using RentACar.Application.Managers;
+using Microsoft.Extensions.Logging;
 
 namespace RentACar.Web.Controllers
 {
@@ -16,11 +17,13 @@ namespace RentACar.Web.Controllers
     {
         private readonly CustomerManager _customerManager;
         private readonly IMapper _mapper;
+        private readonly ILogger<CustomerController> _logger;
 
-        public CustomerController(CustomerManager customerManager, IMapper mapper)
+        public CustomerController(CustomerManager customerManager, IMapper mapper, ILogger<CustomerController> logger)
         {
             _customerManager = customerManager;
             _mapper = mapper;
+            _logger = logger;
         }
 
         [HttpGet("~/Customer")]
@@ -90,6 +93,7 @@ namespace RentACar.Web.Controllers
         [HttpPost]
         public async Task<ActionResult<CustomerDTO>> Create([FromBody] CustomerCreateDTO dto)
         {
+            _logger.LogInformation("Creating customer");
             var created = await _customerManager.CreateCustomer(dto);
             if (created == null) return BadRequest();
             return CreatedAtAction(nameof(Get), new { id = created.UserId }, created);
@@ -99,6 +103,7 @@ namespace RentACar.Web.Controllers
         public async Task<IActionResult> Update(int id, [FromBody] CustomerDTO dto)
         {
             if (id != dto.UserId) return BadRequest();
+            _logger.LogInformation("Updating customer {Id}", id);
             await _customerManager.UpdateCustomer(dto);
             return NoContent();
         }
@@ -106,6 +111,7 @@ namespace RentACar.Web.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
+            _logger.LogInformation("Deleting customer {Id}", id);
             await _customerManager.DeleteCustomer(id);
             return NoContent();
         }

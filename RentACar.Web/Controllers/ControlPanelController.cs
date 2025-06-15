@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using RentACar.Web.Models;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace RentACar.Web.Controllers
 {
@@ -14,11 +15,13 @@ namespace RentACar.Web.Controllers
     {
         private readonly UserManager<IdentityUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly ILogger<ControlPanelController> _logger;
 
-        public ControlPanelController(UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager)
+        public ControlPanelController(UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager, ILogger<ControlPanelController> logger)
         {
             _userManager = userManager;
             _roleManager = roleManager;
+            _logger = logger;
         }
 
         [HttpGet("~/ControlPanel")]
@@ -41,6 +44,7 @@ namespace RentACar.Web.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> ChangeRole([FromBody] ChangeRoleViewModel model)
         {
+            _logger.LogInformation("Changing role for {User}", model.UserName);
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);

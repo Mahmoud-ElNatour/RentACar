@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using RentACar.Application.DTOs;
 using RentACar.Application.Managers;
 using RentACar.Core.Repositories;
+using Microsoft.Extensions.Logging;
 
 namespace RentACar.Web.Controllers
 {
@@ -19,11 +20,13 @@ namespace RentACar.Web.Controllers
     {
         private readonly CarManager _carManager;
         private readonly CategoryManager _categoryManager;
+        private readonly ILogger<CarController> _logger;
 
-            public CarController(CarManager carManager, CategoryManager categoryManager)
+            public CarController(CarManager carManager, CategoryManager categoryManager, ILogger<CarController> logger)
             {
                 _carManager = carManager;
                 _categoryManager = categoryManager;
+                _logger = logger;
             }
 
         [HttpGet("~/Car")]
@@ -82,6 +85,7 @@ namespace RentACar.Web.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult<CarDto>> Create([FromBody] CarDto dto)
         {
+            _logger.LogInformation("Creating car");
             var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             if (userId == null) return Unauthorized();
 
@@ -96,6 +100,7 @@ namespace RentACar.Web.Controllers
         public async Task<IActionResult> Update(int id, [FromBody] CarDto dto)
         {
             if (id != dto.CarId) return BadRequest();
+            _logger.LogInformation("Updating car {Id}", id);
             await _carManager.UpdateCarAsync(dto);
             return NoContent();
         }
@@ -104,6 +109,7 @@ namespace RentACar.Web.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)
         {
+            _logger.LogInformation("Deleting car {Id}", id);
             await _carManager.DeleteCarAsync(id);
             return NoContent();
         }

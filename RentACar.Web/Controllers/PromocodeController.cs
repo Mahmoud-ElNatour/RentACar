@@ -5,6 +5,7 @@ using RentACar.Application.DTOs;
 using RentACar.Application.Managers;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace RentACar.Web.Controllers
 {
@@ -15,11 +16,13 @@ namespace RentACar.Web.Controllers
     {
         private readonly PromocodeManager _promocodeManager;
         private readonly UserManager<IdentityUser> _userManager;
+        private readonly ILogger<PromocodeController> _logger;
 
-        public PromocodeController(PromocodeManager promocodeManager, UserManager<IdentityUser> userManager)
+        public PromocodeController(PromocodeManager promocodeManager, UserManager<IdentityUser> userManager, ILogger<PromocodeController> logger)
         {
             _promocodeManager = promocodeManager;
             _userManager = userManager;
+            _logger = logger;
         }
 
         [HttpGet("~/Promocode")]
@@ -77,6 +80,7 @@ namespace RentACar.Web.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult<PromocodeDto>> Create([FromBody] PromocodeDto dto)
         {
+            _logger.LogInformation("Creating promocode");
             var userId = _userManager.GetUserId(User) ?? string.Empty;
             var created = await _promocodeManager.AddPromocodeAsync(dto, userId);
             if (created == null) return BadRequest();
@@ -88,6 +92,7 @@ namespace RentACar.Web.Controllers
         public async Task<IActionResult> Update(int id, [FromBody] PromocodeDto dto)
         {
             if (id != dto.PromocodeId) return BadRequest();
+            _logger.LogInformation("Updating promocode {Id}", id);
             var userId = _userManager.GetUserId(User) ?? string.Empty;
             var updated = await _promocodeManager.UpdatePromocodeAsync(dto, userId);
             if (updated == null) return NotFound();
@@ -98,6 +103,7 @@ namespace RentACar.Web.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)
         {
+            _logger.LogInformation("Deleting promocode {Id}", id);
             var userId = _userManager.GetUserId(User) ?? string.Empty;
             var success = await _promocodeManager.DeletePromocodeAsync(id, userId);
             if (!success) return NotFound();

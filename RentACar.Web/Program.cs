@@ -10,7 +10,16 @@ using AutoMapper;
 using RentACar.Infrastructure.Data.Repositories;
 using RentACar.Core.Managers;
 using RentACar.Application.Managers;
+using Serilog;
+
 var builder = WebApplication.CreateBuilder(args);
+
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .Enrich.FromLogContext()
+    .CreateLogger();
+
+builder.Host.UseSerilog();
 
 // Add services to the container.
 
@@ -91,6 +100,8 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+
+app.UseSerilogRequestLogging();
 
 app.UseAuthorization();
 

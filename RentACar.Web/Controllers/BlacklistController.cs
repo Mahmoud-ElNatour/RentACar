@@ -5,6 +5,7 @@ using RentACar.Application.DTOs;
 using RentACar.Application.Managers;
 using RentACar.Core.Repositories;
 using System.Security.Claims;
+using Microsoft.Extensions.Logging;
 
 namespace RentACar.Web.Controllers
 {
@@ -16,12 +17,14 @@ namespace RentACar.Web.Controllers
         private readonly BlacklistManager _blacklistManager;
         private readonly IEmployeeRepository _employeeRepository;
         private readonly UserManager<IdentityUser> _userManager;
+        private readonly ILogger<BlacklistController> _logger;
 
-        public BlacklistController(BlacklistManager blacklistManager, IEmployeeRepository employeeRepository, UserManager<IdentityUser> userManager)
+        public BlacklistController(BlacklistManager blacklistManager, IEmployeeRepository employeeRepository, UserManager<IdentityUser> userManager, ILogger<BlacklistController> logger)
         {
             _blacklistManager = blacklistManager;
             _employeeRepository = employeeRepository;
             _userManager = userManager;
+            _logger = logger;
         }
 
         [HttpGet("~/Blacklist")]
@@ -74,6 +77,7 @@ namespace RentACar.Web.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] AddToBlacklistRequestDto dto)
         {
+            _logger.LogInformation("Creating blacklist entry for {Identifier}", dto.Identifier);
             var emp = await GetLoggedEmployee();
             if (emp == null) return Unauthorized();
             var result = await _blacklistManager.AddToBlacklistAsync(dto, emp);
@@ -93,6 +97,7 @@ namespace RentACar.Web.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
+            _logger.LogInformation("Deleting blacklist entry {Id}", id);
             var emp = await GetLoggedEmployee();
             if (emp == null) return Unauthorized();
             var result = await _blacklistManager.RemoveByIdAsync(id, emp);
