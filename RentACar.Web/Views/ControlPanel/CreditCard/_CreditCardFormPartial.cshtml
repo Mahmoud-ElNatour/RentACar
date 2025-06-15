@@ -10,8 +10,8 @@
                 <form id="cardForm">
                     <input type="hidden" asp-for="CreditCardId" />
                     <div class="mb-3">
-                        <label class="form-label">Customer Id</label>
-                        <input type="number" name="CustomerId" class="form-control" value="@Model.CustomerId" />
+                        <label class="form-label">Customer Email</label>
+                        <input type="email" name="CustomerEmail" class="form-control" value="@Model.CustomerEmail" />
                     </div>
                     <div class="credit-card-preview p-3 rounded mb-3">
                         <div class="mb-2">
@@ -42,7 +42,7 @@
             cardHolderName: form.CardHolderName.value,
             expiryDate: form.ExpiryDate.value,
             cvv: form.Cvv.value,
-            customerId: parseInt(form.CustomerId.value || '0')
+            customerEmail: form.CustomerEmail.value
         };
         const url = data.creditCardId ? '/api/CreditCard/' + data.creditCardId : '/api/CreditCard';
         const method = data.creditCardId ? 'PUT' : 'POST';
