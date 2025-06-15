@@ -11,11 +11,12 @@ using RentACar.Infrastructure.Data.Repository.Base;
 
 namespace RentACar.Infrastructure.Data.Repository
 {
-    class BlacklistRepository : Repository<BlackList>, IBlacklistRepository
+    public class BlacklistRepository : Repository<BlackList>, IBlacklistRepository
     {
         private RentACarDbContext _dbContext;
         public BlacklistRepository(RentACarDbContext dbContext) : base(dbContext)
         {
+            _dbContext = dbContext;
 
         }
 
@@ -23,5 +24,6 @@ namespace RentACar.Infrastructure.Data.Repository
         {
             return await _dbContext.BlackLists.FirstOrDefaultAsync(bl => bl.UserId == userId);
         }
+
     }
 }

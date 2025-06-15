@@ -59,3 +59,15 @@ C:\Users\Mohammad\Downloads\RentACar-codex-implement-customer-management-in-cont
 C:\Users\Mohammad\Downloads\RentACar-codex-implement-customer-management-in-control-panel\RentACar.Core\obj\Debug\net8.0\refint\RentACar.Core.dll
 C:\Users\Mohammad\Downloads\RentACar-codex-implement-customer-management-in-control-panel\RentACar.Core\obj\Debug\net8.0\RentACar.Core.pdb
 C:\Users\Mohammad\Downloads\RentACar-codex-implement-customer-management-in-control-panel\RentACar.Core\obj\Debug\net8.0\ref\RentACar.Core.dll
+C:\Users\Mohammad\Downloads\RentACar-codex-implement-blacklist-page-with-actions-and-design\RentACar.Core\bin\Debug\net8.0\RentACar.Core.deps.json
+C:\Users\Mohammad\Downloads\RentACar-codex-implement-blacklist-page-with-actions-and-design\RentACar.Core\bin\Debug\net8.0\RentACar.Core.dll
+C:\Users\Mohammad\Downloads\RentACar-codex-implement-blacklist-page-with-actions-and-design\RentACar.Core\bin\Debug\net8.0\RentACar.Core.pdb
+C:\Users\Mohammad\Downloads\RentACar-codex-implement-blacklist-page-with-actions-and-design\RentACar.Core\obj\Debug\net8.0\RentACar.Core.csproj.AssemblyReference.cache
+C:\Users\Mohammad\Downloads\RentACar-codex-implement-blacklist-page-with-actions-and-design\RentACar.Core\obj\Debug\net8.0\RentACar.Core.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Mohammad\Downloads\RentACar-codex-implement-blacklist-page-with-actions-and-design\RentACar.Core\obj\Debug\net8.0\RentACar.Core.AssemblyInfoInputs.cache
+C:\Users\Mohammad\Downloads\RentACar-codex-implement-blacklist-page-with-actions-and-design\RentACar.Core\obj\Debug\net8.0\RentACar.Core.AssemblyInfo.cs
+C:\Users\Mohammad\Downloads\RentACar-codex-implement-blacklist-page-with-actions-and-design\RentACar.Core\obj\Debug\net8.0\RentACar.Core.csproj.CoreCompileInputs.cache
+C:\Users\Mohammad\Downloads\RentACar-codex-implement-blacklist-page-with-actions-and-design\RentACar.Core\obj\Debug\net8.0\RentACar.Core.dll
+C:\Users\Mohammad\Downloads\RentACar-codex-implement-blacklist-page-with-actions-and-design\RentACar.Core\obj\Debug\net8.0\refint\RentACar.Core.dll
+C:\Users\Mohammad\Downloads\RentACar-codex-implement-blacklist-page-with-actions-and-design\RentACar.Core\obj\Debug\net8.0\RentACar.Core.pdb
+C:\Users\Mohammad\Downloads\RentACar-codex-implement-blacklist-page-with-actions-and-design\RentACar.Core\obj\Debug\net8.0\ref\RentACar.Core.dll

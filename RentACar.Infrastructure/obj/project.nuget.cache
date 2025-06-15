@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "4erZk+MQu7w=",
+  "dgSpecHash": "Ua/TryT2fJo=",
   "success": true,
-  "projectFilePath": "C:\\Users\\Mohammad\\Downloads\\RentACar-codex-implement-customer-management-in-control-panel\\RentACar.Infrastructure\\RentACar.Infrastructure.csproj",
+  "projectFilePath": "C:\\Users\\Mohammad\\Downloads\\RentACar-codex-implement-blacklist-page-with-actions-and-design\\RentACar.Infrastructure\\RentACar.Infrastructure.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Mohammad\\.nuget\\packages\\azure.core\\1.38.0\\azure.core.1.38.0.nupkg.sha512",
     "C:\\Users\\Mohammad\\.nuget\\packages\\azure.identity\\1.11.4\\azure.identity.1.11.4.nupkg.sha512",
