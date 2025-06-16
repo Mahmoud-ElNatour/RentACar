@@ -31,6 +31,13 @@
         <input asp-for="PricePerDay" class="form-control" />
     </div>
     <div class="mb-3">
+        <label class="form-label">Car Image</label>
+        <input type="file" id="CarImage" class="form-control" accept="image/*" />
+        <img id="CarImagePreview" class="img-thumbnail mt-2 preview-thumb" width="80" height="80" style="object-fit:cover;" src="@(Model.CarImage != null ? $"data:image;base64,{Convert.ToBase64String(Model.CarImage)}" : "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+VXeoAAAAASUVORK5CYII=")" />
+        <button type="button" id="RemoveImageBtn" class="btn btn-sm btn-danger mt-2">Remove Image</button>
+        <input type="hidden" id="RemoveImage" value="false" />
+    </div>
+    <div class="mb-3">
         <label class="form-label">Category</label>
         <select asp-for="CategoryId" class="form-select" asp-items="ViewBag.Categories">
             <option value="">-- Select --</option>
@@ -47,6 +54,34 @@
     </div>
 </div>
 <script>
+    const imageInput = document.getElementById('CarImage');
+    const previewImg = document.getElementById('CarImagePreview');
+    const removeBtn = document.getElementById('RemoveImageBtn');
+    const removeField = document.getElementById('RemoveImage');
+
+    removeBtn.addEventListener('click', () => {
+        imageInput.value = '';
+        previewImg.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+VXeoAAAAASUVORK5CYII=';
+        previewImg.style.display = 'block';
+        removeField.value = 'true';
+    });
+
+    imageInput.addEventListener('change', () => {
+        const file = imageInput.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = e => {
+                previewImg.src = e.target.result;
+                previewImg.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+            removeField.value = 'false';
+        } else {
+            previewImg.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+VXeoAAAAASUVORK5CYII=';
+            previewImg.style.display = 'block';
+        }
+    });
+
     document.getElementById('carForm').addEventListener('submit', async function (e) {
         e.preventDefault();
         const form = e.target;
@@ -60,6 +95,11 @@
             categoryId: parseInt(form.CategoryId.value || '0'),
             isAvailable: form.IsAvailable.checked
         };
+        if (removeField.value === 'true') {
+            data.removeImage = true;
+        } else if (imageInput.files.length > 0) {
+            data.carImage = await toBase64(imageInput.files[0]);
+        }
         const url = data.carId ? '/api/Car/' + data.carId : '/api/Car';
         const method = data.carId ? 'PUT' : 'POST';
         await fetch(url, {
@@ -71,4 +111,16 @@
         bootstrap.Modal.getInstance(modalEl).hide();
         if (window.loadCars) loadCars();
     });
+
+    async function toBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+                const base64 = reader.result.split(',')[1];
+                resolve(base64);
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    }
 </script>

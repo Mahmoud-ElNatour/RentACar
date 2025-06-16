@@ -25,6 +25,11 @@ namespace RentACar.Application.DTOs
 
         public int? CategoryId { get; set; }
 
+        public byte[]? CarImage { get; set; }
+
+        // when true, existing image will be removed during update
+        public bool RemoveImage { get; set; }
+
         // Optional: To display category name
         public string? CategoryName { get; set; }
        
