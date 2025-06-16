@@ -78,3 +78,9 @@ input.form-control, select.form-select {
     .dark-modal .btn-close {
         filter: invert(1);
     }
+
+.car-thumb {
+    width: 60px;
+    height: 40px;
+    object-fit: cover;
+}
