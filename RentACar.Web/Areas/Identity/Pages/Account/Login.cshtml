@@ -43,7 +43,7 @@
                 <div class="remember-me mb-3 d-flex justify-content-between align-items-center">
                     <div>
                         <input asp-for="Input.RememberMe" type="checkbox" id="remember" />
-                        <label asp-for="Input.RememberMe" for="remember">Keep me signed in</label>
+                        <label asp-for="Input.RememberMe" for="remember" style="color:#9ea3a9">Keep me signed in</label>
                     </div>
                     <a class="traverse" asp-page="./ForgotPassword">Forgot Password?</a>
                 </div>
@@ -55,7 +55,7 @@
                 <hr class="my-4" />
 
                 <div class="signup-prompt text-center">
-                    <span>New to CarRental?</span>
+                    <span >New to CarRental?</span>
                     <a class="traverse" asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl">Create Account</a>
                 </div>
             </form>
