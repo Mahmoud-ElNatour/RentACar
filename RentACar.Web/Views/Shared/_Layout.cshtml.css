@@ -1,48 +1,48 @@
-﻿/* Please see documentation at https://learn.microsoft.com/aspnet/core/client-side/bundling-and-minification
-for details on configuring this project to bundle and minify static web assets. */
-
-a.navbar-brand {
-  white-space: normal;
-  text-align: center;
-  word-break: break-all;
+:root {
+    --primary-dark: #0a0c0e;
+    --secondary-dark: #161819;
+    --accent-gold: #d4af37;
+    --accent-gold-hover: #e6c347;
+    --text-primary: #ffffff;
+    --text-secondary: #9ea3a9;
 }
 
-a {
-  color: #0077cc;
+.navbar-custom {
+    background-color: var(--secondary-dark);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.5);
 }
 
-.btn-primary {
-  color: #fff;
-  background-color: #1b6ec2;
-  border-color: #1861ac;
+.navbar-custom .navbar-brand {
+    color: var(--accent-gold);
+    font-weight: 600;
 }
 
-.nav-pills .nav-link.active, .nav-pills .show > .nav-link {
-  color: #fff;
-  background-color: #1b6ec2;
-  border-color: #1861ac;
+.navbar-custom .nav-link {
+    color: var(--text-primary);
+    transition: color 0.3s ease;
 }
 
-.border-top {
-  border-top: 1px solid #e5e5e5;
-}
-.border-bottom {
-  border-bottom: 1px solid #e5e5e5;
+.navbar-custom .nav-link:hover,
+.navbar-custom .nav-link:focus {
+    color: var(--accent-gold-hover);
 }
 
-.box-shadow {
-  box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .05);
+.navbar-custom .nav-link.active {
+    color: var(--accent-gold);
 }
 
-button.accept-policy {
-  font-size: 1rem;
-  line-height: inherit;
+.navbar-custom .navbar-toggler {
+    border-color: var(--accent-gold);
+}
+
+.navbar-custom .navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(212,175,55,0.7)' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
 }
 
 .footer {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  white-space: nowrap;
-  line-height: 60px;
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    white-space: nowrap;
+    line-height: 60px;
 }
