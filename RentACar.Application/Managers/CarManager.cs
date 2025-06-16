@@ -135,8 +135,9 @@ namespace RentACar.Application.Managers
             CreateMap<Car, CarDto>()
                 .ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.Category != null ? src.Category.Name : null))
                 .ReverseMap()
-                .ForMember(dest => dest.Category, opt => opt.Ignore()); // prevent circular/auto creation
-        }
+                .ForMember(dest => dest.Category, opt => opt.Ignore())
+                .ForMember(dest => dest.CarImage, opt => opt.Condition(src => src.CarImage != null)); // only map image if provided
+            }
     }
 
 }
