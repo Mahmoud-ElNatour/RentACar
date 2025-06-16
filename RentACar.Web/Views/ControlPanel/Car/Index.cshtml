@@ -55,6 +55,7 @@
             <table id="carTable" class="table table-striped table-dark align-middle">
                 <thead>
                     <tr>
+                        <th>Image</th>
                         <th>Plate #</th>
                         <th>Model</th>
                         <th>Year</th>
@@ -95,7 +96,10 @@
             tbody.innerHTML = '';
             data.forEach(car => {
                 const row = document.createElement('tr');
+                const imgSrc = car.carImage ? `data:image;base64,${car.carImage}` : 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+VXeoAAAAASUVORK5CYII=';
+                const imgCell = `<img class="car-thumb" width="80" height="80" src="${imgSrc}" />`;
                 row.innerHTML = `
+                    <td>${imgCell}</td>
                     <td>${car.plateNumber}</td>
                     <td>${car.modelName}</td>
                     <td>${car.modelYear}</td>

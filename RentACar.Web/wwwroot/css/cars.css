@@ -78,3 +78,17 @@ input.form-control, select.form-select {
     .dark-modal .btn-close {
         filter: invert(1);
     }
+
+
+/* Thumbnail displayed in the car listing table */
+.car-thumb {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+}
+
+.preview-thumb {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+}

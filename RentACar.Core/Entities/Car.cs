@@ -35,6 +35,9 @@ public partial class Car
     [Column("categoryID")]
     public int? CategoryId { get; set; }
 
+    [Column("carImage")]
+    public byte[]? CarImage { get; set; }
+
     [InverseProperty("Car")]
     public virtual ICollection<Booking> Bookings { get; set; } = new List<Booking>();
 
