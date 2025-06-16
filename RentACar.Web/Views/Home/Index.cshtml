@@ -1,18 +1,37 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+@{
+    ViewData["Title"] = "Home";
 }
+<link rel="stylesheet" href="~/css/index-styles.css" />
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<section class="hero">
+    <div class="hero-content">
+        <h1>Welcome to Rent A Car</h1>
+        <p>Book your vehicle in minutes and hit the road.</p>
+        @if (User.Identity.IsAuthenticated)
+        {
+            <a class="btn btn-dark" asp-controller="Dashboard" asp-action="Index">Go to Dashboard</a>
+        }
+        else
+        {
+            <a class="btn btn-dark" asp-area="Identity" asp-page="/Account/Login">Login</a>
+        }
+    </div>
+</section>
 
-    @if (User.Identity.IsAuthenticated)
-    {
-        <p>Your Role: @ViewBag.UserRole</p>
-    }
-    else
-    {
-        <p>You are not logged in.</p>
-    }
-
-</div>
+<section class="featured-cars">
+    <h2>Featured Cars</h2>
+    <div class="car-grid">
+        <div class="car-card">
+            <img src="https://via.placeholder.com/300x150" alt="car" />
+            <h5>Sporty</h5>
+        </div>
+        <div class="car-card">
+            <img src="https://via.placeholder.com/300x150" alt="car" />
+            <h5>SUV</h5>
+        </div>
+        <div class="car-card">
+            <img src="https://via.placeholder.com/300x150" alt="car" />
+            <h5>Economy</h5>
+        </div>
+    </div>
+</section>
