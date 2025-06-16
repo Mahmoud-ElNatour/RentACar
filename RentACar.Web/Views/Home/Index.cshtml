@@ -1,18 +1,84 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+@{
+    ViewData["Title"] = "Home";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+@section Styles {
+    <link rel="stylesheet" href="~/css/index-styles.css" asp-append-version="true" />
+}
 
-    @if (User.Identity.IsAuthenticated)
-    {
-        <p>Your Role: @ViewBag.UserRole</p>
-    }
-    else
-    {
-        <p>You are not logged in.</p>
-    }
-
+<div class="hero">
+    <div class="hero-content">
+        <h1>Drive Your Adventure</h1>
+        <p>Premium vehicles at the best prices</p>
+        <a asp-area="Identity" asp-page="/Account/Register" class="btn btn-dark btn-lg me-2">Sign Up</a>
+        <a asp-controller="Home" asp-action="Privacy" class="btn btn-outline-light btn-lg">Learn More</a>
+    </div>
 </div>
+
+<section class="about-us container my-5">
+    <h2 class="text-center mb-4">About Us</h2>
+    <p class="lead text-center">RentACar provides reliable cars for every journey. From economy to luxury, our fleet is ready to keep you moving.</p>
+</section>
+
+<section class="featured-cars container my-5">
+    <h2 class="text-center mb-4">Featured Cars</h2>
+    <div class="car-grid">
+        <div class="car-card">
+            <img src="https://source.unsplash.com/random/400x250?car" alt="Car 1">
+            <h5>Luxury & Comfort</h5>
+        </div>
+        <div class="car-card">
+            <img src="https://source.unsplash.com/random/401x251?car" alt="Car 2">
+            <h5>Sporty Performance</h5>
+        </div>
+        <div class="car-card">
+            <img src="https://source.unsplash.com/random/402x252?car" alt="Car 3">
+            <h5>Economical Ride</h5>
+        </div>
+    </div>
+</section>
+
+<section class="benefits container my-5">
+    <h2 class="text-center mb-4">Why Choose Us</h2>
+    <div class="benefits-grid">
+        <div class="benefit-item">
+            <i class="fas fa-dollar-sign fa-2x mb-3"></i>
+            <h5>Best Prices</h5>
+            <p>Competitive rates on all vehicles.</p>
+        </div>
+        <div class="benefit-item">
+            <i class="fas fa-car-side fa-2x mb-3"></i>
+            <h5>Large Fleet</h5>
+            <p>From compact to luxury cars.</p>
+        </div>
+        <div class="benefit-item">
+            <i class="fas fa-headset fa-2x mb-3"></i>
+            <h5>24/7 Support</h5>
+            <p>We're here whenever you need us.</p>
+        </div>
+    </div>
+</section>
+
+<section class="reviews container my-5">
+    <h2 class="text-center mb-4">Customer Reviews</h2>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="review-box">
+                <p class="mb-2">"Amazing service and cars!"</p>
+                <span>- Alex</span>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="review-box">
+                <p class="mb-2">"Smooth booking process, highly recommend."</p>
+                <span>- Jamie</span>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="review-box">
+                <p class="mb-2">"Great prices and friendly staff."</p>
+                <span>- Taylor</span>
+            </div>
+        </div>
+    </div>
+</section>

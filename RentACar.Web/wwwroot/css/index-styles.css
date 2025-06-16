@@ -1,4 +1,8 @@
-﻿body {
+:root {
+    --border-radius: 12px;
+}
+
+body {
     background: var(--primary-dark);
     color: var(--text-primary);
     font-family: 'Poppins', sans-serif;
@@ -44,11 +48,11 @@
     text-align: center;
 }
 
-    .car-card img {
-        width: 100%;
-        border-radius: var(--border-radius);
-        margin-bottom: 10px;
-    }
+.car-card img {
+    width: 100%;
+    border-radius: var(--border-radius);
+    margin-bottom: 10px;
+}
 
 .benefits {
     padding: 60px 20px;
@@ -67,6 +71,13 @@
     border-radius: var(--border-radius);
     width: 250px;
     text-align: center;
+}
+
+.reviews .review-box {
+    background: var(--secondary-dark);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    margin-bottom: 20px;
 }
 
 .footer {
