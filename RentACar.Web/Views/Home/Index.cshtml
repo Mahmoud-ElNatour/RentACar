@@ -1,84 +1,146 @@
-@{
+﻿@{
     ViewData["Title"] = "Home";
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-@section Styles {
-    <link rel="stylesheet" href="~/css/index-styles.css" asp-append-version="true" />
-}
+<style>
+    body {
+        font-family: 'Poppins', sans-serif;
+        background-color: #141414;
+        color: #f5f5f5;
+    }
 
-<div class="hero">
-    <div class="hero-content">
-        <h1>Drive Your Adventure</h1>
-        <p>Premium vehicles at the best prices</p>
-        <a asp-area="Identity" asp-page="/Account/Register" class="btn btn-dark btn-lg me-2">Sign Up</a>
-        <a asp-controller="Home" asp-action="Privacy" class="btn btn-outline-light btn-lg">Learn More</a>
+    header.hero {
+        background: linear-gradient(to right, #0d0d0dcc, #1f1f1fcc), url('https://imageio.forbes.com/specials-images/imageserve/5d35eacaf1176b0008974b54/0x0.jpg?format=jpg&crop=4560,2565,x790,y784,safe&height=900&width=1600&fit=bounds') center/cover;
+        color: white;
+        padding: 100px 0;
+        text-align: center;
+    }
+
+    section {
+        padding: 60px 20px;
+    }
+
+    .section-title {
+        font-size: 2.5rem;
+        color: #ffcc00;
+        margin-bottom: 30px;
+    }
+
+    .highlight-box {
+        background: #1e1e1e;
+        border-radius: 15px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        padding: 30px;
+        text-align: center;
+    }
+
+        .highlight-box i {
+            font-size: 3rem;
+            color: #ffcc00;
+        }
+
+    .testimonial {
+        background-color: #2c2c2c;
+        border-left: 5px solid #ffcc00;
+        margin: 15px 0;
+        padding: 20px;
+        border-radius: 8px;
+    }
+
+    .car-gallery img {
+        width: 100%;
+        height: auto;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(255, 204, 0, 0.2);
+        transition: transform 0.3s;
+    }
+
+        .car-gallery img:hover {
+            transform: scale(1.05);
+        }
+</style>
+
+<header class="hero">
+    <div class="container">
+        <h1 class="display-4 fw-bold">Rent A Car Anytime, Anywhere</h1>
+        <p class="lead">Book your vehicle with confidence and convenience.</p>
+        <a href="/Account/Login" class="btn btn-warning btn-lg mt-4">Get Started</a>
     </div>
-</div>
+</header>
 
-<section class="about-us container my-5">
-    <h2 class="text-center mb-4">About Us</h2>
-    <p class="lead text-center">RentACar provides reliable cars for every journey. From economy to luxury, our fleet is ready to keep you moving.</p>
+<section id="about">
+    <div class="container text-center">
+        <h2 class="section-title">About Us</h2>
+        <p class="lead">We are a modern car rental company offering an automated, fast, and user-friendly way to book your next vehicle. Whether online or in-person, your satisfaction is our priority.</p>
+    </div>
 </section>
 
-<section class="featured-cars container my-5">
-    <h2 class="text-center mb-4">Featured Cars</h2>
-    <div class="car-grid">
-        <div class="car-card">
-            <img src="https://source.unsplash.com/random/400x250?car" alt="Car 1">
-            <h5>Luxury & Comfort</h5>
-        </div>
-        <div class="car-card">
-            <img src="https://source.unsplash.com/random/401x251?car" alt="Car 2">
-            <h5>Sporty Performance</h5>
-        </div>
-        <div class="car-card">
-            <img src="https://source.unsplash.com/random/402x252?car" alt="Car 3">
-            <h5>Economical Ride</h5>
+<section id="why-us" class="bg-dark">
+    <div class="container">
+        <h2 class="section-title text-center">Why Choose Us?</h2>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="highlight-box">
+                    <i class="fas fa-car"></i>
+                    <h5 class="mt-3">Diverse Fleet</h5>
+                    <p>Choose from a wide selection of cars in different categories, all well-maintained and available for instant booking.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="highlight-box">
+                    <i class="fas fa-clock"></i>
+                    <h5 class="mt-3">Real-Time Availability</h5>
+                    <p>Our system ensures real-time updates, preventing overbooking and making car availability crystal clear.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="highlight-box">
+                    <i class="fas fa-lock"></i>
+                    <h5 class="mt-3">Secure & Reliable</h5>
+                    <p>Protected transactions, verified users, and a trustworthy platform for all types of customers.</p>
+                </div>
+            </div>
         </div>
     </div>
 </section>
 
-<section class="benefits container my-5">
-    <h2 class="text-center mb-4">Why Choose Us</h2>
-    <div class="benefits-grid">
-        <div class="benefit-item">
-            <i class="fas fa-dollar-sign fa-2x mb-3"></i>
-            <h5>Best Prices</h5>
-            <p>Competitive rates on all vehicles.</p>
+<section id="reviews">
+    <div class="container">
+        <h2 class="section-title text-center">Customer Reviews</h2>
+        <div class="testimonial">
+            <strong>Ali from Beirut:</strong> “Fast service and friendly staff. Booking online was a breeze!”
         </div>
-        <div class="benefit-item">
-            <i class="fas fa-car-side fa-2x mb-3"></i>
-            <h5>Large Fleet</h5>
-            <p>From compact to luxury cars.</p>
+        <div class="testimonial">
+            <strong>Sara from Tripoli:</strong> “The interface is smooth and I love how I can filter cars easily.”
         </div>
-        <div class="benefit-item">
-            <i class="fas fa-headset fa-2x mb-3"></i>
-            <h5>24/7 Support</h5>
-            <p>We're here whenever you need us.</p>
+        <div class="testimonial">
+            <strong>Khaled from Sidon:</strong> “No more double bookings, finally a system that works!”
         </div>
     </div>
 </section>
 
-<section class="reviews container my-5">
-    <h2 class="text-center mb-4">Customer Reviews</h2>
-    <div class="row">
-        <div class="col-md-4">
-            <div class="review-box">
-                <p class="mb-2">"Amazing service and cars!"</p>
-                <span>- Alex</span>
+<section id="gallery" class="bg-dark">
+    <div class="container">
+        <h2 class="section-title text-center">Gallery</h2>
+        <div class="row g-3 car-gallery">
+            <div class="col-sm-6 col-md-4">
+                <img src="https://imageio.forbes.com/specials-images/imageserve/5d35eacaf1176b0008974b54/0x0.jpg?format=jpg&crop=4560,2565,x790,y784,safe&height=900&width=1600&fit=bounds" alt="Car 3" />
+            </div>
+            <div class="col-sm-6 col-md-4">
+                <img src="https://imageio.forbes.com/specials-images/imageserve/5d35eacaf1176b0008974b54/0x0.jpg?format=jpg&crop=4560,2565,x790,y784,safe&height=900&width=1600&fit=bounds" alt="Car 3" />
+            </div>
+            <div class="col-sm-6 col-md-4">
+                <img src="https://imageio.forbes.com/specials-images/imageserve/5d35eacaf1176b0008974b54/0x0.jpg?format=jpg&crop=4560,2565,x790,y784,safe&height=900&width=1600&fit=bounds" alt="Car 3" />
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="review-box">
-                <p class="mb-2">"Smooth booking process, highly recommend."</p>
-                <span>- Jamie</span>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="review-box">
-                <p class="mb-2">"Great prices and friendly staff."</p>
-                <span>- Taylor</span>
-            </div>
-        </div>
+    </div>
+</section>
+
+<section id="cta">
+    <div class="container text-center">
+        <h2 class="section-title">Ready to Rent?</h2>
+        <p>Sign up or login now to explore our full collection and get the best rates available.</p>
+        <a href="/Account/Register" class="btn btn-warning btn-lg">Register Now</a>
     </div>
 </section>
