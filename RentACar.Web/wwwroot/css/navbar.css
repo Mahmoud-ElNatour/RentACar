@@ -1,0 +1,56 @@
+:root {
+    --primary-dark: #0a0c0e;
+    --secondary-dark: #161819;
+    --accent-gold: #d4af37;
+    --accent-gold-hover: #e6c347;
+    --text-primary: #ffffff;
+    --text-secondary: #9ea3a9;
+}
+
+.navbar-custom {
+    background-color: var(--secondary-dark);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.navbar-custom .navbar-brand {
+    color: var(--accent-gold);
+    font-weight: 600;
+}
+
+.navbar-custom .nav-link,
+.navbar-custom .navbar-brand {
+    color: var(--text-primary);
+    transition: color 0.3s ease;
+}
+
+.navbar-custom .nav-link:hover,
+.navbar-custom .navbar-brand:hover {
+    color: var(--accent-gold-hover);
+}
+
+.navbar-custom .dropdown-menu {
+    background-color: var(--secondary-dark);
+    border-color: var(--accent-gold);
+}
+
+.navbar-custom .dropdown-item {
+    color: var(--text-primary);
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.navbar-custom .dropdown-item:hover {
+    background-color: var(--accent-gold);
+    color: var(--primary-dark);
+}
+
+.btn-auth {
+    background-color: var(--accent-gold);
+    border-color: var(--accent-gold);
+    color: var(--primary-dark);
+    margin-left: 10px;
+}
+
+.btn-auth:hover {
+    background-color: var(--accent-gold-hover);
+    border-color: var(--accent-gold-hover);
+}
