@@ -96,7 +96,7 @@
             tbody.innerHTML = '';
             data.forEach(car => {
                 const row = document.createElement('tr');
-                const imgCell = car.carImage ? `<img class="car-thumb" width="60" height="40" src="data:image;base64,${car.carImage}" />` : '';
+                const imgCell = car.carImage ? `<img class="car-thumb" width="80" height="80" src="data:image;base64,${car.carImage}" />` : '';
                 row.innerHTML = `
                     <td>${imgCell}</td>
                     <td>${car.plateNumber}</td>
