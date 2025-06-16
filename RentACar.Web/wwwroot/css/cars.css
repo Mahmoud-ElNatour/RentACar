@@ -85,7 +85,7 @@ input.form-control, select.form-select {
     object-fit: cover;
 }
 
-#CarImagePreview {
+.preview-thumb {
     width: 80px;
     height: 80px;
     object-fit: cover;

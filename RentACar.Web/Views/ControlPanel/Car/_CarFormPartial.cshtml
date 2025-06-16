@@ -33,7 +33,7 @@
     <div class="mb-3">
         <label class="form-label">Car Image</label>
         <input type="file" id="CarImage" class="form-control" accept="image/*" />
-        <img id="CarImagePreview" class="img-thumbnail mt-2" style="width:80px;height:80px;object-fit:cover; @(Model.CarImage == null ? "display:none;" : "")" src="@(Model.CarImage != null ? $"data:image;base64,{Convert.ToBase64String(Model.CarImage)}" : "")" />
+        <img id="CarImagePreview" class="img-thumbnail mt-2 preview-thumb" width="80" height="80" style="object-fit:cover; @(Model.CarImage == null ? "display:none;" : "")" src="@(Model.CarImage != null ? $"data:image;base64,{Convert.ToBase64String(Model.CarImage)}" : "")" />
     </div>
     <div class="mb-3">
         <label class="form-label">Category</label>
