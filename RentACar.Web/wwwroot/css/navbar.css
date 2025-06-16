@@ -10,6 +10,7 @@
 .navbar-custom {
     background-color: var(--secondary-dark);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+    font-family: 'Rubik', 'Segoe UI', Arial, sans-serif;
 }
 
 .navbar-custom .navbar-brand {
@@ -17,30 +18,46 @@
     font-weight: 600;
 }
 
+
 .navbar-custom .nav-link,
 .navbar-custom .navbar-brand {
     color: var(--text-primary);
-    transition: color 0.3s ease;
+    padding: 6px 14px;
+    border-radius: 20px;
+    transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s;
+    margin-right: 4px;
 }
 
 .navbar-custom .nav-link:hover,
 .navbar-custom .navbar-brand:hover {
-    color: var(--accent-gold-hover);
+    background-color: var(--accent-gold);
+    color: var(--primary-dark);
+    transform: translateY(-2px);
+}
+
+.navbar-custom .nav-link.active {
+    background-color: var(--accent-gold);
+    color: var(--primary-dark);
 }
 
 .navbar-custom .dropdown-menu {
     background-color: var(--secondary-dark);
     border-color: var(--accent-gold);
+    border-radius: 16px;
+    padding: 8px;
 }
 
 .navbar-custom .dropdown-item {
     color: var(--text-primary);
-    transition: background-color 0.3s, color 0.3s;
+    padding: 6px 12px;
+    border-radius: 12px;
+    transition: background-color 0.3s, color 0.3s, transform 0.2s;
 }
 
 .navbar-custom .dropdown-item:hover {
     background-color: var(--accent-gold);
     color: var(--primary-dark);
+    transform: translateX(3px);
 }
 
 .btn-auth {
@@ -48,9 +65,14 @@
     border-color: var(--accent-gold);
     color: var(--primary-dark);
     margin-left: 10px;
+    border-radius: 20px;
+    padding: 6px 16px;
+    font-weight: 500;
+    transition: background-color 0.3s, transform 0.2s;
 }
 
 .btn-auth:hover {
     background-color: var(--accent-gold-hover);
     border-color: var(--accent-gold-hover);
+    transform: translateY(-2px);
 }
