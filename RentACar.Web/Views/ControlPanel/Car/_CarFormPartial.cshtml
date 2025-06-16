@@ -32,7 +32,8 @@
     </div>
     <div class="mb-3">
         <label class="form-label">Car Image</label>
-        <input type="file" id="CarImage" class="form-control" />
+        <input type="file" id="CarImage" class="form-control" accept="image/*" />
+        <img id="CarImagePreview" class="img-fluid mt-2" style="max-height:200px; @(Model.CarImage == null ? "display:none;" : "")" src="@(Model.CarImage != null ? $"data:image;base64,{Convert.ToBase64String(Model.CarImage)}" : "")" />
     </div>
     <div class="mb-3">
         <label class="form-label">Category</label>
@@ -51,6 +52,24 @@
     </div>
 </div>
 <script>
+    const imageInput = document.getElementById('CarImage');
+    const previewImg = document.getElementById('CarImagePreview');
+
+    imageInput.addEventListener('change', () => {
+        const file = imageInput.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = e => {
+                previewImg.src = e.target.result;
+                previewImg.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        } else {
+            previewImg.src = '';
+            previewImg.style.display = 'none';
+        }
+    });
+
     document.getElementById('carForm').addEventListener('submit', async function (e) {
         e.preventDefault();
         const form = e.target;
@@ -64,7 +83,6 @@
             categoryId: parseInt(form.CategoryId.value || '0'),
             isAvailable: form.IsAvailable.checked
         };
-        const imageInput = document.getElementById('CarImage');
         if (imageInput.files.length > 0) {
             data.carImage = await toBase64(imageInput.files[0]);
         }
