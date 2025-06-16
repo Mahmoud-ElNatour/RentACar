@@ -25,6 +25,8 @@ namespace RentACar.Application.DTOs
 
         public int? CategoryId { get; set; }
 
+        public byte[]? CarImage { get; set; }
+
         // Optional: To display category name
         public string? CategoryName { get; set; }
        

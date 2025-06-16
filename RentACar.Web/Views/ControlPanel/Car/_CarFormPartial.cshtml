@@ -31,6 +31,10 @@
         <input asp-for="PricePerDay" class="form-control" />
     </div>
     <div class="mb-3">
+        <label class="form-label">Car Image</label>
+        <input type="file" id="CarImage" class="form-control" />
+    </div>
+    <div class="mb-3">
         <label class="form-label">Category</label>
         <select asp-for="CategoryId" class="form-select" asp-items="ViewBag.Categories">
             <option value="">-- Select --</option>
@@ -60,6 +64,10 @@
             categoryId: parseInt(form.CategoryId.value || '0'),
             isAvailable: form.IsAvailable.checked
         };
+        const imageInput = document.getElementById('CarImage');
+        if (imageInput.files.length > 0) {
+            data.carImage = await toBase64(imageInput.files[0]);
+        }
         const url = data.carId ? '/api/Car/' + data.carId : '/api/Car';
         const method = data.carId ? 'PUT' : 'POST';
         await fetch(url, {
@@ -71,4 +79,16 @@
         bootstrap.Modal.getInstance(modalEl).hide();
         if (window.loadCars) loadCars();
     });
+
+    async function toBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+                const base64 = reader.result.split(',')[1];
+                resolve(base64);
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    }
 </script>
