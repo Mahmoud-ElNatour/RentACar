@@ -20,14 +20,9 @@ namespace RentACar.Web.Controllers
         {
             var user = await _userManager.GetUserAsync(User);
             var roles = await _userManager.GetRolesAsync(user);
-            var role = roles.FirstOrDefault();
+            ViewBag.UserRole = roles.FirstOrDefault() ?? "Customer";
 
-            return role switch
-            {
-                "Admin" => View("Admin"),
-                "Employee" => View("Employee"),
-                _ => View("Customer")
-            };
+            return View();
         }
     }
 }

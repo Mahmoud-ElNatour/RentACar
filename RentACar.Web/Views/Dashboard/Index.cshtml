@@ -1,0 +1,129 @@
+@{
+    ViewData["Title"] = "Dashboard";
+}
+<link rel="stylesheet" href="~/css/dashboard.css" />
+<div class="dashboard container">
+    <h2 class="mb-4">@ViewBag.UserRole Dashboard</h2>
+
+    @if (User.IsInRole("Admin"))
+    {
+        <div class="row">
+            <div class="col-md-3">
+                <div class="card mb-3 text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">Total Cars</h5>
+                        <p class="card-text">--</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card mb-3 text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">Total Users</h5>
+                        <p class="card-text">--</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card mb-3 text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">Employees</h5>
+                        <p class="card-text">--</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card mb-3 text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">Most Rented Car</h5>
+                        <p class="card-text">--</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="mt-3">
+            <a class="btn btn-gold me-2" asp-controller="Car" asp-action="Index">Manage Cars</a>
+            <a class="btn btn-gold me-2" asp-controller="ControlPanel" asp-action="Index">Manage Users</a>
+            <a class="btn btn-gold me-2" href="#">Generate Reports</a>
+            <a class="btn btn-gold" href="#">Manage Discounts</a>
+        </div>
+    }
+    else if (User.IsInRole("Employee"))
+    {
+        <div class="row">
+            <div class="col-md-3">
+                <div class="card mb-3 text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">Bookings Today</h5>
+                        <p class="card-text">--</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card mb-3 text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">Overdue Returns</h5>
+                        <p class="card-text">--</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card mb-3 text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">Unverified Users</h5>
+                        <p class="card-text">--</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card mb-3 text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">Car Availability</h5>
+                        <p class="card-text">--</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="mt-3">
+            <a class="btn btn-gold me-2" href="#">Book for Customer</a>
+            <a class="btn btn-gold me-2" href="#">Verify Customer</a>
+            <a class="btn btn-gold" href="#">View Bookings</a>
+        </div>
+    }
+    else
+    {
+        <h4 class="mb-3">Welcome @User.Identity?.Name!</h4>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card mb-3 text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">Current Booking</h5>
+                        <p class="card-text">--</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card mb-3 text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">Upcoming Bookings</h5>
+                        <p class="card-text">--</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card mb-3 text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">Booking History</h5>
+                        <p class="card-text">--</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="mt-3">
+            <a class="btn btn-gold me-2" href="#">Book a Car</a>
+            <a class="btn btn-gold me-2" href="#">View Booking History</a>
+            <a class="btn btn-gold me-2" href="#">Update Profile</a>
+            <a class="btn btn-gold" href="#">Add Credit Card</a>
+        </div>
+    }
+</div>

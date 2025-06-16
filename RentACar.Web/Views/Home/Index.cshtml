@@ -2,36 +2,86 @@
     ViewData["Title"] = "Home";
 }
 <link rel="stylesheet" href="~/css/index-styles.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
 
-<section class="hero">
-    <div class="hero-content">
-        <h1>Welcome to Rent A Car</h1>
-        <p>Book your vehicle in minutes and hit the road.</p>
-        @if (User.Identity.IsAuthenticated)
-        {
-            <a class="btn btn-dark" asp-controller="Dashboard" asp-action="Index">Go to Dashboard</a>
-        }
-        else
-        {
-            <a class="btn btn-dark" asp-area="Identity" asp-page="/Account/Login">Login</a>
-        }
+<section class="hero text-center">
+    <div class="container hero-content">
+        <h1 class="display-4 mb-2">Rent A Car</h1>
+        <p class="lead mb-4">Fast, Reliable, Affordable Car Rentals</p>
+        <div class="d-flex flex-wrap justify-content-center">
+            <a class="btn btn-gold m-2" asp-controller="Car" asp-action="Index">View Cars</a>
+            <a class="btn btn-gold m-2" asp-controller="Home" asp-action="Privacy">About Us</a>
+            <a class="btn btn-outline-light m-2" asp-area="Identity" asp-page="/Account/Login">Login</a>
+            <a class="btn btn-outline-light m-2" asp-area="Identity" asp-page="/Account/Register">Sign Up</a>
+        </div>
     </div>
 </section>
 
-<section class="featured-cars">
-    <h2>Featured Cars</h2>
-    <div class="car-grid">
-        <div class="car-card">
-            <img src="https://via.placeholder.com/300x150" alt="car" />
-            <h5>Sporty</h5>
+<section class="carousel-section py-5">
+    <div id="carCarousel" class="carousel slide" data-bs-ride="carousel">
+        <div class="carousel-inner">
+            <div class="carousel-item active">
+                <img src="https://via.placeholder.com/800x300" class="d-block w-100" alt="Car 1">
+                <div class="carousel-caption d-none d-md-block">
+                    <h5>Sport Coupe</h5>
+                    <p>$70 / day</p>
+                </div>
+            </div>
+            <div class="carousel-item">
+                <img src="https://via.placeholder.com/800x300" class="d-block w-100" alt="Car 2">
+                <div class="carousel-caption d-none d-md-block">
+                    <h5>Family SUV</h5>
+                    <p>$80 / day</p>
+                </div>
+            </div>
+            <div class="carousel-item">
+                <img src="https://via.placeholder.com/800x300" class="d-block w-100" alt="Car 3">
+                <div class="carousel-caption d-none d-md-block">
+                    <h5>Economy Hatch</h5>
+                    <p>$40 / day</p>
+                </div>
+            </div>
         </div>
-        <div class="car-card">
-            <img src="https://via.placeholder.com/300x150" alt="car" />
-            <h5>SUV</h5>
-        </div>
-        <div class="car-card">
-            <img src="https://via.placeholder.com/300x150" alt="car" />
-            <h5>Economy</h5>
+        <button class="carousel-control-prev" type="button" data-bs-target="#carCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Previous</span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#carCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Next</span>
+        </button>
+    </div>
+</section>
+
+<section class="benefits text-center">
+    <div class="container">
+        <div class="benefits-grid">
+            <div class="benefit-item">
+                <i class="fas fa-headset fa-2x mb-2"></i>
+                <h5>24/7 Support</h5>
+                <p>Always here to help.</p>
+            </div>
+            <div class="benefit-item">
+                <i class="fas fa-shield-alt fa-2x mb-2"></i>
+                <h5>Insurance Included</h5>
+                <p>Drive with peace of mind.</p>
+            </div>
+            <div class="benefit-item">
+                <i class="fas fa-mobile-alt fa-2x mb-2"></i>
+                <h5>Online Booking</h5>
+                <p>Reserve your car in minutes.</p>
+            </div>
         </div>
     </div>
 </section>
+
+<footer class="footer">
+    <div class="container text-center">
+        <p>Contact us: info@rentacar.com | +1 234 567 890</p>
+        <div>
+            <a href="#" class="text-light me-2"><i class="fab fa-facebook"></i></a>
+            <a href="#" class="text-light me-2"><i class="fab fa-instagram"></i></a>
+            <a href="#" class="text-light"><i class="fab fa-twitter"></i></a>
+        </div>
+    </div>
+</footer>
