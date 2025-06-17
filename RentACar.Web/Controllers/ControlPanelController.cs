@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using RentACar.Web.Models;
+using RentACar.Application.DTOs;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
@@ -42,7 +42,7 @@ namespace RentACar.Web.Controllers
 
         [HttpPost("ChangeRole")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> ChangeRole([FromBody] ChangeRoleViewModel model)
+        public async Task<IActionResult> ChangeRole([FromBody] ChangeRoleDTO model)
         {
             _logger.LogInformation("Changing role for {User}", model.UserName);
             if (!ModelState.IsValid)
