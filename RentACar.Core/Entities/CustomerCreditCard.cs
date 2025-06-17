@@ -1,22 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
 
 namespace RentACar.Core.Entities;
 
 [Table("CustomerCreditCard")]
-public partial class CustomerCreditCard
+public class CustomerCreditCard
 {
     [Key]
-    public int CustomerCreditCardId { get; set; }
+    [Column("userId", Order = 0)]
+    public int UserId { get; set; }
 
-    [Column("userId")]
-   
-    public int UserId { get; set; } = 0!;
-
-    [Column("creditCardId")]
+    [Key]
+    [Column("creditCardId", Order = 1)]
     public int CreditCardId { get; set; }
 
     [ForeignKey("CreditCardId")]
