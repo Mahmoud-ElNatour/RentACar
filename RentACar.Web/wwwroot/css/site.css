@@ -20,3 +20,64 @@ html {
 body {
   margin-bottom: 60px;
 }
+
+:root {
+    --primary-dark: #0a0c0e;
+    --secondary-dark: #161819;
+    --accent-gold: #d4af37;
+    --accent-gold-hover: #e6c347;
+    --text-primary: #ffffff;
+    --text-secondary: #9ea3a9;
+    --border-radius: 12px;
+}
+
+.navbar-custom {
+    background: var(--secondary-dark);
+}
+
+.navbar-custom .navbar-brand {
+    color: var(--accent-gold);
+    font-weight: 600;
+}
+
+.navbar-custom .nav-link {
+    color: var(--text-primary);
+    position: relative;
+    transition: color 0.3s ease;
+}
+
+.navbar-custom .nav-link::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    width: 0;
+    height: 2px;
+    background: var(--accent-gold);
+    transition: width 0.3s ease, left 0.3s ease;
+}
+
+.navbar-custom .nav-link:hover {
+    color: var(--accent-gold);
+}
+
+.navbar-custom .nav-link:hover::after {
+    width: 100%;
+    left: 0;
+}
+
+.footer-custom {
+    background: var(--secondary-dark);
+    color: var(--text-secondary);
+    text-align: center;
+    padding: 20px 0;
+}
+
+.footer-custom a {
+    color: var(--accent-gold);
+    transition: color 0.3s;
+}
+
+.footer-custom a:hover {
+    color: var(--accent-gold-hover);
+}

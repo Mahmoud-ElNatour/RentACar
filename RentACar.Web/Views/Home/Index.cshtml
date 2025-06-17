@@ -1,18 +1,41 @@
-﻿@{
+@{
     ViewData["Title"] = "Home Page";
 }
+<link rel="stylesheet" href="~/css/index-styles.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<section class="hero">
+    <div class="hero-content">
+        <h1>Drive Your Dream Car</h1>
+        <p>Easy online booking and premium service.</p>
+        <a asp-area="" asp-controller="Home" asp-action="Privacy" class="btn btn-primary hero-btn">Learn More</a>
+        <a asp-area="Identity" asp-page="/Account/Register" class="btn btn-outline-light hero-btn">Get Started</a>
+    </div>
+</section>
 
-    @if (User.Identity.IsAuthenticated)
-    {
-        <p>Your Role: @ViewBag.UserRole</p>
-    }
-    else
-    {
-        <p>You are not logged in.</p>
-    }
+<section class="featured-cars">
+    <h2>Popular Choices</h2>
+    <div class="car-grid">
+        <div class="car-card">
+            <i class="fas fa-car-side fa-3x mb-3"></i>
+            <h5>Luxury SUV</h5>
+        </div>
+        <div class="car-card">
+            <i class="fas fa-car fa-3x mb-3"></i>
+            <h5>City Compact</h5>
+        </div>
+        <div class="car-card">
+            <i class="fas fa-truck-pickup fa-3x mb-3"></i>
+            <h5>Pickup Truck</h5>
+        </div>
+    </div>
+</section>
 
-</div>
+@if (User.Identity.IsAuthenticated)
+{
+    <div class="text-center text-light mt-4">Your Role: @ViewBag.UserRole</div>
+}
+else
+{
+    <div class="text-center text-light mt-4">You are not logged in.</div>
+}

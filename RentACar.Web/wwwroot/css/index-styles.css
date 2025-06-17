@@ -1,4 +1,14 @@
-﻿body {
+:root {
+    --primary-dark: #0a0c0e;
+    --secondary-dark: #161819;
+    --accent-gold: #d4af37;
+    --accent-gold-hover: #e6c347;
+    --text-primary: #ffffff;
+    --text-secondary: #9ea3a9;
+    --border-radius: 12px;
+}
+
+body {
     background: var(--primary-dark);
     color: var(--text-primary);
     font-family: 'Poppins', sans-serif;
@@ -9,6 +19,12 @@
     color: var(--primary-dark);
     text-align: center;
     padding: 100px 20px;
+    animation: fadeIn 1s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 .hero-content h1 {
@@ -21,8 +37,16 @@
     margin-bottom: 20px;
 }
 
-.hero-content a {
+.hero-btn {
     margin: 10px;
+    padding: 10px 30px;
+    border-radius: 30px;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.hero-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
 }
 
 .featured-cars {
@@ -42,31 +66,17 @@
     padding: 20px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.3);
     text-align: center;
+    transition: transform 0.3s;
 }
 
-    .car-card img {
-        width: 100%;
-        border-radius: var(--border-radius);
-        margin-bottom: 10px;
-    }
-
-.benefits {
-    padding: 60px 20px;
+.car-card:hover {
+    transform: translateY(-5px);
 }
 
-.benefits-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    justify-content: center;
-}
-
-.benefit-item {
-    background: var(--secondary-dark);
-    padding: 20px;
+.car-card img {
+    width: 100%;
     border-radius: var(--border-radius);
-    width: 250px;
-    text-align: center;
+    margin-bottom: 10px;
 }
 
 .footer {
