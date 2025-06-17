@@ -120,16 +120,21 @@ public partial class RentACarDbContext : DbContext
 
         modelBuilder.Entity<CustomerCreditCard>(entity =>
         {
-            entity.Property(e => e.CustomerCreditCardId).ValueGeneratedNever();
+            entity.HasKey(e => new { e.UserId, e.CreditCardId }); // Composite PK
 
-            entity.HasOne(d => d.CreditCard).WithMany(p => p.CustomerCreditCards)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_CustomerCreditCard_CreditCard");
-
-            entity.HasOne(d => d.User).WithMany(p => p.CustomerCreditCards)
+            entity.HasOne(e => e.User)
+                .WithMany(c => c.CustomerCreditCards)
+                .HasForeignKey(e => e.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_CustomerCreditCard_Customers");
+
+            entity.HasOne(e => e.CreditCard)
+                .WithMany(cc => cc.CustomerCreditCards)
+                .HasForeignKey(e => e.CreditCardId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_CustomerCreditCard_CreditCard");
         });
+
 
         modelBuilder.Entity<Payment>(entity =>
         {
