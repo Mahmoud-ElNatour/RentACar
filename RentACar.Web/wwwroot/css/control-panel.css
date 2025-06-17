@@ -1,4 +1,4 @@
-:root {
+﻿:root {
     --primary-dark: #0a0c0e;
     --secondary-dark: #161819;
     --accent-gold: #d4af37;
@@ -11,12 +11,14 @@ body {
     background: var(--primary-dark);
     min-height: 100vh;
     font-family: 'Poppins', 'Segoe UI', Arial, sans-serif;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
+/*    padding: 20px;*/
     color: var(--text-primary);
+    
+    /* display: flex;
+    align-items: center;
+    justify-content: center; */
 }
+
 
 .panel-container {
     background: var(--secondary-dark);

@@ -11,7 +11,7 @@ body {
     background: var(--primary-dark);
     color: var(--text-primary);
     font-family: 'Poppins', 'Segoe UI', Arial, sans-serif;
-    padding: 20px;
+/*    padding: 20px;*/
 }
 
 .blacklist-container {
