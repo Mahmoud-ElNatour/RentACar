@@ -16,11 +16,12 @@ body {
 
 .profile-container {
     background: var(--secondary-dark);
-    padding: 30px;
+    padding: 40px;
     border-radius: 20px;
     box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05);
     width: 100%;
-    max-width: 600px;
+    max-width: 800px;
+    min-height: 450px;
 }
 
 .profile-nav .nav-link {

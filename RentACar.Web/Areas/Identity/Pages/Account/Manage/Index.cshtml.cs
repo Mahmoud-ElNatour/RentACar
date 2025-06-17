@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using RentACar.Application.Managers;
+using RentACar.Application.DTOs;
 
 namespace RentACar.Web.Areas.Identity.Pages.Account.Manage
 {
@@ -18,15 +19,18 @@ namespace RentACar.Web.Areas.Identity.Pages.Account.Manage
         private readonly UserManager<IdentityUser> _userManager;
         private readonly SignInManager<IdentityUser> _signInManager;
         private readonly CustomerManager _customerManager;
+        private readonly EmployeeManager _employeeManager;
 
         public IndexModel(
             UserManager<IdentityUser> userManager,
             SignInManager<IdentityUser> signInManager,
-            CustomerManager customerManager)
+            CustomerManager customerManager,
+            EmployeeManager employeeManager)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _customerManager = customerManager;
+            _employeeManager = employeeManager;
         }
 
         /// <summary>
@@ -77,14 +81,24 @@ namespace RentACar.Web.Areas.Identity.Pages.Account.Manage
             var phoneNumber = await _userManager.GetPhoneNumberAsync(user);
             var email = await _userManager.GetEmailAsync(user);
 
-            var customer = await _customerManager.GetCustomerByUsername(userName);
+            CustomerDTO? customer = null;
+            EmployeeDto? employee = null;
+
+            if (await _userManager.IsInRoleAsync(user, "Customer"))
+            {
+                customer = await _customerManager.GetCustomerByUsername(userName);
+            }
+            else if (await _userManager.IsInRoleAsync(user, "Employee") || await _userManager.IsInRoleAsync(user, "Admin"))
+            {
+                employee = await _employeeManager.GetEmployeeByUsername(userName);
+            }
 
             Username = userName;
 
             Input = new InputModel
             {
-                Name = customer?.Name,
-                Address = customer?.Address,
+                Name = customer?.Name ?? employee?.Name,
+                Address = customer?.Address ?? employee?.Address,
                 Email = email,
                 PhoneNumber = phoneNumber
             };
@@ -110,7 +124,17 @@ namespace RentACar.Web.Areas.Identity.Pages.Account.Manage
                 return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
             }
 
-            var customer = await _customerManager.GetCustomerByUsername(user.UserName);
+            CustomerDTO? customer = null;
+            EmployeeDto? employee = null;
+
+            if (await _userManager.IsInRoleAsync(user, "Customer"))
+            {
+                customer = await _customerManager.GetCustomerByUsername(user.UserName);
+            }
+            else if (await _userManager.IsInRoleAsync(user, "Employee") || await _userManager.IsInRoleAsync(user, "Admin"))
+            {
+                employee = await _employeeManager.GetEmployeeByUsername(user.UserName);
+            }
 
             if (!ModelState.IsValid)
             {
@@ -145,6 +169,13 @@ namespace RentACar.Web.Areas.Identity.Pages.Account.Manage
                     await _customerManager.UpdateCustomerName(customer.UserId, Input.Name);
                 if (Input.Address != customer.Address)
                     await _customerManager.UpdateCustomerAddress(customer.UserId, Input.Address);
+            }
+            else if (employee != null)
+            {
+                if (Input.Name != employee.Name)
+                    await _employeeManager.UpdateEmployeeName(employee.EmployeeId.ToString(), Input.Name);
+                if (Input.Address != employee.Address)
+                    await _employeeManager.UpdateEmployeeAddress(employee.EmployeeId.ToString(), Input.Address);
             }
 
             await _signInManager.RefreshSignInAsync(user);
