@@ -1,0 +1,95 @@
+@model RentACar.Application.DTOs.AdminDashboardViewModel
+@{
+    ViewData["Title"] = "Admin Dashboard";
+    Layout = "_Layout";
+}
+<link rel="stylesheet" href="~/css/dashboard.css" />
+<div class="container dashboard-container">
+    <h2 class="text-center mb-4">Admin Dashboard</h2>
+    <div class="row g-3 mb-4">
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-box">
+                <h3>@Model.TotalCars</h3>
+                <span>Total Cars</span>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-box">
+                <h3>@Model.AvailableCars</h3>
+                <span>Available Cars</span>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-box">
+                <h3>@Model.TotalCustomers</h3>
+                <span>Customers</span>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-box">
+                <h3>@Model.TotalEmployees</h3>
+                <span>Employees</span>
+            </div>
+        </div>
+    </div>
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <div class="stat-box">
+                <h3>@Model.TotalBookings</h3>
+                <span>Total Bookings</span>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="chart-container">
+                <canvas id="bookingChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="row g-3 mb-4">
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-box">
+                <h3>@Model.IncomeThisMonth.ToString("C")</h3>
+                <span>Income This Month</span>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-box">
+                <h3>@Model.IncomeThisYear.ToString("C")</h3>
+                <span>Income This Year</span>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-box">
+                <h3>@Model.SalariesToPay.ToString("C")</h3>
+                <span>Salaries</span>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-box">
+                <h3>@Model.ExpectedRevenue.ToString("C")</h3>
+                <span>Expected Revenue</span>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts{
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const monthData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.MonthlyBookings));
+        const ctx = document.getElementById('bookingChart');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+                datasets: [{
+                    label: 'Bookings',
+                    data: monthData,
+                    borderColor: '#d4af37',
+                    backgroundColor: 'rgba(212,175,55,0.3)',
+                    fill: true
+                }]
+            },
+            options: { scales: { y: { beginAtZero: true } } }
+        });
+    </script>
+}

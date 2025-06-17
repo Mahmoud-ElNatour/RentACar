@@ -28,6 +28,12 @@
                         <li class="nav-item">
                             <a class="nav-link text-light" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
+                        @if (SignInManager.IsSignedIn(User))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-light" asp-controller="Dashboard" asp-action="Index">Dashboard</a>
+                            </li>
+                        }
                         @if (User.IsInRole("Admin") || User.IsInRole("Employee"))
                         {
                             <li class="nav-item">
@@ -40,7 +46,7 @@
                         @if (User.IsInRole("Customer"))
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-light" asp-controller="Cars" asp-action="Available">Browse Cars</a>
+                                <a class="nav-link text-light" asp-controller="Browse" asp-action="Index">Browse Cars</a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link text-light" asp-controller="Bookings" asp-action="MyBookings">My Bookings</a>

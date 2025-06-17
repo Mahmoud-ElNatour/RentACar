@@ -1,4 +1,4 @@
-@{
+﻿@{
     ViewData["Title"] = "Manage Cars";
     Layout = null;
 }
@@ -117,16 +117,114 @@
             const html = await res.text();
             const placeholder = document.getElementById('carModalPlaceholder');
             placeholder.innerHTML = html;
-            placeholder.querySelectorAll('script').forEach(scr => {
-                const s = document.createElement('script');
-                s.textContent = scr.textContent;
-                document.body.appendChild(s);
-                document.body.removeChild(s);
-            });
+
             const modalEl = placeholder.querySelector('.modal');
             const modal = new bootstrap.Modal(modalEl);
             modal.show();
+
+            // 🚘 Add/Edit Car Form Logic
+            const form = modalEl.querySelector('#carForm');
+            const imageInput = modalEl.querySelector('#CarImage');
+            const previewImg = modalEl.querySelector('#CarImagePreview');
+
+            if (imageInput) {
+                imageInput.addEventListener('change', () => {
+                    const file = imageInput.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = e => {
+                            previewImg.src = e.target.result;
+                            previewImg.style.display = 'block';
+                        };
+                        reader.readAsDataURL(file);
+                    } else {
+                        previewImg.src = '';
+                        previewImg.style.display = 'none';
+                    }
+                });
+            }
+
+            if (form) {
+                form.addEventListener('submit', async function (e) {
+                    e.preventDefault();
+
+                    const data = {
+                        carId       : parseInt(form.querySelector('[name="CarId"]')?.value || '0'),
+                        plateNumber : form.querySelector('[name="PlateNumber"]')?.value || '',
+                        modelName   : form.querySelector('[name="ModelName"]')?.value || '',
+                        modelYear   : parseInt(form.querySelector('[name="ModelYear"]')?.value || '0'),
+                        color       : form.querySelector('[name="Color"]')?.value || '',
+                        pricePerDay : parseFloat(form.querySelector('[name="PricePerDay"]')?.value || '0'),
+                        categoryId  : parseInt(form.querySelector('[name="CategoryId"]')?.value || '0'),
+                        isAvailable : form.querySelector('[name="IsAvailable"]')?.checked ?? false
+                    };
+
+                    if (imageInput?.files.length > 0) {
+                        data.carImage = await toBase64(imageInput.files[0]);
+                    }
+
+                    const url = data.carId ? '/api/Car/' + data.carId : '/api/Car';
+                    const method = data.carId ? 'PUT' : 'POST';
+
+                    try {
+                        const response = await fetch(url, {
+                            method,
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(data)
+                        });
+
+                        if (!response.ok) {
+                            const error = await response.text();
+                            alert("Error: " + error);
+                            return;
+                        }
+
+                        modal.hide();
+                        if (window.loadCars) loadCars();
+                    } catch (err) {
+                        alert("An error occurred while saving the car.");
+                        console.error(err);
+                    }
+                });
+            }
+
+            // 🗑️ Delete Car Form Logic
+            const deleteForm = modalEl.querySelector('#deleteCarForm');
+            if (deleteForm) {
+                deleteForm.addEventListener('submit', async function (e) {
+                    e.preventDefault();
+                    const id = deleteForm.querySelector('[name="carId"]')?.value;
+                    try {
+                        const response = await fetch('/api/Car/' + id, {
+                            method: 'DELETE'
+                        });
+
+                        if (!response.ok) {
+                            const error = await response.text();
+                            alert("Delete failed: " + error);
+                            return;
+                        }
+
+                        modal.hide();
+                        if (window.loadCars) loadCars();
+                    } catch (err) {
+                        console.error(err);
+                        alert("An error occurred while deleting the car.");
+                    }
+                });
+            }
         }
+
+        async function toBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result.split(',')[1]);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+
 
         document.addEventListener('DOMContentLoaded', () => {
             loadCategories().then(loadCars);
