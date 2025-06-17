@@ -1,0 +1,69 @@
+@page
+@model RentACar.Web.Areas.Identity.Pages.Account.Manage.PaymentsModel
+@{
+    ViewData["Title"] = "Payments";
+    ViewData["ActivePage"] = ManageNavPages.Payments;
+}
+<link rel="stylesheet" href="~/css/profile.css" />
+<link rel="stylesheet" href="~/css/creditcards.css" />
+<div class="d-flex justify-content-center mt-4">
+    <div class="profile-container w-100">
+        <h2 class="text-center mb-4 text-light">My Credit Cards</h2>
+        <div class="text-end mb-3">
+            <button type="button" id="addCard" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i>Add Card
+            </button>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-dark table-striped align-middle">
+                <thead>
+                    <tr><th>Number</th><th>Holder</th><th>Expiry</th><th></th></tr>
+                </thead>
+                <tbody id="cardRows"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<div id="cardModalPlaceholder"></div>
+
+@section Scripts {
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        async function loadCards() {
+            const res = await fetch('/api/MyCreditCards');
+            const data = await res.json();
+            const tbody = document.getElementById('cardRows');
+            tbody.innerHTML = '';
+            data.forEach(c => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${c.cardNumber}</td><td>${c.cardHolderName}</td><td>${c.expiryDate}</td><td><a href="#" class="text-warning me-2 edit-card" data-id="${c.creditCardId}"><i class="fas fa-pencil-alt"></i></a><a href="#" class="text-danger delete-card" data-id="${c.creditCardId}"><i class="fas fa-trash"></i></a></td>`;
+                tbody.appendChild(tr);
+            });
+        }
+        async function loadModal(url) {
+            const res = await fetch(url);
+            const html = await res.text();
+            const placeholder = document.getElementById('cardModalPlaceholder');
+            placeholder.innerHTML = html;
+            placeholder.querySelectorAll('script').forEach(scr => {
+                const s = document.createElement('script');
+                s.textContent = scr.textContent;
+                document.body.appendChild(s);
+                document.body.removeChild(s);
+            });
+            const modalEl = placeholder.querySelector('.modal');
+            const modal = new bootstrap.Modal(modalEl);
+            modal.show();
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCards();
+            document.getElementById('addCard').addEventListener('click', () => loadModal('?handler=AddForm'));
+            document.getElementById('cardRows').addEventListener('click', e => {
+                const edit = e.target.closest('.edit-card');
+                const del = e.target.closest('.delete-card');
+                if (edit) { e.preventDefault(); loadModal('?handler=EditForm&id=' + edit.dataset.id); }
+                else if (del) { e.preventDefault(); loadModal('?handler=DeleteForm&id=' + del.dataset.id); }
+            });
+        });
+    </script>
+}

@@ -1,0 +1,57 @@
+@model RentACar.Application.DTOs.CreditCardDto
+<div class="modal fade" id="cardFormModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content dark-modal">
+            <div class="modal-header">
+                <h5 class="modal-title">@((Model.CreditCardId == 0) ? "Add Card" : "Edit Card")</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="cardForm">
+                    <input type="hidden" asp-for="CreditCardId" />
+                    <div class="credit-card-preview p-3 rounded mb-3">
+                        <div class="mb-2">
+                            <input asp-for="CardNumber" class="form-control bg-transparent border-0 text-light" placeholder="Card Number" />
+                        </div>
+                        <div class="d-flex gap-2">
+                            <input asp-for="CardHolderName" class="form-control bg-transparent border-0 text-light" placeholder="Name" />
+                            <input asp-for="ExpiryDate" type="date" class="form-control bg-transparent border-0 text-light" />
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">CVV</label>
+                        <input asp-for="Cvv" class="form-control" />
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    document.getElementById('cardForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const form = e.target;
+        const data = {
+            creditCardId: parseInt(form.CreditCardId.value || '0'),
+            cardNumber: form.CardNumber.value,
+            cardHolderName: form.CardHolderName.value,
+            expiryDate: form.ExpiryDate.value,
+            cvv: form.Cvv.value
+        };
+        const url = data.creditCardId ? '/api/MyCreditCards/' + data.creditCardId : '/api/MyCreditCards';
+        const method = data.creditCardId ? 'PUT' : 'POST';
+        const res = await fetch(url, {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        const result = await res.json();
+        alert(result.message || (res.ok ? 'Done' : 'Failed'));
+        if (res.ok) {
+            const modalEl = form.closest('.modal');
+            bootstrap.Modal.getInstance(modalEl).hide();
+            if (window.loadCards) loadCards();
+        }
+    });
+</script>

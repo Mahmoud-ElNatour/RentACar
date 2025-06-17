@@ -118,6 +118,18 @@ namespace RentACar.Application.Managers
             return true;
         }
 
+        public async Task<List<CreditCardDto>> GetCardsForCustomerAsync(int userId)
+        {
+            var cards = await _repo.GetCustomerCreditCardsAsync(userId);
+            return cards.Select(c => _mapper.Map<CreditCardDto>(c)).ToList();
+        }
+
+        public async Task<bool> RemoveCustomerCardAsync(int userId, int creditCardId)
+        {
+            await _repo.RemoveCustomerCreditCardAsync(userId, creditCardId);
+            return true;
+        }
+
         private async Task<bool> CanOperateAsync(IdentityUser operatorUser, CustomerDTO customer)
         {
             if (await _userManager.IsInRoleAsync(operatorUser, "Admin") ||
