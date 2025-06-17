@@ -1,0 +1,61 @@
+:root {
+    --primary-dark: #0a0c0e;
+    --secondary-dark: #161819;
+    --accent-gold: #d4af37;
+    --accent-gold-hover: #e6c347;
+    --text-primary: #ffffff;
+    --text-secondary: #9ea3a9;
+}
+
+body {
+    background: var(--primary-dark);
+    color: var(--text-primary);
+    font-family: 'Poppins', 'Segoe UI', Arial, sans-serif;
+    min-height: 100vh;
+}
+
+.profile-container {
+    background: var(--secondary-dark);
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05);
+    width: 100%;
+    max-width: 600px;
+}
+
+.profile-nav .nav-link {
+    color: var(--text-primary);
+    border-radius: 12px;
+}
+
+.profile-nav .nav-link.active,
+.profile-nav .nav-link:hover {
+    background: rgba(255,255,255,0.05);
+    color: var(--accent-gold);
+}
+
+input.form-control {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--text-primary);
+}
+
+input.form-control:focus {
+    background: rgba(255,255,255,0.05);
+    border-color: var(--accent-gold);
+    box-shadow: 0 0 0 3px rgba(212,175,55,0.1);
+    color: var(--text-primary);
+}
+
+.btn-primary {
+    background-color: var(--accent-gold);
+    border-color: var(--accent-gold);
+    color: var(--primary-dark);
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+    background-color: var(--accent-gold-hover);
+    border-color: var(--accent-gold-hover);
+    color: var(--primary-dark);
+}
