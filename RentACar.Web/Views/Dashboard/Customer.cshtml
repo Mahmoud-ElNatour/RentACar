@@ -7,27 +7,43 @@
 <div class="container dashboard-container">
     <h2 class="text-center mb-4">My Dashboard</h2>
     <div class="row g-3 mb-4">
-        <div class="col-md-4 col-sm-6">
+        <div class="col-md-3 col-sm-6">
             <div class="stat-box">
                 <h3>@Model.TotalBookings</h3>
                 <span>Total Bookings</span>
             </div>
         </div>
-        <div class="col-md-4 col-sm-6">
+        <div class="col-md-3 col-sm-6">
             <div class="stat-box">
                 <h3>@Model.UpcomingBookings</h3>
                 <span>Upcoming</span>
             </div>
         </div>
-        <div class="col-md-4 col-sm-6">
+        <div class="col-md-3 col-sm-6">
             <div class="stat-box">
                 <h3>@Model.TotalSpent.ToString("C")</h3>
                 <span>Total Spent</span>
             </div>
         </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-box">
+                <h3>@Model.DiscountSavings.ToString("C")</h3>
+                <span>Saved via Discounts</span>
+            </div>
+        </div>
     </div>
-    <div class="chart-container">
-        <canvas id="custChart"></canvas>
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <div class="chart-container">
+                <canvas id="custChart"></canvas>
+            </div>
+        </div>
+        <div class="col-md-6 d-flex align-items-center">
+            <div class="stat-box w-100">
+                <h3>@Model.BestCategory</h3>
+                <span>Favorite Category</span>
+            </div>
+        </div>
     </div>
 </div>
 @section Scripts{

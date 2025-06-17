@@ -28,11 +28,17 @@ body {
     padding: 20px;
     text-align: center;
     color: var(--text-primary);
+    height: 100%;
 }
 
 .stat-box h3 {
     color: var(--accent-gold);
     margin-bottom: 0.5rem;
+    font-size: 2rem;
+}
+
+.stat-box span {
+    color: var(--text-secondary);
 }
 
 .chart-container {
@@ -40,4 +46,5 @@ body {
     border: 1px solid rgba(255,255,255,0.1);
     border-radius: 12px;
     padding: 20px;
+    height: 100%;
 }

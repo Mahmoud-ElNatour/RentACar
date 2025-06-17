@@ -45,6 +45,32 @@
             </div>
         </div>
     </div>
+    <div class="row g-3 mb-4">
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-box">
+                <h3>@Model.IncomeThisMonth.ToString("C")</h3>
+                <span>Income This Month</span>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-box">
+                <h3>@Model.IncomeThisYear.ToString("C")</h3>
+                <span>Income This Year</span>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-box">
+                <h3>@Model.SalariesToPay.ToString("C")</h3>
+                <span>Salaries</span>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-box">
+                <h3>@Model.ExpectedRevenue.ToString("C")</h3>
+                <span>Expected Revenue</span>
+            </div>
+        </div>
+    </div>
 </div>
 @section Scripts{
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
