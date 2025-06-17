@@ -1,31 +1,23 @@
 @{
     ViewData["Title"] = "Control Panel";
-    Layout = null;
+    Layout = "_Layout";
 }
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - CarRental</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/control-panel.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
-</head>
-<body>
-    <div class="panel-container">
+
+<link rel="stylesheet" href="~/css/control-panel.css" />
+
+
+<div class="container-fluid d-flex justify-content-center align-items-center mt-2 " style="min-height: 100vh;">
+    <div class="panel-container p-5">
         <h2 class="panel-title">Control Panel</h2>
         <div class="panel-actions">
-                <a asp-controller="Car" asp-action="Index" class="panel-action">
-                    <i class="fas fa-car"></i>
-                    <div>Manage Cars</div>
-                </a>
-                <a asp-controller="Category" asp-action="Index" class="panel-action">
-                    <i class="fas fa-tags"></i>
-                    <div>Manage Categories</div>
-                </a>
-           
+            <a asp-controller="Car" asp-action="Index" class="panel-action">
+                <i class="fas fa-car"></i>
+                <div>Manage Cars</div>
+            </a>
+            <a asp-controller="Category" asp-action="Index" class="panel-action">
+                <i class="fas fa-tags"></i>
+                <div>Manage Categories</div>
+            </a>
             <a asp-controller="Blacklist" asp-action="Index" class="panel-action">
                 <i class="fas fa-ban"></i>
                 <div>Blacklists</div>
@@ -44,7 +36,6 @@
                     <i class="fas fa-user-shield"></i>
                     <div>Change Role</div>
                 </a>
-
             }
             <a asp-controller="PromoCode" asp-action="Index" class="panel-action">
                 <i class="fas fa-gift"></i>
@@ -60,8 +51,4 @@
             </a>
         </div>
     </div>
-
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+</div>

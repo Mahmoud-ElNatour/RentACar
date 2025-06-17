@@ -33,9 +33,7 @@
     <div class="mb-3">
         <label class="form-label">Car Image</label>
         <input type="file" id="CarImage" class="form-control" accept="image/*" />
-        <img id="CarImagePreview" class="img-thumbnail mt-2 preview-thumb" width="80" height="80" style="object-fit:cover;" src="@(Model.CarImage != null ? $"data:image;base64,{Convert.ToBase64String(Model.CarImage)}" : "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+VXeoAAAAASUVORK5CYII=")" />
-        <button type="button" id="RemoveImageBtn" class="btn btn-sm btn-danger mt-2">Remove Image</button>
-        <input type="hidden" id="RemoveImage" value="false" />
+        <img id="CarImagePreview" class="img-thumbnail mt-2 preview-thumb" width="80" height="80" style="object-fit:cover; @(Model.CarImage == null ? "display:none;" : "")" src="@(Model.CarImage != null ? $"data:image;base64,{Convert.ToBase64String(Model.CarImage)}" : "")" />
     </div>
     <div class="mb-3">
         <label class="form-label">Category</label>
@@ -56,15 +54,6 @@
 <script>
     const imageInput = document.getElementById('CarImage');
     const previewImg = document.getElementById('CarImagePreview');
-    const removeBtn = document.getElementById('RemoveImageBtn');
-    const removeField = document.getElementById('RemoveImage');
-
-    removeBtn.addEventListener('click', () => {
-        imageInput.value = '';
-        previewImg.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+VXeoAAAAASUVORK5CYII=';
-        previewImg.style.display = 'block';
-        removeField.value = 'true';
-    });
 
     imageInput.addEventListener('change', () => {
         const file = imageInput.files[0];
@@ -75,10 +64,9 @@
                 previewImg.style.display = 'block';
             };
             reader.readAsDataURL(file);
-            removeField.value = 'false';
         } else {
-            previewImg.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+VXeoAAAAASUVORK5CYII=';
-            previewImg.style.display = 'block';
+            previewImg.src = '';
+            previewImg.style.display = 'none';
         }
     });
 
@@ -95,9 +83,7 @@
             categoryId: parseInt(form.CategoryId.value || '0'),
             isAvailable: form.IsAvailable.checked
         };
-        if (removeField.value === 'true') {
-            data.removeImage = true;
-        } else if (imageInput.files.length > 0) {
+        if (imageInput.files.length > 0) {
             data.carImage = await toBase64(imageInput.files[0]);
         }
         const url = data.carId ? '/api/Car/' + data.carId : '/api/Car';

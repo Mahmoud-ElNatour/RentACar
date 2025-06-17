@@ -96,8 +96,7 @@
             tbody.innerHTML = '';
             data.forEach(car => {
                 const row = document.createElement('tr');
-                const imgSrc = car.carImage ? `data:image;base64,${car.carImage}` : 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+VXeoAAAAASUVORK5CYII=';
-                const imgCell = `<img class="car-thumb" width="80" height="80" src="${imgSrc}" />`;
+                const imgCell = car.carImage ? `<img class="car-thumb" width="80" height="80" src="data:image;base64,${car.carImage}" />` : '';
                 row.innerHTML = `
                     <td>${imgCell}</td>
                     <td>${car.plateNumber}</td>

@@ -1,18 +1,462 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
-}
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="~/css/index-style.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+    <title>Home</title>
+</head>
 
-    @if (User.Identity.IsAuthenticated)
-    {
-        <p>Your Role: @ViewBag.UserRole</p>
-    }
-    else
-    {
-        <p>You are not logged in.</p>
-    }
 
-</div>
+    <body>
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="hero-overlay"></div>
+    <div class="container">
+        <div class="row align-items-center min-vh-100">
+            <div class="col-lg-6">
+                <div class="hero-content">
+                    <h1 class="hero-title">Rent A Car <span class="text-warning">Anytime, Anywhere</span></h1>
+                    <p class="hero-subtitle">Book your vehicle with confidence and convenience. Experience premium car rental service with our modern fleet and exceptional customer support.</p>
+                    <div class="hero-buttons">
+                        <a href="{{ url_for('register') }}" class="btn btn-warning btn-lg me-3">
+                            <i class="fas fa-car me-2"></i>Get Started
+                        </a>
+                        <a href="{{ url_for('cars') }}" class="btn btn-outline-light btn-lg">
+                            <i class="fas fa-search me-2"></i>Browse Cars
+                        </a>
+                    </div>
+                    <div class="hero-stats mt-4">
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <div class="stat-item">
+                                    <h3 class="text-warning mb-1">500+</h3>
+                                    <small class="text-light">Cars Available</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="stat-item">
+                                    <h3 class="text-warning mb-1">50+</h3>
+                                    <small class="text-light">Locations</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="stat-item">
+                                    <h3 class="text-warning mb-1">10k+</h3>
+                                    <small class="text-light">Happy Customers</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="hero-image">
+                        <img src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Economy Car" class="img-fluid">
+                    </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- About Section -->
+<section id="about" class="py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <div class="about-content">
+                    <h2 class="section-title">About <span class="text-warning">RentACar</span></h2>
+                    <p class="section-subtitle">We are a modern car rental company offering an automated, fast, and user-friendly way to book your next vehicle. Whether online or in-person, your satisfaction is our priority.</p>
+                    <div class="about-features">
+                        <div class="feature-item">
+                            <i class="fas fa-check-circle text-warning me-3"></i>
+                            <span>Premium quality vehicles</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check-circle text-warning me-3"></i>
+                            <span>24/7 customer support</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check-circle text-warning me-3"></i>
+                            <span>Flexible rental terms</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check-circle text-warning me-3"></i>
+                            <span>Competitive pricing</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="about-image">
+                    <img src="https://images.unsplash.com/photo-1560472354-b33ff0c44a43?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" alt="About Us" class="img-fluid rounded-4">
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Why Choose Us Section -->
+<section id="why-us" class="py-5 bg-dark">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="section-title">Why Choose <span class="text-warning">Us?</span></h2>
+            <p class="section-subtitle">Experience the difference with our premium car rental service</p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-car"></i>
+                    </div>
+                    <h5 class="feature-title">Diverse Fleet</h5>
+                    <p class="feature-description">Choose from our extensive collection of vehicles including economy cars, luxury sedans, SUVs, and sports cars - all well-maintained and ready for your journey.</p>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <h5 class="feature-title">Real-Time Availability</h5>
+                    <p class="feature-description">Our advanced booking system provides real-time updates on vehicle availability, preventing overbooking and ensuring you get exactly what you need.</p>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h5 class="feature-title">Secure & Reliable</h5>
+                    <p class="feature-description">Enjoy peace of mind with our secure payment processing, comprehensive insurance coverage, and verified customer protection policies.</p>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <h5 class="feature-title">Easy Booking</h5>
+                    <p class="feature-description">Book your car in minutes through our user-friendly website or mobile app. Simple, fast, and hassle-free reservation process.</p>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-headset"></i>
+                    </div>
+                    <h5 class="feature-title">24/7 Support</h5>
+                    <p class="feature-description">Our dedicated customer support team is available round the clock to assist you with any questions or concerns during your rental period.</p>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                    <h5 class="feature-title">Multiple Locations</h5>
+                    <p class="feature-description">Pick up and drop off your rental car at any of our convenient locations across the city, including airports and major business districts.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Services Section -->
+<section id="services" class="py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="section-title">Our <span class="text-warning">Services</span></h2>
+            <p class="section-subtitle">Comprehensive car rental solutions for every need</p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-3 col-md-6">
+                <div class="service-card">
+                    <i class="fas fa-car service-icon"></i>
+                    <h5>Economy Cars</h5>
+                    <p>Affordable and fuel-efficient vehicles perfect for city driving and budget-conscious travelers.</p>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="service-card">
+                    <i class="fas fa-gem service-icon"></i>
+                    <h5>Luxury Vehicles</h5>
+                    <p>Premium cars with advanced features and superior comfort for special occasions and business trips.</p>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="service-card">
+                    <i class="fas fa-truck service-icon"></i>
+                    <h5>SUVs & Trucks</h5>
+                    <p>Spacious vehicles ideal for family trips, moving, and adventures that require extra cargo space.</p>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="service-card">
+                    <i class="fas fa-plane service-icon"></i>
+                    <h5>Airport Pickup</h5>
+                    <p>Convenient airport pickup and drop-off services to make your travel experience seamless.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Pricing Section -->
+<section id="pricing" class="py-5 bg-dark">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="section-title">Transparent <span class="text-warning">Pricing</span></h2>
+            <p class="section-subtitle">Choose the plan that fits your needs</p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <div class="pricing-card">
+                    <div class="pricing-header">
+                        <h4>Economy</h4>
+                        <div class="price">
+                            <span class="currency">$</span>
+                            <span class="amount">25</span>
+                            <span class="period">/day</span>
+                        </div>
+                    </div>
+                    <ul class="pricing-features">
+                        <li><i class="fas fa-check text-warning me-2"></i>Fuel Efficient</li>
+                        <li><i class="fas fa-check text-warning me-2"></i>Basic Insurance</li>
+                        <li><i class="fas fa-check text-warning me-2"></i>Free Mileage (200km/day)</li>
+                        <li><i class="fas fa-check text-warning me-2"></i>24/7 Roadside Assistance</li>
+                    </ul>
+                    <a href="{{ url_for('register') }}" class="btn btn-outline-warning btn-block">Book Now</a>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="pricing-card featured">
+                    <div class="pricing-header">
+                        <div class="popular-badge">Most Popular</div>
+                        <h4>Premium</h4>
+                        <div class="price">
+                            <span class="currency">$</span>
+                            <span class="amount">45</span>
+                            <span class="period">/day</span>
+                        </div>
+                    </div>
+                    <ul class="pricing-features">
+                        <li><i class="fas fa-check text-warning me-2"></i>Comfort & Style</li>
+                        <li><i class="fas fa-check text-warning me-2"></i>Comprehensive Insurance</li>
+                        <li><i class="fas fa-check text-warning me-2"></i>Unlimited Mileage</li>
+                        <li><i class="fas fa-check text-warning me-2"></i>GPS Navigation</li>
+                        <li><i class="fas fa-check text-warning me-2"></i>Priority Support</li>
+                    </ul>
+                    <a href="{{ url_for('register') }}" class="btn btn-warning btn-block">Book Now</a>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="pricing-card">
+                    <div class="pricing-header">
+                        <h4>Luxury</h4>
+                        <div class="price">
+                            <span class="currency">$</span>
+                            <span class="amount">85</span>
+                            <span class="period">/day</span>
+                        </div>
+                    </div>
+                    <ul class="pricing-features">
+                        <li><i class="fas fa-check text-warning me-2"></i>Premium Vehicles</li>
+                        <li><i class="fas fa-check text-warning me-2"></i>Full Coverage Insurance</li>
+                        <li><i class="fas fa-check text-warning me-2"></i>Unlimited Mileage</li>
+                        <li><i class="fas fa-check text-warning me-2"></i>Concierge Service</li>
+                        <li><i class="fas fa-check text-warning me-2"></i>Airport Pickup/Drop-off</li>
+                    </ul>
+                    <a href="{{ url_for('register') }}" class="btn btn-outline-warning btn-block">Book Now</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Customer Reviews Section -->
+<section id="reviews" class="py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="section-title">Customer <span class="text-warning">Reviews</span></h2>
+            <p class="section-subtitle">What our satisfied customers say about us</p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <div class="testimonial-card">
+                    <div class="stars mb-3">
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                    </div>
+                    <p class="testimonial-text">"Excellent service! The booking process was smooth and the car was in perfect condition. The staff was very professional and helpful throughout my rental period."</p>
+                    <div class="testimonial-author">
+                        <strong>Ali Hassan</strong>
+                        <small class="text-muted">Beirut</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="testimonial-card">
+                    <div class="stars mb-3">
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                    </div>
+                    <p class="testimonial-text">"Amazing experience! The website is user-friendly and I love how easy it is to filter and find the perfect car for my needs. Will definitely use again!"</p>
+                    <div class="testimonial-author">
+                        <strong>Sara Ahmad</strong>
+                        <small class="text-muted">Tripoli</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="testimonial-card">
+                    <div class="stars mb-3">
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                    </div>
+                    <p class="testimonial-text">"Finally, a rental service that works! No more double bookings or surprises. The real-time availability feature is a game-changer. Highly recommended!"</p>
+                    <div class="testimonial-author">
+                        <strong>Khaled Mahmoud</strong>
+                        <small class="text-muted">Sidon</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Car Gallery Section -->
+<section id="gallery" class="py-5 bg-dark">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="section-title">Our <span class="text-warning">Fleet</span></h2>
+            <p class="section-subtitle">Explore our premium collection of vehicles</p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-4 col-md-6">
+                <div class="gallery-item">
+                    <img src="https://images.unsplash.com/photo-1549924231-f129b911e442?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Luxury Sedan" class="img-fluid">
+                    <div class="gallery-overlay">
+                        <div class="gallery-content">
+                            <h5>Luxury Sedans</h5>
+                            <p>Premium comfort and style</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6">
+                <div class="gallery-item">
+                    <img src="https://images.unsplash.com/photo-1552519507-da3b142c6e3d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Sports Car" class="img-fluid">
+                    <div class="gallery-overlay">
+                        <div class="gallery-content">
+                            <h5>Sports Cars</h5>
+                            <p>Performance and excitement</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6">
+                <div class="gallery-item">
+                    <img src="https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="SUV" class="img-fluid">
+                    <div class="gallery-overlay">
+                        <div class="gallery-content">
+                            <h5>SUVs</h5>
+                            <p>Space and versatility</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6">
+                <div class="gallery-item">
+                    <img src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Economy Car" class="img-fluid">
+                    <div class="gallery-overlay">
+                        <div class="gallery-content">
+                            <h5>Economy Cars</h5>
+                            <p>Efficient and affordable</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6">
+                <div class="gallery-item">
+                    <img src="https://images.unsplash.com/photo-1544636331-e26879cd4d9b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Convertible" class="img-fluid">
+                    <div class="gallery-overlay">
+                        <div class="gallery-content">
+                            <h5>Convertibles</h5>
+                            <p>Open-air freedom</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6">
+                <div class="gallery-item">
+                        <img src="https://www.thecarexpert.co.uk/wp-content/uploads/2025/01/Tesla-Model-Y-2025-facelift.jpg" alt="Electric Car" class="img-fluid">
+                    <div class="gallery-overlay">
+                        <div class="gallery-content">
+                            <h5>Electric Cars</h5>
+                            <p>Eco-friendly driving</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section id="cta" class="py-5 cta-section">
+    <div class="container text-center">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <h2 class="cta-title">Ready to Hit the Road?</h2>
+                <p class="cta-subtitle">Join thousands of satisfied customers and experience the best car rental service. Sign up now to explore our full collection and get exclusive deals!</p>
+                <div class="cta-buttons">
+                    <a href="{{ url_for('register') }}" class="btn btn-warning btn-lg me-3">
+                        <i class="fas fa-user-plus me-2"></i>Register Now
+                    </a>
+                    <a href="{{ url_for('cars') }}" class="btn btn-outline-light btn-lg">
+                        <i class="fas fa-car me-2"></i>Browse Cars
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+</body>
+
+<script src="~/js/index-script.js"></script>
+
+</html>

@@ -1,4 +1,6 @@
-﻿﻿
+﻿@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager﻿
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,49 +8,119 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - RentACar.Web</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    @* <link rel="stylesheet" href="~/css/index-style.css" asp-append-version="true" /> *@
+
     <link rel="stylesheet" href="~/RentACar.Web.styles.css" asp-append-version="true" />
 </head>
-<body>
+<body class="d-flex flex-column min-vh-100">
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+        <nav class="navbar navbar-expand-lg" style="background-color: #1f1f1f; padding: 1rem;">
             <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">RentACar.Web</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
+                <a class="navbar-brand text-warning fw-bold" asp-area="" asp-controller="Home" asp-action="Index">RentACar</a>
+                <button class="navbar-toggler bg-warning" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
+                    <span class="navbar-toggler-icon text-light"></span>
                 </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                            <a class="nav-link text-light" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="ControlPanel" asp-action="Index">Control Panel</a>
-                        </li>
+                        @if (User.IsInRole("Admin") || User.IsInRole("Employee"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-light" asp-controller="ControlPanel" asp-action="Index">Control Panel</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-light" asp-controller="Reports" asp-action="Index">Reports</a>
+                            </li>
+                        }
+                        @if (User.IsInRole("Customer"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-light" asp-controller="Cars" asp-action="Available">Browse Cars</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-light" asp-controller="Bookings" asp-action="MyBookings">My Bookings</a>
+                            </li>
+                        }
                     </ul>
-                    <partial name="_LoginPartial" />
+                    <ul class="navbar-nav ms-auto">
+                        @if (SignInManager.IsSignedIn(User))
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle text-warning" href="#" role="button" data-bs-toggle="dropdown">
+                                    <i class="fa fa-user-circle me-1"></i>@User.Identity?.Name
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end bg-dark">
+                                    <li><a class="dropdown-item text-light" asp-area="Identity" asp-page="/Account/Manage/Index">Profile</a></li>
+                                    <li>
+                                        <form method="post" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home")">
+                                            <button type="submit" class="dropdown-item text-light">Logout</button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </li>
+
+
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-warning" asp-area="Identity" asp-page="/Account/Register">Register</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-warning" asp-area="Identity" asp-page="/Account/Login">Login</a>
+                            </li>
+                        }
+                    </ul>
                 </div>
             </div>
         </nav>
     </header>
-    <div class="container">
-        <main role="main" class="pb-3">
+    <div class="container-fluid m-0 p-0" style=" margin:0px; padding:0px">
+        <main role="main" class="m-0 p-0 flex-grow-1" style="margin:0px; padding:0px">
             @RenderBody()
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
+    <footer class=" text-light pt-3 pb-2 border-top mt-1" style="font-size: 1.1rem; background-color:#161819;!important">
         <div class="container">
-            &copy; 2025 - RentACar.Web - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            <div class="row align-items-start text-center text-md-start">
+                <div class="col-md-4 mb-2">
+                    <h6 class="text-warning mb-2 fw-bold">Contact Us</h6>
+                    <p class="mb-1">📧 support@rentacar.com</p>
+                    <p class="mb-1">📞 +961 1 234 567</p>
+                    <p class="mb-0">🕘 Mon - Sat: 9 AM - 6 PM</p>
+                </div>
+                <div class="col-md-4 mb-2">
+                    <h6 class="text-warning mb-2 fw-bold">Our Locations</h6>
+                    <ul class="list-unstyled mb-0">
+                        <li>📍 Beirut – Hamra St.</li>
+                        <li>📍 Saida – Coastal Rd</li>
+                        <li>📍 Tripoli – Tall St.</li>
+                    </ul>
+                </div>
+                <div class="col-md-4 mb-2 text-md-end text-center">
+                    <div class="mb-2">
+                        <a href="#" class="text-light me-2"><i class="fab fa-facebook"></i></a>
+                        <a href="#" class="text-light me-2"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="text-light"><i class="fab fa-twitter"></i></a>
+                    </div>
+                    <p class="mb-1 fw-bold fw-italic">Powered by <strong>AppDev USAL Team</strong></p>
+                    <small>&copy; 2025 RentACar</small>
+                </div>
+            </div>
         </div>
     </footer>
+
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/index-script.js"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
