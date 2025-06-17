@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using RentACar.Web.Models;
 using Microsoft.AspNetCore.Identity;
 using System.Threading.Tasks;
+using RentACar.Application.Managers;
+using RentACar.Application.DTOs;
 
 namespace RentACar.Web.Controllers
 {
@@ -10,11 +12,22 @@ namespace RentACar.Web.Controllers
     {
         private readonly ILogger<HomeController> _logger;
         private readonly UserManager<IdentityUser> _userManager;
+        private readonly CarManager _carManager;
+        private readonly CategoryManager _categoryManager;
+        private readonly CustomerManager _customerManager;
 
-        public HomeController(ILogger<HomeController> logger, UserManager<IdentityUser> userManager)
+        public HomeController(
+            ILogger<HomeController> logger,
+            UserManager<IdentityUser> userManager,
+            CarManager carManager,
+            CategoryManager categoryManager,
+            CustomerManager customerManager)
         {
             _logger = logger;
             _userManager = userManager;
+            _carManager = carManager;
+            _categoryManager = categoryManager;
+            _customerManager = customerManager;
         }
 
         public async Task<IActionResult> Index()
@@ -31,8 +44,15 @@ namespace RentACar.Web.Controllers
                 }
             }
 
-            ViewBag.UserRole = userRole;
-            return View();
+            var model = new HomeIndexViewModel
+            {
+                UserRole = userRole,
+                AvailableCars = await _carManager.GetAvailableCarCountAsync(),
+                TotalCustomers = await _customerManager.GetTotalCustomerCountAsync(),
+                Categories = await _categoryManager.GetAllCategoriesAsync()
+            };
+
+            return View(model);
         }
 
         public IActionResult Privacy()

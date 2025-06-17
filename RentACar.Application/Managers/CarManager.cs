@@ -100,6 +100,18 @@ namespace RentACar.Application.Managers
             return _mapper.Map<List<CarDto>>(cars);
         }
 
+        public async Task<int> GetTotalCarCountAsync()
+        {
+            var cars = await _carRepository.GetAllAsync();
+            return cars.Count;
+        }
+
+        public async Task<int> GetAvailableCarCountAsync()
+        {
+            var cars = await _carRepository.GetAsync(c => c.IsAvailable);
+            return cars.Count;
+        }
+
         public async Task UpdateCarAvailabilityAsync(int carId, bool isAvailable)
         {
             _logger.LogInformation("Updating availability for car {Id} to {Avail}", carId, isAvailable);

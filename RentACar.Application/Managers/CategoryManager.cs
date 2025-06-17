@@ -69,6 +69,12 @@ namespace RentACar.Application.Managers
             return _mapper.Map<List<CategoryDto>>(categories);
         }
 
+        public async Task<int> GetTotalCategoryCountAsync()
+        {
+            var categories = await _categoryRepository.GetAllAsync();
+            return categories.Count;
+        }
+
         public async Task<CategoryDto?> UpdateCategoryAsync(CategoryDto categoryDto, string userId)
         {
             _logger.LogInformation("Updating category {Id}", categoryDto.CategoryId);

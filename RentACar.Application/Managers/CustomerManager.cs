@@ -102,6 +102,12 @@ namespace RentACar.Application.Managers
             return _mapper.Map<List<CustomerDTO>>(customers);
         }
 
+        public async Task<int> GetTotalCustomerCountAsync()
+        {
+            var customers = await _customerRepository.GetAllAsync();
+            return customers.Count;
+        }
+
         public async Task<List<CustomerDTO>> SearchCustomersByName(string name)
         {
             var customers = await _customerRepository.FindByNameAsync(name);

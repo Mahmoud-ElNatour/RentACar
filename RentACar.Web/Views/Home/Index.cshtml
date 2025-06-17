@@ -1,16 +1,9 @@
-﻿<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+@model RentACar.Web.Models.HomeIndexViewModel
+@section Styles {
     <link rel="stylesheet" href="~/css/index-style.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+}
 
-    <title>Home</title>
-</head>
-
-
-    <body>
 <!-- Hero Section -->
 <section class="hero-section">
     <div class="hero-overlay"></div>
@@ -21,18 +14,30 @@
                     <h1 class="hero-title">Rent A Car <span class="text-warning">Anytime, Anywhere</span></h1>
                     <p class="hero-subtitle">Book your vehicle with confidence and convenience. Experience premium car rental service with our modern fleet and exceptional customer support.</p>
                     <div class="hero-buttons">
-                        <a href="{{ url_for('register') }}" class="btn btn-warning btn-lg me-3">
-                            <i class="fas fa-car me-2"></i>Get Started
-                        </a>
-                        <a href="{{ url_for('cars') }}" class="btn btn-outline-light btn-lg">
-                            <i class="fas fa-search me-2"></i>Browse Cars
-                        </a>
+                        @if (User.Identity?.IsAuthenticated ?? false)
+                        {
+                            <a asp-controller="Cars" asp-action="Available" class="btn btn-warning btn-lg me-3">
+                                <i class="fas fa-car me-2"></i>Get Started
+                            </a>
+                            <a asp-controller="Cars" asp-action="Available" class="btn btn-outline-light btn-lg">
+                                <i class="fas fa-search me-2"></i>Browse Cars
+                            </a>
+                        }
+                        else
+                        {
+                            <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-warning btn-lg me-3">
+                                <i class="fas fa-car me-2"></i>Get Started
+                            </a>
+                            <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-outline-light btn-lg">
+                                <i class="fas fa-search me-2"></i>Browse Cars
+                            </a>
+                        }
                     </div>
                     <div class="hero-stats mt-4">
                         <div class="row text-center">
                             <div class="col-4">
                                 <div class="stat-item">
-                                    <h3 class="text-warning mb-1">500+</h3>
+                                    <h3 class="text-warning mb-1">@Model.AvailableCars</h3>
                                     <small class="text-light">Cars Available</small>
                                 </div>
                             </div>
@@ -44,7 +49,7 @@
                             </div>
                             <div class="col-4">
                                 <div class="stat-item">
-                                    <h3 class="text-warning mb-1">10k+</h3>
+                                    <h3 class="text-warning mb-1">@Model.TotalCustomers</h3>
                                     <small class="text-light">Happy Customers</small>
                                 </div>
                             </div>
@@ -239,7 +244,14 @@
                         <li><i class="fas fa-check text-warning me-2"></i>Free Mileage (200km/day)</li>
                         <li><i class="fas fa-check text-warning me-2"></i>24/7 Roadside Assistance</li>
                     </ul>
-                    <a href="{{ url_for('register') }}" class="btn btn-outline-warning btn-block">Book Now</a>
+                    @if (User.Identity?.IsAuthenticated ?? false)
+                    {
+                        <a asp-controller="Cars" asp-action="Available" class="btn btn-outline-warning btn-block">Book Now</a>
+                    }
+                    else
+                    {
+                        <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-outline-warning btn-block">Book Now</a>
+                    }
                 </div>
             </div>
 
@@ -261,7 +273,14 @@
                         <li><i class="fas fa-check text-warning me-2"></i>GPS Navigation</li>
                         <li><i class="fas fa-check text-warning me-2"></i>Priority Support</li>
                     </ul>
-                    <a href="{{ url_for('register') }}" class="btn btn-warning btn-block">Book Now</a>
+                    @if (User.Identity?.IsAuthenticated ?? false)
+                    {
+                        <a asp-controller="Cars" asp-action="Available" class="btn btn-warning btn-block">Book Now</a>
+                    }
+                    else
+                    {
+                        <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-warning btn-block">Book Now</a>
+                    }
                 </div>
             </div>
 
@@ -282,7 +301,14 @@
                         <li><i class="fas fa-check text-warning me-2"></i>Concierge Service</li>
                         <li><i class="fas fa-check text-warning me-2"></i>Airport Pickup/Drop-off</li>
                     </ul>
-                    <a href="{{ url_for('register') }}" class="btn btn-outline-warning btn-block">Book Now</a>
+                    @if (User.Identity?.IsAuthenticated ?? false)
+                    {
+                        <a asp-controller="Cars" asp-action="Available" class="btn btn-outline-warning btn-block">Book Now</a>
+                    }
+                    else
+                    {
+                        <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-outline-warning btn-block">Book Now</a>
+                    }
                 </div>
             </div>
         </div>
@@ -361,77 +387,32 @@
         </div>
 
         <div class="row g-4">
-            <div class="col-lg-4 col-md-6">
-                <div class="gallery-item">
-                    <img src="https://images.unsplash.com/photo-1549924231-f129b911e442?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Luxury Sedan" class="img-fluid">
-                    <div class="gallery-overlay">
-                        <div class="gallery-content">
-                            <h5>Luxury Sedans</h5>
-                            <p>Premium comfort and style</p>
+            @{
+                var images = new Dictionary<string, string>
+                {
+                    {"Luxury", "https://images.unsplash.com/photo-1549924231-f129b911e442?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"},
+                    {"Sports", "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"},
+                    {"SUV", "https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"},
+                    {"Economy", "https://images.unsplash.com/photo-1503376780353-7e6692767b70?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"},
+                    {"Convertible", "https://images.unsplash.com/photo-1544636331-e26879cd4d9b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"},
+                    {"Electric", "https://www.thecarexpert.co.uk/wp-content/uploads/2025/01/Tesla-Model-Y-2025-facelift.jpg"}
+                };
+            }
+            @foreach (var cat in Model.Categories)
+            {
+                var img = images.ContainsKey(cat.Name) ? images[cat.Name] : images.Values.First();
+                <div class="col-lg-4 col-md-6">
+                    <div class="gallery-item">
+                        <img src="@img" alt="@cat.Name" class="img-fluid">
+                        <div class="gallery-overlay">
+                            <div class="gallery-content">
+                                <h5>@cat.Name</h5>
+                                <p>@cat.Name vehicles</p>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <div class="col-lg-4 col-md-6">
-                <div class="gallery-item">
-                    <img src="https://images.unsplash.com/photo-1552519507-da3b142c6e3d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Sports Car" class="img-fluid">
-                    <div class="gallery-overlay">
-                        <div class="gallery-content">
-                            <h5>Sports Cars</h5>
-                            <p>Performance and excitement</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-lg-4 col-md-6">
-                <div class="gallery-item">
-                    <img src="https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="SUV" class="img-fluid">
-                    <div class="gallery-overlay">
-                        <div class="gallery-content">
-                            <h5>SUVs</h5>
-                            <p>Space and versatility</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-lg-4 col-md-6">
-                <div class="gallery-item">
-                    <img src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Economy Car" class="img-fluid">
-                    <div class="gallery-overlay">
-                        <div class="gallery-content">
-                            <h5>Economy Cars</h5>
-                            <p>Efficient and affordable</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-lg-4 col-md-6">
-                <div class="gallery-item">
-                    <img src="https://images.unsplash.com/photo-1544636331-e26879cd4d9b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Convertible" class="img-fluid">
-                    <div class="gallery-overlay">
-                        <div class="gallery-content">
-                            <h5>Convertibles</h5>
-                            <p>Open-air freedom</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-lg-4 col-md-6">
-                <div class="gallery-item">
-                        <img src="https://www.thecarexpert.co.uk/wp-content/uploads/2025/01/Tesla-Model-Y-2025-facelift.jpg" alt="Electric Car" class="img-fluid">
-                    <div class="gallery-overlay">
-                        <div class="gallery-content">
-                            <h5>Electric Cars</h5>
-                            <p>Eco-friendly driving</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            }
         </div>
     </div>
 </section>
@@ -444,19 +425,28 @@
                 <h2 class="cta-title">Ready to Hit the Road?</h2>
                 <p class="cta-subtitle">Join thousands of satisfied customers and experience the best car rental service. Sign up now to explore our full collection and get exclusive deals!</p>
                 <div class="cta-buttons">
-                    <a href="{{ url_for('register') }}" class="btn btn-warning btn-lg me-3">
-                        <i class="fas fa-user-plus me-2"></i>Register Now
-                    </a>
-                    <a href="{{ url_for('cars') }}" class="btn btn-outline-light btn-lg">
-                        <i class="fas fa-car me-2"></i>Browse Cars
-                    </a>
+                    @if (User.Identity?.IsAuthenticated ?? false)
+                    {
+                        <a asp-controller="Cars" asp-action="Available" class="btn btn-warning btn-lg me-3">
+                            <i class="fas fa-user-plus me-2"></i>Register Now
+                        </a>
+                        <a asp-controller="Cars" asp-action="Available" class="btn btn-outline-light btn-lg">
+                            <i class="fas fa-car me-2"></i>Browse Cars
+                        </a>
+                    }
+                    else
+                    {
+                        <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-warning btn-lg me-3">
+                            <i class="fas fa-user-plus me-2"></i>Register Now
+                        </a>
+                        <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-outline-light btn-lg">
+                            <i class="fas fa-car me-2"></i>Browse Cars
+                        </a>
+                    }
                 </div>
             </div>
         </div>
     </div>
 </section>
-</body>
 
-<script src="~/js/index-script.js"></script>
-
-</html>
+@section Scripts {<script src="~/js/index-script.js"></script>}
