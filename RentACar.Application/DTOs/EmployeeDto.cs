@@ -23,7 +23,7 @@ namespace RentACar.Application.DTOs
         [Required]
         public string Email { get; set; } = null!;
 
-        [Required]
+        
         public string username { get; set; } = null!;
 
         public string? PhoneNumber { get; set; }

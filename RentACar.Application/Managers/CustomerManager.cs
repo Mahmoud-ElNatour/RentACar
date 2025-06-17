@@ -36,7 +36,7 @@ namespace RentACar.Application.Managers
                 PhoneNumber = createDto.PhoneNumber
             };
 
-            var result = await _userManager.CreateAsync(user, "C@c123456");
+            var result = await _userManager.CreateAsync(user, createDto.Password);
             if (!result.Succeeded)
             {
                 _logger.LogWarning("Failed to create user for {Email}", createDto.Email);
