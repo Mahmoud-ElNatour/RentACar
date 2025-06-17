@@ -42,6 +42,8 @@ public partial class RentACarDbContext : DbContext
 
     public virtual DbSet<Payment> Payments { get; set; }
 
+    public virtual DbSet<PaymentMethod> PaymentMethods { get; set; }
+
     public virtual DbSet<Promocode> Promocodes { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
