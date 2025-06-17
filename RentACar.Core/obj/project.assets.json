@@ -709,11 +709,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Mohammad\\Downloads\\RentACar-codex-implement-promocode-management-page\\RentACar.Core\\RentACar.Core.csproj",
+      "projectUniqueName": "C:\\Users\\Mohammad\\source\\repos\\RentACar\\RentACar.Core\\RentACar.Core.csproj",
       "projectName": "RentACar.Core",
-      "projectPath": "C:\\Users\\Mohammad\\Downloads\\RentACar-codex-implement-promocode-management-page\\RentACar.Core\\RentACar.Core.csproj",
+      "projectPath": "C:\\Users\\Mohammad\\source\\repos\\RentACar\\RentACar.Core\\RentACar.Core.csproj",
       "packagesPath": "C:\\Users\\Mohammad\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Mohammad\\Downloads\\RentACar-codex-implement-promocode-management-page\\RentACar.Core\\obj\\",
+      "outputPath": "C:\\Users\\Mohammad\\source\\repos\\RentACar\\RentACar.Core\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
