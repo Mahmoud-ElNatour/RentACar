@@ -113,10 +113,6 @@ namespace RentACar.Application.Managers
             {
                 _logger.LogInformation("Updating car {Id}", carDto.CarId);
                 _mapper.Map(carDto, existingCar);
-                if (carDto.RemoveImage)
-                {
-                    existingCar.CarImage = null;
-                }
                 await _carRepository.UpdateAsync(existingCar);
             }
             else
