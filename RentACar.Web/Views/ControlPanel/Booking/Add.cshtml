@@ -116,8 +116,9 @@
                     body: JSON.stringify(data)
                 });
 
+                const redirectUrl = '@(isCustomer ? "/Bookings/MyBookings" : "/Booking")';
                 if (resp.ok) {
-                    window.location.href = '/Booking';
+                    window.location.href = redirectUrl;
                 } else {
                     const errorText = await resp.text();
                     alert('Error creating booking:\n' + errorText);
