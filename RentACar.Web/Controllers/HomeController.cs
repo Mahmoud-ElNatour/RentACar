@@ -15,9 +15,9 @@ namespace RentACar.Web.Controllers
         private readonly CategoryManager _categoryManager;
 
         public HomeController(ILogger<HomeController> logger,
-            UserManager<IdentityUser> userManager,
-            CarManager carManager,
-            CategoryManager categoryManager)
+                              UserManager<IdentityUser> userManager,
+                              CarManager carManager,
+                              CategoryManager categoryManager)
         {
             _logger = logger;
             _userManager = userManager;
@@ -39,17 +39,14 @@ namespace RentACar.Web.Controllers
                 }
             }
 
-            var categories = await _categoryManager.GetAllCategoriesAsync();
             var cars = await _carManager.BrowseAllCarsAsync();
-
-            var model = new HomeIndexViewModel
-            {
-                Categories = categories,
-                TotalCars = cars.Count
-            };
+            var categories = await _categoryManager.GetAllCategoriesAsync();
 
             ViewBag.UserRole = userRole;
-            return View(model);
+            ViewBag.CarsCount = cars.Count;
+            ViewBag.Categories = categories;
+
+            return View();
         }
 
         public IActionResult Privacy()

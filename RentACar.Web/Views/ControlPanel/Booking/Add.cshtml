@@ -28,9 +28,13 @@
 </head>
 <body>
     <div class="booking-container container">
-        <a href="/Booking" class="btn btn-outline-warning rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:40px;height:40px" title="Back">
-            <i class="fas fa-arrow-left"></i>
-        </a>
+        @if (User.IsInRole("Admin") || User.IsInRole("Customer"))
+        {
+            <a href="/Booking" class="btn btn-outline-warning rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:40px;height:40px" title="Back">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+        }
+
         <h2 class="text-center mb-4">Add Booking</h2>
         <form id="bookingForm">
             @if (!isCustomer)
