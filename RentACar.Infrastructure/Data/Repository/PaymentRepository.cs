@@ -20,5 +20,15 @@ namespace RentACar.Infrastructure.Data.Repository
                                    .Where(p => p.BookingId == bookingId)
                                    .ToListAsync();
         }
+
+        public async Task DeleteAsync(int id)
+        {
+            var payment = await _dbContext.Payments.FindAsync(id);
+            if (payment != null)
+            {
+                _dbContext.Payments.Remove(payment);
+                await _dbContext.SaveChangesAsync();
+            }
+        }
     }
 }
