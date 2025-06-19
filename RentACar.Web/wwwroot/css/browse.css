@@ -21,7 +21,6 @@ body {
 }
 
 .car-card {
-    position: relative;
     background: rgba(255,255,255,0.03);
     border: 1px solid rgba(255,255,255,0.1);
     border-radius: 12px;
@@ -52,22 +51,12 @@ body {
     color: var(--accent-gold);
 }
 
-.book-overlay {
-    position: absolute;
-    bottom: 15px;
-    left: 50%;
-    transform: translateX(-50%);
-    opacity: 0;
-    transition: opacity .2s;
-}
-
-.car-card:hover .book-overlay {
-    opacity: 1;
-}
 
 .btn-book {
     border: none;
-    padding: 8px 16px;
+    padding: 10px 18px;
+    border-radius: 6px;
+    font-weight: 500;
 }
 
 .btn-book.available {
