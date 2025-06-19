@@ -11,6 +11,13 @@
     Layout = null;
     var user = await UserManager.GetUserAsync(User);
     var isCustomer = await UserManager.IsInRoleAsync(user, "Customer");
+    var carIdParam = Context.Request.Query["carId"].ToString();
+    if (string.IsNullOrEmpty(carIdParam) && ViewBag.CarId != null)
+    {
+        carIdParam = ViewBag.CarId;
+    }
+    var startValue = ViewBag.StartDate ?? DateTime.Today.ToString("yyyy-MM-dd");
+    var endValue = ViewBag.EndDate ?? DateTime.Today.AddDays(1).ToString("yyyy-MM-dd");
 
 }
 
@@ -27,9 +34,13 @@
 </head>
 <body>
     <div class="booking-container container">
-        <a href="/Booking" class="btn btn-outline-warning rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:40px;height:40px" title="Back">
-            <i class="fas fa-arrow-left"></i>
-        </a>
+        @if (User.IsInRole("Admin") || User.IsInRole("Customer"))
+        {
+            <a href="/Booking" class="btn btn-outline-warning rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:40px;height:40px" title="Back">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+        }
+
         <h2 class="text-center mb-4">Add Booking</h2>
         <form id="bookingForm">
             @if (!isCustomer)
@@ -43,15 +54,15 @@
             }
             <div class="mb-3">
                 <label class="form-label">Car ID</label>
-                <input class="form-control" type="number" id="CarId" name="CarId" min="1" required />
+                <input class="form-control" type="number" id="CarId" name="CarId" min="1" value="@carIdParam" @(string.IsNullOrEmpty(carIdParam) ? "" : "readonly") required />
             </div>
             <div class="mb-3">
                 <label class="form-label">Start Date</label>
-                <input type="date" class="form-control" id="Startdate" name="Startdate" value="@DateTime.Today.ToString("yyyy-MM-dd")" required />
+                <input type="date" class="form-control" id="Startdate" name="Startdate" value="@startValue" required />
             </div>
             <div class="mb-3">
                 <label class="form-label">End Date</label>
-                <input type="date" class="form-control" id="Enddate" name="Enddate" value="@DateTime.Today.AddDays(1).ToString("yyyy-MM-dd")" required />
+                <input type="date" class="form-control" id="Enddate" name="Enddate" value="@endValue" required />
             </div>@{
                 var methods = await PaymentMethodManager.GetAllPaymentMethodsAsync();
             }
