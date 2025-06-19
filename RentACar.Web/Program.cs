@@ -85,6 +85,15 @@ builder.Services.AddHttpsRedirection(options =>
 
 var app = builder.Build();
 
+// Ensure migrations are applied on startup
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<RentACarDbContext>();
+    db.Database.Migrate();
+    var identityDb = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    identityDb.Database.Migrate();
+}
+
 
 
 // Configure the HTTP request pipeline.
