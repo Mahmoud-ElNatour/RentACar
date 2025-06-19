@@ -3457,11 +3457,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Mohammad\\Desktop\\RentACar-debuging-booking\\RentACar.Infrastructure\\RentACar.Infrastructure.csproj",
+      "projectUniqueName": "C:\\Users\\Mohammad\\Downloads\\RentACar-main\\RentACar.Infrastructure\\RentACar.Infrastructure.csproj",
       "projectName": "RentACar.Infrastructure",
-      "projectPath": "C:\\Users\\Mohammad\\Desktop\\RentACar-debuging-booking\\RentACar.Infrastructure\\RentACar.Infrastructure.csproj",
+      "projectPath": "C:\\Users\\Mohammad\\Downloads\\RentACar-main\\RentACar.Infrastructure\\RentACar.Infrastructure.csproj",
       "packagesPath": "C:\\Users\\Mohammad\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Mohammad\\Desktop\\RentACar-debuging-booking\\RentACar.Infrastructure\\obj\\",
+      "outputPath": "C:\\Users\\Mohammad\\Downloads\\RentACar-main\\RentACar.Infrastructure\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -3483,8 +3483,8 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "projectReferences": {
-            "C:\\Users\\Mohammad\\Desktop\\RentACar-debuging-booking\\RentACar.Core\\RentACar.Core.csproj": {
-              "projectPath": "C:\\Users\\Mohammad\\Desktop\\RentACar-debuging-booking\\RentACar.Core\\RentACar.Core.csproj"
+            "C:\\Users\\Mohammad\\Downloads\\RentACar-main\\RentACar.Core\\RentACar.Core.csproj": {
+              "projectPath": "C:\\Users\\Mohammad\\Downloads\\RentACar-main\\RentACar.Core\\RentACar.Core.csproj"
             }
           }
         }
