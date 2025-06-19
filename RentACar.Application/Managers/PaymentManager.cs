@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RentACar.Application.DTOs;
 using RentACar.Core.Entities;
@@ -169,6 +170,9 @@ namespace RentACar.Core.Managers
             // To be implemented later
             return true;
         }
+
+      
+
     }
 
     public class PaymentProfile : Profile

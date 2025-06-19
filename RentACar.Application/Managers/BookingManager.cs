@@ -201,7 +201,7 @@ namespace RentACar.Core.Managers
             return price;
         }
 
-        public async Task<BookingDto?> UpdateBookingAsync(BookingDto bookingDto)
+        public async Task<BookingEditDto?> UpdateBookingAsync(BookingEditDto bookingDto)
         {
             _logger.LogInformation("Updating booking {Id}", bookingDto.BookingId);
 
@@ -215,7 +215,7 @@ namespace RentACar.Core.Managers
             _mapper.Map(bookingDto, booking);
             await _bookingRepository.UpdateAsync(booking);
 
-            return _mapper.Map<BookingDto>(booking);
+            return _mapper.Map<BookingEditDto>(booking);
         }
 
 
@@ -249,10 +249,24 @@ namespace RentACar.Core.Managers
             if (booking == null || booking.Startdate <= DateOnly.FromDateTime(DateTime.UtcNow))
                 return false;
 
+            // 🔍 Fetch payments for this booking
+            var payments = await _paymentRepository.GetPaymentsByBookingIdAsync(booking.BookingId);
+
+            // 🗑️ Delete all related payments first
+            foreach (var payment in payments)
+            {
+                await _paymentRepository.DeleteAsync(payment);
+            }
+
+            // ✅ Then delete the booking
             await _bookingRepository.DeleteAsync(booking);
+
+            // ✅ Update car availability
             await _carRepository.SetCarAvailabilityAsync(booking.CarId, true);
+
             return true;
         }
+
 
         public async Task<(DateOnly startDate, DateOnly endDate)> SuggestBookingDatesAsync(int carId)
         {
@@ -299,6 +313,9 @@ namespace RentACar.Core.Managers
         public BookingProfile()
         {
             CreateMap<Booking, BookingDto>().ReverseMap();
+
+            CreateMap<Booking, BookingEditDto>().ReverseMap();
+
         }
     }
 }

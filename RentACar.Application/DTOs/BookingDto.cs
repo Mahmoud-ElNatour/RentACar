@@ -9,7 +9,6 @@ namespace RentACar.Application.DTOs
         public int BookingId { get; set; }
 
         [Required]
-        [StringLength(450)]
         public int CustomerId { get; set; } = 0!;
 
         [Required]
@@ -17,7 +16,6 @@ namespace RentACar.Application.DTOs
 
         public bool? IsBookedByEmployee { get; set; }
 
-        [StringLength(450)]
         public int? EmployeebookerId { get; set; }
 
         [Required]
@@ -70,5 +68,15 @@ namespace RentACar.Application.DTOs
     {
         [Required]
         public int BookingId { get; set; }
+    }
+
+
+    public class BookingEditDto
+    {
+        public int BookingId { get; set; }
+        public DateOnly Startdate { get; set; }
+        public DateOnly Enddate { get; set; }
+        public decimal TotalPrice { get; set; } // still validated
+        public string BookingStatus { get; set; } = "pending";
     }
 }
