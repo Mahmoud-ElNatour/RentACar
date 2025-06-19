@@ -57,6 +57,11 @@ builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 builder.Services.AddScoped<IBlacklistRepository, BlacklistRepository>();
 builder.Services.AddScoped<IPromocodeRepository, PromocodeRepository>();
+builder.Services.AddScoped<IPaymentMethodRepository, PaymentMethodRepository>();
+builder.Services.AddScoped<IBookingRepository, BookingRepository>();
+builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+
+
 builder.Services.AddHttpContextAccessor();
 // 🔥 Register Managers
 builder.Services.AddScoped<CustomerManager>();
@@ -67,6 +72,9 @@ builder.Services.AddScoped<CarManager>();
 builder.Services.AddScoped<BlacklistManager>();
 builder.Services.AddScoped<PromocodeManager>();
 builder.Services.AddScoped<CreditCardManager>();
+builder.Services.AddScoped<PaymentMethodManager>();
+builder.Services.AddScoped<BookingManager>();
+builder.Services.AddScoped<PaymentManager>();
 
 
 
