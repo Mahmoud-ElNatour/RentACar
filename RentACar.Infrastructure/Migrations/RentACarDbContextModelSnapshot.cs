@@ -297,7 +297,7 @@ namespace RentACar.Infrastructure.Migrations
                         .HasDefaultValue(false)
                         .HasColumnName("isBookedByEmployee");
 
-                    b.Property<int>("PaymentId")
+                    b.Property<int?>("PaymentId")
                         .HasColumnType("int")
                         .HasColumnName("paymentID");
 
@@ -762,7 +762,7 @@ namespace RentACar.Infrastructure.Migrations
                     b.HasOne("RentACar.Core.Entities.Payment", "Payment")
                         .WithMany("Bookings")
                         .HasForeignKey("PaymentId")
-                        .IsRequired()
+                        .OnDelete(DeleteBehavior.ClientSetNull)
                         .HasConstraintName("FK_Bookings_Payments");
 
                     b.HasOne("RentACar.Core.Entities.Promocode", "Promocode")

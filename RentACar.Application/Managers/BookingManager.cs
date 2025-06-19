@@ -155,7 +155,7 @@ namespace RentACar.Core.Managers
                 Subtotal = subtotal,
                 IsBookedByEmployee = isBookedByEmployee,
                 EmployeebookerId = isBookedByEmployee ? employeeBookerIntId : null,
-                PaymentId = 0
+                PaymentId = null
             };
 
             // Save booking first to generate BookingId

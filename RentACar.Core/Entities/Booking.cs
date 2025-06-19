@@ -43,7 +43,7 @@ public partial class Booking
     public string? BookingStatus { get; set; }
 
     [Column("paymentID")]
-    public int PaymentId { get; set; }
+    public int? PaymentId { get; set; }
 
     [Column("subtotal", TypeName = "decimal(18, 2)")]
     public decimal? Subtotal { get; set; }

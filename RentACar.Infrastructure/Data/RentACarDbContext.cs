@@ -89,8 +89,11 @@ public partial class RentACarDbContext : DbContext
 
             entity.HasOne(d => d.Employeebooker).WithMany(p => p.Bookings).HasConstraintName("FK_Bookings_Employees");
 
-            entity.HasOne(d => d.Payment).WithMany(p => p.Bookings)
+            entity.HasOne(d => d.Payment)
+                .WithMany(p => p.Bookings)
+                .HasForeignKey(d => d.PaymentId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
+                .IsRequired(false)
                 .HasConstraintName("FK_Bookings_Payments");
 
             entity.HasOne(d => d.Promocode).WithMany(p => p.Bookings).HasConstraintName("FK_Bookings_Promocodes1");
