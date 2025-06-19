@@ -47,6 +47,20 @@ namespace RentACar.Infrastructure.Data.Repository
             return await _dbContext.Bookings.Where(b => b.EmployeebookerId == employeeId).ToListAsync();
         }
 
-       
+        public async Task UpdateCarAvailabilityAsync(int carId, bool isAvailable)
+        {
+            var car = await _dbContext.Cars.FindAsync(carId);
+            if (car != null)
+            {
+                car.IsAvailable = isAvailable;
+                _dbContext.Update(car);
+                await _dbContext.SaveChangesAsync();
+            }
+        }
+        public async Task UpdateAsync(Booking booking)
+        {
+            _dbContext.Entry(booking).State = EntityState.Modified;
+            await _dbContext.SaveChangesAsync();
+        }
     }
 }
