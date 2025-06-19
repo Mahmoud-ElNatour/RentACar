@@ -1,0 +1,101 @@
+:root {
+    --primary-dark: #0a0c0e;
+    --secondary-dark: #161819;
+    --accent-gold: #d4af37;
+    --accent-gold-hover: #e6c347;
+    --text-primary: #ffffff;
+    --text-secondary: #9ea3a9;
+}
+
+body {
+    background: var(--primary-dark);
+    color: var(--text-primary);
+    font-family: 'Poppins', 'Segoe UI', Arial, sans-serif;
+}
+
+.browse-container {
+    background: var(--secondary-dark);
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05);
+}
+
+.car-card {
+    position: relative;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.car-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.4);
+}
+
+.car-thumb {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+}
+
+.car-info {
+    padding: 15px;
+    flex-grow: 1;
+}
+
+.car-info h5 {
+    color: var(--accent-gold);
+}
+
+.book-overlay {
+    position: absolute;
+    bottom: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: opacity .2s;
+}
+
+.car-card:hover .book-overlay {
+    opacity: 1;
+}
+
+.btn-book {
+    border: none;
+    padding: 8px 16px;
+}
+
+.btn-book.available {
+    background-color: var(--accent-gold);
+    color: var(--primary-dark);
+}
+
+.btn-book.available:hover {
+    background-color: var(--accent-gold-hover);
+}
+
+.btn-book.unavailable {
+    background-color: #dc3545;
+    color: #fff;
+}
+
+.btn-book.unavailable:hover {
+    background-color: #c82333;
+}
+
+.search-input {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--text-primary);
+}
+
+.search-input:focus {
+    background: rgba(255,255,255,0.05);
+    border-color: var(--accent-gold);
+    box-shadow: 0 0 0 3px rgba(212,175,55,0.1);
+}

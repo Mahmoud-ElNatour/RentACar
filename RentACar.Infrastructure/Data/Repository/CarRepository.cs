@@ -103,14 +103,15 @@ namespace RentACar.Infrastructure.Data.Repositories
             }
         }
 
-        public Task<List<Car>> GetAvailabilityInTimelineAsync(DateTime startTime, DateTime endTime)
+        public async Task<List<Car>> GetAvailabilityInTimelineAsync(DateTime startTime, DateTime endTime)
         {
-            throw new NotImplementedException();
-            //return await _dbContext.Cars
-            //    .Where(car => !_dbContext.Bookings.Any(booking =>
-            //        booking.CarId == car.CarId &&
-            //        booking.RentalEndDate >= startTime && booking.RentalStartDate <= endTime))
-            //    .ToListAsync();
+            var start = DateOnly.FromDateTime(startTime.Date);
+            var end = DateOnly.FromDateTime(endTime.Date);
+
+            return await _dbContext.Cars
+                .Include(c => c.Category)
+                .Where(car => !_dbContext.Bookings.Any(b => b.CarId == car.CarId && b.Startdate <= end && b.Enddate >= start))
+                .ToListAsync();
         }
 
         public Task SetCarAvailabilityAsync(int carId, bool isAvailable)

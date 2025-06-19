@@ -2,6 +2,7 @@
 using RentACar.Application.DTOs;
 using RentACar.Application.Managers;
 using RentACar.Core.Entities;
+using System.Linq;
 
 namespace RentACar.Web.Controllers
 {
@@ -18,7 +19,7 @@ namespace RentACar.Web.Controllers
         }
 
         [HttpGet("~/Browse")]
-        public async Task<IActionResult> Index(string? name = null, int? categoryId = null, decimal? maxPrice = null)
+        public async Task<IActionResult> Index(string? name = null, int? categoryId = null, decimal? maxPrice = null, DateOnly? startDate = null, DateOnly? endDate = null)
         {
             var categories = await _categoryManager.GetAllCategoriesAsync();
 
@@ -31,13 +32,22 @@ namespace RentACar.Web.Controllers
                 cars = cars.Where(c => c.PricePerDay <= maxPrice.Value).ToList();
             }
 
+            if (startDate.HasValue && endDate.HasValue)
+            {
+                var available = await _carManager.GetAvailableCarsInTimelineAsync(startDate.Value.ToDateTime(TimeOnly.MinValue), endDate.Value.ToDateTime(TimeOnly.MinValue));
+                var availIds = available.Select(c => c.CarId).ToHashSet();
+                cars = cars.Where(c => availIds.Contains(c.CarId)).ToList();
+            }
+
             var model = new BrowseViewDTO
             {
                 Cars = cars,
                 Categories = categories,
                 FilterName = name,
                 FilterCategoryId = categoryId,
-                FilterMaxPrice = maxPrice
+                FilterMaxPrice = maxPrice,
+                FilterStartDate = startDate,
+                FilterEndDate = endDate
             };
 
             return View(model);
