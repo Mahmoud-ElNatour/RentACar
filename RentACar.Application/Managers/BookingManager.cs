@@ -254,6 +254,40 @@ namespace RentACar.Core.Managers
             return true;
         }
 
+        public async Task<(DateOnly startDate, DateOnly endDate)> SuggestBookingDatesAsync(int carId)
+        {
+            var bookings = await _bookingRepository.GetBookingsByCarIdAsync(carId);
+            var ordered = bookings.OrderBy(b => b.Startdate).ToList();
+
+            DateOnly start = DateOnly.FromDateTime(DateTime.Today);
+
+            foreach (var b in ordered)
+            {
+                if (start >= b.Startdate && start <= b.Enddate)
+                {
+                    start = b.Enddate.AddDays(1);
+                    continue;
+                }
+                if (b.Startdate > start)
+                {
+                    break;
+                }
+            }
+
+            var next = ordered.FirstOrDefault(b => b.Startdate > start);
+            DateOnly end = start.AddDays(1);
+            if (next != null)
+            {
+                var candidate = next.Startdate.AddDays(-1);
+                if (candidate > start)
+                {
+                    end = candidate;
+                }
+            }
+
+            return (start, end);
+        }
+
         public Task<bool> PrintBookingDocumentAsync(int bookingId)
         {
             return Task.FromResult(true);

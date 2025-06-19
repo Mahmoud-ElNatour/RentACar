@@ -39,8 +39,16 @@ namespace RentACar.Web.Controllers
         [HttpGet("~/Booking/Add")]
         //[Authorize(Roles = "Admin,Employee")]
         [ApiExplorerSettings(IgnoreApi = true)]
-        public IActionResult Add()
+        public async Task<IActionResult> Add(int? carId = null)
         {
+            if (carId.HasValue)
+            {
+                var (start, end) = await _bookingManager.SuggestBookingDatesAsync(carId.Value);
+                ViewBag.StartDate = start.ToDateTime(TimeOnly.MinValue).ToString("yyyy-MM-dd");
+                ViewBag.EndDate = end.ToDateTime(TimeOnly.MinValue).ToString("yyyy-MM-dd");
+                ViewBag.CarId = carId.Value.ToString();
+            }
+
             return View("~/Views/ControlPanel/Booking/Add.cshtml", new BookingDto());
         }
 
