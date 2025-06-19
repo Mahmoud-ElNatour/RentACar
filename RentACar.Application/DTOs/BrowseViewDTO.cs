@@ -15,6 +15,9 @@ namespace RentACar.Application.DTOs
         public string? FilterName { get; set; }
         public int? FilterCategoryId { get; set; }
         public decimal? FilterMaxPrice { get; set; }
+
+        public DateOnly? FilterStartDate { get; set; }
+        public DateOnly? FilterEndDate { get; set; }
     }
 }
 
