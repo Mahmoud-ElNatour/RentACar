@@ -1,0 +1,75 @@
+﻿@model RentACar.Application.DTOs.BookingDto
+@{
+    ViewData["Title"] = "Edit Booking";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/bookings.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
+</head>
+<body>
+    <div class="booking-container container">
+        <a href="/Booking" class="btn btn-outline-warning rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:40px;height:40px" title="Back">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <h2 class="text-center mb-4">Edit Booking</h2>
+        <form id="bookingForm">
+            <input type="hidden" asp-for="BookingId" />
+            <div class="mb-3">
+                <label class="form-label">Customer ID</label>
+                <input asp-for="CustomerId" class="form-control" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Car ID</label>
+                <input asp-for="CarId" class="form-control" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Start Date</label>
+                <input asp-for="Startdate" type="date" class="form-control" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">End Date</label>
+                <input asp-for="Enddate" type="date" class="form-control" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Status</label>
+                <input asp-for="BookingStatus" class="form-control" />
+            </div>
+            <button type="submit" class="btn btn-primary">Save</button>
+        </form>
+    </div>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('bookingForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const form = e.target;
+            const id = form.querySelector('[name="BookingId"]').value;
+            const data = {
+                bookingId: parseInt(id),
+                customerId: parseInt(form.querySelector('[name="CustomerId"]').value || '0'),
+                carId: parseInt(form.querySelector('[name="CarId"]').value || '0'),
+                startdate: form.querySelector('[name="Startdate"]').value,
+                enddate: form.querySelector('[name="Enddate"]').value,
+                bookingStatus: form.querySelector('[name="BookingStatus"]').value
+            };
+            const resp = await fetch('/api/Booking/' + id, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            if (resp.ok) {
+                window.location.href = '/Booking';
+            } else {
+                alert('Error updating booking');
+            }
+        });
+    </script>
+</body>
+</html>
