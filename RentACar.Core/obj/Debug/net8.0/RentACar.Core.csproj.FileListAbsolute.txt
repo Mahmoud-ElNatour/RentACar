@@ -47,3 +47,15 @@ C:\Users\Mohammad\Downloads\RentACar-main\RentACar.Core\obj\Debug\net8.0\RentACa
 C:\Users\Mohammad\Downloads\RentACar-main\RentACar.Core\obj\Debug\net8.0\refint\RentACar.Core.dll
 C:\Users\Mohammad\Downloads\RentACar-main\RentACar.Core\obj\Debug\net8.0\RentACar.Core.pdb
 C:\Users\Mohammad\Downloads\RentACar-main\RentACar.Core\obj\Debug\net8.0\ref\RentACar.Core.dll
+C:\Users\Mohammad\Downloads\RentACar-codex-auto-fill-booking-form-with-car-details\RentACar.Core\bin\Debug\net8.0\RentACar.Core.deps.json
+C:\Users\Mohammad\Downloads\RentACar-codex-auto-fill-booking-form-with-car-details\RentACar.Core\bin\Debug\net8.0\RentACar.Core.dll
+C:\Users\Mohammad\Downloads\RentACar-codex-auto-fill-booking-form-with-car-details\RentACar.Core\bin\Debug\net8.0\RentACar.Core.pdb
+C:\Users\Mohammad\Downloads\RentACar-codex-auto-fill-booking-form-with-car-details\RentACar.Core\obj\Debug\net8.0\RentACar.Core.csproj.AssemblyReference.cache
+C:\Users\Mohammad\Downloads\RentACar-codex-auto-fill-booking-form-with-car-details\RentACar.Core\obj\Debug\net8.0\RentACar.Core.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Mohammad\Downloads\RentACar-codex-auto-fill-booking-form-with-car-details\RentACar.Core\obj\Debug\net8.0\RentACar.Core.AssemblyInfoInputs.cache
+C:\Users\Mohammad\Downloads\RentACar-codex-auto-fill-booking-form-with-car-details\RentACar.Core\obj\Debug\net8.0\RentACar.Core.AssemblyInfo.cs
+C:\Users\Mohammad\Downloads\RentACar-codex-auto-fill-booking-form-with-car-details\RentACar.Core\obj\Debug\net8.0\RentACar.Core.csproj.CoreCompileInputs.cache
+C:\Users\Mohammad\Downloads\RentACar-codex-auto-fill-booking-form-with-car-details\RentACar.Core\obj\Debug\net8.0\RentACar.Core.dll
+C:\Users\Mohammad\Downloads\RentACar-codex-auto-fill-booking-form-with-car-details\RentACar.Core\obj\Debug\net8.0\refint\RentACar.Core.dll
+C:\Users\Mohammad\Downloads\RentACar-codex-auto-fill-booking-form-with-car-details\RentACar.Core\obj\Debug\net8.0\RentACar.Core.pdb
+C:\Users\Mohammad\Downloads\RentACar-codex-auto-fill-booking-form-with-car-details\RentACar.Core\obj\Debug\net8.0\ref\RentACar.Core.dll
