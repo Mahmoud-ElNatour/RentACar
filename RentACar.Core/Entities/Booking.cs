@@ -62,7 +62,7 @@ public partial class Booking
 
     [ForeignKey("PaymentId")]
     [InverseProperty("Bookings")]
-    public virtual Payment Payment { get; set; } = null!;
+    public virtual Payment? Payment { get; set; }
 
     [InverseProperty("Booking")]
     public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();
