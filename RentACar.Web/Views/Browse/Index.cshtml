@@ -13,11 +13,13 @@
 <div class="browse-container container my-4">
     <h2 class="mb-4 text-white">Browse Cars</h2>
 
-    <form method="get" class="row g-2 mb-3">
-        <div class="col-md-2">
-            <input type="text" name="name" class="form-control" placeholder="Car Name" value="@Model.FilterName" />
+    <form method="get" class="row g-3 mb-4 align-items-end">
+        <div class="col">
+            <label class="form-label text-white">Name</label>
+            <input type="text" name="name" class="form-control" placeholder="Model name" value="@Model.FilterName" />
         </div>
-        <div class="col-md-2">
+        <div class="col">
+            <label class="form-label text-white">Category</label>
             <select name="categoryId" class="form-select">
                 <option value="">All Categories</option>
                 @foreach (var cat in Model.Categories)
@@ -33,17 +35,20 @@
                 }
             </select>
         </div>
-        <div class="col-md-2">
-            <input type="number" name="maxPrice" class="form-control" placeholder="Max Price" min="0" value="@(Model.FilterMaxPrice?.ToString() ?? "")" />
+        <div class="col">
+            <label class="form-label text-white">Max Price</label>
+            <input type="number" name="maxPrice" class="form-control" placeholder="Max" min="0" value="@(Model.FilterMaxPrice?.ToString() ?? "")" />
         </div>
-        <div class="col-md-2">
+        <div class="col">
+            <label class="form-label text-white">Start Date</label>
             <input type="date" name="startDate" class="form-control" value="@(Model.FilterStartDate?.ToString("yyyy-MM-dd") ?? "")" />
         </div>
-        <div class="col-md-2">
+        <div class="col">
+            <label class="form-label text-white">End Date</label>
             <input type="date" name="endDate" class="form-control" value="@(Model.FilterEndDate?.ToString("yyyy-MM-dd") ?? "")" />
         </div>
-        <div class="col-md-2">
-            <button type="submit" class="btn btn-primary w-100">Filter</button>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-primary">Filter</button>
         </div>
     </form>
 

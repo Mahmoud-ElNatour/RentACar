@@ -108,3 +108,32 @@ body {
     border-color: var(--accent-gold);
     box-shadow: 0 0 0 3px rgba(212,175,55,0.1);
 }
+
+/* Inputs and selects styling similar to control panel */
+input.form-control,
+select.form-select {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--text-primary);
+}
+
+input.form-control:focus,
+select.form-select:focus {
+    background: rgba(255,255,255,0.05);
+    border-color: var(--accent-gold);
+    box-shadow: 0 0 0 3px rgba(212,175,55,0.1);
+    color: var(--text-primary);
+}
+
+.btn-primary {
+    background-color: var(--accent-gold);
+    border-color: var(--accent-gold);
+    color: var(--primary-dark);
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+    background-color: var(--accent-gold-hover);
+    border-color: var(--accent-gold-hover);
+    color: var(--primary-dark);
+}
