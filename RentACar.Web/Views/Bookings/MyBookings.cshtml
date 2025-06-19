@@ -1,0 +1,48 @@
+@{
+    ViewData["Title"] = "My Bookings";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<link rel="stylesheet" href="~/css/mybookings.css" />
+<div class="d-flex justify-content-center mt-4">
+    <div class="history-container w-100">
+        <h2 class="text-center mb-4">My Bookings</h2>
+        <div class="table-responsive">
+            <table class="table table-dark table-striped align-middle">
+                <thead>
+                    <tr>
+                        <th>Booking ID</th>
+                        <th>Car</th>
+                        <th>Payment</th>
+                        <th>Start</th>
+                        <th>End</th>
+                        <th>Price</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="bookingRows"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+@section Scripts{
+    <script>
+        async function loadBookings(){
+            const res = await fetch('/api/Bookings');
+            const data = await res.json();
+            const tbody = document.getElementById('bookingRows');
+            tbody.innerHTML='';
+            data.forEach(b=>{
+                const tr=document.createElement('tr');
+                tr.innerHTML=`<td>${b.bookingId}</td>`+
+                              `<td>${b.carName ?? ''} (${b.plateNumber ?? ''})</td>`+
+                              `<td>${b.paymentId ?? ''}</td>`+
+                              `<td>${b.startdate}</td>`+
+                              `<td>${b.enddate}</td>`+
+                              `<td>${b.totalPrice}</td>`+
+                              `<td><a class='btn btn-primary btn-sm' href='/Bookings/Ticket/${b.bookingId}' target='_blank'>Ticket</a></td>`;
+                tbody.appendChild(tr);
+            });
+        }
+        document.addEventListener('DOMContentLoaded', loadBookings);
+    </script>
+}
