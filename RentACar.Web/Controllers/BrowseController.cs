@@ -32,9 +32,17 @@ namespace RentACar.Web.Controllers
                 cars = cars.Where(c => c.PricePerDay <= maxPrice.Value).ToList();
             }
 
-            if (startDate.HasValue && endDate.HasValue)
+            if (startDate.HasValue || endDate.HasValue)
             {
-                var available = await _carManager.GetAvailableCarsInTimelineAsync(startDate.Value.ToDateTime(TimeOnly.MinValue), endDate.Value.ToDateTime(TimeOnly.MinValue));
+                var start = startDate ?? endDate ?? DateOnly.FromDateTime(DateTime.Today);
+                var end = endDate ?? start;
+                if (end < start)
+                {
+                    var temp = start;
+                    start = end;
+                    end = temp;
+                }
+                var available = await _carManager.GetAvailableCarsInTimelineAsync(start.ToDateTime(TimeOnly.MinValue), end.ToDateTime(TimeOnly.MinValue));
                 var availIds = available.Select(c => c.CarId).ToHashSet();
                 cars = cars.Where(c => availIds.Contains(c.CarId)).ToList();
             }
