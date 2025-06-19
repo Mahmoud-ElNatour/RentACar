@@ -19,8 +19,9 @@ namespace RentACar.Application.DTOs
 
         public int? CreditcardId { get; set; }
 
-        [StringLength(20)]
-        public string? PaymentMethod { get; set; }
+        // Use ID instead of raw string for better normalization
+        [Required]
+        public int PaymentMethodId { get; set; }
 
         [StringLength(50)]
         public string? Status { get; set; }
@@ -36,9 +37,8 @@ namespace RentACar.Application.DTOs
         public decimal Amount { get; set; }
 
         [Required]
-        [StringLength(20)]
-        public string PaymentMethod { get; set; } // "Cash" or "CreditCard"
+        public int PaymentMethodId { get; set; } // refers to PaymentMethods table
 
-        public int? CreditcardId { get; set; } // Required if PaymentMethod is "CreditCard"
+        public int? CreditcardId { get; set; } // Required if method is credit card
     }
 }

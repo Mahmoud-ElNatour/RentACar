@@ -61,7 +61,7 @@ namespace RentACar.Application.DTOs
         public DateOnly Enddate { get; set; }
 
         public string? Promocode { get; set; } // To apply promocode by string
-        public string PaymentMethod { get; set; } // "Cash" or "CreditCard"
+        public int PaymentMethodId { get; set; } // "Cash" or "CreditCard"
         public int? CreditcardId { get; set; } // If paying by credit card
     }
 
