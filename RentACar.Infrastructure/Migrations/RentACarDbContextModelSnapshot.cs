@@ -297,7 +297,7 @@ namespace RentACar.Infrastructure.Migrations
                         .HasDefaultValue(false)
                         .HasColumnName("isBookedByEmployee");
 
-                    b.Property<int>("PaymentId")
+                    b.Property<int?>("PaymentId")
                         .HasColumnType("int")
                         .HasColumnName("paymentID");
 
@@ -324,8 +324,6 @@ namespace RentACar.Infrastructure.Migrations
                     b.HasIndex("CustomerId");
 
                     b.HasIndex("EmployeebookerId");
-
-                    b.HasIndex("PaymentId");
 
                     b.HasIndex("PromocodeId");
 
@@ -602,9 +600,30 @@ namespace RentACar.Infrastructure.Migrations
 
                     b.HasKey("PaymentId");
 
-                    b.HasIndex("BookingId");
+                    b.HasIndex("BookingId")
+                        .IsUnique();
 
                     b.ToTable("Payments");
+                });
+
+            modelBuilder.Entity("RentACar.Core.Entities.PaymentMethod", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("PaymentMethodName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasColumnName("paymentMethodName");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PaymentMethods");
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.Promocode", b =>
@@ -739,12 +758,6 @@ namespace RentACar.Infrastructure.Migrations
                         .HasForeignKey("EmployeebookerId")
                         .HasConstraintName("FK_Bookings_Employees");
 
-                    b.HasOne("RentACar.Core.Entities.Payment", "Payment")
-                        .WithMany("Bookings")
-                        .HasForeignKey("PaymentId")
-                        .IsRequired()
-                        .HasConstraintName("FK_Bookings_Payments");
-
                     b.HasOne("RentACar.Core.Entities.Promocode", "Promocode")
                         .WithMany("Bookings")
                         .HasForeignKey("PromocodeId")
@@ -755,8 +768,6 @@ namespace RentACar.Infrastructure.Migrations
                     b.Navigation("Customer");
 
                     b.Navigation("Employeebooker");
-
-                    b.Navigation("Payment");
 
                     b.Navigation("Promocode");
                 });
@@ -815,8 +826,8 @@ namespace RentACar.Infrastructure.Migrations
             modelBuilder.Entity("RentACar.Core.Entities.Payment", b =>
                 {
                     b.HasOne("RentACar.Core.Entities.Booking", "Booking")
-                        .WithMany("Payments")
-                        .HasForeignKey("BookingId")
+                        .WithOne()
+                        .HasForeignKey("RentACar.Core.Entities.Payment", "BookingId")
                         .IsRequired()
                         .HasConstraintName("FK_Payments_Bookings");
 
@@ -841,11 +852,6 @@ namespace RentACar.Infrastructure.Migrations
                     b.Navigation("Customer");
 
                     b.Navigation("Employees");
-                });
-
-            modelBuilder.Entity("RentACar.Core.Entities.Booking", b =>
-                {
-                    b.Navigation("Payments");
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.Car", b =>
@@ -874,11 +880,6 @@ namespace RentACar.Infrastructure.Migrations
                 {
                     b.Navigation("BlackLists");
 
-                    b.Navigation("Bookings");
-                });
-
-            modelBuilder.Entity("RentACar.Core.Entities.Payment", b =>
-                {
                     b.Navigation("Bookings");
                 });
 

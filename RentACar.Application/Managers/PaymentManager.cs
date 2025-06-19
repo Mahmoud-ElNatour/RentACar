@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Logging;
 using RentACar.Application.DTOs;
 using RentACar.Core.Entities;
 using RentACar.Core.Repositories;
-using Microsoft.Extensions.Logging;
-using AspNetUserEntity = RentACar.Core.Entities.AspNetUser; // Add this using directive
+using AspNetUserEntity = RentACar.Core.Entities.AspNetUser;
 
 namespace RentACar.Core.Managers
 {
@@ -16,7 +16,8 @@ namespace RentACar.Core.Managers
         private readonly IPaymentRepository _paymentRepository;
         private readonly IBookingRepository _bookingRepository;
         private readonly ICreditCardRepository _creditCardRepository;
-        private readonly UserManager<AspNetUserEntity> _userManager; // Inject UserManager
+        private readonly IPaymentMethodRepository _paymentMethodRepository;
+        private readonly UserManager<IdentityUser> _userManager;
         private readonly IMapper _mapper;
         private readonly ILogger<PaymentManager> _logger;
 
@@ -24,76 +25,125 @@ namespace RentACar.Core.Managers
             IPaymentRepository paymentRepository,
             IBookingRepository bookingRepository,
             ICreditCardRepository creditCardRepository,
-            UserManager<AspNetUserEntity> userManager, // Receive UserManager
+            IPaymentMethodRepository paymentMethodRepository,
+            UserManager<IdentityUser> userManager,
             IMapper mapper,
             ILogger<PaymentManager> logger)
         {
             _paymentRepository = paymentRepository;
             _bookingRepository = bookingRepository;
             _creditCardRepository = creditCardRepository;
+            _paymentMethodRepository = paymentMethodRepository;
             _userManager = userManager;
             _mapper = mapper;
             _logger = logger;
         }
 
-        // Used by authenticated customer (can only pay with credit card for their own booking)
         public async Task<bool> MakePaymentByCustomerAsync(MakePaymentRequestDto paymentDto, int customerUserId)
         {
             _logger.LogInformation("Customer {Id} making payment for booking {Booking}", customerUserId, paymentDto.BookingId);
+
             var booking = await _bookingRepository.GetByIdAsync(paymentDto.BookingId);
             if (booking == null || booking.CustomerId != customerUserId)
                 return false;
 
-            if (paymentDto.PaymentMethod?.ToLowerInvariant() != "creditcard" || !paymentDto.CreditcardId.HasValue)
+            var paymentMethod = await _paymentMethodRepository.GetByIdAsync(paymentDto.PaymentMethodId);
+            if (paymentMethod == null)
                 return false;
-
-            var creditCard = await _creditCardRepository.GetByIdAsync(paymentDto.CreditcardId.Value);
-            if (creditCard == null)
-                return false;
-
-            // Simulate payment gateway
-            bool paymentSuccessful = true;
-
-            var payment = new Payment
+            if (paymentMethod.PaymentMethodName.Equals("creditcard", StringComparison.OrdinalIgnoreCase))
             {
-                BookingId = paymentDto.BookingId,
-                Amount = paymentDto.Amount,
-                PaymentDate = DateOnly.FromDateTime(DateTime.UtcNow),
-                CreditcardId = paymentDto.CreditcardId,
-                PaymentMethod = paymentDto.PaymentMethod,
-                Status = paymentSuccessful ? "done" : "failed"
-            };
+                if (!paymentDto.CreditcardId.HasValue)
+                    return false;
 
-            await _paymentRepository.AddAsync(payment);
-            return paymentSuccessful;
+                var creditCard = await _creditCardRepository.GetByIdAsync(paymentDto.CreditcardId.Value);
+                if (creditCard == null)
+                    return false;
+
+                var payment = new Payment
+                {
+                    BookingId = paymentDto.BookingId,
+                    Amount = paymentDto.Amount,
+                    PaymentDate = DateOnly.FromDateTime(DateTime.UtcNow),
+                    CreditcardId = paymentDto.CreditcardId,
+                    PaymentMethod = paymentMethod.PaymentMethodName,
+                    Status = "done"
+                };
+
+                await _paymentRepository.AddAsync(payment);
+                return true;
+            }
+            else
+            {
+                var payment = new Payment
+                {
+                    BookingId = paymentDto.BookingId,
+                    Amount = paymentDto.Amount,
+                    PaymentDate = DateOnly.FromDateTime(DateTime.UtcNow),
+                    PaymentMethod = paymentMethod.PaymentMethodName,
+                    Status = "done"
+                };
+                await _paymentRepository.AddAsync(payment);
+                return true;
+
+            }
         }
 
-        // Used by authenticated employee (can only pay in cash for any valid booking)
         public async Task<bool> MakePaymentByEmployeeAsync(MakePaymentRequestDto paymentDto, string employeeUserId)
         {
             _logger.LogInformation("Employee {Id} recording payment for booking {Booking}", employeeUserId, paymentDto.BookingId);
             var user = await _userManager.FindByIdAsync(employeeUserId);
-            if (user == null || !await _userManager.IsInRoleAsync(user, "Employee")) // Check user role directly
+            if (user == null || !await _userManager.IsInRoleAsync(user, "Employee"))
+                return false;
+            var paymentMethod = await _paymentMethodRepository.GetByIdAsync(paymentDto.PaymentMethodId);
+            if (paymentMethod == null)
                 return false;
 
-            var booking = await _bookingRepository.GetByIdAsync(paymentDto.BookingId);
-            if (booking == null)
-                return false;
-
-            if (paymentDto.PaymentMethod?.ToLowerInvariant() != "cash")
-                return false;
-
-            var payment = new Payment
+            if (paymentMethod.PaymentMethodName.Equals("creditcard", StringComparison.OrdinalIgnoreCase))
             {
-                BookingId = paymentDto.BookingId,
-                Amount = paymentDto.Amount,
-                PaymentDate = DateOnly.FromDateTime(DateTime.UtcNow),
-                PaymentMethod = paymentDto.PaymentMethod,
-                Status = "done"
-            };
+                if (!paymentDto.CreditcardId.HasValue)
+                    return false;
 
-            await _paymentRepository.AddAsync(payment);
-            return true;
+                var creditCard = await _creditCardRepository.GetByIdAsync(paymentDto.CreditcardId.Value);
+                if (creditCard == null)
+                    return false;
+
+                var payment = new Payment
+                {
+                    BookingId = paymentDto.BookingId,
+                    Amount = paymentDto.Amount,
+                    PaymentDate = DateOnly.FromDateTime(DateTime.UtcNow),
+                    CreditcardId = paymentDto.CreditcardId,
+                    PaymentMethod = paymentMethod.PaymentMethodName,
+                    Status = "done"
+                };
+
+                await _paymentRepository.AddAsync(payment);
+                return true;
+            }
+            else
+            {
+                if (user == null || !await _userManager.IsInRoleAsync(user, "Employee"))
+                    return false;
+
+                var booking = await _bookingRepository.GetByIdAsync(paymentDto.BookingId);
+                if (booking == null)
+                    return false;
+
+                if (paymentMethod == null || !paymentMethod.PaymentMethodName.Equals("cash", StringComparison.OrdinalIgnoreCase))
+                    return false;
+
+                var payment = new Payment
+                {
+                    BookingId = paymentDto.BookingId,
+                    Amount = paymentDto.Amount,
+                    PaymentDate = DateOnly.FromDateTime(DateTime.UtcNow),
+                    PaymentMethod = paymentMethod.PaymentMethodName,
+                    Status = "done"
+                };
+
+                await _paymentRepository.AddAsync(payment);
+                return true;
+            }
         }
 
         public async Task<List<PaymentDto>> GetPaymentsByBookingIdAsync(int bookingId)
@@ -113,10 +163,10 @@ namespace RentACar.Core.Managers
             var payments = await _paymentRepository.GetAllAsync();
             return _mapper.Map<List<PaymentDto>>(payments);
         }
-        //add async task<bool> when implemented
+
         public bool PrintPaymentDocument(int bookingId)
         {
-            // To be implemented later when other managers/entities are available
+            // To be implemented later
             return true;
         }
     }
@@ -126,8 +176,7 @@ namespace RentACar.Core.Managers
         public PaymentProfile()
         {
             CreateMap<Payment, PaymentDto>().ReverseMap();
-            // Note: MakePaymentRequestDto should be handled manually due to logic requirements.
+            CreateMap<PaymentMethod, PaymentMethodDto>().ReverseMap();
         }
     }
-
 }

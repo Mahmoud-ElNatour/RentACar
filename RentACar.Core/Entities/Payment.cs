@@ -1,8 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
 
 namespace RentACar.Core.Entities;
 
@@ -35,9 +34,7 @@ public partial class Payment
     public string? Status { get; set; }
 
     [ForeignKey("BookingId")]
-    [InverseProperty("Payments")]
     public virtual Booking Booking { get; set; } = null!;
 
-    [InverseProperty("Payment")]
-    public virtual ICollection<Booking> Bookings { get; set; } = new List<Booking>();
+    // ❌ Removed: public virtual ICollection<Booking> Bookings
 }

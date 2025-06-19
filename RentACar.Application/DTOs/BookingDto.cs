@@ -33,10 +33,11 @@ namespace RentACar.Application.DTOs
         public decimal TotalPrice { get; set; }
 
         [StringLength(50)]
-        public string? BookingStatus { get; set; }
+        public string BookingStatus { get; set; } = "pending";
 
         [Required]
-        public int PaymentId { get; set; }
+        public int? PaymentId { get; set; }
+
 
         [Range(0.01, double.MaxValue, ErrorMessage = "Subtotal must be greater than 0.")]
         public decimal? Subtotal { get; set; }
@@ -61,7 +62,7 @@ namespace RentACar.Application.DTOs
         public DateOnly Enddate { get; set; }
 
         public string? Promocode { get; set; } // To apply promocode by string
-        public string PaymentMethod { get; set; } // "Cash" or "CreditCard"
+        public int PaymentMethodId { get; set; } // "Cash" or "CreditCard"
         public int? CreditcardId { get; set; } // If paying by credit card
     }
 

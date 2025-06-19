@@ -1,0 +1,123 @@
+﻿@inject UserManager<IdentityUser> UserManager
+@inject SignInManager<IdentityUser> SignInManager
+@inject PaymentMethodManager PaymentMethodManager
+
+@using Microsoft.AspNetCore.Identity
+@using RentACar.Application.Managers
+
+@model RentACar.Application.DTOs.BookingDto
+@{
+    ViewData["Title"] = "Add Booking";
+    Layout = null;
+    var user = await UserManager.GetUserAsync(User);
+    var isCustomer = await UserManager.IsInRoleAsync(user, "Customer");
+
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/bookings.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
+</head>
+<body>
+    <div class="booking-container container">
+        <a href="/Booking" class="btn btn-outline-warning rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:40px;height:40px" title="Back">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <h2 class="text-center mb-4">Add Booking</h2>
+        <form id="bookingForm">
+            @if (!isCustomer)
+            {
+                <div class="mb-3">
+                    <label class="form-label">Customer ID</label>
+                    <input class="form-control" type="number" id="CustomerId" name="CustomerId" min="1" required />
+                </div>
+            }else{
+               
+            }
+            <div class="mb-3">
+                <label class="form-label">Car ID</label>
+                <input class="form-control" type="number" id="CarId" name="CarId" min="1" required />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Start Date</label>
+                <input type="date" class="form-control" id="Startdate" name="Startdate" value="@DateTime.Today.ToString("yyyy-MM-dd")" required />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">End Date</label>
+                <input type="date" class="form-control" id="Enddate" name="Enddate" value="@DateTime.Today.AddDays(1).ToString("yyyy-MM-dd")" required />
+            </div>@{
+                var methods = await PaymentMethodManager.GetAllPaymentMethodsAsync();
+            }
+            <div class="mb-3">
+                <p>Found @methods.Count payment methods.</p>
+
+                <label class="form-label">Payment Method</label>
+
+                <select id="paymentMethod" class="form-select" required>
+                    <option disabled selected>Select a payment method</option>
+                    @foreach (var method in methods)
+                    {
+                        <option value="@method.Id">@method.PaymentMethodName</option>
+                    }
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Promocode</label>
+                <input type="text" id="promocode" class="form-control" />
+            </div>
+            <button type="submit" class="btn btn-primary">Save</button>
+        </form>
+    </div>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+              document.getElementById('bookingForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const form = e.target;
+            const customerIdInput = document.getElementById('CustomerId');
+                    const data = {
+            carId: parseInt(document.getElementById('CarId').value),
+            startdate: document.getElementById('Startdate').value,
+            enddate: document.getElementById('Enddate').value,
+            paymentMethodId: parseInt(document.getElementById('paymentMethod').value),
+            promocode: document.getElementById('promocode').value || null
+        };
+
+        if (customerIdInput) {
+            data.customerId = parseInt(customerIdInput.value);
+        }
+
+           
+
+            try {
+                const resp = await fetch('/api/Booking', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (resp.ok) {
+                    window.location.href = '/Booking';
+                } else {
+                    const errorText = await resp.text();
+                    alert('Error creating booking:\n' + errorText);
+                    console.error('Booking error:', errorText);
+                }
+            } catch (err) {
+                alert('Unexpected error occurred while submitting booking.');
+                console.error(err);
+            }
+        });
+
+    </script>
+</body>
+</html>
