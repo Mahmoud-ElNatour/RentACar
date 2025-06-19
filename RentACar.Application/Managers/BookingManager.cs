@@ -21,6 +21,7 @@ namespace RentACar.Core.Managers
         private readonly IPromocodeRepository _promocodeRepository;
         private readonly IPaymentMethodRepository _paymentMethodRepository;
         private readonly PaymentManager _paymentManager;
+        private readonly IPaymentRepository _paymentRepository;
         private readonly IMapper _mapper;
         private readonly ILogger<BookingManager> _logger;
         private readonly UserManager<IdentityUser> _userManager;
@@ -32,6 +33,7 @@ namespace RentACar.Core.Managers
             ICarRepository carRepository,
             IPromocodeRepository promocodeRepository,
             IPaymentMethodRepository paymentMethodRepository,
+            IPaymentRepository paymentRepository,
             PaymentManager paymentManager,
             IMapper mapper,
             UserManager<IdentityUser> userManager,
@@ -44,6 +46,7 @@ namespace RentACar.Core.Managers
             _userManager = userManager;
             _promocodeRepository = promocodeRepository;
             _paymentMethodRepository = paymentMethodRepository;
+            _paymentRepository = paymentRepository;
             _paymentManager = paymentManager;
             _mapper = mapper;
             _logger = logger;
@@ -125,41 +128,7 @@ namespace RentACar.Core.Managers
                 return null;
             }
 
-            // 🔹 Process payment
-            bool paymentSuccess = false;
-            var paymentRequest = new MakePaymentRequestDto
-            {
-                BookingId = 0,
-                Amount = totalPrice,
-                PaymentMethodId = requestDto.PaymentMethodId,
-                CreditcardId = requestDto.CreditcardId
-            };
-
-            if (paymentMethod.PaymentMethodName.Equals("creditcard", StringComparison.OrdinalIgnoreCase))
-            {
-                paymentSuccess = await _paymentManager.MakePaymentByCustomerAsync(paymentRequest, requestDto.CustomerId);
-            }
-            else if (paymentMethod.PaymentMethodName.Equals("cash", StringComparison.OrdinalIgnoreCase))
-            {
-                if (isCustomer)
-                {
-                    paymentSuccess = await _paymentManager.MakePaymentByCustomerAsync(paymentRequest, requestDto.CustomerId);
-                }
-                else
-                {
-                    paymentSuccess = await _paymentManager.MakePaymentByEmployeeAsync(paymentRequest, loggedInUserId);
-                }
-                    
-            }
-
-            if (!paymentSuccess)
-            {
-                _logger.LogWarning("Booking failed: Payment unsuccessful.");
-                return null;
-            }
-
             // 🔹 Set employee booker if employee or admin
-            string? employeeBookerId = null;
             int? employeeBookerIntId = null;
             bool isBookedByEmployee = isAdmin || isEmployee;
 
@@ -173,7 +142,7 @@ namespace RentACar.Core.Managers
                 }
             }
 
-            // 🔹 Create booking
+            // 🔹 Create booking entity (without payment yet)
             var booking = new Booking
             {
                 CustomerId = requestDto.CustomerId,
@@ -189,22 +158,31 @@ namespace RentACar.Core.Managers
                 PaymentId = 0
             };
 
+            // Save booking first to generate BookingId
             var addedBooking = await _bookingRepository.AddAsync(booking);
 
-            var payment = await _paymentManager.GetPaymentsByBookingIdAsync(addedBooking.BookingId);
-            if (payment.Any())
+            // 🔹 Create payment linked to the newly created booking
+            var payment = new Payment
             {
-                addedBooking.PaymentId = payment.First().PaymentId;
-                await _bookingRepository.UpdateAsync(addedBooking);
-                await _carRepository.SetCarAvailabilityAsync(booking.CarId, false);
-                _logger.LogInformation("✅ Booking created with ID: {BookingId}", addedBooking.BookingId);
-                return _mapper.Map<BookingDto>(addedBooking);
-            }
+                BookingId = addedBooking.BookingId,
+                Amount = totalPrice,
+                PaymentDate = DateOnly.FromDateTime(DateTime.UtcNow),
+                PaymentMethod = paymentMethod.PaymentMethodName,
+                Status = "done",
+                CreditcardId = paymentMethod.PaymentMethodName.Equals("creditcard", StringComparison.OrdinalIgnoreCase)
+                    ? requestDto.CreditcardId
+                    : null
+            };
 
-            // 🔴 Rollback if payment not recorded
-            _logger.LogError("Booking rollback: Payment not linked after booking.");
-            await _bookingRepository.DeleteAsync(addedBooking);
-            return null;
+            var addedPayment = await _paymentRepository.AddAsync(payment);
+
+            // Link payment back to booking
+            addedBooking.PaymentId = addedPayment.PaymentId;
+            await _bookingRepository.UpdateAsync(addedBooking);
+
+            await _carRepository.SetCarAvailabilityAsync(booking.CarId, false);
+            _logger.LogInformation("✅ Booking created with ID: {BookingId}", addedBooking.BookingId);
+            return _mapper.Map<BookingDto>(addedBooking);
         }
 
 
