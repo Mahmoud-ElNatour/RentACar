@@ -13,37 +13,21 @@ public partial class RentACarDbContext : DbContext
     }
 
     public virtual DbSet<AspNetRole> AspNetRoles { get; set; }
-
     public virtual DbSet<AspNetRoleClaim> AspNetRoleClaims { get; set; }
-
     public virtual DbSet<AspNetUser> AspNetUsers { get; set; }
-
     public virtual DbSet<AspNetUserClaim> AspNetUserClaims { get; set; }
-
     public virtual DbSet<AspNetUserLogin> AspNetUserLogins { get; set; }
-
     public virtual DbSet<AspNetUserToken> AspNetUserTokens { get; set; }
-
     public virtual DbSet<BlackList> BlackLists { get; set; }
-
     public virtual DbSet<Booking> Bookings { get; set; }
-
     public virtual DbSet<Car> Cars { get; set; }
-
     public virtual DbSet<Category> Categories { get; set; }
-
     public virtual DbSet<CreditCard> CreditCards { get; set; }
-
     public virtual DbSet<Customer> Customers { get; set; }
-
     public virtual DbSet<CustomerCreditCard> CustomerCreditCards { get; set; }
-
     public virtual DbSet<Employee> Employees { get; set; }
-
     public virtual DbSet<Payment> Payments { get; set; }
     public virtual DbSet<PaymentMethod> PaymentMethods { get; set; }
-
-
     public virtual DbSet<Promocode> Promocodes { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -87,18 +71,19 @@ public partial class RentACarDbContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Bookings_Customers1");
 
-            entity.HasOne(d => d.Employeebooker).WithMany(p => p.Bookings).HasConstraintName("FK_Bookings_Employees");
+            entity.HasOne(d => d.Employeebooker).WithMany(p => p.Bookings)
+                .HasConstraintName("FK_Bookings_Employees");
 
-            entity.HasOne(d => d.Payment).WithMany(p => p.Bookings)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Bookings_Payments");
+            // 🔥 Removed Booking → Payment FK to avoid circular dependency
 
-            entity.HasOne(d => d.Promocode).WithMany(p => p.Bookings).HasConstraintName("FK_Bookings_Promocodes1");
+            entity.HasOne(d => d.Promocode).WithMany(p => p.Bookings)
+                .HasConstraintName("FK_Bookings_Promocodes1");
         });
 
         modelBuilder.Entity<Car>(entity =>
         {
-            entity.HasOne(d => d.Category).WithMany(p => p.Cars).HasConstraintName("FK_Cars_Categories1");
+            entity.HasOne(d => d.Category).WithMany(p => p.Cars)
+                .HasConstraintName("FK_Cars_Categories1");
         });
 
         modelBuilder.Entity<CreditCard>(entity =>
@@ -122,7 +107,7 @@ public partial class RentACarDbContext : DbContext
 
         modelBuilder.Entity<CustomerCreditCard>(entity =>
         {
-            entity.HasKey(e => new { e.UserId, e.CreditCardId }); // Composite PK
+            entity.HasKey(e => new { e.UserId, e.CreditCardId });
 
             entity.HasOne(e => e.User)
                 .WithMany(c => c.CustomerCreditCards)
@@ -137,10 +122,11 @@ public partial class RentACarDbContext : DbContext
                 .HasConstraintName("FK_CustomerCreditCard_CreditCard");
         });
 
-
         modelBuilder.Entity<Payment>(entity =>
         {
-            entity.HasOne(d => d.Booking).WithMany(p => p.Payments)
+            entity.HasOne(d => d.Booking)
+                .WithOne() // No navigation in Booking
+                .HasForeignKey<Payment>(p => p.BookingId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Payments_Bookings");
         });
