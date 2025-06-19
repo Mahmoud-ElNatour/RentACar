@@ -49,8 +49,10 @@
                     <label class="form-label">Customer ID</label>
                     <input class="form-control" type="number" id="CustomerId" name="CustomerId" min="1" required />
                 </div>
-            }else{
-               
+            }
+            else
+            {
+
             }
             <div class="mb-3">
                 <label class="form-label">Car ID</label>
@@ -107,7 +109,7 @@
             data.customerId = parseInt(customerIdInput.value);
         }
 
-           
+
 
             try {
                 const resp = await fetch('/api/Booking', {
@@ -116,8 +118,9 @@
                     body: JSON.stringify(data)
                 });
 
+                const redirectUrl = '@(isCustomer ? "/Bookings/MyBookings" : "/Booking")';
                 if (resp.ok) {
-                    window.location.href = '/Booking';
+                    window.location.href = redirectUrl;
                 } else {
                     const errorText = await resp.text();
                     alert('Error creating booking:\n' + errorText);

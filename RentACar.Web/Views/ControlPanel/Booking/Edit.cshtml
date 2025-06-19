@@ -39,8 +39,15 @@
                 <input asp-for="Enddate" type="date" class="form-control" />
             </div>
             <div class="mb-3">
-                <label class="form-label">Status</label>
-                <input asp-for="BookingStatus" class="form-control" />
+                <label class="form-label">Booking Status</label>
+                <select asp-for="BookingStatus" class="form-select">
+                    <option value="pending" selected="@(Model.BookingStatus == "pending")">Pending</option>
+                    <option value="accepted" selected="@(Model.BookingStatus == "accepted")">Accepted</option>
+                    <option value="booked" selected="@(Model.BookingStatus == "booked")">Booked</option>
+                    <option value="returned" selected="@(Model.BookingStatus == "returned")">Returned</option>
+                    <option value="rejected" selected="@(Model.BookingStatus == "rejected")">Rejected</option>
+                </select>
+
             </div>
             <button type="submit" class="btn btn-primary">Save</button>
         </form>
@@ -58,7 +65,7 @@
                 startdate: form.querySelector('[name="Startdate"]').value,
                 enddate: form.querySelector('[name="Enddate"]').value,
                 bookingStatus: form.querySelector('[name="BookingStatus"]').value
-            };
+                    };
             const resp = await fetch('/api/Booking/' + id, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },

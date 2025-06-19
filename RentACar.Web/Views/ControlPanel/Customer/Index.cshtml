@@ -57,6 +57,7 @@
             <table id="customerTable" class="table table-striped table-dark align-middle">
                 <thead>
                     <tr>
+                        <th>Customer Id</th>
                         <th>Name</th>
                         <th>Email</th>
                         <th>Phone</th>
@@ -82,6 +83,7 @@
             data.forEach(c => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
+                    <td>${c.userId}</td>
                     <td>${c.name}</td>
                     <td>${c.email}</td>
                     <td>${c.phoneNumber ?? ''}</td>
