@@ -11,6 +11,7 @@
     Layout = null;
     var user = await UserManager.GetUserAsync(User);
     var isCustomer = await UserManager.IsInRoleAsync(user, "Customer");
+    var carIdParam = Context.Request.Query["carId"].ToString();
 
 }
 
@@ -43,7 +44,7 @@
             }
             <div class="mb-3">
                 <label class="form-label">Car ID</label>
-                <input class="form-control" type="number" id="CarId" name="CarId" min="1" required />
+                <input class="form-control" type="number" id="CarId" name="CarId" min="1" value="@carIdParam" @(string.IsNullOrEmpty(carIdParam) ? "" : "readonly") required />
             </div>
             <div class="mb-3">
                 <label class="form-label">Start Date</label>

@@ -119,6 +119,17 @@
                         <p class="card-text"><strong>Price/Day:</strong> @(car.PricePerDay?.ToString("F2") ?? "N/A") $</p>
                         <p class="card-text"><strong>Available:</strong> @(car.IsAvailable ? "Yes" : "No")</p>
                         <p class="card-text"><strong>Category:</strong> @(string.IsNullOrEmpty(car.CategoryName) ? "N/A" : car.CategoryName)</p>
+                        @if (car.IsAvailable)
+                        {
+                            if (User.Identity.IsAuthenticated)
+                            {
+                                <a asp-controller="Booking" asp-action="Add" asp-route-carId="@car.CarId" class="btn btn-yellow mt-auto">Book</a>
+                            }
+                            else
+                            {
+                                <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-yellow mt-auto">Book</a>
+                            }
+                        }
                     </div>
                 </div>
             </div>
