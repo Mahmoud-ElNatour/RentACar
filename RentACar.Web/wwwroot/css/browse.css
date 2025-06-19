@@ -20,40 +20,56 @@ body {
     box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05);
 }
 
-
-.car-card {
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 15px;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    transition: transform .2s ease, box-shadow .2s ease;
+/* Gallery style cards similar to home page */
+.car-gallery-item {
     position: relative;
+    overflow: hidden;
+    border-radius: 15px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    transition: transform .3s ease, box-shadow .3s ease;
 }
 
-.car-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 16px rgba(0,0,0,0.4);
+.car-gallery-item:hover {
+    transform: scale(1.03);
+    box-shadow: 0 20px 40px rgba(212, 175, 55, 0.2);
 }
 
-.car-thumb {
+.car-gallery-item img {
     width: 100%;
-    height: 180px;
+    height: 220px;
     object-fit: cover;
+    transition: all .3s ease;
 }
 
-.car-info {
-    padding: 15px;
-    flex-grow: 1;
+.car-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(20, 20, 20, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity .3s ease;
 }
 
-.car-info h5 {
+.car-gallery-item:hover .car-overlay {
+    opacity: 1;
+}
+
+.car-content {
+    text-align: center;
+    color: var(--text-primary);
+}
+
+.car-content h5 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: .5rem;
     color: var(--accent-gold);
-    margin-bottom: 8px;
 }
-
 
 .btn-book {
     border: 1px solid var(--accent-gold);

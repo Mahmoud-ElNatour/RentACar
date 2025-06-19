@@ -51,7 +51,7 @@
         <input type="text" id="localSearch" class="form-control search-input" placeholder="Search cars..." />
     </div>
 
-    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-3">
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-4">
         @foreach (var car in Model.Cars)
         {
             string imgSrc;
@@ -66,21 +66,21 @@
             }
 
             <div class="col car-card-container">
-                <div class="card car-card h-100">
-                    <img src="@imgSrc" alt="@car.ModelName" class="car-thumb card-img-top" />
-                    <div class="car-info d-flex flex-column">
-                        <h5 class="card-title">@car.ModelName (@car.ModelYear)</h5>
-                        <p class="card-text mb-1"><strong>Plate #:</strong> @car.PlateNumber</p>
-                        <p class="card-text mb-1"><strong>Price/Day:</strong> @(car.PricePerDay?.ToString("F2") ?? "N/A") $</p>
-                        <p class="card-text"><strong>Category:</strong> @(string.IsNullOrEmpty(car.CategoryName) ? "N/A" : car.CategoryName)</p>
-                        <div class="mt-auto">
+                <div class="car-gallery-item">
+                    <img src="@imgSrc" alt="@car.ModelName" class="img-fluid">
+                    <div class="car-overlay">
+                        <div class="car-content">
+                            <h5>@car.ModelName (@car.ModelYear)</h5>
+                            <p class="mb-1">Plate #: @car.PlateNumber</p>
+                            <p class="mb-1">Price/Day: @(car.PricePerDay?.ToString("F2") ?? "N/A") $</p>
+                            <p class="mb-3">Category: @(string.IsNullOrEmpty(car.CategoryName) ? "N/A" : car.CategoryName)</p>
                             @if (User.Identity.IsAuthenticated)
                             {
-                                <a asp-controller="Booking" asp-action="Add" asp-route-carId="@car.CarId" class="btn btn-book w-100 @(car.IsAvailable ? "" : "unavailable")">Book</a>
+                                <a asp-controller="Booking" asp-action="Add" asp-route-carId="@car.CarId" class="btn btn-book @(car.IsAvailable ? "" : "unavailable")">Book</a>
                             }
                             else
                             {
-                                <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-book w-100 @(car.IsAvailable ? "" : "unavailable")">Book</a>
+                                <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-book @(car.IsAvailable ? "" : "unavailable")">Book</a>
                             }
                         </div>
                     </div>
