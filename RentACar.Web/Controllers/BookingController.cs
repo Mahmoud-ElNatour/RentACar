@@ -129,7 +129,7 @@ namespace RentACar.Web.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] BookingDto dto)
+        public async Task<IActionResult> Update(int id, [FromBody] BookingEditDto dto)
         {
             if (id != dto.BookingId)
                 return BadRequest();
