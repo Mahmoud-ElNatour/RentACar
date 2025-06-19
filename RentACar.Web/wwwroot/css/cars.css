@@ -63,7 +63,7 @@ input.form-control, select.form-select {
         background: rgba(255,255,255,0.05);
         border-color: var(--accent-gold);
         box-shadow: 0 0 0 3px rgba(212,175,55,0.1);
-        color: var(--text-primary);
+        color: #d4af37;
     }
 
 .dark-modal {

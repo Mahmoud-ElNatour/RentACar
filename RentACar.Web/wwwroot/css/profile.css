@@ -42,12 +42,12 @@ input.form-control {
     color: var(--text-primary);
 }
 
-input.form-control:focus {
-    background: rgba(255,255,255,0.05);
-    border-color: var(--accent-gold);
-    box-shadow: 0 0 0 3px rgba(212,175,55,0.1);
-    color: var(--text-primary);
-}
+    input.form-control:focus {
+        background: rgba(255,255,255,0.05);
+        border-color: var(--accent-gold);
+        box-shadow: 0 0 0 3px rgba(212,175,55,0.1);
+        color: #d4af37;
+    }
 
 .btn-primary {
     background-color: var(--accent-gold);
