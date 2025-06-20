@@ -208,7 +208,10 @@ namespace RentACar.Web.Controllers
                             col.Item().Text($"Promocode: {promo.Name} ({promo.DiscountPercentage}% off)");
                         col.Item().Text($"Start Date: {booking.Startdate:yyyy-MM-dd}");
                         col.Item().Text($"End Date: {booking.Enddate:yyyy-MM-dd}");
-                        col.Item().Text($"Total Price: {booking.TotalPrice:C}");
+                        if (booking.Subtotal != null)
+                            col.Item().Text($"Subtotal: {booking.Subtotal:C}");
+                        else
+                            col.Item().Text($"Total Price: {booking.TotalPrice:C}");
                         col.Item().PaddingVertical(20).Text("I, the renter, accept responsibility for the rental vehicle.");
                         col.Item().Row(row =>
                         {
