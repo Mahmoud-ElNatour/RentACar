@@ -22,7 +22,7 @@ namespace RentACar.Application.DTOs
         // Use ID instead of raw string for better normalization
         [Required]
         public int PaymentMethodId { get; set; }
-
+        public string? PaymentMethodName { get; set; }
         [StringLength(50)]
         public string? Status { get; set; }
     }

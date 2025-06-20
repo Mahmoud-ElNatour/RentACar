@@ -150,19 +150,166 @@ namespace RentACar.Core.Managers
         public async Task<List<PaymentDto>> GetPaymentsByBookingIdAsync(int bookingId)
         {
             var payments = await _paymentRepository.GetPaymentsByBookingIdAsync(bookingId);
-            return _mapper.Map<List<PaymentDto>>(payments);
+            var result = new List<PaymentDto>();
+            foreach (var payment in payments)
+            {
+                var dto = _mapper.Map<PaymentDto>(payment);
+                var method = await _paymentMethodRepository.GetByNameAsync(payment.PaymentMethod);
+                if (method != null)
+                {
+                    dto.PaymentMethodId = method.Id;
+                    dto.PaymentMethodName = method.PaymentMethodName;
+                }
+                else
+                {
+                    dto.PaymentMethodName = payment.PaymentMethod;
+                }
+                result.Add(dto);
+            }
+            return result;
         }
 
         public async Task<PaymentDto?> GetPaymentByIdAsync(int id)
         {
             var payment = await _paymentRepository.GetByIdAsync(id);
-            return _mapper.Map<PaymentDto>(payment);
+            if (payment == null) return null;
+            var dto = _mapper.Map<PaymentDto>(payment);
+            var method = await _paymentMethodRepository.GetByNameAsync(payment.PaymentMethod);
+            if (method != null)
+            {
+                dto.PaymentMethodId = method.Id;
+                dto.PaymentMethodName = method.PaymentMethodName;
+            }
+            else
+            {
+                dto.PaymentMethodName = payment.PaymentMethod;
+            }
+            return dto;
         }
-
         public async Task<List<PaymentDto>> GetAllPaymentsAsync()
         {
             var payments = await _paymentRepository.GetAllAsync();
-            return _mapper.Map<List<PaymentDto>>(payments);
+            var result = new List<PaymentDto>();
+            foreach (var payment in payments)
+            {
+                var dto = _mapper.Map<PaymentDto>(payment);
+                var method = await _paymentMethodRepository.GetByNameAsync(payment.PaymentMethod);
+                if (method != null)
+                {
+                    dto.PaymentMethodId = method.Id;
+                    dto.PaymentMethodName = method.PaymentMethodName;
+                }
+                else
+                {
+                    dto.PaymentMethodName = payment.PaymentMethod;
+                }
+                result.Add(dto);
+            }
+            return result;
+        }
+
+        public async Task<PaymentDto?> AddPaymentAsync(PaymentDto dto, string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null || (!await _userManager.IsInRoleAsync(user, "Admin") &&
+                                 !await _userManager.IsInRoleAsync(user, "Employee")))
+            {
+                _logger.LogWarning("User {UserId} not authorized to add payment", userId);
+                return null;
+            }
+
+            var booking = await _bookingRepository.GetByIdAsync(dto.BookingId);
+            var method = await _paymentMethodRepository.GetByIdAsync(dto.PaymentMethodId);
+            if (booking == null || method == null)
+                return null;
+
+            if (method.PaymentMethodName.Equals("creditcard", StringComparison.OrdinalIgnoreCase))
+            {
+                if (!dto.CreditcardId.HasValue) return null;
+                var card = await _creditCardRepository.GetByIdAsync(dto.CreditcardId.Value);
+                if (card == null) return null;
+            }
+
+            var entity = new Payment
+            {
+                BookingId = dto.BookingId,
+                Amount = dto.Amount,
+                PaymentDate = dto.PaymentDate,
+                CreditcardId = dto.CreditcardId,
+                PaymentMethod = method.PaymentMethodName,
+                Status = dto.Status
+            };
+
+            await _paymentRepository.AddAsync(entity);
+            var resultDto = _mapper.Map<PaymentDto>(entity);
+            resultDto.PaymentMethodId = method.Id;
+            resultDto.PaymentMethodName = method.PaymentMethodName;
+            return resultDto;
+        }
+
+
+        public async Task<PaymentDto?> UpdatePaymentAsync(PaymentDto dto, string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null || (!await _userManager.IsInRoleAsync(user, "Admin") &&
+                                 !await _userManager.IsInRoleAsync(user, "Employee")))
+            {
+                _logger.LogWarning("User {UserId} not authorized to update payment", userId);
+                return null;
+            }
+
+            var payment = await _paymentRepository.GetByIdAsync(dto.PaymentId);
+            var method = await _paymentMethodRepository.GetByIdAsync(dto.PaymentMethodId);
+            if (payment == null || method == null)
+                return null;
+
+            if (method.PaymentMethodName.Equals("creditcard", StringComparison.OrdinalIgnoreCase))
+            {
+                if (!dto.CreditcardId.HasValue) return null;
+                var card = await _creditCardRepository.GetByIdAsync(dto.CreditcardId.Value);
+                if (card == null) return null;
+            }
+
+            payment.BookingId = dto.BookingId;
+            payment.Amount = dto.Amount;
+            payment.PaymentDate = dto.PaymentDate;
+            payment.CreditcardId = dto.CreditcardId;
+            payment.PaymentMethod = method.PaymentMethodName;
+            payment.Status = dto.Status;
+            if (payment.Status.Equals("rejected", StringComparison.OrdinalIgnoreCase))
+            {
+                var booking = await _bookingRepository.GetBookingByIdAsync(payment.BookingId);
+                if (booking != null)
+                {
+                    booking.BookingStatus = "Rejected";
+                    await _bookingRepository.UpdateAsync(booking); // Don't forget to save the change
+                }
+            }
+
+
+            await _paymentRepository.UpdateAsync(payment);
+            var resultDto = _mapper.Map<PaymentDto>(payment);
+            resultDto.PaymentMethodId = method.Id;
+            resultDto.PaymentMethodName = method.PaymentMethodName;
+            return resultDto;
+        }
+
+
+        public async Task<bool> DeletePaymentAsync(int id, string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null || !await _userManager.IsInRoleAsync(user, "Admin"))
+            {
+                _logger.LogWarning("User {UserId} not authorized to delete payment", userId);
+                return false;
+            }
+
+            var payment = await _paymentRepository.GetByIdAsync(id);
+            if (payment == null)
+                return false;
+
+            await _paymentRepository.DeleteAsync(id);
+            return true;
         }
 
         public bool PrintPaymentDocument(int bookingId)
