@@ -62,5 +62,17 @@ namespace RentACar.Infrastructure.Data.Repository
             _dbContext.Entry(booking).State = EntityState.Modified;
             await _dbContext.SaveChangesAsync();
         }
+
+        public async Task<bool> DeleteBookingAsync(int bookingId)
+        {
+            var booking = await _dbContext.Bookings.FindAsync(bookingId);
+            if (booking == null)
+                return false;
+
+            _dbContext.Bookings.Remove(booking);
+            await _dbContext.SaveChangesAsync();
+            return true;
+        }
+
     }
 }
