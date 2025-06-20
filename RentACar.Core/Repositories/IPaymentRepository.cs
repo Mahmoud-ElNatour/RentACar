@@ -11,6 +11,7 @@ namespace RentACar.Core.Repositories
    public  interface IPaymentRepository : IRepository<Payment>
     {
         Task<List<Payment>> GetPaymentsByBookingIdAsync(int bookingId);
+        Task DeleteAsync(int id);
 
     }
 

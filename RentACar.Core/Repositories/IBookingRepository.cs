@@ -16,5 +16,6 @@ namespace RentACar.Core.Repositories
         Task<List<Booking>> GetBookingsByCarIdAsync(int carId);
         Task<List<Booking>> GetBookingsBetweenDatesAsync(DateOnly startDate, DateOnly endDate);
         Task UpdateAsync(Booking booking);
+        Task<bool> DeleteBookingAsync(int bookingId);
     }
 }

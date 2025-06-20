@@ -96,3 +96,15 @@ C:\Users\Mohammad\source\repos\RentACar\RentACar.Core\obj\Debug\net8.0\RentACar.
 C:\Users\Mohammad\source\repos\RentACar\RentACar.Core\obj\Debug\net8.0\refint\RentACar.Core.dll
 C:\Users\Mohammad\source\repos\RentACar\RentACar.Core\obj\Debug\net8.0\RentACar.Core.pdb
 C:\Users\Mohammad\source\repos\RentACar\RentACar.Core\obj\Debug\net8.0\ref\RentACar.Core.dll
+C:\Users\Mohammad\Downloads\RentACar-codex-update-booking-table-and-add-pdf-generation\RentACar.Core\bin\Debug\net8.0\RentACar.Core.deps.json
+C:\Users\Mohammad\Downloads\RentACar-codex-update-booking-table-and-add-pdf-generation\RentACar.Core\bin\Debug\net8.0\RentACar.Core.dll
+C:\Users\Mohammad\Downloads\RentACar-codex-update-booking-table-and-add-pdf-generation\RentACar.Core\bin\Debug\net8.0\RentACar.Core.pdb
+C:\Users\Mohammad\Downloads\RentACar-codex-update-booking-table-and-add-pdf-generation\RentACar.Core\obj\Debug\net8.0\RentACar.Core.csproj.AssemblyReference.cache
+C:\Users\Mohammad\Downloads\RentACar-codex-update-booking-table-and-add-pdf-generation\RentACar.Core\obj\Debug\net8.0\RentACar.Core.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Mohammad\Downloads\RentACar-codex-update-booking-table-and-add-pdf-generation\RentACar.Core\obj\Debug\net8.0\RentACar.Core.AssemblyInfoInputs.cache
+C:\Users\Mohammad\Downloads\RentACar-codex-update-booking-table-and-add-pdf-generation\RentACar.Core\obj\Debug\net8.0\RentACar.Core.AssemblyInfo.cs
+C:\Users\Mohammad\Downloads\RentACar-codex-update-booking-table-and-add-pdf-generation\RentACar.Core\obj\Debug\net8.0\RentACar.Core.csproj.CoreCompileInputs.cache
+C:\Users\Mohammad\Downloads\RentACar-codex-update-booking-table-and-add-pdf-generation\RentACar.Core\obj\Debug\net8.0\RentACar.Core.dll
+C:\Users\Mohammad\Downloads\RentACar-codex-update-booking-table-and-add-pdf-generation\RentACar.Core\obj\Debug\net8.0\refint\RentACar.Core.dll
+C:\Users\Mohammad\Downloads\RentACar-codex-update-booking-table-and-add-pdf-generation\RentACar.Core\obj\Debug\net8.0\RentACar.Core.pdb
+C:\Users\Mohammad\Downloads\RentACar-codex-update-booking-table-and-add-pdf-generation\RentACar.Core\obj\Debug\net8.0\ref\RentACar.Core.dll
