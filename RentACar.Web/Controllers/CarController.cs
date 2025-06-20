@@ -80,6 +80,8 @@ namespace RentACar.Web.Controllers
             return PartialView("~/Views/ControlPanel/Car/_DeleteCarPartial.cshtml", car);
         }
 
+
+        //feltering get method
         [HttpGet]
         public async Task<ActionResult<IEnumerable<CarDto>>> Get([FromQuery] string? name, [FromQuery] int? categoryId, [FromQuery] bool? available)
         {
