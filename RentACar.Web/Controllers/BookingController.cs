@@ -95,9 +95,21 @@ namespace RentACar.Web.Controllers
 
         //used in tablw when viewing all
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<object>>> Get()
+        public async Task<ActionResult<IEnumerable<object>>> Get(
+            [FromQuery] int? customerId,
+            [FromQuery] int? carId,
+            [FromQuery] string? status)
         {
             var bookings = await _bookingManager.GetAllBookingsAsync();
+
+            if (customerId.HasValue)
+                bookings = bookings.Where(b => b.CustomerId == customerId.Value).ToList();
+
+            if (carId.HasValue)
+                bookings = bookings.Where(b => b.CarId == carId.Value).ToList();
+
+            if (!string.IsNullOrWhiteSpace(status))
+                bookings = bookings.Where(b => string.Equals(b.BookingStatus, status, StringComparison.OrdinalIgnoreCase)).ToList();
 
             var result = new List<object>();
             foreach (var b in bookings)
