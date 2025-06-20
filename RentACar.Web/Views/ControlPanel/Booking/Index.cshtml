@@ -1,4 +1,4 @@
-﻿@{
+@{
     ViewData["Title"] = "Bookings";
     Layout = null;
 }
@@ -32,6 +32,11 @@
                         <th>ID</th>
                         <th>Customer</th>
                         <th>Car</th>
+                        <th>Employee Booker</th>
+                        <th>Payment</th>
+                        <th>Amount</th>
+                        <th>Subtotal</th>
+                        <th>Promocode</th>
                         <th>Start</th>
                         <th>End</th>
                         <th>Status</th>
@@ -49,18 +54,24 @@
             const data = await res.json();
             const tbody = document.getElementById('bookingRows');
             tbody.innerHTML = '';
-            data.forEach(b => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `<td>${b.bookingId}</td>` +
-                    `<td>${b.customerId}</td>` +
-                    `<td>${b.carId}</td>` +
-                    `<td>${b.startdate}</td>` +
-                    `<td>${b.enddate}</td>` +
-                    `<td>${b.bookingStatus ?? ''}</td>` +
-                    `<td><a href='/Booking/Edit/${b.bookingId}' class='text-warning me-2'><i class='fas fa-pencil-alt'></i></a>` +
-                    `<a href='/Booking/Delete/${b.bookingId}' class='text-danger'><i class='fas fa-trash'></i></a></td>`;
-                tbody.appendChild(tr);
-            });
+                data.forEach(b => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `<td>${b.bookingId}</td>` +
+                        `<td>${b.customerId} - ${b.cutmomerName}</td>` +
+                        `<td>${b.carId} -  ${b.carName}</td>` +
+                        `<td>${b.employeebookerId ?? ''} ${b.employeeName}</td>` +
+                        `<td>${b.paymentId ?? ''}</td>` +
+                        `<td>${b.paymentAmount ?? ''}</td>` +
+                        `<td>${b.subtotal ?? ''}</td>` +
+                        `<td>${b.promocodeId ?? ''}</td>` +
+                        `<td>${b.startdate}</td>` +
+                        `<td>${b.enddate}</td>` +
+                        `<td>${b.bookingStatus ?? ''}</td>` +
+                        `<td><a href='/Booking/Edit/${b.bookingId}' class='text-warning me-2'><i class='fas fa-pencil-alt'></i></a>` +
+                        `<a href='/Booking/Delete/${b.bookingId}' class='text-danger me-2'><i class='fas fa-trash'></i></a>` +
+                        `<a href='/Booking/Contract/${b.bookingId}' target='_blank' class='text-info'><i class='fas fa-file-pdf'></i></a></td>`;
+                    tbody.appendChild(tr);
+                });
         }
         document.addEventListener('DOMContentLoaded', loadBookings);
     </script>
