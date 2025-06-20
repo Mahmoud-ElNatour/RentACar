@@ -91,10 +91,37 @@ namespace RentACar.Web.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<BookingDto>>> Get()
+        public async Task<ActionResult<IEnumerable<object>>> Get()
         {
             var bookings = await _bookingManager.GetAllBookingsAsync();
-            return Ok(bookings);
+
+            var result = new List<object>();
+            foreach (var b in bookings)
+            {
+                decimal? paymentAmount = null;
+                if (b.PaymentId.HasValue)
+                {
+                    var payment = await _paymentManager.GetPaymentByIdAsync(b.PaymentId.Value);
+                    paymentAmount = payment?.Amount;
+                }
+
+                result.Add(new
+                {
+                    bookingId = b.BookingId,
+                    customerId = b.CustomerId,
+                    carId = b.CarId,
+                    employeebookerId = b.EmployeebookerId,
+                    paymentId = b.PaymentId,
+                    paymentAmount,
+                    subtotal = b.Subtotal,
+                    promocodeId = b.PromocodeId,
+                    startdate = b.Startdate.ToString("yyyy-MM-dd"),
+                    enddate = b.Enddate.ToString("yyyy-MM-dd"),
+                    bookingStatus = b.BookingStatus
+                });
+            }
+
+            return Ok(result);
         }
 
         [HttpGet("{id}")]
@@ -196,7 +223,7 @@ namespace RentACar.Web.Controllers
                     page.Size(PageSizes.A4);
                     page.Content().Column(col =>
                     {
-                        col.Item().Text("Rental Contract").FontSize(20).Bold().AlignCenter();
+                        col.Item().AlignCenter().Text("Rental Contract").FontSize(20).Bold();
                         col.Item().Text($"Booking ID: {booking.BookingId}");
                         if (customer != null)
                             col.Item().Text($"Customer: {customer.Name} (ID: {customer.UserId})");
