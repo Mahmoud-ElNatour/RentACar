@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
 using RentACar.Application.Managers;
+using RentACar.Core.Repositories;
 
 namespace RentACar.Web.Areas.Identity.Pages.Account
 {
@@ -24,16 +25,22 @@ namespace RentACar.Web.Areas.Identity.Pages.Account
         private readonly ILogger<LoginModel> _logger;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly BlacklistManager _blacklistManager;
+        private readonly ICustomerRepository _customerRepository;
+        private readonly IEmployeeRepository _employeeRepository;
 
         public LoginModel(SignInManager<IdentityUser> signInManager,
                           ILogger<LoginModel> logger,
                           UserManager<IdentityUser> userManager,
-                          BlacklistManager blacklistManager)
+                          BlacklistManager blacklistManager,
+                          ICustomerRepository customerRepository,
+                          IEmployeeRepository employeeRepository)
         {
             _signInManager = signInManager;
             _logger = logger;
             _userManager = userManager;
             _blacklistManager = blacklistManager;
+            _customerRepository = customerRepository;
+            _employeeRepository = employeeRepository;
         }
 
         /// <summary>
@@ -124,6 +131,20 @@ namespace RentACar.Web.Areas.Identity.Pages.Account
                     if (bl != null)
                     {
                         ModelState.AddModelError(string.Empty, "You are blacklisted.");
+                        return Page();
+                    }
+
+                    var customer = await _customerRepository.GetByIdAsync(user.Id);
+                    if (customer != null && !customer.Isactive)
+                    {
+                        ModelState.AddModelError(string.Empty, "Your account is inactive.");
+                        return Page();
+                    }
+
+                    var employee = await _employeeRepository.GetByIdAsync(user.Id);
+                    if (employee != null && !employee.IsActive)
+                    {
+                        ModelState.AddModelError(string.Empty, "Your account is inactive.");
                         return Page();
                     }
                 }
