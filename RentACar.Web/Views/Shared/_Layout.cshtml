@@ -1,18 +1,26 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @inject SignInManager<IdentityUser> SignInManager
-@inject UserManager<IdentityUser> UserManager﻿
+@inject UserManager<IdentityUser> UserManager
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - RentACar.Web</title>
+
+    <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 
+    <!-- jQuery + jQuery UI (must load before any feature script) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+
+    <!-- Site CSS -->
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     @* <link rel="stylesheet" href="~/css/index-style.css" asp-append-version="true" /> *@
-
     @* <link rel="stylesheet" href="~/RentACar.Web.styles.css" asp-append-version="true" /> *@
 </head>
 <body class="d-flex flex-column min-vh-100">
@@ -69,8 +77,6 @@
                                     </li>
                                 </ul>
                             </li>
-
-
                         }
                         else
                         {
@@ -86,13 +92,14 @@
             </div>
         </nav>
     </header>
-    <div class="container-fluid m-0 p-0" style=" margin:0px; padding:0px">
-        <main role="main" class="m-0 p-0 flex-grow-1" style="margin:0px; padding:0px">
+
+    <div class="container-fluid m-0 p-0">
+        <main role="main" class="m-0 p-0 flex-grow-1">
             @RenderBody()
         </main>
     </div>
 
-    <footer class=" text-light pt-3 pb-2  mt-3" style="font-size: 1.1rem; background-color:#161819;!important">
+    <footer class="text-light pt-3 pb-2 mt-3" style="font-size: 1.1rem; background-color:#161819;">
         <div class="container">
             <div class="row align-items-start text-center text-md-start">
                 <div class="col-md-4 mb-2">
@@ -122,11 +129,13 @@
         </div>
     </footer>
 
-
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <!-- Bootstrap JS bundle -->
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Site scripts -->
     <script src="~/js/site.js" asp-append-version="true"></script>
-    <script src="~/js/index-script.js"></script>
+    <script src="~/js/index-script.js" asp-append-version="true"></script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

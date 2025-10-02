@@ -6,6 +6,7 @@ using RentACar.Application.Managers;
 using RentACar.Core.Repositories;
 using System.Security.Claims;
 using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
 
 namespace RentACar.Web.Controllers
 {
@@ -124,6 +125,30 @@ namespace RentACar.Web.Controllers
                 PhoneNumber = empEntity.User.PhoneNumber,
                 aspNetUserId = empEntity.aspNetUserId
             };
+        }
+        // Endpoint for jQuery UI Autocomplete
+        [HttpGet("identifiers")]
+        public async Task<IActionResult> GetIdentifiers([FromQuery] string term)
+        {
+            term = term?.Trim() ?? string.Empty;
+            if (term.Length < 2)
+                return Ok(Array.Empty<object>());
+
+            // Search Identity users by email or username, limit 10
+            var users = await _userManager.Users
+                .Where(u => (u.Email ?? "").Contains(term) || (u.UserName ?? "").Contains(term))
+                .OrderBy(u => u.Email)
+                .Take(10)
+                .Select(u => new
+                {
+                    // jQuery UI expects { label, value }
+                    label = $"{u.UserName} — {u.Email}",
+                    value = u.Email, // what shows in the textbox
+                    id = u.Id        // keep the actual user id (you'll put it in a hidden input)
+                })
+                .ToListAsync();
+
+            return Ok(users);
         }
     }
 }
