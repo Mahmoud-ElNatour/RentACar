@@ -1,6 +1,7 @@
 @{
     ViewData["Title"] = "Employees";
     Layout = null;
+    var canResetEmployeePassword = User.IsInRole("Admin");
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -84,6 +85,7 @@
     <div id="employeeModalPlaceholder"></div>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        const canResetPassword = @(canResetEmployeePassword.ToString().ToLower());
         async function loadEmployees() {
         const params = new URLSearchParams(new FormData(document.getElementById('filterForm')));
         const res = await fetch('/api/Employee?' + params.toString());
@@ -103,6 +105,7 @@
         <td>
         <a href="#" class="text-warning me-2 edit-employee" data-id="${emp.employeeId}"><i class="fas fa-pencil-alt"></i></a>
         <a href="#" class="text-danger delete-employee" data-id="${emp.employeeId}"><i class="fas fa-trash"></i></a>
+        ${canResetPassword ? `<a href="#" class="text-info ms-2 reset-pass" data-id="${emp.employeeId}" title="Reset Password"><i class="fas fa-key"></i></a>` : ''}
         </td>`;
                 tbody.appendChild(row);
             });
@@ -126,15 +129,28 @@
             loadEmployees();
             document.getElementById('filterForm').addEventListener('submit', e => { e.preventDefault(); loadEmployees(); });
             document.getElementById('addEmployee').addEventListener('click', () => loadModal('/Employee/Add'));
-            document.getElementById('employeeRows').addEventListener('click', e => {
+            document.getElementById('employeeRows').addEventListener('click', async e => {
                 const edit = e.target.closest('.edit-employee');
                 const del = e.target.closest('.delete-employee');
+                const reset = canResetPassword ? e.target.closest('.reset-pass') : null;
                 if (edit) {
                     e.preventDefault();
                     loadModal('/Employee/Edit/' + edit.dataset.id);
                 } else if (del) {
                     e.preventDefault();
                     loadModal('/Employee/Delete/' + del.dataset.id);
+                } else if (reset) {
+                    e.preventDefault();
+                    if (confirm('Reset password for this employee?')) {
+                        const response = await fetch('/api/Employee/' + reset.dataset.id + '/reset-password', { method: 'POST' });
+                        if (response.ok) {
+                            showPopup('Password reset successfully to E@e123456', 'success');
+                        } else if (response.status === 404) {
+                            showPopup('Employee not found.', 'warning');
+                        } else {
+                            showPopup('Failed to reset password.', 'error');
+                        }
+                    }
                 }
             });
             document.getElementById('tableSearch').addEventListener('keyup', function () {

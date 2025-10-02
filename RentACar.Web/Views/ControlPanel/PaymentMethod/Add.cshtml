@@ -60,7 +60,7 @@
             if (res.ok) {
                 window.location.href = '/PaymentMethod';
             } else {
-                alert('Failed to add payment method');
+                showPopup('Failed to add payment method', 'error');
             }
         });
     </script>
