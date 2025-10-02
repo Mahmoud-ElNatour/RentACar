@@ -4,9 +4,11 @@ using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 using RentACar.Application.DTOs;
 using RentACar.Application.Managers;
 using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
 
 namespace RentACar.Web.Controllers
 {
@@ -112,8 +114,24 @@ namespace RentACar.Web.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             _logger.LogInformation("Deleting customer {Id}", id);
-            await _customerManager.DeleteCustomer(id);
-            return NoContent();
+
+            try
+            {
+                await _customerManager.DeleteCustomer(id);
+                return NoContent();
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database constraint prevented deleting customer {Id}", id);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Unable to delete customer because related records exist. Remove the related data before deleting the customer.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error while deleting customer {Id}", id);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "An unexpected error occurred while deleting the customer. Please try again later.");
+            }
         }
 
         [HttpPost("{id}/reset-password")]
