@@ -87,8 +87,8 @@
                     <td>${b.dateBlocked}</td>
                     <td>${b.employeeName}</td>
                     <td>
-                        <a href="#" class="text-warning me-2 edit-blacklist" data-id="${b.blacklistId}"><i class="fas fa-pencil-alt"></i></a>
-                        <a href="#" class="text-danger unblock-blacklist" data-id="${b.blacklistId}"><i class="fas fa-unlock"></i></a>
+                        <a href="#" class="text-info me-2 view-blacklist" data-id="${b.blacklistId}" title="View details"><i class="fas fa-eye"></i></a>
+                        <a href="#" class="text-danger unblock-blacklist" data-id="${b.blacklistId}" title="Unblock"><i class="fas fa-unlock"></i></a>
                     </td>`;
                 tbody.appendChild(row);
             });
@@ -116,11 +116,11 @@
             document.getElementById('addBlacklist').addEventListener('click', () => loadModal('/Blacklist/Add'));
             document.getElementById('loadMore').addEventListener('click', () => loadBlacklist(false));
             document.getElementById('blacklistRows').addEventListener('click', e => {
-                const edit = e.target.closest('.edit-blacklist');
+                const view = e.target.closest('.view-blacklist');
                 const del = e.target.closest('.unblock-blacklist');
-                if (edit) {
+                if (view) {
                     e.preventDefault();
-                    loadModal('/Blacklist/Edit/' + edit.dataset.id);
+                    loadModal('/Blacklist/Details/' + view.dataset.id);
                 } else if (del) {
                     e.preventDefault();
                     loadModal('/Blacklist/Delete/' + del.dataset.id);
