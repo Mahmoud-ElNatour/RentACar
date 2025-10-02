@@ -1,0 +1,28 @@
+@model RentACar.Application.DTOs.BlacklistDisplayDto
+<div class="modal fade" id="blacklistViewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content dark-modal">
+            <div class="modal-header">
+                <h5 class="modal-title">Blacklist Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">User</dt>
+                    <dd class="col-sm-8">@Model.Username <small class="text-muted">(@Model.UserId)</small></dd>
+                    <dt class="col-sm-4">Type</dt>
+                    <dd class="col-sm-8">@Model.UserType</dd>
+                    <dt class="col-sm-4">Reason</dt>
+                    <dd class="col-sm-8">@(!string.IsNullOrWhiteSpace(Model.Reason) ? Model.Reason : "—")</dd>
+                    <dt class="col-sm-4">Date Blocked</dt>
+                    <dd class="col-sm-8">@Model.DateBlocked.ToString("MMMM d, yyyy")</dd>
+                    <dt class="col-sm-4">Blocked By</dt>
+                    <dd class="col-sm-8">@(!string.IsNullOrWhiteSpace(Model.EmployeeName) ? Model.EmployeeName : $"Employee #{Model.EmployeeDoneBlacklistId}")</dd>
+                </dl>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
