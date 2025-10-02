@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -9,6 +10,7 @@ using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 namespace RentACar.Web.Controllers
 {
@@ -185,11 +187,26 @@ namespace RentACar.Web.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var success = await _bookingManager.DeleteBookingAsync(new DeleteBookingRequestDto { BookingId = id });
-            if (!success)
-                return NotFound();
+            try
+            {
+                var success = await _bookingManager.DeleteBookingAsync(new DeleteBookingRequestDto { BookingId = id });
+                if (!success)
+                    return NotFound();
 
-            return NoContent();
+                return NoContent();
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database constraint prevented deleting booking {Id}", id);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Unable to delete booking because related records exist. Remove the related data before deleting the booking.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error while deleting booking {Id}", id);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "An unexpected error occurred while deleting the booking. Please try again later.");
+            }
         }
 
         [HttpGet("~/Booking/Contract/{id}")]

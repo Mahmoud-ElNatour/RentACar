@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using RentACar.Application.DTOs;
 using RentACar.Application.Managers;
 using System.Linq;
 using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
 
 namespace RentACar.Web.Controllers
 {
@@ -117,9 +119,22 @@ namespace RentACar.Web.Controllers
         {
             _logger.LogInformation("Deleting credit card {Id}", id);
             var userId = _userManager.GetUserId(User)!;
-            var result = await _creditCardManager.DeleteCreditCardAsync(id, userId);
-            if (!result) return BadRequest(new { message = "Failed" });
-            return Ok(new { message = "Done" });
+            try
+            {
+                var result = await _creditCardManager.DeleteCreditCardAsync(id, userId);
+                if (!result) return BadRequest(new { message = "Failed" });
+                return Ok(new { message = "Done" });
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database constraint prevented deleting credit card {Id}", id);
+                return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Unable to delete credit card because related records exist. Remove the related data before deleting the card." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error while deleting credit card {Id}", id);
+                return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An unexpected error occurred while deleting the credit card. Please try again later." });
+            }
         }
 
     }

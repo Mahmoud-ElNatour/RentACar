@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using RentACar.Application.DTOs;
@@ -6,6 +7,7 @@ using RentACar.Application.Managers;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
 
 namespace RentACar.Web.Controllers
 {
@@ -105,9 +107,24 @@ namespace RentACar.Web.Controllers
         {
             _logger.LogInformation("Deleting promocode {Id}", id);
             var userId = _userManager.GetUserId(User) ?? string.Empty;
-            var success = await _promocodeManager.DeletePromocodeAsync(id, userId);
-            if (!success) return NotFound();
-            return NoContent();
+            try
+            {
+                var success = await _promocodeManager.DeletePromocodeAsync(id, userId);
+                if (!success) return NotFound();
+                return NoContent();
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database constraint prevented deleting promocode {Id}", id);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Unable to delete promocode because related records exist. Remove the related data before deleting the promocode.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error while deleting promocode {Id}", id);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "An unexpected error occurred while deleting the promocode. Please try again later.");
+            }
         }
     }
 }

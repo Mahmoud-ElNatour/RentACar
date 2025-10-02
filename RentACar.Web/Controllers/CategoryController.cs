@@ -5,6 +5,8 @@ using RentACar.Application.DTOs;
 using RentACar.Application.Managers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 
 namespace RentACar.Web.Controllers
 {
@@ -106,9 +108,24 @@ namespace RentACar.Web.Controllers
         {
             _logger.LogInformation("Deleting category {Id}", id);
             var userId = _userManager.GetUserId(User) ?? string.Empty;
-            var success = await _categoryManager.DeleteCategoryAsync(id, userId);
-            if (!success) return NotFound();
-            return NoContent();
+            try
+            {
+                var success = await _categoryManager.DeleteCategoryAsync(id, userId);
+                if (!success) return NotFound();
+                return NoContent();
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database constraint prevented deleting category {Id}", id);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Unable to delete category because related records exist. Remove the related data before deleting the category.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error while deleting category {Id}", id);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "An unexpected error occurred while deleting the category. Please try again later.");
+            }
         }
     }
 }

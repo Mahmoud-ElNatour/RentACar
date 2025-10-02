@@ -22,6 +22,7 @@
         <h2 class="mb-4">Delete Booking</h2>
         <p>Are you sure you want to delete booking #@Model.BookingId?</p>
         <div class="mt-3">
+            <div class="alert alert-danger d-none" id="deleteBookingError" role="alert"></div>
             <button id="confirmDelete" class="btn btn-danger">Delete</button>
             <a href="/Booking" class="btn btn-secondary ms-2">Cancel</a>
         </div>
@@ -30,11 +31,47 @@
     <script>
         document.getElementById('confirmDelete').addEventListener('click', async () => {
             const id = @Model.BookingId;
-            const resp = await fetch('/api/Booking/' + id, { method: 'DELETE' });
-            if (resp.ok) {
-                window.location.href = '/Booking';
-            } else {
-                alert('Error deleting booking');
+            const errorAlert = document.getElementById('deleteBookingError');
+            if (errorAlert) {
+                errorAlert.classList.add('d-none');
+                errorAlert.textContent = '';
+            }
+
+            try {
+                const resp = await fetch('/api/Booking/' + id, { method: 'DELETE' });
+                if (resp.ok) {
+                    window.location.href = '/Booking';
+                    return;
+                }
+
+                let message = 'Error deleting booking.';
+                const contentType = resp.headers.get('Content-Type') || '';
+
+                try {
+                    if (contentType.includes('application/json')) {
+                        const data = await resp.json();
+                        if (data && typeof data === 'object') {
+                            message = data.message || message;
+                        }
+                    } else {
+                        const text = await resp.text();
+                        if (text) {
+                            message = text;
+                        }
+                    }
+                } catch {
+                    // ignore parsing errors
+                }
+
+                if (errorAlert) {
+                    errorAlert.textContent = message;
+                    errorAlert.classList.remove('d-none');
+                }
+            } catch (err) {
+                if (errorAlert) {
+                    errorAlert.textContent = 'Unable to connect to the server. Please try again.';
+                    errorAlert.classList.remove('d-none');
+                }
             }
         });
     </script>

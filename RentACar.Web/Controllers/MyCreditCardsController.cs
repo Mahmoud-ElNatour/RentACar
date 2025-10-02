@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using RentACar.Application.DTOs;
@@ -6,6 +7,7 @@ using RentACar.Application.Managers;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 namespace RentACar.Web.Controllers
 {
@@ -125,15 +127,28 @@ namespace RentACar.Web.Controllers
             }
 
             _logger.LogInformation("Attempting to delete credit card {CardId} for customer {CustomerId}", id, customerId);
-            var result = await _cardManager.RemoveCustomerCardAsync(customerId.Value, id);
-            if (!result)
+            try
             {
-                _logger.LogError("Failed to delete credit card {CardId} for customer {CustomerId}", id, customerId);
-                return BadRequest(new { message = "Failed" });
-            }
+                var result = await _cardManager.RemoveCustomerCardAsync(customerId.Value, id);
+                if (!result)
+                {
+                    _logger.LogError("Failed to delete credit card {CardId} for customer {CustomerId}", id, customerId);
+                    return BadRequest(new { message = "Failed" });
+                }
 
-            _logger.LogInformation("Successfully deleted credit card {CardId} for customer {CustomerId}", id, customerId);
-            return Ok(new { message = "Done" });
+                _logger.LogInformation("Successfully deleted credit card {CardId} for customer {CustomerId}", id, customerId);
+                return Ok(new { message = "Done" });
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database constraint prevented deleting credit card {CardId} for customer {CustomerId}", id, customerId);
+                return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Unable to delete credit card because related records exist. Remove the related data before deleting the card." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error while deleting credit card {CardId} for customer {CustomerId}", id, customerId);
+                return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An unexpected error occurred while deleting the credit card. Please try again later." });
+            }
         }
     }
 }

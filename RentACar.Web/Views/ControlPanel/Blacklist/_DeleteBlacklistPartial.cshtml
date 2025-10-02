@@ -8,6 +8,7 @@
             </div>
             <form id="deleteBlacklistForm">
                 <div class="modal-body">
+                    <div class="alert alert-danger d-none" id="deleteBlacklistError" role="alert"></div>
                     <input type="hidden" name="id" value="@Model.BlacklistId" />
                     <p>Unblock user <strong>@Model.UserId</strong>?</p>
                 </div>
@@ -23,13 +24,55 @@
     document.getElementById('deleteBlacklistForm').addEventListener('submit', async function (e) {
         e.preventDefault();
         const id = this.querySelector('[name="id"]').value;
-        const res = await fetch('/api/Blacklist/' + id, { method: 'DELETE' });
-        const result = await res.json();
-        alert(result.message);
-        if (res.ok) {
+        const errorAlert = this.querySelector('#deleteBlacklistError');
+        if (errorAlert) {
+            errorAlert.classList.add('d-none');
+            errorAlert.textContent = '';
+        }
+
+        try {
+            const response = await fetch('/api/Blacklist/' + id, { method: 'DELETE' });
+
+            if (!response.ok) {
+                let message = 'An error occurred while updating the blacklist entry.';
+                const contentType = response.headers.get('Content-Type') || '';
+
+                try {
+                    if (contentType.includes('application/json')) {
+                        const data = await response.json();
+                        if (data && typeof data === 'object') {
+                            message = data.message || message;
+                        }
+                    } else {
+                        const text = await response.text();
+                        if (text) {
+                            message = text;
+                        }
+                    }
+                } catch {
+                    // ignore parsing errors
+                }
+
+                if (errorAlert) {
+                    errorAlert.textContent = message;
+                    errorAlert.classList.remove('d-none');
+                }
+                return;
+            }
+
+            const result = await response.json().catch(() => null);
+            if (result && result.message) {
+                // Optionally display success somewhere else
+            }
+
             const modalEl = this.closest('.modal');
             bootstrap.Modal.getInstance(modalEl).hide();
             if (window.loadBlacklist) loadBlacklist(true);
+        } catch (err) {
+            if (errorAlert) {
+                errorAlert.textContent = 'Unable to connect to the server. Please try again.';
+                errorAlert.classList.remove('d-none');
+            }
         }
     });
 </script>
