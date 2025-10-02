@@ -150,5 +150,14 @@ namespace RentACar.Web.Controllers
                     "An unexpected error occurred while deleting the employee. Please try again later.");
             }
         }
+
+        [HttpPost("{id}/reset-password")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> ResetPassword(int id)
+        {
+            var success = await _employeeManager.ResetPassword(id, "E@e123456");
+            if (!success) return NotFound();
+            return NoContent();
+        }
     }
 }

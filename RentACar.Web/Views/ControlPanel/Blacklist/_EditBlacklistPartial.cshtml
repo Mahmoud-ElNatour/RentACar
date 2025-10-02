@@ -48,7 +48,7 @@
             body: JSON.stringify(data)
         });
         const result = await res.json();
-        alert(result.message);
+        showPopup(result.message, res.ok ? 'success' : 'error');
         if (res.ok) {
             const modalEl = form.closest('.modal');
             bootstrap.Modal.getInstance(modalEl).hide();

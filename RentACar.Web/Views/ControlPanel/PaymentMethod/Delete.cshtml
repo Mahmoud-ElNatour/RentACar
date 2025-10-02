@@ -84,15 +84,10 @@
                     // ignore parsing errors
                 }
 
-                if (errorAlert) {
-                    errorAlert.textContent = message;
-                    errorAlert.classList.remove('d-none');
-                }
-            } catch (err) {
-                if (errorAlert) {
-                    errorAlert.textContent = 'Unable to connect to the server. Please try again.';
-                    errorAlert.classList.remove('d-none');
-                }
+            if (res.ok) {
+                window.location.href = '/PaymentMethod';
+            } else {
+                showPopup('Failed to delete payment method', 'error');
             }
         });
     </script>

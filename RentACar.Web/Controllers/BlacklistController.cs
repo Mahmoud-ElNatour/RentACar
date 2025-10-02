@@ -43,15 +43,6 @@ namespace RentACar.Web.Controllers
             return PartialView("~/Views/ControlPanel/Blacklist/_AddBlacklistPartial.cshtml", new AddToBlacklistRequestDto());
         }
 
-        [HttpGet("~/Blacklist/Edit/{id}")]
-        [ApiExplorerSettings(IgnoreApi = true)]
-        public async Task<IActionResult> EditForm(int id)
-        {
-            var bl = await _blacklistManager.GetByIdAsync(id);
-            if (bl == null) return NotFound();
-            return PartialView("~/Views/ControlPanel/Blacklist/_EditBlacklistPartial.cshtml", bl);
-        }
-
         [HttpGet("~/Blacklist/Delete/{id}")]
         [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> DeleteForm(int id)
@@ -59,6 +50,15 @@ namespace RentACar.Web.Controllers
             var bl = await _blacklistManager.GetByIdAsync(id);
             if (bl == null) return NotFound();
             return PartialView("~/Views/ControlPanel/Blacklist/_DeleteBlacklistPartial.cshtml", bl);
+        }
+
+        [HttpGet("~/Blacklist/Details/{id}")]
+        [ApiExplorerSettings(IgnoreApi = true)]
+        public async Task<IActionResult> Details(int id)
+        {
+            var bl = await _blacklistManager.GetDisplayByIdAsync(id);
+            if (bl == null) return NotFound();
+            return PartialView("~/Views/ControlPanel/Blacklist/_ViewBlacklistPartial.cshtml", bl);
         }
 
         [HttpGet]

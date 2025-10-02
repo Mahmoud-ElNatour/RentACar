@@ -49,7 +49,7 @@
             if (res.ok) {
                 window.location.href = '/PaymentMethod';
             } else {
-                alert('Failed to update payment method');
+                showPopup('Failed to update payment method', 'error');
             }
         });
     </script>

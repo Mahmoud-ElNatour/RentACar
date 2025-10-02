@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Identity;
@@ -218,6 +219,17 @@ namespace RentACar.Application.Managers
             return entry == null ? null : _mapper.Map<BlacklistDto>(entry);
         }
 
+        public async Task<BlacklistDisplayDto?> GetDisplayByIdAsync(int id)
+        {
+            var entry = await _blacklistRepository.GetByIdAsync(id);
+            if (entry == null)
+            {
+                return null;
+            }
+
+            return await BuildDisplayDtoAsync(entry);
+        }
+
         public async Task<List<BlacklistDisplayDto>> GetAllAsync(string? type = null, string? search = null, int offset = 0, int limit = 30)
         {
             var all = await _blacklistRepository.GetAllAsync();
@@ -225,41 +237,58 @@ namespace RentACar.Application.Managers
 
             foreach (var item in all)
             {
-                var user = await _userManager.FindByIdAsync(item.UserId);
-                if (user == null) continue;
-                var emp = await _employeeRepository.GetByIdAsync(item.EmployeeDoneBlacklistId);
-
-                var isCustomer = await _userManager.IsInRoleAsync(user, "Customer");
-                var isEmployee = await _userManager.IsInRoleAsync(user, "Employee");
-                var userType = isCustomer ? "Customer" : isEmployee ? "Employee" : "Unknown";
-
-                if (!string.IsNullOrEmpty(type) && !string.Equals(type, userType, StringComparison.OrdinalIgnoreCase))
-                    continue;
-
-                var display = new BlacklistDisplayDto
+                var display = await BuildDisplayDtoAsync(item);
+                if (display == null)
                 {
-                    BlacklistId = item.BlacklistId,
-                    UserId = item.UserId,
-                    Username = user.UserName ?? string.Empty,
-                    Reason = item.Reason,
-                    DateBlocked = item.DateBlocked,
-                    EmployeeDoneBlacklistId = item.EmployeeDoneBlacklistId,
-                    EmployeeName = emp?.Name ?? string.Empty,
-                    UserType = userType
-                };
+                    continue;
+                }
+
+                if (!string.IsNullOrEmpty(type) && !string.Equals(type, display.UserType, StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
 
                 if (!string.IsNullOrWhiteSpace(search))
                 {
                     var searchLower = search.ToLowerInvariant();
                     var match = (display.Username?.ToLowerInvariant().Contains(searchLower) ?? false) ||
                                 (display.Reason?.ToLowerInvariant().Contains(searchLower) ?? false);
-                    if (!match) continue;
+                    if (!match)
+                    {
+                        continue;
+                    }
                 }
 
                 result.Add(display);
             }
 
             return result.Skip(offset).Take(limit).ToList();
+        }
+
+        private async Task<BlacklistDisplayDto?> BuildDisplayDtoAsync(BlackList item)
+        {
+            var user = await _userManager.FindByIdAsync(item.UserId);
+            if (user == null)
+            {
+                return null;
+            }
+
+            var emp = await _employeeRepository.GetByIdAsync(item.EmployeeDoneBlacklistId);
+            var isCustomer = await _userManager.IsInRoleAsync(user, "Customer");
+            var isEmployee = await _userManager.IsInRoleAsync(user, "Employee");
+            var userType = isCustomer ? "Customer" : isEmployee ? "Employee" : "Unknown";
+
+            return new BlacklistDisplayDto
+            {
+                BlacklistId = item.BlacklistId,
+                UserId = item.UserId,
+                Username = user.UserName ?? string.Empty,
+                Reason = item.Reason,
+                DateBlocked = item.DateBlocked,
+                EmployeeDoneBlacklistId = item.EmployeeDoneBlacklistId,
+                EmployeeName = emp?.Name ?? string.Empty,
+                UserType = userType
+            };
         }
 
         public async Task UpdateBlacklistAsync(BlacklistDto dto)
