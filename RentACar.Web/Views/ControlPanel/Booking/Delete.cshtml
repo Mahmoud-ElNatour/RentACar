@@ -34,7 +34,7 @@
             if (resp.ok) {
                 window.location.href = '/Booking';
             } else {
-                alert('Error deleting booking');
+                showPopup('Error deleting booking', 'error');
             }
         });
     </script>

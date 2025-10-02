@@ -55,7 +55,7 @@
             if (res.ok) {
                 window.location.href = '/PaymentMethod';
             } else {
-                alert('Failed to delete payment method');
+                showPopup('Failed to delete payment method', 'error');
             }
         });
     </script>

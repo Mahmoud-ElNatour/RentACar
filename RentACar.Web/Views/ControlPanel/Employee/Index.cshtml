@@ -144,11 +144,11 @@
                     if (confirm('Reset password for this employee?')) {
                         const response = await fetch('/api/Employee/' + reset.dataset.id + '/reset-password', { method: 'POST' });
                         if (response.ok) {
-                            alert('Password reset successfully to E@e123456');
+                            showPopup('Password reset successfully to E@e123456', 'success');
                         } else if (response.status === 404) {
-                            alert('Employee not found.');
+                            showPopup('Employee not found.', 'warning');
                         } else {
-                            alert('Failed to reset password.');
+                            showPopup('Failed to reset password.', 'error');
                         }
                     }
                 }

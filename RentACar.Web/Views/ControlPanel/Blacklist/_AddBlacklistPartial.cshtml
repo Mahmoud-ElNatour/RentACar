@@ -61,7 +61,7 @@
         minLength: 2,
         delay: 150,
         source: function (request, response) {
-                    console.log("typing term:", request.term);   // <— should log on each keystroke
+                    console.log("typing term:", request.term);   // should log on each keystroke
 
           $.ajax({
           url: "/api/Blacklist/identifiers",
@@ -108,7 +108,7 @@
           body: JSON.stringify(payload)
         });
         const result = await res.json();
-        alert(result.message || (res.ok ? 'Added.' : 'Failed.'));
+        showPopup(result.message || (res.ok ? 'Added.' : 'Failed.'), res.ok ? 'success' : 'error');
         if (res.ok) {
           const modalEl = form.closest('.modal');
           (bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl)).hide();
@@ -116,7 +116,7 @@
         }
       } catch (err) {
         console.error(err);
-        alert('Network error while adding to blacklist.');
+        showPopup('Network error while adding to blacklist.', 'error');
       }
     });
 </script>

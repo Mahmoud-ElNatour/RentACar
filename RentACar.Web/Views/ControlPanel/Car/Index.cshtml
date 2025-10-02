@@ -175,14 +175,14 @@
 
                         if (!response.ok) {
                             const error = await response.text();
-                            alert("Error: " + error);
+                            showPopup(`Error: ${error}`, 'error');
                             return;
                         }
 
                         modal.hide();
                         if (window.loadCars) loadCars();
                     } catch (err) {
-                        alert("An error occurred while saving the car.");
+                        showPopup('An error occurred while saving the car.', 'error');
                         console.error(err);
                     }
                 });
@@ -201,7 +201,7 @@
 
                         if (!response.ok) {
                             const error = await response.text();
-                            alert("Delete failed: " + error);
+                            showPopup(`Delete failed: ${error}`, 'error');
                             return;
                         }
 
@@ -209,7 +209,7 @@
                         if (window.loadCars) loadCars();
                     } catch (err) {
                         console.error(err);
-                        alert("An error occurred while deleting the car.");
+                        showPopup('An error occurred while deleting the car.', 'error');
                     }
                 });
             }

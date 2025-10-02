@@ -25,7 +25,7 @@
         const id = this.querySelector('[name="id"]').value;
         const res = await fetch('/api/CreditCard/' + id, { method: 'DELETE' });
         const result = await res.json();
-        alert(result.message || (res.ok ? 'Done' : 'Failed'));
+        showPopup(result.message || (res.ok ? 'Done' : 'Failed'), res.ok ? 'success' : 'error');
         if (res.ok) {
             const modalEl = this.closest('.modal');
             bootstrap.Modal.getInstance(modalEl).hide();
