@@ -39,13 +39,14 @@
                 document.getElementById('editPromocodeForm').addEventListener('submit', async function (e) {
                     e.preventDefault();
                     const form = e.target;
+                    const isActiveCheckbox = form.querySelector('input[type="checkbox"][name="IsActive"]');
                     const data = {
                         promocodeId: parseInt(form.PromocodeId.value),
                         name: form.Name.value,
                         discountPercentage: parseFloat(form.DiscountPercentage.value || '0'),
                         validUntil: form.ValidUntil.value || null,
                         description: form.Description.value,
-                        isActive: form.querySelector('[name="IsActive"]')?.checked ?? false
+                        isActive: isActiveCheckbox ? isActiveCheckbox.checked : false
                     };
                     await fetch('/api/Promocode/' + data.promocodeId, {
                         method: 'PUT',
