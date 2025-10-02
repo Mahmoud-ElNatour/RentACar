@@ -1,0 +1,57 @@
+Critical errors:
+- if we have a car that booked someday, after the booking we can't delete it (found in booking table), same for categories, same for customers and employees --> error
+
+Frontend and popups:
+- dropdown background should be gray
+- response should be partial vioew popup in all pages, show error or succ. response in all actions in all pannels 
+<<<<<<<<(works in customers only should impleent in others )?>>>>>>>>>
+- add show pass button
+
+Blacklist panel and inactive users:
+
+- customer if he has any action on booking sys, we can't delete it we can only set it inactive
+
+Reset pass and email api
+-reset pass should be random and send it by email
+- implement email api (search for mailgun easy - create new acc in mailgun)
+
+Customers and employees:
+- bug in change doc of cus
+- bug in edit customers username if already assigned to another user , same for employee (user)--> should give error m
+- bug in add customers when i try to add it takes forever if the image is just 7mb
+
+
+-employee if has action on sys we can't do delete
+
+
+
+Booking improvement:
+- booking we should add usernames and names instead of user id
+- add cancle for status
+
+
+Notes:
+- for deleting do for now (on delete cascade), yoou can do delete after popup alerting you... think for logical solution
+
+Later on:
+-request panel for canceling the booking from employee nso the admin can approve or deny
+- refunded panel
+
+
+
+------- error --------when a customer books a car the back button takes him to the booking of control panel!!!
+
+
+
+------------------------done--------------------------------------
+-in blacklist, it should be dropdown m3 kitebe in add text input
+-remove the edit in blacklist table and add employee id and name or do view details instead
+- unblock the username instead of userid
+- user if  inactive should not be able to login even though not blacklisted.
+
+-add option reset pass for employee in action column in employee panel
+
+
+Promocode:
+- bug in viewing inactive promocodes fix
+- bug while adding promocode always adding it inactive fixed
