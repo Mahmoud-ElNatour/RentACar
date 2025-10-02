@@ -1,0 +1,59 @@
+@model RentACar.Application.DTOs.PromocodeDto
+<div class="modal fade" id="addPromocodeModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content custom-modal">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Promocode</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="addPromocodeForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label asp-for="Name" class="form-label"></label>
+                        <input asp-for="Name" class="form-control" />
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="DiscountPercentage" class="form-label"></label>
+                        <input asp-for="DiscountPercentage" class="form-control" />
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="ValidUntil" class="form-label"></label>
+                        <input asp-for="ValidUntil" type="date" class="form-control" />
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Description" class="form-label"></label>
+                        <input asp-for="Description" class="form-control" />
+                    </div>
+                    <div class="form-check mb-3">
+                        <input asp-for="IsActive" class="form-check-input" />
+                        <label asp-for="IsActive" class="form-check-label"></label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+            <script>
+                document.getElementById('addPromocodeForm').addEventListener('submit', async function (e) {
+                    e.preventDefault();
+                    const form = e.target;
+                    const data = {
+                        name: form.Name.value,
+                        discountPercentage: parseFloat(form.DiscountPercentage.value || '0'),
+                        validUntil: form.ValidUntil.value || null,
+                        description: form.Description.value,
+                        isActive: form.IsActive.checked
+                    };
+                    await fetch('/api/Promocode', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                    bootstrap.Modal.getInstance(document.getElementById('addPromocodeModal')).hide();
+                    if (window.loadPromocodes) loadPromocodes();
+                });
+            </script>
+        </div>
+    </div>
+</div>

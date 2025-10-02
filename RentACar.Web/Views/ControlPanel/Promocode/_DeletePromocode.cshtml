@@ -1,0 +1,30 @@
+@model RentACar.Application.DTOs.PromocodeDto
+<div class="modal fade" id="deletePromocodeModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content custom-modal">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete Promocode</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="deletePromocodeForm">
+                <div class="modal-body">
+                    <input type="hidden" asp-for="PromocodeId" />
+                    <p>Are you sure you want to delete <strong>@Model.Name</strong>?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </div>
+            </form>
+            <script>
+                document.getElementById('deletePromocodeForm').addEventListener('submit', async function (e) {
+                    e.preventDefault();
+                    const id = this.PromocodeId.value;
+                    await fetch('/api/Promocode/' + id, { method: 'DELETE' });
+                    bootstrap.Modal.getInstance(document.getElementById('deletePromocodeModal')).hide();
+                    if (window.loadPromocodes) loadPromocodes();
+                });
+            </script>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,42 @@
+﻿@model RentACar.Application.DTOs.BookingDto
+@{
+    ViewData["Title"] = "Delete Booking";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/bookings.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
+</head>
+<body>
+    <div class="booking-container container text-center">
+        <a href="/Booking" class="btn btn-outline-warning rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:40px;height:40px" title="Back">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <h2 class="mb-4">Delete Booking</h2>
+        <p>Are you sure you want to delete booking #@Model.BookingId?</p>
+        <div class="mt-3">
+            <button id="confirmDelete" class="btn btn-danger">Delete</button>
+            <a href="/Booking" class="btn btn-secondary ms-2">Cancel</a>
+        </div>
+    </div>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('confirmDelete').addEventListener('click', async () => {
+            const id = @Model.BookingId;
+            const resp = await fetch('/api/Booking/' + id, { method: 'DELETE' });
+            if (resp.ok) {
+                window.location.href = '/Booking';
+            } else {
+                alert('Error deleting booking');
+            }
+        });
+    </script>
+</body>
+</html>

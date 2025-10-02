@@ -1,0 +1,42 @@
+:root {
+    --primary-dark: #0a0c0e;
+    --secondary-dark: #161819;
+    --accent-gold: #d4af37;
+    --accent-gold-hover: #e6c347;
+    --text-primary: #ffffff;
+    --text-secondary: #9ea3a9;
+}
+
+body {
+    background: var(--primary-dark);
+    color: var(--text-primary);
+    font-family: 'Poppins', 'Segoe UI', Arial, sans-serif;
+    padding: 20px;
+}
+
+.history-container {
+    background: var(--secondary-dark);
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05);
+}
+
+.table-dark th, .table-dark td {
+    color: var(--text-primary);
+}
+
+.table-dark th {
+    color: var(--accent-gold);
+}
+
+.btn-primary {
+    background-color: var(--accent-gold);
+    border-color: var(--accent-gold);
+    color: var(--primary-dark);
+}
+
+.btn-primary:hover, .btn-primary:focus {
+    background-color: var(--accent-gold-hover);
+    border-color: var(--accent-gold-hover);
+    color: var(--primary-dark);
+}

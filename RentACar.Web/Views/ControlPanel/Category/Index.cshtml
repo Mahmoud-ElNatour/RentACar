@@ -1,0 +1,84 @@
+@{
+    ViewData["Title"] = "Categories";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/categories.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
+</head>
+<body>
+    <div class="category-container">
+        <a href="../ControlPanel" class="btn btn-outline-warning mb-3 rounded-circle d-inline-flex align-items-center justify-content-center" style="width:40px;height:40px" title="Back">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <h2 class="page-title mb-4 text-center">Categories</h2>
+        <div class="text-end mb-3">
+            <button class="btn btn-primary add-category">Add Category</button>
+        </div>
+        <div class="category-grid" id="categoryGrid">
+        </div>
+    </div>
+    <div id="categoryModalPlaceholder"></div>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        async function loadCategories() {
+            const res = await fetch('/api/Category');
+            const data = await res.json();
+            const grid = document.getElementById('categoryGrid');
+            grid.innerHTML = '';
+            data.forEach(cat => {
+                const div = document.createElement('div');
+                div.className = 'category-card';
+                div.dataset.id = cat.categoryId;
+                div.innerHTML = `<span class="category-name">${cat.name}</span>` +
+                    `<div class="actions">` +
+                    `<a href="#" class="edit-category" data-id="${cat.categoryId}"><i class="fas fa-pencil-alt"></i></a>` +
+                    `<a href="#" class="delete-category" data-id="${cat.categoryId}"><i class="fas fa-trash"></i></a>` +
+                    `</div>`;
+                grid.appendChild(div);
+            });
+        }
+
+        async function loadModal(url) {
+            const res = await fetch(url);
+            const html = await res.text();
+            const placeholder = document.getElementById('categoryModalPlaceholder');
+            placeholder.innerHTML = html;
+            placeholder.querySelectorAll('script').forEach(scr => {
+                const s = document.createElement('script');
+                s.textContent = scr.textContent;
+                document.body.appendChild(s);
+                document.body.removeChild(s);
+            });
+            const modalEl = placeholder.querySelector('.modal');
+            const modal = new bootstrap.Modal(modalEl);
+            modal.show();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCategories();
+            document.querySelector('.add-category').addEventListener('click', () => loadModal('/Category/Add'));
+
+            document.getElementById('categoryGrid').addEventListener('click', (e) => {
+                const edit = e.target.closest('.edit-category');
+                const del = e.target.closest('.delete-category');
+                if (edit) {
+                    e.preventDefault();
+                    loadModal('/Category/Edit/' + edit.dataset.id);
+                } else if (del) {
+                    e.preventDefault();
+                    loadModal('/Category/Delete/' + del.dataset.id);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,81 @@
+@model RentACar.Application.DTOs.CustomerDTO
+<div class="modal fade" id="customerDocsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content dark-modal">
+            <div class="modal-header">
+                <h5 class="modal-title">Customer Documents</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="docsForm">
+                    <input type="hidden" name="customerId" value="@Model.UserId" />
+                    <div class="row g-3">
+                        <div class="col-md-6 text-center">
+                            <label class="form-label">Driving License Front</label>
+                            @if (Model.DrivingLicenseFront != null)
+                            {
+                                <img src="data:image/png;base64,@Convert.ToBase64String(Model.DrivingLicenseFront)" class="img-fluid mb-2" />
+                            }
+                            <input type="file" name="DrivingLicenseFront" class="form-control" />
+                        </div>
+                        <div class="col-md-6 text-center">
+                            <label class="form-label">Driving License Back</label>
+                            @if (Model.DrivingLicenseBack != null)
+                            {
+                                <img src="data:image/png;base64,@Convert.ToBase64String(Model.DrivingLicenseBack)" class="img-fluid mb-2" />
+                            }
+                            <input type="file" name="DrivingLicenseBack" class="form-control" />
+                        </div>
+                        <div class="col-md-6 text-center">
+                            <label class="form-label">National ID Front</label>
+                            @if (Model.NationalIdfront != null)
+                            {
+                                <img src="data:image/png;base64,@Convert.ToBase64String(Model.NationalIdfront)" class="img-fluid mb-2" />
+                            }
+                            <input type="file" name="NationalIdfront" class="form-control" />
+                        </div>
+                        <div class="col-md-6 text-center">
+                            <label class="form-label">National ID Back</label>
+                            @if (Model.NationalIdback != null)
+                            {
+                                <img src="data:image/png;base64,@Convert.ToBase64String(Model.NationalIdback)" class="img-fluid mb-2" />
+                            }
+                            <input type="file" name="NationalIdback" class="form-control" />
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" id="saveDocs" class="btn btn-primary">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    async function fileToBase64(file) {
+        const buffer = await file.arrayBuffer();
+        const bytes = new Uint8Array(buffer);
+        let binary = '';
+        bytes.forEach(b => binary += String.fromCharCode(b));
+        return btoa(binary);
+    }
+    document.getElementById('saveDocs').addEventListener('click', async function () {
+        const form = document.getElementById('docsForm');
+        const files = form.elements;
+        const data = {
+            drivingLicenseFront: files['DrivingLicenseFront'].files[0] ? await fileToBase64(files['DrivingLicenseFront'].files[0]) : null,
+            drivingLicenseBack: files['DrivingLicenseBack'].files[0] ? await fileToBase64(files['DrivingLicenseBack'].files[0]) : null,
+            nationalIdfront: files['NationalIdfront'].files[0] ? await fileToBase64(files['NationalIdfront'].files[0]) : null,
+            nationalIdback: files['NationalIdback'].files[0] ? await fileToBase64(files['NationalIdback'].files[0]) : null
+        };
+        const id = form.querySelector('[name="customerId"]').value;
+        await fetch('/api/Customer/' + id + '/documents', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        const modalEl = document.getElementById('customerDocsModal');
+        bootstrap.Modal.getInstance(modalEl).hide();
+    });
+</script>
