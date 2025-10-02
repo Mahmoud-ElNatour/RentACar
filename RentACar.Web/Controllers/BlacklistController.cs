@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using RentACar.Application.DTOs;
@@ -101,10 +102,25 @@ namespace RentACar.Web.Controllers
             _logger.LogInformation("Deleting blacklist entry {Id}", id);
             var emp = await GetLoggedEmployee();
             if (emp == null) return Unauthorized();
-            var result = await _blacklistManager.RemoveByIdAsync(id, emp);
-            if (!result.Success)
-                return BadRequest(new { message = result.Message });
-            return Ok(new { message = result.Message });
+            try
+            {
+                var result = await _blacklistManager.RemoveByIdAsync(id, emp);
+                if (!result.Success)
+                    return BadRequest(new { message = result.Message });
+                return Ok(new { message = result.Message });
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database constraint prevented deleting blacklist entry {Id}", id);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new { message = "Unable to remove this blacklist entry because related records exist. Remove the related data before deleting the entry." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error while deleting blacklist entry {Id}", id);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new { message = "An unexpected error occurred while deleting the blacklist entry. Please try again later." });
+            }
         }
 
         private async Task<EmployeeDto?> GetLoggedEmployee()

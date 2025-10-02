@@ -32,6 +32,7 @@
             <p>Are you sure you want to delete <strong>@Model.PaymentMethodName</strong>?</p>
 
             <form id="deleteMethodForm" class="mt-3">
+                <div class="alert alert-danger d-none" id="deleteMethodError" role="alert"></div>
                 <input type="hidden" asp-for="Id" />
 
                 <button type="submit" class="btn btn-danger me-2">
@@ -47,10 +48,41 @@
         document.getElementById('deleteMethodForm').addEventListener('submit', async function (e) {
             e.preventDefault();
 
-            const id = this.Id.value;
-            const res = await fetch('/api/PaymentMethod/' + id, {
-                method: 'DELETE'
-            });
+            const id = this.querySelector('[name="Id"]').value;
+            const errorAlert = document.getElementById('deleteMethodError');
+            if (errorAlert) {
+                errorAlert.classList.add('d-none');
+                errorAlert.textContent = '';
+            }
+
+            try {
+                const res = await fetch('/api/PaymentMethod/' + id, {
+                    method: 'DELETE'
+                });
+
+                if (res.ok) {
+                    window.location.href = '/PaymentMethod';
+                    return;
+                }
+
+                let message = 'Failed to delete payment method.';
+                const contentType = res.headers.get('Content-Type') || '';
+
+                try {
+                    if (contentType.includes('application/json')) {
+                        const data = await res.json();
+                        if (data && typeof data === 'object') {
+                            message = data.message || message;
+                        }
+                    } else {
+                        const text = await res.text();
+                        if (text) {
+                            message = text;
+                        }
+                    }
+                } catch {
+                    // ignore parsing errors
+                }
 
             if (res.ok) {
                 window.location.href = '/PaymentMethod';

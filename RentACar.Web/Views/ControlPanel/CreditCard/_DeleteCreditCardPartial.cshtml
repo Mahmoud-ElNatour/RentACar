@@ -1,4 +1,5 @@
 @model RentACar.Application.DTOs.CreditCardDto
+
 <div class="modal fade" id="deleteCardModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content dark-modal">
@@ -8,6 +9,7 @@
             </div>
             <form id="deleteCardForm">
                 <div class="modal-body">
+                    <div class="alert alert-danger d-none" id="deleteCardError" role="alert"></div>
                     <input type="hidden" name="id" value="@Model.CreditCardId" />
                     <p>Are you sure you want to delete card <strong>@Model.CardNumber</strong>?</p>
                 </div>
@@ -19,17 +21,96 @@
         </div>
     </div>
 </div>
+
 <script>
-    document.getElementById('deleteCardForm').addEventListener('submit', async function (e) {
+(function () {
+    const form = document.getElementById('deleteCardForm');
+    if (!form) return;
+
+    form.addEventListener('submit', async function (e) {
         e.preventDefault();
+
         const id = this.querySelector('[name="id"]').value;
-        const res = await fetch('/api/CreditCard/' + id, { method: 'DELETE' });
-        const result = await res.json();
-        showPopup(result.message || (res.ok ? 'Done' : 'Failed'), res.ok ? 'success' : 'error');
-        if (res.ok) {
+        const errorAlert = this.querySelector('#deleteCardError');
+
+        // reset error UI
+        if (errorAlert) {
+            errorAlert.classList.add('d-none');
+            errorAlert.textContent = '';
+        }
+
+        // optional anti-forgery support
+        const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+        const headers = { 'Accept': 'application/json' };
+        if (tokenInput && tokenInput.value) {
+            headers['RequestVerificationToken'] = tokenInput.value;
+        }
+
+        try {
+            const resp = await fetch('/api/CreditCard/' + encodeURIComponent(id), {
+                method: 'DELETE',
+                headers
+            });
+
+            let message = '';
+            const ct = resp.headers.get('Content-Type') || '';
+
+            // Try to read a message if there is a body
+            if (ct.includes('application/json')) {
+                try {
+                    const data = await resp.json();
+                    message = (data && (data.message || data.error || data.title)) || '';
+                } catch { /* ignore parse errors */ }
+            } else if (!resp.ok) {
+                try {
+                    message = await resp.text() || '';
+                } catch { /* ignore */ }
+            }
+
+            if (!resp.ok) {
+                if (!message) message = 'An error occurred while deleting the credit card.';
+                if (typeof window.showPopup === 'function') {
+                    window.showPopup(message, 'error');
+                } else if (errorAlert) {
+                    errorAlert.textContent = message;
+                    errorAlert.classList.remove('d-none');
+                }
+                return;
+            }
+
+            // success
+            if (!message) message = 'Card deleted successfully.';
+            if (typeof window.showPopup === 'function') {
+                window.showPopup(message, 'success');
+            }
+
+            // hide modal safely
             const modalEl = this.closest('.modal');
-            bootstrap.Modal.getInstance(modalEl).hide();
-            if (window.loadCards) loadCards(true);
+            if (modalEl) {
+                let instance = window.bootstrap && window.bootstrap.Modal.getInstance
+                    ? window.bootstrap.Modal.getInstance(modalEl)
+                    : null;
+                if (!instance && window.bootstrap && window.bootstrap.Modal) {
+                    instance = new window.bootstrap.Modal(modalEl);
+                }
+                if (instance && typeof instance.hide === 'function') instance.hide();
+            }
+
+            // reload cards if provided
+            if (typeof window.loadCards === 'function') {
+                window.loadCards(true);
+            }
+        } catch (err) {
+            const msg = 'Unable to connect to the server. Please try again.';
+            if (typeof window.showPopup === 'function') {
+                window.showPopup(msg, 'error');
+            } else if (errorAlert) {
+                errorAlert.textContent = msg;
+                errorAlert.classList.remove('d-none');
+            } else {
+                alert(msg);
+            }
         }
     });
+})();
 </script>

@@ -1,4 +1,4 @@
-﻿@model RentACar.Application.DTOs.BookingDto
+@model RentACar.Application.DTOs.BookingDto
 @{
     ViewData["Title"] = "Delete Booking";
     Layout = null;
@@ -19,24 +19,97 @@
         <a href="/Booking" class="btn btn-outline-warning rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:40px;height:40px" title="Back">
             <i class="fas fa-arrow-left"></i>
         </a>
+
         <h2 class="mb-4">Delete Booking</h2>
         <p>Are you sure you want to delete booking #@Model.BookingId?</p>
+
         <div class="mt-3">
+            <div class="alert alert-danger d-none" id="deleteBookingError" role="alert"></div>
             <button id="confirmDelete" class="btn btn-danger">Delete</button>
             <a href="/Booking" class="btn btn-secondary ms-2">Cancel</a>
         </div>
     </div>
+
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        document.getElementById('confirmDelete').addEventListener('click', async () => {
-            const id = @Model.BookingId;
-            const resp = await fetch('/api/Booking/' + id, { method: 'DELETE' });
-            if (resp.ok) {
-                window.location.href = '/Booking';
-            } else {
-                showPopup('Error deleting booking', 'error');
+        (function () {
+            // Safe serialization: works for int, string, or GUID
+            const id = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.BookingId));
+
+            const btn = document.getElementById('confirmDelete');
+            const errorAlert = document.getElementById('deleteBookingError');
+
+            function showError(message) {
+                if (typeof window.showPopup === 'function') {
+                    window.showPopup(message, 'error');
+                } else if (errorAlert) {
+                    errorAlert.textContent = message || 'Error deleting booking.';
+                    errorAlert.classList.remove('d-none');
+                } else {
+                    alert(message || 'Error deleting booking.'); // last resort
+                }
             }
-        });
+
+            function clearError() {
+                if (errorAlert) {
+                    errorAlert.textContent = '';
+                    errorAlert.classList.add('d-none');
+                }
+            }
+
+            btn.addEventListener('click', async () => {
+                clearError();
+
+                // Optional anti-forgery token support
+                const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+                const headers = { 'Accept': 'application/json' };
+                if (tokenInput && tokenInput.value) {
+                    headers['RequestVerificationToken'] = tokenInput.value;
+                }
+
+                try {
+                    const resp = await fetch('/api/Booking/' + encodeURIComponent(id), {
+                        method: 'DELETE',
+                        headers
+                    });
+
+                    if (resp.ok) {
+                        // Some APIs return 204 No Content; try to parse only if there is content
+                        const ct = resp.headers.get('Content-Type') || '';
+                        if (ct.includes('application/json')) {
+                            // best effort; not required
+                            try {
+                                const data = await resp.json();
+                                if (data && data.message && typeof window.showPopup === 'function') {
+                                    window.showPopup(data.message, 'success');
+                                }
+                            } catch { /* ignore */ }
+                        }
+                        window.location.href = '/Booking';
+                        return;
+                    }
+
+                    // Build a helpful error message
+                    let message = 'Error deleting booking.';
+                    const ct = resp.headers.get('Content-Type') || '';
+                    try {
+                        if (ct.includes('application/json')) {
+                            const data = await resp.json();
+                            if (data && typeof data === 'object') {
+                                message = data.message || data.error || data.title || message;
+                            }
+                        } else {
+                            const text = await resp.text();
+                            if (text) message = text;
+                        }
+                    } catch { /* ignore parse errors */ }
+
+                    showError(message);
+                } catch (e) {
+                    showError('Unable to connect to the server. Please try again.');
+                }
+            });
+        })();
     </script>
 </body>
 </html>

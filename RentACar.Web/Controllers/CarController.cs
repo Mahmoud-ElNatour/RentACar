@@ -4,12 +4,14 @@ using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using RentACar.Application.DTOs;
 using RentACar.Application.Managers;
 using RentACar.Core.Repositories;
 using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
 
 namespace RentACar.Web.Controllers
 {
@@ -149,9 +151,24 @@ namespace RentACar.Web.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             _logger.LogInformation("🗑️ [Delete] Request to delete car ID {Id}", id);
-            await _carManager.DeleteCarAsync(id);
-            _logger.LogInformation("✅ [Delete] Car ID {Id} deleted successfully", id);
-            return NoContent();
+            try
+            {
+                await _carManager.DeleteCarAsync(id);
+                _logger.LogInformation("✅ [Delete] Car ID {Id} deleted successfully", id);
+                return NoContent();
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database constraint prevented deleting car {Id}", id);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Unable to delete car because related records exist. Remove the related data before deleting the car.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error while deleting car {Id}", id);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "An unexpected error occurred while deleting the car. Please try again later.");
+            }
         }
 
         private async Task PopulateCategories()

@@ -3,10 +3,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RentACar.Application.DTOs;
 using RentACar.Application.Managers;
 using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
 
 namespace RentACar.Web.Controllers
 {
@@ -130,8 +132,23 @@ namespace RentACar.Web.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             _logger.LogInformation("Deleting employee {Id}", id);
-            await _employeeManager.DeleteEmployee(id);
-            return NoContent();
+            try
+            {
+                await _employeeManager.DeleteEmployee(id);
+                return NoContent();
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database constraint prevented deleting employee {Id}", id);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Unable to delete employee because related records exist. Remove the related data before deleting the employee.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error while deleting employee {Id}", id);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "An unexpected error occurred while deleting the employee. Please try again later.");
+            }
         }
 
         [HttpPost("{id}/reset-password")]

@@ -1,10 +1,13 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using RentACar.Application.DTOs;
 using RentACar.Application.Managers;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
 
 namespace RentACar.Web.Controllers
 {
@@ -131,15 +134,29 @@ namespace RentACar.Web.Controllers
         {
             _logger.LogInformation("Deleting payment method {Id}", id);
             var userId = _userManager.GetUserId(User) ?? string.Empty;
-
-            var success = await _paymentMethodManager.DeletePaymentMethodAsync(id, userId);
-            if (!success)
+            try
             {
-                _logger.LogWarning("Failed to delete payment method with ID {Id}", id);
-                return NotFound();
-            }
+                var success = await _paymentMethodManager.DeletePaymentMethodAsync(id, userId);
+                if (!success)
+                {
+                    _logger.LogWarning("Failed to delete payment method with ID {Id}", id);
+                    return NotFound();
+                }
 
-            return NoContent();
+                return NoContent();
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database constraint prevented deleting payment method {Id}", id);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Unable to delete payment method because related records exist. Remove the related data before deleting the payment method.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error while deleting payment method {Id}", id);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "An unexpected error occurred while deleting the payment method. Please try again later.");
+            }
         }
     }
 }

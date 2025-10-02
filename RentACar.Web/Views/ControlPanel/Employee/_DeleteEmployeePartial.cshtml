@@ -8,6 +8,7 @@
             </div>
             <form id="deleteEmployeeForm">
                 <div class="modal-body">
+                    <div class="alert alert-danger d-none" id="deleteEmployeeError" role="alert"></div>
                     <input type="hidden" name="employeeId" value="@Model.EmployeeId" />
                     <p>Are you sure you want to delete employee <strong>@Model.Name</strong>?</p>
                 </div>
@@ -23,9 +24,50 @@
     document.getElementById('deleteEmployeeForm').addEventListener('submit', async function (e) {
         e.preventDefault();
         const id = this.querySelector('[name="employeeId"]').value;
-        await fetch('/api/Employee/' + id, { method: 'DELETE' });
-        const modalEl = this.closest('.modal');
-        bootstrap.Modal.getInstance(modalEl).hide();
-        if (window.loadEmployees) loadEmployees();
+        const errorAlert = this.querySelector('#deleteEmployeeError');
+        if (errorAlert) {
+            errorAlert.classList.add('d-none');
+            errorAlert.textContent = '';
+        }
+
+        try {
+            const response = await fetch('/api/Employee/' + id, { method: 'DELETE' });
+
+            if (!response.ok) {
+                let message = 'An error occurred while deleting the employee.';
+                const contentType = response.headers.get('Content-Type') || '';
+
+                try {
+                    if (contentType.includes('application/json')) {
+                        const data = await response.json();
+                        if (data && typeof data === 'object') {
+                            message = data.message || message;
+                        }
+                    } else {
+                        const text = await response.text();
+                        if (text) {
+                            message = text;
+                        }
+                    }
+                } catch {
+                    // ignore
+                }
+
+                if (errorAlert) {
+                    errorAlert.textContent = message;
+                    errorAlert.classList.remove('d-none');
+                }
+                return;
+            }
+
+            const modalEl = this.closest('.modal');
+            bootstrap.Modal.getInstance(modalEl).hide();
+            if (window.loadEmployees) loadEmployees();
+        } catch (err) {
+            if (errorAlert) {
+                errorAlert.textContent = 'Unable to connect to the server. Please try again.';
+                errorAlert.classList.remove('d-none');
+            }
+        }
     });
 </script>
