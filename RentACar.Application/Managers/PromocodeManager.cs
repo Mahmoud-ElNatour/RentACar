@@ -62,14 +62,16 @@ namespace RentACar.Application.Managers
         public async Task<List<PromocodeDto>> GetAllPromocodesAsync(string userId)
         {
             var user = await _userManager.FindByIdAsync(userId);
-            if (user == null || !await _userManager.IsInRoleAsync(user, "Employee"))
+            var isAdmin = user != null && await _userManager.IsInRoleAsync(user, "Admin");
+
+            if (!isAdmin)
             {
-                // Normal employees might only see active ones
+                // Non-admin users should only see active promocodes
                 var activePromocodes = await _promocodeRepository.GetActiveAsync();
                 return _mapper.Map<List<PromocodeDto>>(activePromocodes);
             }
 
-            // Admins see all
+            // Admins see all promocodes, including inactive ones
             var allPromocodes = await _promocodeRepository.GetAllAsync();
             return _mapper.Map<List<PromocodeDto>>(allPromocodes);
         }
