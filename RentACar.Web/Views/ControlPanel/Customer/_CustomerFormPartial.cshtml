@@ -64,13 +64,22 @@
     </div>
 </div>
 <script>
-    async function fileToBase64(file) {
-        const buffer = await file.arrayBuffer();
-        const bytes = new Uint8Array(buffer);
-        let binary = '';
-        bytes.forEach(b => binary += String.fromCharCode(b));
-        return btoa(binary);
+    function fileToBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+                if (typeof reader.result === 'string') {
+                    const commaIndex = reader.result.indexOf(',');
+                    resolve(commaIndex >= 0 ? reader.result.substring(commaIndex + 1) : reader.result);
+                } else {
+                    reject(new Error('Unable to read file.'));
+                }
+            };
+            reader.onerror = () => reject(reader.error ?? new Error('Unable to read file.'));
+            reader.readAsDataURL(file);
+        });
     }
+
     document.getElementById('customerForm').addEventListener('submit', async function (e) {
         e.preventDefault();
         const form = e.target;
@@ -87,23 +96,65 @@
         };
         let url = '/api/Customer';
         let method = 'POST';
-        if (data.userId) {
+        const isUpdate = Boolean(data.userId);
+        if (isUpdate) {
             url += '/' + data.userId;
             method = 'PUT';
         } else {
             data.password = f['Password'].value;
-            data.drivingLicenseFront = f['DrivingLicenseFront'].files[0] ? await fileToBase64(f['DrivingLicenseFront'].files[0]) : null;
-            data.drivingLicenseBack = f['DrivingLicenseBack'].files[0] ? await fileToBase64(f['DrivingLicenseBack'].files[0]) : null;
-            data.nationalIdfront = f['NationalIdfront'].files[0] ? await fileToBase64(f['NationalIdfront'].files[0]) : null;
-            data.nationalIdback = f['NationalIdback'].files[0] ? await fileToBase64(f['NationalIdback'].files[0]) : null;
+            const licenseFrontFile = f['DrivingLicenseFront'].files[0];
+            const licenseBackFile = f['DrivingLicenseBack'].files[0];
+            const nationalFrontFile = f['NationalIdfront'].files[0];
+            const nationalBackFile = f['NationalIdback'].files[0];
+
+            if (licenseFrontFile) data.drivingLicenseFront = await fileToBase64(licenseFrontFile);
+            if (licenseBackFile) data.drivingLicenseBack = await fileToBase64(licenseBackFile);
+            if (nationalFrontFile) data.nationalIdfront = await fileToBase64(nationalFrontFile);
+            if (nationalBackFile) data.nationalIdback = await fileToBase64(nationalBackFile);
         }
-        await fetch(url, {
-            method: method,
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
-        const modalEl = form.closest('.modal');
-        bootstrap.Modal.getInstance(modalEl).hide();
-        if (window.loadCustomers) loadCustomers();
+
+        try {
+            const response = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (!response.ok) {
+                let message = 'Failed to save customer.';
+                try {
+                    const contentType = response.headers.get('Content-Type') || '';
+                    if (contentType.includes('application/json')) {
+                        const payload = await response.json();
+                        if (payload && typeof payload === 'object' && payload.message) {
+                            message = payload.message;
+                        }
+                    } else {
+                        const text = await response.text();
+                        if (text) message = text;
+                    }
+                } catch {
+                    // ignore parsing errors
+                }
+
+                if (window.showPopup) {
+                    window.showPopup(message, 'error');
+                }
+                return;
+            }
+
+            if (window.showPopup) {
+                window.showPopup(isUpdate ? 'Customer updated successfully.' : 'Customer created successfully.', 'success');
+            }
+
+            const modalEl = form.closest('.modal');
+            bootstrap.Modal.getInstance(modalEl).hide();
+            if (window.loadCustomers) loadCustomers();
+        } catch (err) {
+            if (window.showPopup) {
+                window.showPopup('Unexpected error occurred while saving the customer.', 'error');
+            }
+            console.error(err);
+        }
     });
 </script>

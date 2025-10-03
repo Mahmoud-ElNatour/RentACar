@@ -36,6 +36,7 @@
                         <th>Payment</th>
                         <th>Amount</th>
                         <th>Subtotal</th>
+                        <th>Total</th>
                         <th>Promocode</th>
                         <th>Start</th>
                         <th>End</th>
@@ -47,33 +48,97 @@
             </table>
         </div>
     </div>
+    <div id="bookingModalPlaceholder"></div>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        function formatValue(value) {
+            if (value === null || value === undefined) {
+                return '';
+            }
+            const number = Number(value);
+            if (Number.isNaN(number)) {
+                return value;
+            }
+            return number.toFixed(2);
+        }
+
         async function loadBookings() {
-            const res = await fetch('/api/Booking');
-            const data = await res.json();
-            const tbody = document.getElementById('bookingRows');
-            tbody.innerHTML = '';
+            try {
+                const res = await fetch('/api/Booking');
+                if (!res.ok) {
+                    throw new Error(await res.text());
+                }
+                const data = await res.json();
+                const tbody = document.getElementById('bookingRows');
+                tbody.innerHTML = '';
                 data.forEach(b => {
                     const tr = document.createElement('tr');
-                    tr.innerHTML = `<td>${b.bookingId}</td>` +
-                        `<td>${b.customerId}</td>` +
-                        `<td>${b.carId}</td>` +
-                        `<td>${b.employeebookerId ?? ''}</td>` +
+                    const customerDisplay = [b.customerName ?? '', b.customerUsername ? `(${b.customerUsername})` : ''].join(' ').trim() || '-';
+                    const carDisplay = [b.carModel ?? '', b.carPlate ? `(${b.carPlate})` : ''].join(' ').trim() || '-';
+                    const employeeDisplay = b.employeeName ?? '';
+                    const promoDisplay = b.promocodeName ? `${b.promocodeName}${b.promocodeDiscount ? ` (${b.promocodeDiscount}%)` : ''}` : '';
+
+                    tr.innerHTML =
+                        `<td>${b.bookingId}</td>` +
+                        `<td>${customerDisplay}</td>` +
+                        `<td>${carDisplay}</td>` +
+                        `<td>${employeeDisplay}</td>` +
                         `<td>${b.paymentId ?? ''}</td>` +
-                        `<td>${b.paymentAmount ?? ''}</td>` +
-                        `<td>${b.subtotal ?? ''}</td>` +
-                        `<td>${b.promocodeId ?? ''}</td>` +
+                        `<td>${formatValue(b.paymentAmount)}</td>` +
+                        `<td>${formatValue(b.subtotal)}</td>` +
+                        `<td>${formatValue(b.totalPrice)}</td>` +
+                        `<td>${promoDisplay}</td>` +
                         `<td>${b.startdate}</td>` +
                         `<td>${b.enddate}</td>` +
-                        `<td>${b.bookingStatus ?? ''}</td>` +
-                        `<td><a href='/Booking/Edit/${b.bookingId}' class='text-warning me-2'><i class='fas fa-pencil-alt'></i></a>` +
-                        `<a href='/Booking/Delete/${b.bookingId}' class='text-danger me-2'><i class='fas fa-trash'></i></a>` +
-                        `<a href='/Booking/Contract/${b.bookingId}' target='_blank' class='text-info'><i class='fas fa-file-pdf'></i></a></td>`;
+                        `<td class='text-capitalize'>${b.bookingStatus ?? ''}</td>` +
+                        `<td>` +
+                        `<a href='#' class='text-info me-2 view-booking' data-url='/Booking/Details/${b.bookingId}' title='View details'><i class='fas fa-eye'></i></a>` +
+                        `<a href='/Booking/Edit/${b.bookingId}' class='text-warning me-2' title='Edit booking'><i class='fas fa-pencil-alt'></i></a>` +
+                        `<a href='/Booking/Delete/${b.bookingId}' class='text-danger me-2' title='Delete booking'><i class='fas fa-trash'></i></a>` +
+                        `<a href='/Booking/Contract/${b.bookingId}' target='_blank' class='text-primary' title='Download contract'><i class='fas fa-file-pdf'></i></a>` +
+                        `</td>`;
                     tbody.appendChild(tr);
                 });
+            } catch (err) {
+                console.error(err);
+                if (window.showPopup) {
+                    window.showPopup('Failed to load bookings.', 'error');
+                }
+            }
         }
-        document.addEventListener('DOMContentLoaded', loadBookings);
+
+        async function loadModal(url) {
+            try {
+                const res = await fetch(url);
+                if (!res.ok) {
+                    throw new Error(await res.text());
+                }
+                const html = await res.text();
+                const placeholder = document.getElementById('bookingModalPlaceholder');
+                placeholder.innerHTML = html;
+                placeholder.querySelectorAll('script').forEach(src => {
+                    const script = document.createElement('script');
+                    script.textContent = src.textContent;
+                    document.body.appendChild(script);
+                    document.body.removeChild(script);
+                });
+            } catch (err) {
+                console.error(err);
+                if (window.showPopup) {
+                    window.showPopup('Failed to load booking details.', 'error');
+                }
+            }
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+            loadBookings();
+            document.getElementById('bookingRows').addEventListener('click', async e => {
+                const viewLink = e.target.closest('.view-booking');
+                if (viewLink) {
+                    e.preventDefault();
+                    await loadModal(viewLink.dataset.url);
+                }
+            });
+        });
     </script>
 </body>
 </html>

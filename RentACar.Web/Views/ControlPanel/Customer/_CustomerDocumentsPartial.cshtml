@@ -53,13 +53,22 @@
     </div>
 </div>
 <script>
-    async function fileToBase64(file) {
-        const buffer = await file.arrayBuffer();
-        const bytes = new Uint8Array(buffer);
-        let binary = '';
-        bytes.forEach(b => binary += String.fromCharCode(b));
-        return btoa(binary);
+    function fileToBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+                if (typeof reader.result === 'string') {
+                    const commaIndex = reader.result.indexOf(',');
+                    resolve(commaIndex >= 0 ? reader.result.substring(commaIndex + 1) : reader.result);
+                } else {
+                    reject(new Error('Unable to read file.'));
+                }
+            };
+            reader.onerror = () => reject(reader.error ?? new Error('Unable to read file.'));
+            reader.readAsDataURL(file);
+        });
     }
+
     document.getElementById('saveDocs').addEventListener('click', async function () {
         const form = document.getElementById('docsForm');
         const files = form.elements;
@@ -70,12 +79,46 @@
             nationalIdback: files['NationalIdback'].files[0] ? await fileToBase64(files['NationalIdback'].files[0]) : null
         };
         const id = form.querySelector('[name="customerId"]').value;
-        await fetch('/api/Customer/' + id + '/documents', {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
-        const modalEl = document.getElementById('customerDocsModal');
-        bootstrap.Modal.getInstance(modalEl).hide();
+        try {
+            const response = await fetch('/api/Customer/' + id + '/documents', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (!response.ok) {
+                let message = 'Failed to update customer documents.';
+                try {
+                    const contentType = response.headers.get('Content-Type') || '';
+                    if (contentType.includes('application/json')) {
+                        const payload = await response.json();
+                        if (payload && typeof payload === 'object' && payload.message) {
+                            message = payload.message;
+                        }
+                    } else {
+                        const text = await response.text();
+                        if (text) message = text;
+                    }
+                } catch {
+                    // ignore parsing errors
+                }
+
+                if (window.showPopup) {
+                    window.showPopup(message, 'error');
+                }
+                return;
+            }
+
+            const modalEl = document.getElementById('customerDocsModal');
+            bootstrap.Modal.getInstance(modalEl).hide();
+            if (window.showPopup) {
+                window.showPopup('Customer documents updated successfully.', 'success');
+            }
+        } catch (err) {
+            if (window.showPopup) {
+                window.showPopup('Unexpected error occurred while updating documents.', 'error');
+            }
+            console.error(err);
+        }
     });
 </script>

@@ -64,19 +64,55 @@
             };
         let url = '/api/Employee';
         let method = 'POST';
-        if (data.employeeId) {
+        const isUpdate = Boolean(data.employeeId);
+        if (isUpdate) {
             url += '/' + data.employeeId;
             method = 'PUT';
         } else {
             data.password = f['Password']?.value;
         }
-        await fetch(url, {
-            method: method,
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
-        const modalEl = form.closest('.modal');
-        bootstrap.Modal.getInstance(modalEl).hide();
-        if (window.loadEmployees) loadEmployees();
+        try {
+            const response = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (!response.ok) {
+                let message = 'Failed to save employee.';
+                try {
+                    const contentType = response.headers.get('Content-Type') || '';
+                    if (contentType.includes('application/json')) {
+                        const payload = await response.json();
+                        if (payload && typeof payload === 'object' && payload.message) {
+                            message = payload.message;
+                        }
+                    } else {
+                        const text = await response.text();
+                        if (text) message = text;
+                    }
+                } catch {
+                    // ignore
+                }
+
+                if (window.showPopup) {
+                    window.showPopup(message, 'error');
+                }
+                return;
+            }
+
+            if (window.showPopup) {
+                window.showPopup(isUpdate ? 'Employee updated successfully.' : 'Employee created successfully.', 'success');
+            }
+
+            const modalEl = form.closest('.modal');
+            bootstrap.Modal.getInstance(modalEl).hide();
+            if (window.loadEmployees) loadEmployees();
+        } catch (err) {
+            if (window.showPopup) {
+                window.showPopup('Unexpected error occurred while saving the employee.', 'error');
+            }
+            console.error(err);
+        }
     });
 </script>

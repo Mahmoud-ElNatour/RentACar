@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -95,10 +96,23 @@ namespace RentACar.Web.Controllers
         [HttpPost]
         public async Task<ActionResult<CustomerDTO>> Create([FromBody] CustomerCreateDTO dto)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             _logger.LogInformation("Creating customer");
-            var created = await _customerManager.CreateCustomer(dto);
-            if (created == null) return BadRequest();
-            return CreatedAtAction(nameof(Get), new { id = created.UserId }, created);
+
+            try
+            {
+                var created = await _customerManager.CreateCustomer(dto);
+                return CreatedAtAction(nameof(Get), new { id = created!.UserId }, created);
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogWarning(ex, "Failed to create customer: {Message}", ex.Message);
+                return Conflict(new { message = ex.Message });
+            }
         }
 
         [HttpPut("{id}")]
@@ -106,8 +120,16 @@ namespace RentACar.Web.Controllers
         {
             if (id != dto.UserId) return BadRequest();
             _logger.LogInformation("Updating customer {Id}", id);
-            await _customerManager.UpdateCustomer(dto);
-            return NoContent();
+            try
+            {
+                await _customerManager.UpdateCustomer(dto);
+                return NoContent();
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogWarning(ex, "Failed to update customer {Id}: {Message}", id, ex.Message);
+                return Conflict(new { message = ex.Message });
+            }
         }
 
         [HttpDelete("{id}")]
@@ -119,6 +141,11 @@ namespace RentACar.Web.Controllers
             {
                 await _customerManager.DeleteCustomer(id);
                 return NoContent();
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogWarning(ex, "Customer {Id} could not be deleted: {Message}", id, ex.Message);
+                return Conflict(new { message = ex.Message });
             }
             catch (DbUpdateException ex)
             {

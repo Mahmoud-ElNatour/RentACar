@@ -21,6 +21,7 @@ namespace RentACar.Infrastructure.Repositories
         {
             return await _dbContext.Set<Employee>()
                                    .Include(e => e.User)
+                                   .Include(e => e.BlackLists)
                                    .FirstOrDefaultAsync(e => e.EmployeeId == id);
         }
 
@@ -28,6 +29,7 @@ namespace RentACar.Infrastructure.Repositories
         {
             return await _dbContext.Set<Employee>()
                                    .Include(e => e.User)
+                                   .Include(e => e.BlackLists)
                                    .ToListAsync();
         }
 
@@ -57,6 +59,7 @@ namespace RentACar.Infrastructure.Repositories
         {
             return await _dbContext.Set<Employee>()
                                    .Include(e => e.User)
+                                   .Include(e => e.BlackLists)
                                    .FirstOrDefaultAsync(c => c.aspNetUserId == aspNetUserId);
         }
     }

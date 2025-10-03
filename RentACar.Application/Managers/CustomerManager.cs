@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Identity;
@@ -17,21 +19,46 @@ namespace RentACar.Application.Managers
         private readonly ICustomerRepository _customerRepository;
         private readonly IMapper _mapper;
         private readonly ILogger<CustomerManager> _logger;
+        private readonly IBookingRepository _bookingRepository;
 
-        public CustomerManager(UserManager<IdentityUser> userManager,RoleManager<IdentityRole> roleManager,ICustomerRepository customerRepository,IMapper mapper, ILogger<CustomerManager> logger)
+        public CustomerManager(
+            UserManager<IdentityUser> userManager,
+            RoleManager<IdentityRole> roleManager,
+            ICustomerRepository customerRepository,
+            IBookingRepository bookingRepository,
+            IMapper mapper,
+            ILogger<CustomerManager> logger)
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _customerRepository = customerRepository;
             _mapper = mapper;
             _logger = logger;
+            _bookingRepository = bookingRepository;
         }
         public async Task<CustomerDTO?> CreateCustomer(CustomerCreateDTO createDto)
         {
             _logger.LogInformation("Creating customer for {Email}", createDto.Email);
+            if (string.IsNullOrWhiteSpace(createDto.Username))
+            {
+                createDto.Username = createDto.Email;
+            }
+
+            var existingByUsername = await _userManager.FindByNameAsync(createDto.Username);
+            if (existingByUsername != null)
+            {
+                throw new InvalidOperationException("Username is already in use by another user.");
+            }
+
+            var existingByEmail = await _userManager.FindByEmailAsync(createDto.Email);
+            if (existingByEmail != null)
+            {
+                throw new InvalidOperationException("Email address is already registered.");
+            }
+
             var user = new IdentityUser
             {
-                UserName = createDto.Email,
+                UserName = createDto.Username,
                 Email = createDto.Email,
                 PhoneNumber = createDto.PhoneNumber
             };
@@ -39,8 +66,13 @@ namespace RentACar.Application.Managers
             var result = await _userManager.CreateAsync(user, createDto.Password);
             if (!result.Succeeded)
             {
-                _logger.LogWarning("Failed to create user for {Email}", createDto.Email);
-                return null;
+                var errorMessage = string.Join("; ", result.Errors.Select(e => e.Description));
+                if (string.IsNullOrWhiteSpace(errorMessage))
+                {
+                    errorMessage = "Unable to create user account for the customer.";
+                }
+                _logger.LogWarning("Failed to create user for {Email}: {Error}", createDto.Email, errorMessage);
+                throw new InvalidOperationException(errorMessage);
             }
 
             // Ensure "Customer" role exists
@@ -205,13 +237,32 @@ namespace RentACar.Application.Managers
         public async Task DeleteCustomer(int id)
         {
             _logger.LogInformation("Deleting customer {Id}", id);
-            var customer = await GetCustomerById(id);
-            if (customer == null)
+            var customerEntity = await _customerRepository.GetByIdAsync(id);
+            if (customerEntity == null)
                 throw new Exception("Customer not found");
 
-            var user = await _userManager.FindByIdAsync(customer.aspNetUserId);
+            var user = await _userManager.FindByIdAsync(customerEntity.aspNetUserId);
             if (user == null)
                 throw new Exception("User not found");
+
+            var hasBookings = (await _bookingRepository.GetBookingsByCustomerIdAsync(id)).Any();
+            if (hasBookings)
+            {
+                if (customerEntity.Isactive)
+                {
+                    customerEntity.Isactive = false;
+                    await _customerRepository.UpdateAsync(customerEntity);
+                }
+
+                if (user != null)
+                {
+                    user.LockoutEnabled = true;
+                    user.LockoutEnd = DateTimeOffset.MaxValue;
+                    await _userManager.UpdateAsync(user);
+                }
+
+                throw new InvalidOperationException("Customer has existing activity and was marked as inactive instead of being deleted.");
+            }
 
             await _customerRepository.DeleteAsync(id);
             await _userManager.DeleteAsync(user);
@@ -227,6 +278,19 @@ namespace RentACar.Application.Managers
                 var user = await _userManager.FindByIdAsync(customer.aspNetUserId);
                 if (user != null)
                 {
+                    dto.username ??= dto.Email;
+                    var existingByEmail = await _userManager.FindByEmailAsync(dto.Email);
+                    if (existingByEmail != null && existingByEmail.Id != user.Id)
+                    {
+                        throw new InvalidOperationException("Email address is already registered to another user.");
+                    }
+
+                    var existingByUsername = await _userManager.FindByNameAsync(dto.username);
+                    if (existingByUsername != null && existingByUsername.Id != user.Id)
+                    {
+                        throw new InvalidOperationException("Username is already in use by another user.");
+                    }
+
                     user.Email = dto.Email;
                     user.UserName = dto.username;
                     user.PhoneNumber = dto.PhoneNumber;
@@ -255,14 +319,41 @@ namespace RentACar.Application.Managers
 
         public async Task UpdateCustomerDocuments(int customerId, CustomerDocumentsDto docs)
         {
-            if (docs.DrivingLicenseFront != null && docs.DrivingLicenseBack != null)
+            var customer = await _customerRepository.GetByIdAsync(customerId);
+            if (customer == null)
             {
-                await UpdateCustomerDrivingLicense(customerId, docs.DrivingLicenseFront, docs.DrivingLicenseBack);
+                throw new KeyNotFoundException($"Customer with ID {customerId} not found.");
             }
 
-            if (docs.NationalIdfront != null && docs.NationalIdback != null)
+            var hasChanges = false;
+
+            if (docs.DrivingLicenseFront != null)
             {
-                await UpdateCustomerNationalId(customerId, docs.NationalIdfront, docs.NationalIdback);
+                customer.DrivingLicenseFront = docs.DrivingLicenseFront;
+                hasChanges = true;
+            }
+
+            if (docs.DrivingLicenseBack != null)
+            {
+                customer.DrivingLicenseBack = docs.DrivingLicenseBack;
+                hasChanges = true;
+            }
+
+            if (docs.NationalIdfront != null)
+            {
+                customer.NationalIdfront = docs.NationalIdfront;
+                hasChanges = true;
+            }
+
+            if (docs.NationalIdback != null)
+            {
+                customer.NationalIdback = docs.NationalIdback;
+                hasChanges = true;
+            }
+
+            if (hasChanges)
+            {
+                await _customerRepository.UpdateAsync(customer);
             }
         }
     }

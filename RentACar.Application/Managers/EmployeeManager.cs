@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Identity;
@@ -18,8 +20,9 @@ namespace RentACar.Application.Managers
         private readonly IMapper _mapper;
         private readonly CustomerManager _customerManager; // To access CustomerManager methods
         private readonly ILogger<EmployeeManager> _logger;
+        private readonly IBookingRepository _bookingRepository;
 
-        public EmployeeManager(UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager, IEmployeeRepository employeeRepository, IMapper mapper, CustomerManager customerManager, ILogger<EmployeeManager> logger)
+        public EmployeeManager(UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager, IEmployeeRepository employeeRepository, IBookingRepository bookingRepository, IMapper mapper, CustomerManager customerManager, ILogger<EmployeeManager> logger)
         {
             _userManager = userManager;
             _roleManager = roleManager;
@@ -27,14 +30,29 @@ namespace RentACar.Application.Managers
             _mapper = mapper;
             _customerManager = customerManager;
             _logger = logger;
+            _bookingRepository = bookingRepository;
         }
 
         public async Task<EmployeeDto?> CreateEmployee(EmployeeCreateDTO createDto)
         {
             _logger.LogInformation("Creating employee for {Email}", createDto.Email);
+            var username = createDto.Email;
+
+            var existingByUsername = await _userManager.FindByNameAsync(username);
+            if (existingByUsername != null)
+            {
+                throw new InvalidOperationException("Username is already in use by another user.");
+            }
+
+            var existingByEmail = await _userManager.FindByEmailAsync(createDto.Email);
+            if (existingByEmail != null)
+            {
+                throw new InvalidOperationException("Email address is already registered.");
+            }
+
             var user = new IdentityUser
             {
-                UserName = createDto.Email,
+                UserName = username,
                 Email = createDto.Email,
                 PhoneNumber = createDto.PhoneNumber,
                 EmailConfirmed = true
@@ -59,8 +77,14 @@ namespace RentACar.Application.Managers
 
                 return _mapper.Map<EmployeeDto>(employee);
             }
-            _logger.LogWarning("Failed to create employee for {Email}", createDto.Email);
-            return null;
+            var errorMessage = string.Join("; ", result.Errors.Select(e => e.Description));
+            if (string.IsNullOrWhiteSpace(errorMessage))
+            {
+                errorMessage = "Unable to create employee account.";
+            }
+
+            _logger.LogWarning("Failed to create employee for {Email}: {Message}", createDto.Email, errorMessage);
+            throw new InvalidOperationException(errorMessage);
         }
         public async Task<bool> ResetPassword(int EmployeeId, string newPassword)
         {
@@ -92,6 +116,19 @@ namespace RentACar.Application.Managers
                 var user = await _userManager.FindByIdAsync(employeeEntity.aspNetUserId);
                 if (user != null)
                 {
+                    employeeDto.username ??= employeeDto.Email;
+                    var existingByEmail = await _userManager.FindByEmailAsync(employeeDto.Email);
+                    if (existingByEmail != null && existingByEmail.Id != user.Id)
+                    {
+                        throw new InvalidOperationException("Email address is already registered to another user.");
+                    }
+
+                    var existingByUsername = await _userManager.FindByNameAsync(employeeDto.username);
+                    if (existingByUsername != null && existingByUsername.Id != user.Id)
+                    {
+                        throw new InvalidOperationException("Username is already in use by another user.");
+                    }
+
                     user.Email = employeeDto.Email;
                     user.UserName = employeeDto.username;
                     user.PhoneNumber = employeeDto.PhoneNumber;
@@ -125,6 +162,27 @@ namespace RentACar.Application.Managers
             }
 
             var user = await _userManager.FindByIdAsync(employee.aspNetUserId);
+            var hasBookings = (await _bookingRepository.GetBookingsByEmployeeIdAsync(id)).Any();
+            var hasBlacklistEntries = employee.BlackLists?.Any() ?? false;
+
+            if (hasBookings || hasBlacklistEntries)
+            {
+                if (employee.IsActive)
+                {
+                    employee.IsActive = false;
+                    await _employeeRepository.UpdateAsync(employee);
+                }
+
+                if (user != null)
+                {
+                    user.LockoutEnabled = true;
+                    user.LockoutEnd = DateTimeOffset.MaxValue;
+                    await _userManager.UpdateAsync(user);
+                }
+
+                throw new InvalidOperationException("Employee has existing activity and was marked as inactive instead of being deleted.");
+            }
+
             if (user != null)
             {
                 await _userManager.DeleteAsync(user);

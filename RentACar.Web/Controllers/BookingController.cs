@@ -11,6 +11,7 @@ using QuestPDF.Helpers;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using RentACar.Web.Models;
 
 namespace RentACar.Web.Controllers
 {
@@ -24,6 +25,7 @@ namespace RentACar.Web.Controllers
         private readonly CarManager _carManager;
         private readonly CustomerManager _customerManager;
         private readonly PromocodeManager _promocodeManager;
+        private readonly EmployeeManager _employeeManager;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly ILogger<BookingController> _logger;
 
@@ -33,6 +35,7 @@ namespace RentACar.Web.Controllers
             CarManager carManager,
             CustomerManager customerManager,
             PromocodeManager promocodeManager,
+            EmployeeManager employeeManager,
             UserManager<IdentityUser> userManager,
             ILogger<BookingController> logger)
         {
@@ -41,6 +44,7 @@ namespace RentACar.Web.Controllers
             _carManager = carManager;
             _customerManager = customerManager;
             _promocodeManager = promocodeManager;
+            _employeeManager = employeeManager;
             _userManager = userManager;
             _logger = logger;
         }
@@ -92,31 +96,108 @@ namespace RentACar.Web.Controllers
             return View("~/Views/ControlPanel/Booking/Delete.cshtml", booking);
         }
 
+        [HttpGet("~/Booking/Details/{id}")]
+        [ApiExplorerSettings(IgnoreApi = true)]
+        public async Task<IActionResult> Details(int id)
+        {
+            var booking = await _bookingManager.GetBookingByIdAsync(id);
+            if (booking == null)
+            {
+                return NotFound();
+            }
+
+            var customerTask = _customerManager.GetCustomerById(booking.CustomerId);
+            var carTask = _carManager.GetCarByIdAsync(booking.CarId);
+            var employeeTask = booking.EmployeebookerId.HasValue
+                ? _employeeManager.GetEmployeeById(booking.EmployeebookerId.Value)
+                : Task.FromResult<EmployeeDto?>(null);
+            var paymentTask = booking.PaymentId.HasValue
+                ? _paymentManager.GetPaymentByIdAsync(booking.PaymentId.Value)
+                : Task.FromResult<PaymentDto?>(null);
+            var promoTask = booking.PromocodeId.HasValue
+                ? _promocodeManager.GetPromocodeByIdAsync(booking.PromocodeId.Value)
+                : Task.FromResult<PromocodeDto?>(null);
+
+            await Task.WhenAll(customerTask, carTask, employeeTask, paymentTask, promoTask);
+
+            var viewModel = new BookingDetailsViewModel
+            {
+                BookingId = booking.BookingId,
+                BookingStatus = booking.BookingStatus,
+                StartDate = booking.Startdate,
+                EndDate = booking.Enddate,
+                TotalPrice = booking.TotalPrice,
+                Subtotal = booking.Subtotal,
+                CustomerName = customerTask.Result?.Name,
+                CustomerUsername = customerTask.Result?.username,
+                CustomerEmail = customerTask.Result?.Email,
+                CustomerPhone = customerTask.Result?.PhoneNumber,
+                EmployeeName = employeeTask.Result?.Name,
+                CarModel = carTask.Result?.ModelName,
+                CarPlateNumber = carTask.Result?.PlateNumber,
+                CarCategory = carTask.Result?.CategoryName,
+                CarColor = carTask.Result?.Color,
+                CarModelYear = carTask.Result?.ModelYear,
+                CarPricePerDay = carTask.Result?.PricePerDay,
+                PaymentId = booking.PaymentId,
+                PaymentAmount = paymentTask.Result?.Amount,
+                PromocodeName = promoTask.Result?.Name,
+                PromocodeDiscount = promoTask.Result?.DiscountPercentage
+            };
+
+            return PartialView("~/Views/ControlPanel/Booking/_BookingDetailsPartial.cshtml", viewModel);
+        }
+
         [HttpGet]
         public async Task<ActionResult<IEnumerable<object>>> Get()
         {
             var bookings = await _bookingManager.GetAllBookingsAsync();
 
-            var result = new List<object>();
+            var result = new List<object>(bookings.Count);
             foreach (var b in bookings)
             {
-                decimal? paymentAmount = null;
-                if (b.PaymentId.HasValue)
-                {
-                    var payment = await _paymentManager.GetPaymentByIdAsync(b.PaymentId.Value);
-                    paymentAmount = payment?.Amount;
-                }
+                var customerTask = _customerManager.GetCustomerById(b.CustomerId);
+                var carTask = _carManager.GetCarByIdAsync(b.CarId);
+                var employeeTask = b.EmployeebookerId.HasValue
+                    ? _employeeManager.GetEmployeeById(b.EmployeebookerId.Value)
+                    : Task.FromResult<EmployeeDto?>(null);
+                var paymentTask = b.PaymentId.HasValue
+                    ? _paymentManager.GetPaymentByIdAsync(b.PaymentId.Value)
+                    : Task.FromResult<PaymentDto?>(null);
+                var promoTask = b.PromocodeId.HasValue
+                    ? _promocodeManager.GetPromocodeByIdAsync(b.PromocodeId.Value)
+                    : Task.FromResult<PromocodeDto?>(null);
+
+                await Task.WhenAll(customerTask, carTask, employeeTask, paymentTask, promoTask);
+
+                var customer = customerTask.Result;
+                var car = carTask.Result;
+                var employee = employeeTask.Result;
+                var payment = paymentTask.Result;
+                var promo = promoTask.Result;
 
                 result.Add(new
                 {
                     bookingId = b.BookingId,
                     customerId = b.CustomerId,
+                    customerName = customer?.Name,
+                    customerUsername = customer?.username,
+                    customerEmail = customer?.Email,
                     carId = b.CarId,
+                    carModel = car?.ModelName,
+                    carPlate = car?.PlateNumber,
+                    carYear = car?.ModelYear,
+                    carColor = car?.Color,
+                    carPricePerDay = car?.PricePerDay,
                     employeebookerId = b.EmployeebookerId,
+                    employeeName = employee?.Name,
                     paymentId = b.PaymentId,
-                    paymentAmount,
+                    paymentAmount = payment?.Amount,
                     subtotal = b.Subtotal,
+                    totalPrice = b.TotalPrice,
                     promocodeId = b.PromocodeId,
+                    promocodeName = promo?.Name,
+                    promocodeDiscount = promo?.DiscountPercentage,
                     startdate = b.Startdate.ToString("yyyy-MM-dd"),
                     enddate = b.Enddate.ToString("yyyy-MM-dd"),
                     bookingStatus = b.BookingStatus

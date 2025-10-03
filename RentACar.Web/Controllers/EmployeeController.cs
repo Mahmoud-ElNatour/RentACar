@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
@@ -98,10 +99,22 @@ namespace RentACar.Web.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult<EmployeeDto>> Create([FromBody] EmployeeCreateDTO dto)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             _logger.LogInformation("Creating employee");
-            var created = await _employeeManager.CreateEmployee(dto);
-            if (created == null) return BadRequest();
-            return CreatedAtAction(nameof(Get), new { id = created.EmployeeId }, created);
+            try
+            {
+                var created = await _employeeManager.CreateEmployee(dto);
+                return CreatedAtAction(nameof(Get), new { id = created!.EmployeeId }, created);
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogWarning(ex, "Failed to create employee: {Message}", ex.Message);
+                return Conflict(new { message = ex.Message });
+            }
         }
 
         [HttpPut("{id}")]
@@ -121,9 +134,16 @@ namespace RentACar.Web.Controllers
             }
 
             _logger.LogInformation("Updating employee {Id}", id);
-
-            await _employeeManager.UpdateEmployee(dto);
-            return NoContent(); // 204 success
+            try
+            {
+                await _employeeManager.UpdateEmployee(dto);
+                return NoContent(); // 204 success
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogWarning(ex, "Failed to update employee {Id}: {Message}", id, ex.Message);
+                return Conflict(new { message = ex.Message });
+            }
         }
 
 
@@ -136,6 +156,11 @@ namespace RentACar.Web.Controllers
             {
                 await _employeeManager.DeleteEmployee(id);
                 return NoContent();
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogWarning(ex, "Employee {Id} could not be deleted: {Message}", id, ex.Message);
+                return Conflict(new { message = ex.Message });
             }
             catch (DbUpdateException ex)
             {
