@@ -104,11 +104,10 @@
             const msg = 'Unable to connect to the server. Please try again.';
             if (typeof window.showPopup === 'function') {
                 window.showPopup(msg, 'error');
-            } else if (errorAlert) {
+            }
+            if (errorAlert) {
                 errorAlert.textContent = msg;
                 errorAlert.classList.remove('d-none');
-            } else {
-                alert(msg);
             }
         }
     });

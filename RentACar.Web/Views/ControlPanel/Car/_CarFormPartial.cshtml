@@ -91,7 +91,7 @@
                     isAvailable : form.querySelector('[name="IsAvailable"]')?.checked ?? false
                 };
 
-                if (imageInput.files.length > 0) {
+                if (imageInput && imageInput.files.length > 0) {
                     data.carImage = await toBase64(imageInput.files[0]);
                 }
 
@@ -113,6 +113,7 @@
                     }
 
                     bootstrap.Modal.getInstance(form.closest('.modal')).hide();
+                    showPopup(data.carId ? 'Car updated successfully.' : 'Car created successfully.', 'success');
                     if (window.loadCars) loadCars();
                 } catch (err) {
                     showPopup('An error occurred while saving the car.', 'error');

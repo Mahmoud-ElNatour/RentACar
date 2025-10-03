@@ -22,14 +22,49 @@
         },
     };
 
+    const CONFIRM_THEME = {
+        success: {
+            header: 'confirm-success',
+            button: 'btn-popup-success',
+        },
+        error: {
+            header: 'confirm-error',
+            button: 'btn-popup-error',
+        },
+        warning: {
+            header: 'confirm-warning',
+            button: 'btn-popup-warning',
+        },
+        info: {
+            header: 'confirm-info',
+            button: 'btn-popup-info',
+        },
+    };
+
     const DEFAULT_DURATION = 4000;
 
     function ensureContainer() {
-        let container = document.querySelector('.notification-container');
+        let container = document.querySelector('[data-popup-container]');
         if (!container) {
             container = document.createElement('div');
             container.className = 'notification-container';
+            container.setAttribute('data-popup-container', '');
+            container.setAttribute('aria-live', 'polite');
+            container.setAttribute('aria-atomic', 'true');
+            const sr = document.createElement('span');
+            sr.className = 'visually-hidden';
+            sr.setAttribute('data-popup-sr', '');
+            sr.setAttribute('aria-live', 'polite');
+            sr.setAttribute('aria-atomic', 'true');
+            container.appendChild(sr);
             document.body.appendChild(container);
+        } else if (!container.querySelector('[data-popup-sr]')) {
+            const sr = document.createElement('span');
+            sr.className = 'visually-hidden';
+            sr.setAttribute('data-popup-sr', '');
+            sr.setAttribute('aria-live', 'polite');
+            sr.setAttribute('aria-atomic', 'true');
+            container.appendChild(sr);
         }
         return container;
     }
@@ -43,6 +78,19 @@
             return '';
         }
         return String(message).replace(/\n/g, '<br />');
+    }
+
+    function announceToSr(container, message) {
+        const sr = container.querySelector('[data-popup-sr]');
+        if (!sr) {
+            return;
+        }
+
+        sr.textContent = '';
+        // Force assistive tech to recognise update
+        requestAnimationFrame(() => {
+            sr.textContent = typeof message === 'string' ? message : String(message || '');
+        });
     }
 
     window.showPopup = function showPopup(message, type = 'info', options = {}) {
@@ -85,6 +133,7 @@
         toast.appendChild(content);
         toast.appendChild(dismiss);
         container.appendChild(toast);
+        announceToSr(container, `${TYPE_MAP[resolvedType].label}: ${typeof message === 'string' ? message : ''}`);
 
         requestAnimationFrame(() => {
             toast.classList.add('show');
@@ -131,4 +180,88 @@
         toast.classList.add('hiding');
         toast.classList.remove('show');
     }
+
+    function ensureConfirmModal() {
+        const modal = document.getElementById('globalConfirmModal');
+        if (!modal) {
+            return null;
+        }
+
+        if (!modal._popupConfirmCache) {
+            modal._popupConfirmCache = {
+                title: modal.querySelector('#globalConfirmTitle'),
+                message: modal.querySelector('#globalConfirmMessage'),
+                ok: modal.querySelector('#globalConfirmOk'),
+                cancel: modal.querySelector('#globalConfirmCancel'),
+                header: modal.querySelector('.modal-header'),
+            };
+        }
+
+        return modal;
+    }
+
+    function applyConfirmTheme(modal, type) {
+        const { header, ok } = modal._popupConfirmCache;
+        const resolved = normaliseType(type);
+        const theme = CONFIRM_THEME[resolved] || CONFIRM_THEME.info;
+
+        header.classList.remove('confirm-success', 'confirm-error', 'confirm-warning', 'confirm-info');
+        header.classList.add(theme.header);
+
+        ok.classList.remove('btn-popup-success', 'btn-popup-error', 'btn-popup-warning', 'btn-popup-info');
+        ok.classList.add(theme.button);
+    }
+
+    window.showPopupConfirm = function showPopupConfirm(message, options = {}) {
+        const modal = ensureConfirmModal();
+        if (!modal || !window.bootstrap || !window.bootstrap.Modal) {
+            if (typeof window.confirm === 'function') {
+                return Promise.resolve(window.confirm(String(message || '')));
+            }
+            return Promise.resolve(true);
+        }
+
+        const cache = modal._popupConfirmCache;
+        const instance = window.bootstrap.Modal.getOrCreateInstance
+            ? window.bootstrap.Modal.getOrCreateInstance(modal)
+            : new window.bootstrap.Modal(modal);
+        const title = options.title || 'Please Confirm';
+        const confirmLabel = options.confirmLabel || 'Confirm';
+        const cancelLabel = options.cancelLabel || 'Cancel';
+        const type = options.type || 'warning';
+
+        cache.title.textContent = title;
+        cache.message.textContent = message != null ? String(message) : '';
+        cache.ok.textContent = confirmLabel;
+        cache.cancel.textContent = cancelLabel;
+        applyConfirmTheme(modal, type);
+
+        return new Promise((resolve) => {
+            let resolved = false;
+
+            const cleanup = (result) => {
+                if (resolved) {
+                    return;
+                }
+                resolved = true;
+                resolve(result);
+            };
+
+            const handleHidden = () => cleanup(false);
+            const handleOk = () => {
+                cleanup(true);
+                instance.hide();
+            };
+            const handleCancel = () => cleanup(false);
+
+            modal.addEventListener('hidden.bs.modal', handleHidden, { once: true });
+            cache.ok.addEventListener('click', handleOk, { once: true });
+            cache.cancel.addEventListener('click', () => {
+                handleCancel();
+                instance.hide();
+            }, { once: true });
+
+            instance.show();
+        });
+    };
 })();

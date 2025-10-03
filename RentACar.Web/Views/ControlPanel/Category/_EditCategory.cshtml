@@ -25,13 +25,25 @@
                     e.preventDefault();
                     const form = e.target;
                     const data = { categoryId: form.CategoryId.value, name: form.Name.value };
-                    await fetch('/api/Category/' + form.CategoryId.value, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(data)
-                    });
-                    bootstrap.Modal.getInstance(document.getElementById('editCategoryModal')).hide();
-                    if (window.loadCategories) loadCategories();
+                    try {
+                        const response = await fetch('/api/Category/' + form.CategoryId.value, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(data)
+                        });
+
+                        if (!response.ok) {
+                            const message = await response.text();
+                            showPopup(message || 'Failed to update category.', 'error');
+                            return;
+                        }
+
+                        bootstrap.Modal.getInstance(document.getElementById('editCategoryModal')).hide();
+                        showPopup('Category updated successfully.', 'success');
+                        if (window.loadCategories) loadCategories();
+                    } catch {
+                        showPopup('Unable to update category right now.', 'error');
+                    }
                 });
             </script>
         </div>

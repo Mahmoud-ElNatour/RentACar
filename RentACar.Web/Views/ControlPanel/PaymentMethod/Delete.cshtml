@@ -11,11 +11,13 @@
     <title>@ViewData["Title"]</title>
 
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/login-style.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
 </head>
 <body>
+    @await Html.PartialAsync("_PopupNotifications")
     <div class="container1">
         <div class="login-container text-center">
             <a href="/PaymentMethod" class="btn btn-outline-warning rounded-circle d-inline-flex align-items-center justify-content-center"
@@ -44,6 +46,7 @@
     </div>
 
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
     <script>
         document.getElementById('deleteMethodForm').addEventListener('submit', async function (e) {
             e.preventDefault();
@@ -61,7 +64,8 @@
                 });
 
                 if (res.ok) {
-                    window.location.href = '/PaymentMethod';
+                    showPopup('Payment method deleted successfully.', 'success');
+                    setTimeout(() => { window.location.href = '/PaymentMethod'; }, 900);
                     return;
                 }
 
@@ -84,10 +88,17 @@
                     // ignore parsing errors
                 }
 
-            if (res.ok) {
-                window.location.href = '/PaymentMethod';
-            } else {
-                showPopup('Failed to delete payment method', 'error');
+                if (errorAlert) {
+                    errorAlert.textContent = message;
+                    errorAlert.classList.remove('d-none');
+                }
+                showPopup(message, 'error');
+            } catch (err) {
+                if (errorAlert) {
+                    errorAlert.textContent = 'Unable to connect to the server. Please try again.';
+                    errorAlert.classList.remove('d-none');
+                }
+                showPopup('Unable to connect to the server.', 'error');
             }
         });
     </script>

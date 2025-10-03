@@ -9,11 +9,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"]</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/employees.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
 </head>
 <body>
+    @await Html.PartialAsync("_PopupNotifications")
     <div class="customer-container container">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <a href="../ControlPanel" class="btn btn-outline-warning rounded-circle d-inline-flex align-items-center justify-content-center" style="width:40px;height:40px" title="Back">
@@ -73,6 +75,7 @@
     </div>
     <div id="customerModalPlaceholder"></div>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
     <script>
         async function loadCustomers() {
             const params = new URLSearchParams(new FormData(document.getElementById('filterForm')));
@@ -131,9 +134,23 @@
                     loadModal('/Customer/Delete/' + del.dataset.id);
                 } else if (reset) {
                     e.preventDefault();
-                    if (confirm('Reset password for this customer?')) {
-                        await fetch('/api/Customer/' + reset.dataset.id + '/reset-password', { method: 'POST' });
-                    }
+                    showPopupConfirm('Reset password for this customer?', {
+                        type: 'warning',
+                        confirmLabel: 'Reset',
+                        cancelLabel: 'Keep',
+                    }).then(async confirmed => {
+                        if (!confirmed) {
+                            return;
+                        }
+                        const response = await fetch('/api/Customer/' + reset.dataset.id + '/reset-password', { method: 'POST' });
+                        if (response.ok) {
+                            showPopup('Password reset successfully.', 'success');
+                        } else if (response.status === 404) {
+                            showPopup('Customer not found.', 'warning');
+                        } else {
+                            showPopup('Failed to reset password.', 'error');
+                        }
+                    });
                 } else if (docs) {
                     e.preventDefault();
                     loadModal('/Customer/Documents/' + docs.dataset.id);

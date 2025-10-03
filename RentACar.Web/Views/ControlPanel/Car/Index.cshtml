@@ -9,11 +9,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - CarRental</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/cars.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
 </head>
 <body>
+    @await Html.PartialAsync("_PopupNotifications")
     <div class="container car-container">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <a href="../ControlPanel" class="btn btn-outline-warning rounded-circle d-inline-flex align-items-center justify-content-center" style="width:40px;height:40px;" title="Back to Control Panel">
@@ -74,6 +76,7 @@
     </div>
     <div id="carModalPlaceholder"></div>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
     <script>
         let categories = [];
         async function loadCategories() {

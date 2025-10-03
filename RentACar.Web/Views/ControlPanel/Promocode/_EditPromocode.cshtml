@@ -48,13 +48,25 @@
                         description: form.Description.value,
                         isActive: isActiveCheckbox ? isActiveCheckbox.checked : false
                     };
-                    await fetch('/api/Promocode/' + data.promocodeId, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(data)
-                    });
-                    bootstrap.Modal.getInstance(document.getElementById('editPromocodeModal')).hide();
-                    if (window.loadPromocodes) loadPromocodes();
+                    try {
+                        const response = await fetch('/api/Promocode/' + data.promocodeId, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(data)
+                        });
+
+                        if (!response.ok) {
+                            const message = await response.text();
+                            showPopup(message || 'Failed to update promocode.', 'error');
+                            return;
+                        }
+
+                        bootstrap.Modal.getInstance(document.getElementById('editPromocodeModal')).hide();
+                        showPopup('Promocode updated successfully.', 'success');
+                        if (window.loadPromocodes) loadPromocodes();
+                    } catch {
+                        showPopup('Unable to update promocode right now.', 'error');
+                    }
                 });
             </script>
         </div>

@@ -57,17 +57,20 @@
                     errorAlert.textContent = message;
                     errorAlert.classList.remove('d-none');
                 }
+                showPopup(message, 'error');
                 return;
             }
 
             const modalEl = this.closest('.modal');
             bootstrap.Modal.getInstance(modalEl).hide();
+            showPopup('Car deleted successfully.', 'success');
             if (window.loadCars) loadCars();
         } catch (err) {
             if (errorAlert) {
                 errorAlert.textContent = 'Unable to connect to the server. Please try again.';
                 errorAlert.classList.remove('d-none');
             }
+            showPopup('Unable to delete car right now.', 'error');
         }
     });
 </script>

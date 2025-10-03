@@ -46,13 +46,25 @@
                         description: form.Description.value,
                         isActive: isActiveCheckbox ? isActiveCheckbox.checked : false
                     };
-                    await fetch('/api/Promocode', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(data)
-                    });
-                    bootstrap.Modal.getInstance(document.getElementById('addPromocodeModal')).hide();
-                    if (window.loadPromocodes) loadPromocodes();
+                    try {
+                        const response = await fetch('/api/Promocode', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(data)
+                        });
+
+                        if (!response.ok) {
+                            const message = await response.text();
+                            showPopup(message || 'Failed to add promocode.', 'error');
+                            return;
+                        }
+
+                        bootstrap.Modal.getInstance(document.getElementById('addPromocodeModal')).hide();
+                        showPopup('Promocode added successfully.', 'success');
+                        if (window.loadPromocodes) loadPromocodes();
+                    } catch {
+                        showPopup('Unable to add promocode right now.', 'error');
+                    }
                 });
             </script>
         </div>

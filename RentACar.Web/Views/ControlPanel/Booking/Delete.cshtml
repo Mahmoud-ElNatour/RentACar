@@ -10,11 +10,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"]</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/bookings.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
 </head>
 <body>
+    @await Html.PartialAsync("_PopupNotifications")
     <div class="booking-container container text-center">
         <a href="/Booking" class="btn btn-outline-warning rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:40px;height:40px" title="Back">
             <i class="fas fa-arrow-left"></i>
@@ -31,6 +33,7 @@
     </div>
 
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
     <script>
         (function () {
             // Safe serialization: works for int, string, or GUID
@@ -40,14 +43,11 @@
             const errorAlert = document.getElementById('deleteBookingError');
 
             function showError(message) {
-                if (typeof window.showPopup === 'function') {
-                    window.showPopup(message, 'error');
-                } else if (errorAlert) {
+                if (errorAlert) {
                     errorAlert.textContent = message || 'Error deleting booking.';
                     errorAlert.classList.remove('d-none');
-                } else {
-                    alert(message || 'Error deleting booking.'); // last resort
                 }
+                showPopup(message || 'Error deleting booking.', 'error');
             }
 
             function clearError() {
@@ -74,18 +74,8 @@
                     });
 
                     if (resp.ok) {
-                        // Some APIs return 204 No Content; try to parse only if there is content
-                        const ct = resp.headers.get('Content-Type') || '';
-                        if (ct.includes('application/json')) {
-                            // best effort; not required
-                            try {
-                                const data = await resp.json();
-                                if (data && data.message && typeof window.showPopup === 'function') {
-                                    window.showPopup(data.message, 'success');
-                                }
-                            } catch { /* ignore */ }
-                        }
-                        window.location.href = '/Booking';
+                        showPopup('Booking deleted successfully.', 'success');
+                        setTimeout(() => { window.location.href = '/Booking'; }, 1000);
                         return;
                     }
 

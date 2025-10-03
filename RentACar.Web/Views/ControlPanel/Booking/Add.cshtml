@@ -29,11 +29,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"]</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/bookings.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
 </head>
 <body>
+    @await Html.PartialAsync("_PopupNotifications")
     <div class="booking-container container">
         <a href="@backUrl" class="btn btn-outline-warning rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:40px;height:40px" title="Back">
             <i class="fas fa-arrow-left"></i>
@@ -89,25 +91,24 @@
     </div>
 
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
     <script>
-              document.getElementById('bookingForm').addEventListener('submit', async function (e) {
+        document.getElementById('bookingForm').addEventListener('submit', async function (e) {
             e.preventDefault();
 
             const form = e.target;
             const customerIdInput = document.getElementById('CustomerId');
-                    const data = {
-            carId: parseInt(document.getElementById('CarId').value),
-            startdate: document.getElementById('Startdate').value,
-            enddate: document.getElementById('Enddate').value,
-            paymentMethodId: parseInt(document.getElementById('paymentMethod').value),
-            promocode: document.getElementById('promocode').value || null
-        };
+            const data = {
+                carId: parseInt(document.getElementById('CarId').value),
+                startdate: document.getElementById('Startdate').value,
+                enddate: document.getElementById('Enddate').value,
+                paymentMethodId: parseInt(document.getElementById('paymentMethod').value),
+                promocode: document.getElementById('promocode').value || null,
+            };
 
-        if (customerIdInput) {
-            data.customerId = parseInt(customerIdInput.value);
-        }
-
-
+            if (customerIdInput) {
+                data.customerId = parseInt(customerIdInput.value);
+            }
 
             try {
                 const resp = await fetch('/api/Booking', {
@@ -118,7 +119,8 @@
 
                 const redirectUrl = '@(isCustomer ? "/Bookings/MyBookings" : "/Booking")';
                 if (resp.ok) {
-                    window.location.href = redirectUrl;
+                    showPopup('Booking created successfully.', 'success');
+                    setTimeout(() => { window.location.href = redirectUrl; }, 1000);
                 } else {
                     const errorText = await resp.text();
                     showPopup(`Error creating booking:\n${errorText}`, 'error');

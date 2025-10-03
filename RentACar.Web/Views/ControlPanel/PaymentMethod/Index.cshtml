@@ -10,11 +10,13 @@
     <title>@ViewData["Title"]</title>
 
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/creditcards.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
 </head>
 <body>
+    @await Html.PartialAsync("_PopupNotifications")
     <div class="creditcard-container container">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <a href="../ControlPanel"
@@ -48,6 +50,7 @@
     </div>
 
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
     <script>
         async function loadMethods() {
             try {
@@ -74,6 +77,7 @@
 
             } catch (error) {
                 console.error('Failed to load payment methods', error);
+                showPopup('Failed to load payment methods.', 'error');
             }
         }
 

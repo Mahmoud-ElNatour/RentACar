@@ -10,11 +10,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"]</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/employees.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
 </head>
 <body>
+    @await Html.PartialAsync("_PopupNotifications")
     <div class="employee-container container">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <a href="../ControlPanel" class="btn btn-outline-warning rounded-circle d-inline-flex align-items-center justify-content-center" style="width:40px;height:40px" title="Back">
@@ -84,6 +86,7 @@
     </div>
     <div id="employeeModalPlaceholder"></div>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
     <script>
         const canResetPassword = @(canResetEmployeePassword.ToString().ToLower());
         async function loadEmployees() {
@@ -141,7 +144,14 @@
                     loadModal('/Employee/Delete/' + del.dataset.id);
                 } else if (reset) {
                     e.preventDefault();
-                    if (confirm('Reset password for this employee?')) {
+                    showPopupConfirm('Reset password for this employee?', {
+                        type: 'warning',
+                        confirmLabel: 'Reset',
+                        cancelLabel: 'Keep',
+                    }).then(async confirmed => {
+                        if (!confirmed) {
+                            return;
+                        }
                         const response = await fetch('/api/Employee/' + reset.dataset.id + '/reset-password', { method: 'POST' });
                         if (response.ok) {
                             showPopup('Password reset successfully to E@e123456', 'success');
@@ -150,7 +160,7 @@
                         } else {
                             showPopup('Failed to reset password.', 'error');
                         }
-                    }
+                    });
                 }
             });
             document.getElementById('tableSearch').addEventListener('keyup', function () {

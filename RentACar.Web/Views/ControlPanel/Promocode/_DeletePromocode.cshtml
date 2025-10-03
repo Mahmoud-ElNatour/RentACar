@@ -54,16 +54,19 @@
                                 errorAlert.textContent = message;
                                 errorAlert.classList.remove('d-none');
                             }
+                            showPopup(message, 'error');
                             return;
                         }
 
                         bootstrap.Modal.getInstance(document.getElementById('deletePromocodeModal')).hide();
+                        showPopup('Promocode deleted successfully.', 'success');
                         if (window.loadPromocodes) loadPromocodes();
                     } catch (err) {
                         if (errorAlert) {
                             errorAlert.textContent = 'Unable to connect to the server. Please try again.';
                             errorAlert.classList.remove('d-none');
                         }
+                        showPopup('Unable to delete promocode right now.', 'error');
                     }
                 });
             </script>
