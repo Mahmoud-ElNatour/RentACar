@@ -34,6 +34,10 @@
                         <th>ID</th>
                         <th>Booking</th>
                         <th>Customer</th>
+                        <th>Subtotal</th>
+                        <th>Promo Code</th>
+                        <th>Discount %</th>
+                        <th>Total</th>
                         <th>Amount</th>
                         <th>Date</th>
                         <th>Method</th>
@@ -50,13 +54,24 @@
     <script>
         function formatAmount(value) {
             if (value === null || value === undefined) {
-                return '';
+                return '-';
             }
             const number = Number(value);
             if (Number.isNaN(number)) {
                 return value;
             }
             return number.toFixed(2);
+        }
+
+        function formatPercentage(value) {
+            if (value === null || value === undefined) {
+                return '-';
+            }
+            const number = Number(value);
+            if (Number.isNaN(number)) {
+                return value;
+            }
+            return `${number.toFixed(2)}%`;
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
@@ -78,6 +93,10 @@
                         `<td>${payment.paymentId}</td>` +
                         `<td>#${payment.bookingId}</td>` +
                         `<td>${customerDisplay}</td>` +
+                        `<td>${formatAmount(payment.bookingSubtotal)}</td>` +
+                        `<td>${payment.promocodeName ?? '-'}</td>` +
+                        `<td>${formatPercentage(payment.promocodeDiscountPercentage)}</td>` +
+                        `<td>${formatAmount(payment.bookingTotal)}</td>` +
                         `<td>${formatAmount(payment.amount)}</td>` +
                         `<td>${payment.paymentDate ?? ''}</td>` +
                         `<td class='text-capitalize'>${payment.paymentMethodName ?? ''}</td>` +

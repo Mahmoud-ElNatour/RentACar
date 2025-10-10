@@ -22,11 +22,15 @@ Booking improvement:
 -bug in view booking details
 
 Payments:
-Let the codex re-do it with better design or fix the crud opr.
+- in edit add apply promocode
 
 Notes:
 - for deleting we choose to don't delete if it has any action on system, instead we set it inactive
 --> add attr to all needed tables (category,  promocode, paymentmethod).
+
+
+
+
 
 Later on:
 -request panel for canceling the booking from employee nso the admin can approve or deny

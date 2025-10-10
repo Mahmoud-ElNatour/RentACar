@@ -51,7 +51,12 @@
                 </div>
                 <div class="input mb-4">
                     <label class="form-label text-white">Status</label>
-                    <input name="Status" class="form-control" placeholder="Status" />
+                    <select name="Status" class="form-select">
+                        <option value="" selected>Select status</option>
+                        <option value="pending">Pending</option>
+                        <option value="done">Done</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
                 </div>
                 <button type="submit" class="login-btn w-100">Save</button>
             </form>

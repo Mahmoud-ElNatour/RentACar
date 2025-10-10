@@ -190,7 +190,20 @@ namespace RentACar.Application.Managers
                 return null;
 
             var dto = _mapper.Map<PaymentDto>(payment);
-            //dto.PaymentMethodId = await ResolvePaymentMethodIdAsync(payment.PaymentMethod);
+            var methodId = await ResolvePaymentMethodIdAsync(payment.PaymentMethod);
+            if (methodId.HasValue)
+            {
+                dto.PaymentMethodId = methodId.Value;
+            }
+            else
+            {
+                var allMethods = await _paymentMethodRepository.GetAllAsync();
+                var fallback = allMethods.FirstOrDefault();
+                if (fallback != null)
+                {
+                    dto.PaymentMethodId = fallback.Id;
+                }
+            }
             return dto;
         }
 
@@ -244,6 +257,10 @@ namespace RentACar.Application.Managers
             };
 
             var created = await _paymentRepository.AddAsync(payment);
+            if (booking != null)
+            {
+                await UpdateBookingStatusForPaymentAsync(booking, dto.Status);
+            }
             var result = _mapper.Map<PaymentDto>(created);
             result.PaymentMethodId = paymentMethod.Id;
             return result;
@@ -257,6 +274,8 @@ namespace RentACar.Application.Managers
                 _logger.LogWarning("Attempted to update missing payment {PaymentId}", dto.PaymentId);
                 return null;
             }
+
+            Booking? bookingForStatus = null;
 
             if (existing.BookingId != dto.BookingId)
             {
@@ -275,6 +294,7 @@ namespace RentACar.Application.Managers
                 }
 
                 existing.BookingId = dto.BookingId;
+                bookingForStatus = booking;
             }
 
             var paymentMethod = await _paymentMethodRepository.GetByIdAsync(dto.PaymentMethodId);
@@ -307,6 +327,14 @@ namespace RentACar.Application.Managers
             existing.Status = dto.Status;
 
             await _paymentRepository.UpdateAsync(existing);
+            if (bookingForStatus == null)
+            {
+                bookingForStatus = await _bookingRepository.GetByIdAsync(existing.BookingId);
+            }
+            if (bookingForStatus != null)
+            {
+                await UpdateBookingStatusForPaymentAsync(bookingForStatus, dto.Status);
+            }
             var result = _mapper.Map<PaymentDto>(existing);
             result.PaymentMethodId = paymentMethod.Id;
             return result;
@@ -321,12 +349,26 @@ namespace RentACar.Application.Managers
         private PaymentDetailsDto MapToDetailsDto(Payment payment, IReadOnlyDictionary<string, int>? methodLookup = null)
         {
             int? methodId = null;
-            if (!string.IsNullOrWhiteSpace(payment.PaymentMethod) && methodLookup != null)
+            if (!string.IsNullOrWhiteSpace(payment.PaymentMethod) && methodLookup != null &&
+                methodLookup.TryGetValue(payment.PaymentMethod, out var resolvedId))
             {
-                if (methodLookup.TryGetValue(payment.PaymentMethod, out var id))
-                {
-                    methodId = id;
-                }
+                methodId = resolvedId;
+            }
+
+            var subtotal = payment.Booking?.Subtotal;
+            var promocode = payment.Booking?.Promocode;
+            var discountPercentage = promocode?.DiscountPercentage;
+
+            decimal? discountAmount = null;
+            if (discountPercentage.HasValue && subtotal.HasValue)
+            {
+                discountAmount = Math.Round(subtotal.Value * discountPercentage.Value / 100m, 2, MidpointRounding.AwayFromZero);
+            }
+
+            var total = payment.Booking?.TotalPrice;
+            if (!total.HasValue && subtotal.HasValue)
+            {
+                total = discountAmount.HasValue ? subtotal.Value - discountAmount.Value : subtotal.Value;
             }
 
             return new PaymentDetailsDto
@@ -341,8 +383,11 @@ namespace RentACar.Application.Managers
                 CustomerName = payment.Booking?.Customer?.Name,
                 CustomerUsername = payment.Booking?.Customer?.User?.UserName,
                 BookingStatus = payment.Booking?.BookingStatus,
-                BookingTotal = payment.Booking?.TotalPrice,
-                BookingSubtotal = payment.Booking?.Subtotal,
+                BookingTotal = total,
+                BookingSubtotal = subtotal,
+                BookingDiscountAmount = discountAmount,
+                PromocodeName = promocode?.Name,
+                PromocodeDiscountPercentage = discountPercentage,
                 CarModel = payment.Booking?.Car?.ModelName,
                 CarPlateNumber = payment.Booking?.Car?.PlateNumber,
                 PaymentMethodId = methodId
@@ -363,6 +408,27 @@ namespace RentACar.Application.Managers
         {
             var methods = await _paymentMethodRepository.GetAllAsync();
             return methods.ToDictionary(m => m.PaymentMethodName, m => m.Id, StringComparer.OrdinalIgnoreCase);
+        }
+
+        private async Task UpdateBookingStatusForPaymentAsync(Booking booking, string? paymentStatus)
+        {
+            if (string.IsNullOrWhiteSpace(paymentStatus))
+            {
+                return;
+            }
+
+            if (paymentStatus.Equals("rejected", StringComparison.OrdinalIgnoreCase) ||
+                paymentStatus.Equals("cancelled", StringComparison.OrdinalIgnoreCase))
+            {
+                var targetStatus = paymentStatus.Equals("cancelled", StringComparison.OrdinalIgnoreCase)
+                    ? "cancelled"
+                    : "rejected";
+                if (!string.Equals(booking.BookingStatus, targetStatus, StringComparison.OrdinalIgnoreCase))
+                {
+                    booking.BookingStatus = targetStatus;
+                    await _bookingRepository.UpdateAsync(booking);
+                }
+            }
         }
 
       
