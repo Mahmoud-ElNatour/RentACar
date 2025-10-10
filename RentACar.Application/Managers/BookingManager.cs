@@ -9,7 +9,7 @@ using RentACar.Application.DTOs;
 using RentACar.Core.Entities;
 using RentACar.Core.Repositories;
 
-namespace RentACar.Core.Managers
+namespace RentACar.Application.Managers
 {
     public class BookingManager
     {

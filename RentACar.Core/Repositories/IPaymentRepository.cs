@@ -12,6 +12,10 @@ namespace RentACar.Core.Repositories
     {
         Task<List<Payment>> GetPaymentsByBookingIdAsync(int bookingId);
 
+        Task<List<Payment>> GetAllWithDetailsAsync();
+
+        Task<Payment?> GetByIdWithDetailsAsync(int id);
+
     }
 
 }

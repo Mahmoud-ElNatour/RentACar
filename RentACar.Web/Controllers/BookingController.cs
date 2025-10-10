@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using RentACar.Application.DTOs;
 using RentACar.Application.Managers;
-using RentACar.Core.Managers;
+using RentACar.Application.Managers;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using System.Collections.Generic;

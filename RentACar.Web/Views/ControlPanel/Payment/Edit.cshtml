@@ -1,0 +1,151 @@
+@model RentACar.Application.DTOs.PaymentDto
+@{
+    ViewData["Title"] = "Edit Payment";
+    Layout = null;
+    var paymentDateValue = Model.PaymentDate.ToDateTime(TimeOnly.MinValue).ToString("yyyy-MM-dd");
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/login-style.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
+</head>
+<body>
+    @await Html.PartialAsync("_PopupNotifications")
+    <div class="container1">
+        <div class="login-container">
+            <a href="/Payment" class="btn btn-outline-warning rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 40px; height: 40px;" title="Back">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <div class="logo-text mt-3">
+                <i class="fas fa-money-check-alt fa-lg"></i>
+                <div>RentACar</div>
+            </div>
+            <h2 class="mt-4">Edit Payment</h2>
+            <form id="editPaymentForm" class="mt-3">
+                <input type="hidden" name="PaymentId" value="@Model.PaymentId" />
+                <div class="input mb-3">
+                    <label class="form-label text-white">Booking</label>
+                    <select name="BookingId" class="form-select" required></select>
+                </div>
+                <div class="input mb-3">
+                    <label class="form-label text-white">Amount</label>
+                    <input name="Amount" type="number" step="0.01" min="0" class="form-control" value="@Model.Amount" required />
+                </div>
+                <div class="input mb-3">
+                    <label class="form-label text-white">Payment Date</label>
+                    <input name="PaymentDate" type="date" class="form-control" value="@paymentDateValue" required />
+                </div>
+                <div class="input mb-3">
+                    <label class="form-label text-white">Payment Method</label>
+                    <select name="PaymentMethodId" class="form-select" required></select>
+                </div>
+                <div class="input mb-3">
+                    <label class="form-label text-white">Credit Card ID (optional)</label>
+                    <input name="CreditcardId" type="number" min="0" class="form-control" value="@(Model.CreditcardId?.ToString() ?? string.Empty)" />
+                </div>
+                <div class="input mb-4">
+                    <label class="form-label text-white">Status</label>
+                    <input name="Status" class="form-control" value="@Model.Status" />
+                </div>
+                <button type="submit" class="login-btn w-100">Update</button>
+            </form>
+        </div>
+    </div>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        async function loadSelectOptions() {
+            const bookingSelect = document.querySelector('select[name="BookingId"]');
+            const methodSelect = document.querySelector('select[name="PaymentMethodId"]');
+            const selectedBooking = '@Model.BookingId';
+            const selectedMethod = '@Model.PaymentMethodId';
+            bookingSelect.innerHTML = '<option value="" disabled selected>Loading...</option>';
+            methodSelect.innerHTML = '<option value="" disabled selected>Loading...</option>';
+            try {
+                const [bookingRes, methodRes] = await Promise.all([
+                    fetch('/api/Booking'),
+                    fetch('/api/PaymentMethod')
+                ]);
+                if (!bookingRes.ok) {
+                    throw new Error('Failed to load bookings');
+                }
+                if (!methodRes.ok) {
+                    throw new Error('Failed to load payment methods');
+                }
+                const bookings = await bookingRes.json();
+                const methods = await methodRes.json();
+                bookingSelect.innerHTML = '';
+                bookings.forEach(b => {
+                    const option = document.createElement('option');
+                    const labelParts = [`#${b.bookingId}`];
+                    if (b.customerName) labelParts.push(b.customerName);
+                    if (b.carModel) labelParts.push(`- ${b.carModel}`);
+                    option.value = b.bookingId;
+                    option.textContent = labelParts.join(' ');
+                    if (String(b.bookingId) === selectedBooking) {
+                        option.selected = true;
+                    }
+                    bookingSelect.appendChild(option);
+                });
+                methodSelect.innerHTML = '';
+                methods.forEach(m => {
+                    const option = document.createElement('option');
+                    option.value = m.id;
+                    option.textContent = m.paymentMethodName;
+                    if (String(m.id) === selectedMethod) {
+                        option.selected = true;
+                    }
+                    methodSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error(error);
+                if (window.showPopup) {
+                    window.showPopup('Failed to load form data.', 'error');
+                }
+            }
+        }
+
+        document.getElementById('editPaymentForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const payload = {
+                paymentId: Number(form.PaymentId.value),
+                bookingId: Number(form.BookingId.value),
+                amount: Number(form.Amount.value),
+                paymentDate: form.PaymentDate.value,
+                paymentMethodId: Number(form.PaymentMethodId.value),
+                creditcardId: form.CreditcardId.value ? Number(form.CreditcardId.value) : null,
+                status: form.Status.value || null
+            };
+            try {
+                const res = await fetch(`/api/Payment/${payload.paymentId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!res.ok) {
+                    throw new Error(await res.text());
+                }
+                if (window.showPopup) {
+                    window.showPopup('Payment updated successfully.', 'success');
+                }
+                setTimeout(() => { window.location.href = '/Payment'; }, 900);
+            } catch (error) {
+                console.error(error);
+                if (window.showPopup) {
+                    window.showPopup('Failed to update payment.', 'error');
+                }
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', loadSelectOptions);
+    </script>
+</body>
+</html>

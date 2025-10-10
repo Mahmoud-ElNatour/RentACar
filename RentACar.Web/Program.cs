@@ -8,7 +8,6 @@ using RentACar.Infrastructure.Data.Repository;
 using RentACar.Infrastructure.Repositories;
 using AutoMapper;
 using RentACar.Infrastructure.Data.Repositories;
-using RentACar.Core.Managers;
 using RentACar.Application.Managers;
 using Serilog;
 using QuestPDF.Infrastructure;
