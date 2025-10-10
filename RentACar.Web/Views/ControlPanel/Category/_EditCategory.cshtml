@@ -1,0 +1,51 @@
+@model RentACar.Application.DTOs.CategoryDto
+<div class="modal fade" id="editCategoryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content custom-modal">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Category</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="editCategoryForm">
+                <div class="modal-body">
+                    <input type="hidden" asp-for="CategoryId" />
+                    <div class="mb-3">
+                        <label asp-for="Name" class="form-label"></label>
+                        <input asp-for="Name" class="form-control" />
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+            <script>
+                document.getElementById('editCategoryForm').addEventListener('submit', async function (e) {
+                    e.preventDefault();
+                    const form = e.target;
+                    const data = { categoryId: form.CategoryId.value, name: form.Name.value };
+                    try {
+                        const response = await fetch('/api/Category/' + form.CategoryId.value, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(data)
+                        });
+
+                        if (!response.ok) {
+                            const message = await response.text();
+                            showPopup(message || 'Failed to update category.', 'error');
+                            return;
+                        }
+
+                        bootstrap.Modal.getInstance(document.getElementById('editCategoryModal')).hide();
+                        showPopup('Category updated successfully.', 'success');
+                        if (window.loadCategories) loadCategories();
+                    } catch {
+                        showPopup('Unable to update category right now.', 'error');
+                    }
+                });
+            </script>
+        </div>
+    </div>
+</div>

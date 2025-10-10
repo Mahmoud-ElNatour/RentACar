@@ -1,0 +1,68 @@
+﻿@page
+@model RegisterConfirmationModel
+@{
+    ViewData["Title"] = "Confirm your email";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - CarRental</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/login-style.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
+</head>
+<body>
+    <div class="container1">
+        <div class="login-container">
+            <div class="logo-text">
+                <i class="fas fa-car-side"></i>
+                <div>CarRental</div>
+            </div>
+
+            <h2>Confirm Your Email</h2>
+
+            @if (Model.DisplayConfirmAccountLink)
+            {
+                <div class="text-center">
+                    <p style="color:white; font-weight: 500; text-align: center;">
+                        This app does not currently have a real email sender configured.<br />
+                        See <a href="https://aka.ms/aspaccountconf" target="_blank" style="color: var(--accent-gold); text-decoration: underline;">these docs</a> to configure a real email sender.
+                    </p>
+
+                    <p>
+                        <a class="traverse" href="@Model.EmailConfirmationUrl">Click here to confirm your account</a>
+                    </p>
+                </div>
+            }
+            else
+            {
+                <div class="text-center">
+                    <p>
+                        We've sent a confirmation link to <strong>@Model.Email</strong>.<br />
+                        Please check your inbox to confirm your account.
+                    </p>
+                    <p>
+                        <i class="fas fa-envelope fa-3x" style="color: var(--accent-gold);"></i>
+                    </p>
+                </div>
+            }
+
+            <hr />
+
+            <div class="signup-prompt text-center">
+                <span>Already confirmed?</span>
+                <a class="traverse" asp-page="./Login">Log In</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <partial name="_ValidationScriptsPartial" />
+</body>
+</html>

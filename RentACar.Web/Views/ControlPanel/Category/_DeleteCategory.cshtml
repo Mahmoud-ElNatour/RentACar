@@ -1,0 +1,75 @@
+@model RentACar.Application.DTOs.CategoryDto
+<div class="modal fade" id="deleteCategoryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content custom-modal">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete Category</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="deleteCategoryForm">
+                <div class="modal-body">
+                    <div class="alert alert-danger d-none" id="deleteCategoryError" role="alert"></div>
+                    <input type="hidden" asp-for="CategoryId" />
+                    <p>Are you sure you want to delete <strong>@Model.Name</strong>?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </div>
+            </form>
+            <script>
+                document.getElementById('deleteCategoryForm').addEventListener('submit', async function (e) {
+                    e.preventDefault();
+                    const id = this.CategoryId.value;
+                    const errorAlert = this.querySelector('#deleteCategoryError');
+                    if (errorAlert) {
+                        errorAlert.classList.add('d-none');
+                        errorAlert.textContent = '';
+                    }
+
+                    try {
+                        const response = await fetch('/api/Category/' + id, { method: 'DELETE' });
+
+                        if (!response.ok) {
+                            let message = 'An error occurred while deleting the category.';
+                            const contentType = response.headers.get('Content-Type') || '';
+
+                            try {
+                                if (contentType.includes('application/json')) {
+                                    const data = await response.json();
+                                    if (data && typeof data === 'object') {
+                                        message = data.message || message;
+                                    }
+                                } else {
+                                    const text = await response.text();
+                                    if (text) {
+                                        message = text;
+                                    }
+                                }
+                            } catch {
+                                // ignore
+                            }
+
+                            if (errorAlert) {
+                                errorAlert.textContent = message;
+                                errorAlert.classList.remove('d-none');
+                            }
+                            showPopup(message, 'error');
+                            return;
+                        }
+
+                        bootstrap.Modal.getInstance(document.getElementById('deleteCategoryModal')).hide();
+                        showPopup('Category deleted successfully.', 'success');
+                        if (window.loadCategories) loadCategories();
+                    } catch (err) {
+                        if (errorAlert) {
+                            errorAlert.textContent = 'Unable to connect to the server. Please try again.';
+                            errorAlert.classList.remove('d-none');
+                        }
+                        showPopup('Unable to delete category right now.', 'error');
+                    }
+                });
+            </script>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,256 @@
+﻿@{
+    ViewData["Title"] = "Manage Cars";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - CarRental</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/cars.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
+</head>
+<body>
+    @await Html.PartialAsync("_PopupNotifications")
+    <div class="container car-container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <a href="../ControlPanel" class="btn btn-outline-warning rounded-circle d-inline-flex align-items-center justify-content-center" style="width:40px;height:40px;" title="Back to Control Panel">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <h2 class="flex-grow-1 text-center m-0">Manage Cars</h2>
+            <div style="width:40px;"></div>
+        </div>
+        <form id="filterForm" class="row g-2 mb-4 align-items-end">
+            <div class="col">
+                <label class="form-label">Name</label>
+                <input type="text" name="name" class="form-control" placeholder="Model name" />
+            </div>
+            <div class="col">
+                <label class="form-label">Category</label>
+                <select name="categoryId" id="categoryFilter" class="form-select">
+                    <option value="">All Categories</option>
+                </select>
+            </div>
+            <div class="col">
+                <label class="form-label">Availability</label>
+                <select name="available" class="form-select">
+                    <option value="">Any</option>
+                    <option value="true">Available</option>
+                    <option value="false">Not Available</option>
+                </select>
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-secondary">Filter</button>
+            </div>
+            <div class="col-auto ms-auto">
+                <button type="button" id="addCar" class="btn btn-primary"><i class="fas fa-plus me-1"></i>Add Car</button>
+            </div>
+        </form>
+        <div class="mb-3">
+            <input type="text" id="tableSearch" class="form-control" placeholder="Search table..." />
+        </div>
+        <div class="table-responsive">
+            <table id="carTable" class="table table-striped table-dark align-middle">
+                <thead>
+                    <tr>
+                        <th>Image</th>
+                        <th>Plate #</th>
+                        <th>Model</th>
+                        <th>Year</th>
+                        <th>Color</th>
+                        <th>Price/Day</th>
+                        <th>Available</th>
+                        <th>Category</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="carRows">
+                </tbody>
+            </table>
+        </div>
+        <nav></nav>
+    </div>
+    <div id="carModalPlaceholder"></div>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        let categories = [];
+        async function loadCategories() {
+            const res = await fetch('/api/Category');
+            categories = await res.json();
+            const select = document.getElementById('categoryFilter');
+            categories.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.categoryId;
+                opt.textContent = c.name;
+                select.appendChild(opt);
+            });
+        }
+
+        async function loadCars() {
+            const params = new URLSearchParams(new FormData(document.getElementById('filterForm')));
+            const res = await fetch('/api/Car?' + params.toString());
+            const data = await res.json();
+            const tbody = document.getElementById('carRows');
+            tbody.innerHTML = '';
+            data.forEach(car => {
+                const row = document.createElement('tr');
+                const imgCell = car.carImage ? `<img class="car-thumb" width="80" height="80" src="data:image;base64,${car.carImage}" />` : '';
+                row.innerHTML = `
+                    <td>${imgCell}</td>
+                    <td>${car.plateNumber}</td>
+                    <td>${car.modelName}</td>
+                    <td>${car.modelYear}</td>
+                    <td>${car.color || ''}</td>
+                    <td>${car.pricePerDay ?? ''}</td>
+                    <td class="text-center">${car.isAvailable ? '<i class="fas fa-check text-success"></i>' : '<i class="fas fa-times text-danger"></i>'}</td>
+                    <td>${car.categoryName || ''}</td>
+                    <td><a href="#" class="text-warning me-2 edit-car" data-id="${car.carId}"><i class="fas fa-pencil-alt"></i></a>
+                        <a href="#" class="text-danger delete-car" data-id="${car.carId}"><i class="fas fa-trash"></i></a></td>`;
+                tbody.appendChild(row);
+            });
+        }
+
+        async function loadModal(url) {
+            const res = await fetch(url);
+            const html = await res.text();
+            const placeholder = document.getElementById('carModalPlaceholder');
+            placeholder.innerHTML = html;
+
+            const modalEl = placeholder.querySelector('.modal');
+            const modal = new bootstrap.Modal(modalEl);
+            modal.show();
+
+            // 🚘 Add/Edit Car Form Logic
+            const form = modalEl.querySelector('#carForm');
+            const imageInput = modalEl.querySelector('#CarImage');
+            const previewImg = modalEl.querySelector('#CarImagePreview');
+
+            if (imageInput) {
+                imageInput.addEventListener('change', () => {
+                    const file = imageInput.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = e => {
+                            previewImg.src = e.target.result;
+                            previewImg.style.display = 'block';
+                        };
+                        reader.readAsDataURL(file);
+                    } else {
+                        previewImg.src = '';
+                        previewImg.style.display = 'none';
+                    }
+                });
+            }
+
+            if (form) {
+                form.addEventListener('submit', async function (e) {
+                    e.preventDefault();
+
+                    const data = {
+                        carId       : parseInt(form.querySelector('[name="CarId"]')?.value || '0'),
+                        plateNumber : form.querySelector('[name="PlateNumber"]')?.value || '',
+                        modelName   : form.querySelector('[name="ModelName"]')?.value || '',
+                        modelYear   : parseInt(form.querySelector('[name="ModelYear"]')?.value || '0'),
+                        color       : form.querySelector('[name="Color"]')?.value || '',
+                        pricePerDay : parseFloat(form.querySelector('[name="PricePerDay"]')?.value || '0'),
+                        categoryId  : parseInt(form.querySelector('[name="CategoryId"]')?.value || '0'),
+                        isAvailable : form.querySelector('[name="IsAvailable"]')?.checked ?? false
+                    };
+
+                    if (imageInput?.files.length > 0) {
+                        data.carImage = await toBase64(imageInput.files[0]);
+                    }
+
+                    const url = data.carId ? '/api/Car/' + data.carId : '/api/Car';
+                    const method = data.carId ? 'PUT' : 'POST';
+
+                    try {
+                        const response = await fetch(url, {
+                            method,
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(data)
+                        });
+
+                        if (!response.ok) {
+                            const error = await response.text();
+                            showPopup(`Error: ${error}`, 'error');
+                            return;
+                        }
+
+                        modal.hide();
+                        if (window.loadCars) loadCars();
+                    } catch (err) {
+                        showPopup('An error occurred while saving the car.', 'error');
+                        console.error(err);
+                    }
+                });
+            }
+
+            // 🗑️ Delete Car Form Logic
+            const deleteForm = modalEl.querySelector('#deleteCarForm');
+            if (deleteForm) {
+                deleteForm.addEventListener('submit', async function (e) {
+                    e.preventDefault();
+                    const id = deleteForm.querySelector('[name="carId"]')?.value;
+                    try {
+                        const response = await fetch('/api/Car/' + id, {
+                            method: 'DELETE'
+                        });
+
+                        if (!response.ok) {
+                            const error = await response.text();
+                            showPopup(`Delete failed: ${error}`, 'error');
+                            return;
+                        }
+
+                        modal.hide();
+                        if (window.loadCars) loadCars();
+                    } catch (err) {
+                        console.error(err);
+                        showPopup('An error occurred while deleting the car.', 'error');
+                    }
+                });
+            }
+        }
+
+        async function toBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result.split(',')[1]);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCategories().then(loadCars);
+            document.getElementById('filterForm').addEventListener('submit', e => { e.preventDefault(); loadCars(); });
+            document.getElementById('addCar').addEventListener('click', () => loadModal('/Car/Add'));
+            document.getElementById('carRows').addEventListener('click', e => {
+                const edit = e.target.closest('.edit-car');
+                const del = e.target.closest('.delete-car');
+                if (edit) {
+                    e.preventDefault();
+                    loadModal('/Car/Edit/' + edit.dataset.id);
+                } else if (del) {
+                    e.preventDefault();
+                    loadModal('/Car/Delete/' + del.dataset.id);
+                }
+            });
+            document.getElementById('tableSearch').addEventListener('keyup', function () {
+                const value = this.value.toLowerCase();
+                document.querySelectorAll('#carTable tbody tr').forEach(tr => {
+                    tr.style.display = tr.textContent.toLowerCase().includes(value) ? '' : 'none';
+                });
+            });
+        });
+    </script>
+</body>
+</html>

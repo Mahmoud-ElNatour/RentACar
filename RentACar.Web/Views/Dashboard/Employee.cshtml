@@ -1,0 +1,66 @@
+@model RentACar.Application.DTOs.EmployeeDashboardViewModel
+@{
+    ViewData["Title"] = "Employee Dashboard";
+    Layout = "_Layout";
+}
+<link rel="stylesheet" href="~/css/dashboard.css" />
+<div class="container dashboard-container">
+    <h2 class="text-center mb-4">Employee Dashboard</h2>
+    <div class="row g-3 mb-4">
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-box">
+                <h3>@Model.ProcessedBookings</h3>
+                <span>Bookings Processed</span>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-box">
+                <h3>@Model.TotalCars</h3>
+                <span>Total Cars</span>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-box">
+                <h3>@Model.AvailableCars</h3>
+                <span>Available Cars</span>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-box">
+                <h3>@Model.UnverifiedCustomers</h3>
+                <span>Unverified Customers</span>
+            </div>
+        </div>
+    </div>
+    <div class="row g-3 mb-4">
+        <div class="col-md-6 col-sm-6">
+            <div class="stat-box">
+                <h3>@Model.WaitingBookings</h3>
+                <span>Pending Bookings</span>
+            </div>
+        </div>
+        <div class="col-md-6 col-sm-6">
+            <div class="chart-container">
+                <canvas id="empChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts{
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const data = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.MonthlyProcessedBookings));
+        new Chart(document.getElementById('empChart'), {
+            type: 'bar',
+            data: {
+                labels: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+                datasets: [{
+                    label: 'Bookings',
+                    data: data,
+                    backgroundColor: '#d4af37'
+                }]
+            },
+            options: { scales: { y: { beginAtZero: true } } }
+        });
+    </script>
+}

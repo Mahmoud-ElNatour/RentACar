@@ -1,0 +1,50 @@
+:root {
+    --primary-dark: #0a0c0e;
+    --secondary-dark: #161819;
+    --accent-gold: #d4af37;
+    --accent-gold-hover: #e6c347;
+    --text-primary: #ffffff;
+    --text-secondary: #9ea3a9;
+}
+
+body {
+    background: var(--primary-dark);
+    color: var(--text-primary);
+    font-family: 'Poppins', 'Segoe UI', Arial, sans-serif;
+}
+
+.dashboard-container {
+    background: var(--secondary-dark);
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05);
+    margin-top: 2rem;
+}
+
+.stat-box {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    color: var(--text-primary);
+    height: 100%;
+}
+
+.stat-box h3 {
+    color: var(--accent-gold);
+    margin-bottom: 0.5rem;
+    font-size: 2rem;
+}
+
+.stat-box span {
+    color: var(--text-secondary);
+}
+
+.chart-container {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 20px;
+    height: 100%;
+}
