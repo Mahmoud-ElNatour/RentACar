@@ -20,5 +20,29 @@ namespace RentACar.Infrastructure.Data.Repository
                                    .Where(p => p.BookingId == bookingId)
                                    .ToListAsync();
         }
+
+        public async Task<List<Payment>> GetAllWithDetailsAsync()
+        {
+            return await _dbContext.Payments
+                                   .Include(p => p.Booking)
+                                       .ThenInclude(b => b.Customer)
+                                           .ThenInclude(c => c.User)
+                                   .Include(p => p.Booking)
+                                       .ThenInclude(b => b.Car)
+                                   .AsNoTracking()
+                                   .ToListAsync();
+        }
+
+        public async Task<Payment?> GetByIdWithDetailsAsync(int id)
+        {
+            return await _dbContext.Payments
+                                   .Include(p => p.Booking)
+                                       .ThenInclude(b => b.Customer)
+                                           .ThenInclude(c => c.User)
+                                   .Include(p => p.Booking)
+                                       .ThenInclude(b => b.Car)
+                                   .AsNoTracking()
+                                   .FirstOrDefaultAsync(p => p.PaymentId == id);
+        }
     }
 }
