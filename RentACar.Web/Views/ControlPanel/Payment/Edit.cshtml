@@ -1,8 +1,9 @@
 @model RentACar.Application.DTOs.PaymentDto
-@{
+@{ 
     ViewData["Title"] = "Edit Payment";
     Layout = null;
     var paymentDateValue = Model.PaymentDate.ToDateTime(TimeOnly.MinValue).ToString("yyyy-MM-dd");
+    var statusValue = Model.Status?.ToLowerInvariant();
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -52,7 +53,11 @@
                 </div>
                 <div class="input mb-4">
                     <label class="form-label text-white">Status</label>
-                    <input name="Status" class="form-control" value="@Model.Status" />
+                    <select name="Status" class="form-select">
+                        <option value="pending" @(statusValue == "pending" ? "selected" : string.Empty)>Pending</option>
+                        <option value="done" @(statusValue == "done" ? "selected" : string.Empty)>Done</option>
+                        <option value="rejected" @(statusValue == "rejected" ? "selected" : string.Empty)>Rejected</option>
+                    </select>
                 </div>
                 <button type="submit" class="login-btn w-100">Update</button>
             </form>

@@ -29,6 +29,8 @@ namespace RentACar.Infrastructure.Data.Repository
                                            .ThenInclude(c => c.User)
                                    .Include(p => p.Booking)
                                        .ThenInclude(b => b.Car)
+                                   .Include(p => p.Booking)
+                                       .ThenInclude(b => b.Promocode)
                                    .AsNoTracking()
                                    .ToListAsync();
         }
@@ -41,6 +43,8 @@ namespace RentACar.Infrastructure.Data.Repository
                                            .ThenInclude(c => c.User)
                                    .Include(p => p.Booking)
                                        .ThenInclude(b => b.Car)
+                                   .Include(p => p.Booking)
+                                       .ThenInclude(b => b.Promocode)
                                    .AsNoTracking()
                                    .FirstOrDefaultAsync(p => p.PaymentId == id);
         }
