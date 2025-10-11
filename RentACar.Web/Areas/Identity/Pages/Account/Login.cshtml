@@ -13,11 +13,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - CarRental</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/login-style.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
 </head>
 <body>
+    @await Html.PartialAsync("_PopupNotifications")
     <div class="auth-wrapper">
         <div class="auth-container">
             <div class="logo-text">
@@ -37,6 +39,9 @@
 
                 <div class="input mb-3">
                     <input asp-for="Input.Password" class="form-control" placeholder="Enter your password" autocomplete="current-password" aria-required="true" />
+                    <button type="button" class="toggle-password" data-toggle-password="#Input_Password" aria-label="Show password">
+                        <i class="fa-solid fa-eye"></i>
+                    </button>
                     <span asp-validation-for="Input.Password" class="text-danger"></span>
                 </div>
 
@@ -64,6 +69,7 @@
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
     <partial name="_ValidationScriptsPartial" />
 </body>
 </html>
