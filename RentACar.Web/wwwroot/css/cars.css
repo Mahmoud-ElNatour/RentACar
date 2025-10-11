@@ -53,18 +53,36 @@ body {
     color: var(--primary-dark);
 }
 
-input.form-control, select.form-select {
+input.form-control {
     background: rgba(255,255,255,0.03);
     border: 1px solid rgba(255,255,255,0.1);
     color: var(--text-primary);
 }
 
-    input.form-control:focus, select.form-select:focus {
+    input.form-control:focus {
         background: rgba(255,255,255,0.05);
         border-color: var(--accent-gold);
         box-shadow: 0 0 0 3px rgba(212,175,55,0.1);
-        color: #d4af37;
+        color: var(--text-primary);
     }
+
+select.form-select {
+    background: #2b2b2b;
+    border: 1px solid rgba(212,175,55,0.35);
+    color: var(--accent-gold);
+}
+
+    select.form-select:focus {
+        background: #323232;
+        border-color: var(--accent-gold);
+        box-shadow: 0 0 0 3px rgba(212,175,55,0.15);
+        color: var(--accent-gold);
+    }
+
+select.form-select option {
+    background-color: #2b2b2b;
+    color: var(--accent-gold);
+}
 
 .dark-modal {
     background: var(--secondary-dark);

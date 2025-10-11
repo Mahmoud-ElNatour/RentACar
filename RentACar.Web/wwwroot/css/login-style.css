@@ -149,6 +149,27 @@ input.form-control {
         box-shadow: 0 2px 10px rgba(212, 175, 55, 0.2);
     }
 
+.toggle-password {
+    position: absolute;
+    top: 50%;
+    right: 18px;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: var(--accent-gold);
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    transition: color 0.2s ease;
+}
+
+    .toggle-password:hover,
+    .toggle-password:focus {
+        color: var(--accent-gold-hover);
+        outline: none;
+    }
+
 
 .signup-prompt {
     text-align: center;

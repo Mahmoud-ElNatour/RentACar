@@ -265,3 +265,55 @@
         });
     };
 })();
+
+(function () {
+    function updateButtonState(button, input) {
+        if (!button || !input) {
+            return;
+        }
+
+        const isVisible = input.type === 'text';
+        const icon = button.querySelector('i');
+        if (icon) {
+            icon.classList.toggle('fa-eye', !isVisible);
+            icon.classList.toggle('fa-eye-slash', isVisible);
+        }
+
+        button.setAttribute('aria-pressed', String(isVisible));
+        button.setAttribute('aria-label', isVisible ? 'Hide password' : 'Show password');
+    }
+
+    document.addEventListener('click', (event) => {
+        const trigger = event.target.closest('[data-toggle-password]');
+        if (!trigger) {
+            return;
+        }
+
+        const selector = trigger.getAttribute('data-toggle-password');
+        if (!selector) {
+            return;
+        }
+
+        const input = document.querySelector(selector);
+        if (!input) {
+            return;
+        }
+
+        const nextType = input.type === 'password' ? 'text' : 'password';
+        input.setAttribute('type', nextType);
+        updateButtonState(trigger, input);
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('[data-toggle-password]').forEach((button) => {
+            const selector = button.getAttribute('data-toggle-password');
+            if (!selector) {
+                return;
+            }
+            const input = document.querySelector(selector);
+            if (input) {
+                updateButtonState(button, input);
+            }
+        });
+    });
+})();
