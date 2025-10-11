@@ -1,10 +1,5 @@
-Frontend and popups:
-- dropdown background should be gray
-- add show pass button
-- check that the new popup is visible in all actions in all pages
-
 Blacklist panel and inactive users:
-- when unblacklist or setactive again in db it remains lockedout (fix) - fix design of lockedout page
+- when unblacklist from blacklist panelor setactive from customer or employee panelagain in db it remains lockedout (fix) - fix design of lockedout page
 
 Reset pass and email api
 -reset pass should be random and send it by email
