@@ -27,6 +27,7 @@ The **Rent a Car Online Booking & Administrative Management System** is designed
 - Filter cars by type/date/features
 - Secure car reservations and credit card payments
 - Booking history tracking
+- Upcoming: unified travel booking experience (cars + hotels/flights powered by Booking.com)
 
 ### Employee Panel
 - In-person customer booking
@@ -130,6 +131,8 @@ Edit
 ## 📌 Notes
 
 This system is built with scalability in mind, making it suitable for Final Year Projects (FYPs) and future enhancements like multi-branch support and dynamic pricing models.
+
+For details on the planned Booking.com hotel and flight integration, see [`docs/booking_api_integration_plan.md`](docs/booking_api_integration_plan.md).
 
 ---
 

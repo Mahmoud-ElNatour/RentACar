@@ -29,6 +29,7 @@ public partial class RentACarDbContext : DbContext
     public virtual DbSet<Payment> Payments { get; set; }
     public virtual DbSet<PaymentMethod> PaymentMethods { get; set; }
     public virtual DbSet<Promocode> Promocodes { get; set; }
+    public virtual DbSet<TravelActionLog> TravelActionLogs { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -129,6 +130,20 @@ public partial class RentACarDbContext : DbContext
                 .HasForeignKey<Payment>(p => p.BookingId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Payments_Bookings");
+        });
+
+        modelBuilder.Entity<TravelActionLog>(entity =>
+        {
+            entity.ToTable("TravelActionLogs");
+
+            entity.Property(e => e.CreatedAtUtc)
+                .HasDefaultValueSql("GETUTCDATE()");
+
+            entity.HasOne(d => d.Customer)
+                .WithMany(p => p.TravelActionLogs)
+                .HasForeignKey(d => d.CustomerId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_TravelActionLogs_Customers");
         });
 
         OnModelCreatingPartial(modelBuilder);

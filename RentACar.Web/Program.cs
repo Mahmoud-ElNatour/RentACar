@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+using System;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using RentACar.Core.Entities;
@@ -8,9 +9,11 @@ using RentACar.Infrastructure.Data.Repository;
 using RentACar.Infrastructure.Repositories;
 using AutoMapper;
 using RentACar.Infrastructure.Data.Repositories;
+using RentACar.Application.Integration.BookingCom;
 using RentACar.Application.Managers;
 using Serilog;
 using QuestPDF.Infrastructure;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -56,6 +59,7 @@ builder.Services.AddScoped<IBlacklistRepository, BlacklistRepository>();
 builder.Services.AddScoped<IPromocodeRepository, PromocodeRepository>();
 builder.Services.AddScoped<IPaymentMethodRepository, PaymentMethodRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+builder.Services.AddScoped<ITravelActionLogRepository, TravelActionLogRepository>();
 
 // ✅ Register managers
 builder.Services.AddScoped<CustomerManager>();
@@ -69,6 +73,27 @@ builder.Services.AddScoped<CreditCardManager>();
 builder.Services.AddScoped<PaymentMethodManager>();
 builder.Services.AddScoped<BookingManager>();
 builder.Services.AddScoped<PaymentManager>();
+builder.Services.AddScoped<TravelBookingManager>();
+
+builder.Services.Configure<BookingComOptions>(builder.Configuration.GetSection("BookingComApi"));
+
+builder.Services.AddHttpClient<IBookingComClient, BookingComClient>((serviceProvider, client) =>
+{
+    var options = serviceProvider.GetRequiredService<IOptions<BookingComOptions>>().Value;
+    if (!string.IsNullOrWhiteSpace(options.BaseUrl))
+    {
+        client.BaseAddress = new Uri(options.BaseUrl, UriKind.Absolute);
+    }
+
+    client.DefaultRequestHeaders.Accept.Clear();
+    client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+
+    if (!string.IsNullOrWhiteSpace(options.ApiKey))
+    {
+        client.DefaultRequestHeaders.Remove("X-Api-Key");
+        client.DefaultRequestHeaders.Add("X-Api-Key", options.ApiKey);
+    }
+});
 
 // ✅ HTTPS redirection
 builder.Services.AddHttpsRedirection(options =>

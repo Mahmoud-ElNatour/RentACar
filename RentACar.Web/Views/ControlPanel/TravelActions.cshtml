@@ -1,0 +1,64 @@
+@{
+    ViewData["Title"] = "Travel Activity";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<link rel="stylesheet" href="~/css/travel-actions-admin.css" asp-append-version="true" />
+
+<div class="container py-4 travel-log-container">
+    <div class="row mb-4 align-items-center">
+        <div class="col-lg-8">
+            <h2 class="fw-bold mb-0">Booking.com Travel Activity</h2>
+            <p class="text-muted mb-0">Track every hotel and flight booking executed by customers or staff.</p>
+        </div>
+        <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+            <button class="btn btn-outline-warning" id="refreshTravelLogs">
+                <i class="fas fa-sync-alt me-1"></i>Refresh
+            </button>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form class="row g-3" id="travelLogFilters">
+                <div class="col-md-4">
+                    <label for="filterUsername" class="form-label">Customer Username</label>
+                    <input type="text" id="filterUsername" class="form-control" placeholder="customer.username" />
+                </div>
+                <div class="col-md-3">
+                    <label for="filterFrom" class="form-label">From (UTC)</label>
+                    <input type="datetime-local" id="filterFrom" class="form-control" />
+                </div>
+                <div class="col-md-3">
+                    <label for="filterTo" class="form-label">To (UTC)</label>
+                    <input type="datetime-local" id="filterTo" class="form-control" />
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-warning w-100">Apply</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-dark table-striped align-middle" id="travelLogTable">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Customer</th>
+                    <th>Action</th>
+                    <th>Actor</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Reference</th>
+                    <th>Created (UTC)</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/travel-actions-admin.js" asp-append-version="true"></script>
+}

@@ -1,0 +1,121 @@
+@{
+    ViewData["Title"] = "Ahla Bhal Talle";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var canTargetOtherCustomers = User.IsInRole("Admin") || User.IsInRole("Employee");
+}
+
+<link rel="stylesheet" href="~/css/ahla-bhal-talle.css" asp-append-version="true" />
+
+<div class="travel-panel container py-5" data-can-target="@(canTargetOtherCustomers.ToString().ToLowerInvariant())">
+    <div class="row justify-content-center mb-4">
+        <div class="col-lg-8 text-center">
+            <h2 class="fw-bold mb-2">Ahla Bhal Talle</h2>
+            <p class="lead text-muted">Choose between flight ticketing and hotel booking powered by Booking.com.</p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="travel-card shadow-sm h-100">
+                <div class="travel-card-header">
+                    <h3 class="h4 mb-1">Hotel Booking</h3>
+                    <p class="text-muted mb-0">Plan your stay with a few quick details.</p>
+                </div>
+                <form id="hotelBookingForm" class="travel-form">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label for="hotelDestination" class="form-label">Destination</label>
+                            <input type="text" class="form-control" id="hotelDestination" name="destination" placeholder="Beirut" required />
+                        </div>
+                        <div class="col-md-6">
+                            <label for="hotelDestinationCountry" class="form-label">Destination Country Code</label>
+                            <input type="text" class="form-control" id="hotelDestinationCountry" name="destinationCountryCode" placeholder="lb" maxlength="10" required />
+                        </div>
+                        <div class="col-md-6">
+                            <label for="hotelUserCountry" class="form-label">Your Country Code</label>
+                            <input type="text" class="form-control" id="hotelUserCountry" name="userCountryCode" placeholder="lb" maxlength="10" required />
+                        </div>
+                        <div class="col-md-6">
+                            <label for="hotelCheckIn" class="form-label">Check-in</label>
+                            <input type="date" class="form-control" id="hotelCheckIn" name="checkInDate" required />
+                        </div>
+                        <div class="col-md-6">
+                            <label for="hotelCheckOut" class="form-label">Check-out</label>
+                            <input type="date" class="form-control" id="hotelCheckOut" name="checkOutDate" required />
+                        </div>
+                        <div class="col-md-6">
+                            <label for="hotelGuests" class="form-label">Guests</label>
+                            <input type="number" class="form-control" id="hotelGuests" name="numberOfGuests" min="1" max="12" value="2" required />
+                        </div>
+                        <div class="col-md-6 employee-only @(canTargetOtherCustomers ? string.Empty : "d-none")">
+                            <label for="hotelCustomer" class="form-label">Customer Username</label>
+                            <input type="text" class="form-control" id="hotelCustomer" name="targetCustomerUsername" placeholder="customer.username" />
+                        </div>
+                    </div>
+                    <div class="mt-4 d-flex justify-content-end">
+                        <button type="submit" class="btn btn-warning">Book Hotel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="travel-card shadow-sm h-100">
+                <div class="travel-card-header">
+                    <h3 class="h4 mb-1">Flight Ticketing</h3>
+                    <p class="text-muted mb-0">Secure your seats in just a couple of clicks.</p>
+                </div>
+                <form id="flightBookingForm" class="travel-form">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="flightOrigin" class="form-label">Origin Airport Code</label>
+                            <input type="text" class="form-control" id="flightOrigin" name="originAirportCode" placeholder="BEY" maxlength="10" required />
+                        </div>
+                        <div class="col-md-6">
+                            <label for="flightDestination" class="form-label">Destination Airport Code</label>
+                            <input type="text" class="form-control" id="flightDestination" name="destinationAirportCode" placeholder="DXB" maxlength="10" required />
+                        </div>
+                        <div class="col-md-6">
+                            <label for="flightDeparture" class="form-label">Departure Date</label>
+                            <input type="date" class="form-control" id="flightDeparture" name="departureDate" required />
+                        </div>
+                        <div class="col-md-6">
+                            <label for="flightReturn" class="form-label">Return Date (optional)</label>
+                            <input type="date" class="form-control" id="flightReturn" name="returnDate" />
+                        </div>
+                        <div class="col-md-4">
+                            <label for="flightAdults" class="form-label">Adults</label>
+                            <input type="number" class="form-control" id="flightAdults" name="adults" min="1" max="9" value="1" required />
+                        </div>
+                        <div class="col-md-4">
+                            <label for="flightChildren" class="form-label">Children</label>
+                            <input type="number" class="form-control" id="flightChildren" name="children" min="0" max="8" value="0" />
+                        </div>
+                        <div class="col-md-4">
+                            <label for="flightCabin" class="form-label">Cabin Class</label>
+                            <select class="form-select" id="flightCabin" name="cabinClass">
+                                <option value="ECONOMY" selected>Economy</option>
+                                <option value="PREMIUM_ECONOMY">Premium Economy</option>
+                                <option value="BUSINESS">Business</option>
+                                <option value="FIRST">First</option>
+                            </select>
+                        </div>
+                        <div class="col-12 employee-only @(canTargetOtherCustomers ? string.Empty : "d-none")">
+                            <label for="flightCustomer" class="form-label">Customer Username</label>
+                            <input type="text" class="form-control" id="flightCustomer" name="targetCustomerUsername" placeholder="customer.username" />
+                        </div>
+                    </div>
+                    <div class="mt-4 d-flex justify-content-end">
+                        <button type="submit" class="btn btn-warning">Book Flight</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="travelNotifications" class="mt-4"></div>
+</div>
+
+@section Scripts {
+    <script src="~/js/ahla-bhal-talle.js" asp-append-version="true"></script>
+}
