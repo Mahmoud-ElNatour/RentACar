@@ -1,4 +1,5 @@
 @model RentACar.Web.Models.BookingDetailsViewModel
+
 <div class="modal fade" id="bookingDetailsModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content dark-modal">
@@ -13,78 +14,97 @@
                         <dl class="row mb-0">
                             <dt class="col-sm-5">Booking ID</dt>
                             <dd class="col-sm-7">@Model.BookingId</dd>
+
                             <dt class="col-sm-5">Status</dt>
-                            <dd class="col-sm-7">@(!string.IsNullOrWhiteSpace(Model.BookingStatus) ? Model.BookingStatus : "Pending")</dd>
+                            <dd class="col-sm-7">@(!string.IsNullOrWhiteSpace(Model.BookingStatus) ? Model.BookingStatus : "-")</dd>
+
                             <dt class="col-sm-5">Start Date</dt>
                             <dd class="col-sm-7">@Model.StartDate.ToString("yyyy-MM-dd")</dd>
+
                             <dt class="col-sm-5">End Date</dt>
                             <dd class="col-sm-7">@Model.EndDate.ToString("yyyy-MM-dd")</dd>
+
                             <dt class="col-sm-5">Subtotal</dt>
-                            <dd class="col-sm-7">@(Model.Subtotal?.ToString("C") ?? "-")</dd>
+                            <dd class="col-sm-7">@((Model.Subtotal ?? 0).ToString("C"))</dd>
+
                             <dt class="col-sm-5">Total Price</dt>
-                            <dd class="col-sm-7">@Model.TotalPrice.ToString("C")</dd>
+                            <dd class="col-sm-7">@((Model.TotalPrice).ToString("C"))</dd>
                         </dl>
                     </div>
+
                     <div class="col-md-6">
                         <h6 class="text-uppercase text-secondary">Customer</h6>
                         <dl class="row mb-0">
                             <dt class="col-sm-5">Name</dt>
-                            <dd class="col-sm-7">@Model.CustomerName ?? "-"</dd>
+                            <dd class="col-sm-7">@(!string.IsNullOrWhiteSpace(Model.CustomerName) ? Model.CustomerName : "-")</dd>
+
                             <dt class="col-sm-5">Username</dt>
-                            <dd class="col-sm-7">@Model.CustomerUsername ?? "-"</dd>
+                            <dd class="col-sm-7">@(!string.IsNullOrWhiteSpace(Model.CustomerUsername) ? Model.CustomerUsername : "-")</dd>
+
                             <dt class="col-sm-5">Email</dt>
-                            <dd class="col-sm-7">@Model.CustomerEmail ?? "-"</dd>
+                            <dd class="col-sm-7">@(!string.IsNullOrWhiteSpace(Model.CustomerEmail) ? Model.CustomerEmail : "-")</dd>
+
                             <dt class="col-sm-5">Phone</dt>
-                            <dd class="col-sm-7">@Model.CustomerPhone ?? "-"</dd>
+                            <dd class="col-sm-7">@(!string.IsNullOrWhiteSpace(Model.CustomerPhone) ? Model.CustomerPhone : "-")</dd>
                         </dl>
                     </div>
+
                     <div class="col-md-6">
                         <h6 class="text-uppercase text-secondary mt-3">Car</h6>
                         <dl class="row mb-0">
                             <dt class="col-sm-5">Model</dt>
-                            <dd class="col-sm-7">@Model.CarModel ?? "-"</dd>
+                            <dd class="col-sm-7">@(!string.IsNullOrWhiteSpace(Model.CarModel) ? Model.CarModel : "-")</dd>
+
                             <dt class="col-sm-5">Plate</dt>
-                            <dd class="col-sm-7">@Model.CarPlateNumber ?? "-"</dd>
+                            <dd class="col-sm-7">@(!string.IsNullOrWhiteSpace(Model.CarPlateNumber) ? Model.CarPlateNumber : "-")</dd>
+
                             <dt class="col-sm-5">Category</dt>
-                            <dd class="col-sm-7">@Model.CarCategory ?? "-"</dd>
+                            <dd class="col-sm-7">@(!string.IsNullOrWhiteSpace(Model.CarCategory) ? Model.CarCategory : "-")</dd>
+
                             <dt class="col-sm-5">Color</dt>
-                            <dd class="col-sm-7">@Model.CarColor ?? "-"</dd>
+                            <dd class="col-sm-7">@(!string.IsNullOrWhiteSpace(Model.CarColor) ? Model.CarColor : "-")</dd>
+
                             <dt class="col-sm-5">Model Year</dt>
-                            <dd class="col-sm-7">@(Model.CarModelYear?.ToString() ?? "-")</dd>
+                            <dd class="col-sm-7">@((Model.CarModelYear?.ToString() ?? "-"))</dd>
+
                             <dt class="col-sm-5">Price / day</dt>
-                            <dd class="col-sm-7">@(Model.CarPricePerDay?.ToString("C") ?? "-")</dd>
+                            <dd class="col-sm-7">@((Model.CarPricePerDay?.ToString("C") ?? "-"))</dd>
                         </dl>
                     </div>
+
                     <div class="col-md-6">
                         <h6 class="text-uppercase text-secondary mt-3">Additional</h6>
                         <dl class="row mb-0">
                             <dt class="col-sm-5">Booked By</dt>
-                            <dd class="col-sm-7">@Model.EmployeeName ?? "-"</dd>
+                            <dd class="col-sm-7">@(!string.IsNullOrWhiteSpace(Model.EmployeeName) ? Model.EmployeeName : "-")</dd>
+
                             <dt class="col-sm-5">Payment</dt>
-                            <dd class="col-sm-7">@(Model.PaymentId.HasValue ? $"#{Model.PaymentId.Value}" : "-")</dd>
+                            <dd class="col-sm-7">@((Model.PaymentId.HasValue ? $"#{Model.PaymentId}" : "-"))</dd>
+
                             <dt class="col-sm-5">Paid Amount</dt>
-                            <dd class="col-sm-7">@(Model.PaymentAmount?.ToString("C") ?? "-")</dd>
+                            <dd class="col-sm-7">@((Model.PaymentAmount?.ToString("C") ?? "-"))</dd>
+
                             <dt class="col-sm-5">Promocode</dt>
-                            <dd class="col-sm-7">@Model.PromocodeName ?? "-"</dd>
+                            <dd class="col-sm-7">@(!string.IsNullOrWhiteSpace(Model.PromocodeName) ? Model.PromocodeName : "-")</dd>
+
                             <dt class="col-sm-5">Discount</dt>
-                            <dd class="col-sm-7">@(Model.PromocodeDiscount.HasValue ? $"{Model.PromocodeDiscount.Value}%" : "-")</dd>
+                            <dd class="col-sm-7">@((Model.PromocodeDiscount.HasValue ? $"{Model.PromocodeDiscount.Value}%" : "-"))</dd>
                         </dl>
                     </div>
                 </div>
             </div>
+
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
 </div>
+
 <script>
     (function () {
         const modalElement = document.getElementById('bookingDetailsModal');
-        modalElement.addEventListener('hidden.bs.modal', () => {
-            modalElement.remove();
-        }, { once: true });
-        const modal = new bootstrap.Modal(modalElement);
-        modal.show();
+        modalElement.addEventListener('hidden.bs.modal', () => modalElement.remove(), { once: true });
+        new bootstrap.Modal(modalElement).show();
     })();
 </script>

@@ -105,20 +105,17 @@ namespace RentACar.Web.Controllers
             {
                 return NotFound();
             }
-
-            var customerTask = _customerManager.GetCustomerById(booking.CustomerId);
-            var carTask = _carManager.GetCarByIdAsync(booking.CarId);
-            var employeeTask = booking.EmployeebookerId.HasValue
-                ? _employeeManager.GetEmployeeById(booking.EmployeebookerId.Value)
-                : Task.FromResult<EmployeeDto?>(null);
-            var paymentTask = booking.PaymentId.HasValue
-                ? _paymentManager.GetPaymentByIdAsync(booking.PaymentId.Value)
-                : Task.FromResult<PaymentDto?>(null);
-            var promoTask = booking.PromocodeId.HasValue
-                ? _promocodeManager.GetPromocodeByIdAsync(booking.PromocodeId.Value)
-                : Task.FromResult<PromocodeDto?>(null);
-
-            await Task.WhenAll(customerTask, carTask, employeeTask, paymentTask, promoTask);
+            var customer = await _customerManager.GetCustomerById(booking.CustomerId);
+            var car = await _carManager.GetCarByIdAsync(booking.CarId);
+            var employee = booking.EmployeebookerId.HasValue
+                ? await _employeeManager.GetEmployeeById(booking.EmployeebookerId.Value)
+                : null;
+            var payment = booking.PaymentId.HasValue
+                ? await _paymentManager.GetPaymentByIdAsync(booking.PaymentId.Value)
+                : null;
+            var promo = booking.PromocodeId.HasValue
+                ? await _promocodeManager.GetPromocodeByIdAsync(booking.PromocodeId.Value)
+                : null;
 
             var viewModel = new BookingDetailsViewModel
             {
@@ -128,24 +125,25 @@ namespace RentACar.Web.Controllers
                 EndDate = booking.Enddate,
                 TotalPrice = booking.TotalPrice,
                 Subtotal = booking.Subtotal,
-                CustomerName = customerTask.Result?.Name,
-                CustomerUsername = customerTask.Result?.username,
-                CustomerEmail = customerTask.Result?.Email,
-                CustomerPhone = customerTask.Result?.PhoneNumber,
-                EmployeeName = employeeTask.Result?.Name,
-                CarModel = carTask.Result?.ModelName,
-                CarPlateNumber = carTask.Result?.PlateNumber,
-                CarCategory = carTask.Result?.CategoryName,
-                CarColor = carTask.Result?.Color,
-                CarModelYear = carTask.Result?.ModelYear,
-                CarPricePerDay = carTask.Result?.PricePerDay,
+                CustomerName = customer?.Name,
+                CustomerUsername = customer?.username,
+                CustomerEmail = customer?.Email,
+                CustomerPhone = customer?.PhoneNumber,
+                EmployeeName = employee?.Name,
+                CarModel = car?.ModelName,
+                CarPlateNumber = car?.PlateNumber,
+                CarCategory = car?.CategoryName,
+                CarColor = car?.Color,
+                CarModelYear = car?.ModelYear,
+                CarPricePerDay = car?.PricePerDay,
                 PaymentId = booking.PaymentId,
-                PaymentAmount = paymentTask.Result?.Amount,
-                PromocodeName = promoTask.Result?.Name,
-                PromocodeDiscount = promoTask.Result?.DiscountPercentage
+                PaymentAmount = payment?.Amount,
+                PromocodeName = promo?.Name,
+                PromocodeDiscount = promo?.DiscountPercentage
             };
 
             return PartialView("~/Views/ControlPanel/Booking/_BookingDetailsPartial.cshtml", viewModel);
+
         }
 
         [HttpGet]
