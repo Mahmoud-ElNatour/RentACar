@@ -9,6 +9,7 @@ using RentACar.Infrastructure.Repositories;
 using AutoMapper;
 using RentACar.Infrastructure.Data.Repositories;
 using RentACar.Application.Managers;
+using RentACar.Application.Options;
 using Serilog;
 using QuestPDF.Infrastructure;
 
@@ -53,6 +54,7 @@ builder.Services.AddRazorPages();
 builder.Services.AddControllersWithViews();
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddHttpContextAccessor();
+builder.Services.Configure<StripeOptions>(builder.Configuration.GetSection("Stripe"));
 
 // ✅ Register repositories
 builder.Services.AddScoped<IBookingRepository, BookingRepository>();
@@ -78,6 +80,7 @@ builder.Services.AddScoped<CreditCardManager>();
 builder.Services.AddScoped<PaymentMethodManager>();
 builder.Services.AddScoped<BookingManager>();
 builder.Services.AddScoped<PaymentManager>();
+builder.Services.AddScoped<StripePaymentManager>();
 
 // ✅ HTTPS redirection
 builder.Services.AddHttpsRedirection(options =>
