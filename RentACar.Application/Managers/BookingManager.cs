@@ -20,6 +20,7 @@ namespace RentACar.Application.Managers
         private readonly ICarRepository _carRepository;
         private readonly IPromocodeRepository _promocodeRepository;
         private readonly IPaymentRepository _paymentRepository;
+        private readonly IPaymentMethodRepository _paymentMethodRepository;
         private readonly StripePaymentManager _stripePaymentManager;
         private readonly IMapper _mapper;
         private readonly ILogger<BookingManager> _logger;
@@ -32,6 +33,7 @@ namespace RentACar.Application.Managers
             ICarRepository carRepository,
             IPromocodeRepository promocodeRepository,
             IPaymentRepository paymentRepository,
+            IPaymentMethodRepository paymentMethodRepository,
             StripePaymentManager stripePaymentManager,
             IMapper mapper,
             UserManager<IdentityUser> userManager,
@@ -44,6 +46,7 @@ namespace RentACar.Application.Managers
             _userManager = userManager;
             _promocodeRepository = promocodeRepository;
             _paymentRepository = paymentRepository;
+            _paymentMethodRepository = paymentMethodRepository;
             _stripePaymentManager = stripePaymentManager;
             _mapper = mapper;
             _logger = logger;
@@ -106,6 +109,13 @@ namespace RentACar.Application.Managers
                 return null;
             }
 
+            var paymentMethod = await _paymentMethodRepository.GetByIdAsync(requestDto.PaymentMethodId);
+            if (paymentMethod == null)
+            {
+                _logger.LogWarning("Booking failed: Payment method {PaymentMethodId} not found.", requestDto.PaymentMethodId);
+                return null;
+            }
+
             var existingBookings = await _bookingRepository.GetBookingsByCarIdAsync(requestDto.CarId);
             var conflictingBookings = existingBookings
                 .Where(b => IsBlockingStatus(b.BookingStatus)
@@ -137,8 +147,9 @@ namespace RentACar.Application.Managers
             }
 
             // 🔹 Calculate price
-            decimal subtotal = CalculateTotalPrice(requestDto.CarId, requestDto.Startdate, requestDto.Enddate);
-            decimal totalPrice = promocode != null ? ApplyPromocode(subtotal, promocode) : subtotal;
+            decimal subtotal = CalculateTotalPrice(car, requestDto.Startdate, requestDto.Enddate);
+            decimal promoAdjustedTotal = promocode != null ? ApplyPromocode(subtotal, promocode) : subtotal;
+            decimal totalPrice = ApplyPaymentMethodCharge(promoAdjustedTotal, paymentMethod.PaymentMethodName);
 
             // 🔹 Set employee booker if employee or admin
             int? employeeBookerIntId = null;
@@ -216,10 +227,33 @@ namespace RentACar.Application.Managers
         }
 
 
-        private decimal CalculateTotalPrice(int carId, DateOnly startDate, DateOnly endDate)
+        private decimal CalculateTotalPrice(Car car, DateOnly startDate, DateOnly endDate)
         {
+            if (!car.PricePerDay.HasValue)
+            {
+                _logger.LogWarning("Car {CarId} has no price per day configured.", car.CarId);
+                return 0m;
+            }
+
             TimeSpan duration = endDate.ToDateTime(TimeOnly.MinValue) - startDate.ToDateTime(TimeOnly.MinValue);
-            return 50 * (decimal)duration.Days;
+            var days = Math.Max(1, duration.Days);
+            return car.PricePerDay.Value * days;
+        }
+
+        private decimal ApplyPaymentMethodCharge(decimal amount, string paymentMethodName)
+        {
+            if (amount <= 0)
+            {
+                return amount;
+            }
+
+            if (paymentMethodName.Equals("cash", StringComparison.OrdinalIgnoreCase))
+            {
+                return Math.Round(amount * 0.30m, 2, MidpointRounding.AwayFromZero);
+            }
+
+            // Credit card or other methods pay the full amount.
+            return amount;
         }
 
         private decimal ApplyPromocode(decimal price, Promocode promocode)
