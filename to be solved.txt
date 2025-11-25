@@ -23,8 +23,21 @@ Notes:
 - for deleting we choose to don't delete if it has any action on system, instead we set it inactive
 --> add attr to all needed tables (category,  promocode, paymentmethod).
 
+design errors(to be checked by ayoubi)!!!:
 
-
+RentACar.Web/Areas/Identity/Pages/Account/ResetPasswordConfirmation.cshtml
+RentACar.Web/Areas/Identity/Pages/Account/AccessDenied.cshtml
+RentACar.Web/Areas/Identity/Pages/Account/ConfirmEmail.cshtml
+RentACar.Web/Areas/Identity/Pages/Account/ConfirmEmailChange.cshtml
+RentACar.Web/Areas/Identity/Pages/Account/ExternalLogin.cshtml
+RentACar.Web/Areas/Identity/Pages/Account/ForgotPasswordConfirmation.cshtml
+RentACar.Web/Areas/Identity/Pages/Account/Lockout.cshtml
+RentACar.Web/Areas/Identity/Pages/Account/LoginWith2fa.cshtml
+RentACar.Web/Areas/Identity/Pages/Account/LoginWithRecoveryCode.cshtml
+RentACar.Web/Areas/Identity/Pages/Account/Logout.cshtml
+RentACar.Web/Areas/Identity/Pages/Account/ResetPasswordConfirmation.cshtml
+RentACar.Web/Areas/Identity/Pages/Account/ResetPassword.cshtml
+RentACar.Web/Areas/Identity/Pages/Account/ResendEmailConfirmation.cshtml
 
 
 Later on:
