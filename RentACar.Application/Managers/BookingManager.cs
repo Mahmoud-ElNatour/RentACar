@@ -71,9 +71,14 @@ namespace RentACar.Application.Managers
             {
                 var customerEntity = (await _customerRepository.GetAllAsync())
                     .FirstOrDefault(c => c.aspNetUserId == loggedInUserId);
-                _logger.LogInformation("Customer is booking with customer id if this print them custome ris null");
-                _logger.LogInformation("Customer is booking with customer id", customerEntity.UserId);
-                _logger.LogInformation("Customer", customerEntity);
+                if (customerEntity != null)
+                {
+                    _logger.LogInformation("Customer booking with customer id {CustomerId}", customerEntity.UserId);
+                }
+                else
+                {
+                    _logger.LogInformation("Customer record not found for user {UserId}", loggedInUserId);
+                }
                 if (customerEntity == null)
                 {
                     _logger.LogWarning("Booking failed: No customer found for user {UserId}", loggedInUserId);
@@ -95,9 +100,9 @@ namespace RentACar.Application.Managers
 
             // 🔹 Validate car
             var car = await _carRepository.GetByIdAsync(requestDto.CarId);
-            if (car == null || !car.IsAvailable)
+            if (car == null)
             {
-                _logger.LogWarning("Booking failed: Car not found or unavailable.");
+                _logger.LogWarning("Booking failed: Car not found.");
                 return null;
             }
 
