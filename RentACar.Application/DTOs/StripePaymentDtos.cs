@@ -7,9 +7,8 @@ namespace RentACar.Application.DTOs
         [Required]
         public int BookingId { get; set; }
 
-        [Required]
         [StringLength(10, MinimumLength = 3)]
-        public string Currency { get; set; } = "usd";
+        public string? Currency { get; set; } = "usd";
 
         [EmailAddress]
         public string? ReceiptEmail { get; set; }

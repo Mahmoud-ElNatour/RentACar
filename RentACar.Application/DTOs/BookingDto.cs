@@ -33,12 +33,19 @@ namespace RentACar.Application.DTOs
         [StringLength(50)]
         public string BookingStatus { get; set; } = "pending";
 
-        [Required]
         public int? PaymentId { get; set; }
 
 
         [Range(0.01, double.MaxValue, ErrorMessage = "Subtotal must be greater than 0.")]
         public decimal? Subtotal { get; set; }
+
+        public string? StripePaymentIntentId { get; set; }
+
+        public string? StripeClientSecret { get; set; }
+
+        public long? StripeAmount { get; set; }
+
+        public string? StripeCurrency { get; set; }
     }
 
     public class MakeBookingRequestDto
@@ -62,6 +69,10 @@ namespace RentACar.Application.DTOs
         public string? Promocode { get; set; } // To apply promocode by string
         public int PaymentMethodId { get; set; } // "Cash" or "CreditCard"
         public int? CreditcardId { get; set; } // If paying by credit card
+
+        public string? Currency { get; set; }
+
+        public string? ReceiptEmail { get; set; }
     }
 
     public class DeleteBookingRequestDto

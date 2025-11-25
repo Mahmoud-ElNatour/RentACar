@@ -19,9 +19,8 @@ namespace RentACar.Application.Managers
         private readonly IEmployeeRepository _employeeRepository;
         private readonly ICarRepository _carRepository;
         private readonly IPromocodeRepository _promocodeRepository;
-        private readonly IPaymentMethodRepository _paymentMethodRepository;
-        private readonly PaymentManager _paymentManager;
         private readonly IPaymentRepository _paymentRepository;
+        private readonly StripePaymentManager _stripePaymentManager;
         private readonly IMapper _mapper;
         private readonly ILogger<BookingManager> _logger;
         private readonly UserManager<IdentityUser> _userManager;
@@ -32,9 +31,8 @@ namespace RentACar.Application.Managers
             ICustomerRepository customerRepository,
             ICarRepository carRepository,
             IPromocodeRepository promocodeRepository,
-            IPaymentMethodRepository paymentMethodRepository,
             IPaymentRepository paymentRepository,
-            PaymentManager paymentManager,
+            StripePaymentManager stripePaymentManager,
             IMapper mapper,
             UserManager<IdentityUser> userManager,
             ILogger<BookingManager> logger)
@@ -45,9 +43,8 @@ namespace RentACar.Application.Managers
             _carRepository = carRepository;
             _userManager = userManager;
             _promocodeRepository = promocodeRepository;
-            _paymentMethodRepository = paymentMethodRepository;
             _paymentRepository = paymentRepository;
-            _paymentManager = paymentManager;
+            _stripePaymentManager = stripePaymentManager;
             _mapper = mapper;
             _logger = logger;
         }
@@ -138,14 +135,6 @@ namespace RentACar.Application.Managers
             decimal subtotal = CalculateTotalPrice(requestDto.CarId, requestDto.Startdate, requestDto.Enddate);
             decimal totalPrice = promocode != null ? ApplyPromocode(subtotal, promocode) : subtotal;
 
-            // 🔹 Validate payment method
-            var paymentMethod = await _paymentMethodRepository.GetByIdAsync(requestDto.PaymentMethodId);
-            if (paymentMethod == null)
-            {
-                _logger.LogWarning("Booking failed: Payment method not found.");
-                return null;
-            }
-
             // 🔹 Set employee booker if employee or admin
             int? employeeBookerIntId = null;
             bool isBookedByEmployee = isAdmin || isEmployee;
@@ -173,33 +162,35 @@ namespace RentACar.Application.Managers
                 Subtotal = subtotal,
                 IsBookedByEmployee = isBookedByEmployee,
                 EmployeebookerId = isBookedByEmployee ? employeeBookerIntId : null,
-                PaymentId = 0
+                PaymentId = null
             };
 
             // Save booking first to generate BookingId
             var addedBooking = await _bookingRepository.AddAsync(booking);
 
-            // 🔹 Create payment linked to the newly created booking
-            var payment = new Payment
+            // 🔹 Create Stripe payment intent so the client can complete payment on Stripe
+            var paymentIntent = await _stripePaymentManager.CreatePaymentIntentForBookingAsync(new StripePaymentIntentRequestDto
             {
                 BookingId = addedBooking.BookingId,
-                Amount = totalPrice,
-                PaymentDate = DateOnly.FromDateTime(DateTime.UtcNow),
-                PaymentMethod = paymentMethod.PaymentMethodName,
-                Status = "done",
-                CreditcardId = paymentMethod.PaymentMethodName.Equals("creditcard", StringComparison.OrdinalIgnoreCase)
-                    ? requestDto.CreditcardId
-                    : null
-            };
+                Currency = string.IsNullOrWhiteSpace(requestDto.Currency) ? null : requestDto.Currency,
+                ReceiptEmail = string.IsNullOrWhiteSpace(requestDto.ReceiptEmail) ? user.Email : requestDto.ReceiptEmail
+            });
 
-            var addedPayment = await _paymentRepository.AddAsync(payment);
-
-            // Link payment back to booking
-            addedBooking.PaymentId = addedPayment.PaymentId;
-            await _bookingRepository.UpdateAsync(addedBooking);
+            if (paymentIntent == null)
+            {
+                _logger.LogWarning("Rolling back booking {BookingId} because Stripe payment intent could not be created.", addedBooking.BookingId);
+                await _bookingRepository.DeleteAsync(addedBooking);
+                return null;
+            }
 
             _logger.LogInformation("✅ Booking created with ID: {BookingId}", addedBooking.BookingId);
-            return _mapper.Map<BookingDto>(addedBooking);
+            var bookingDto = _mapper.Map<BookingDto>(addedBooking);
+            bookingDto.StripePaymentIntentId = paymentIntent.PaymentIntentId;
+            bookingDto.StripeClientSecret = paymentIntent.ClientSecret;
+            bookingDto.StripeAmount = paymentIntent.Amount;
+            bookingDto.StripeCurrency = paymentIntent.Currency;
+
+            return bookingDto;
         }
 
 
