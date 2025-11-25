@@ -1,5 +1,3 @@
-Blacklist panel and inactive users:
-- when unblacklist from blacklist panelor setactive from customer or employee panelagain in db it remains lockedout (fix) - fix design of lockedout page
 
 Reset pass and email api
 -reset pass should be random and send it by email
@@ -10,11 +8,6 @@ Customers and employees:
 - improve logic in which the DTO for the table not include the image and for change image here should load the imageDTO / same for creating customer, let it 2 pages the first took only the the other attr, and for image (document) to be desscussed if to be done from profile setting or from 2nd step signup.
 --> better to be after login from profile settings (and give note in home page "please submit doc to verfy ur acc like the whish money APP) --> NEED TO CHANGE LOGIC CREATE CUSTOMER AND DTOS
 
-
-Booking improvement:
-- booking bug (if car is unavailable in some date range ca't book it in other range)
-- when book dont use set_available false instead use other logic at booking to check the booking table if the car is booked in same date range
--bug in view booking details
 
 Payments:
 - in edit add apply promocode

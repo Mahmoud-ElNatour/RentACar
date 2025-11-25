@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
@@ -119,5 +119,29 @@ namespace RentACar.Web.Controllers
 
             return NoContent();
         }
+
+        [HttpPost("~/Payment/Checkout/{bookingId}")]
+        [ApiExplorerSettings(IgnoreApi = true)]
+        public async Task<IActionResult> CreateCheckoutSession(int bookingId)
+        {
+            try
+            {
+                // 🔹 Get booking amount from manager
+                var sessionUrl = await _paymentManager.CreateStripeCheckoutSessionAsync(bookingId);
+
+                if (string.IsNullOrEmpty(sessionUrl))
+                {
+                    return BadRequest("Unable to create Stripe session.");
+                }
+
+                return Redirect(sessionUrl);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Stripe checkout creation failed");
+                return StatusCode(500, "Stripe error");
+            }
+        }
+
     }
 }

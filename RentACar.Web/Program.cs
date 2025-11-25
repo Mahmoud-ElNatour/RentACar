@@ -9,9 +9,10 @@ using RentACar.Infrastructure.Repositories;
 using AutoMapper;
 using RentACar.Infrastructure.Data.Repositories;
 using RentACar.Application.Managers;
-using RentACar.Application.Options;
 using Serilog;
 using QuestPDF.Infrastructure;
+using RentACar.Web.Models.Stripe;
+using Stripe;
 
 var builder = WebApplication.CreateBuilder(args);
 var fromConfig = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -52,9 +53,14 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.Requ
 
 builder.Services.AddRazorPages();
 builder.Services.AddControllersWithViews();
+builder.Services.Configure<StripeSettings>(
+    builder.Configuration.GetSection("Stripe")
+);
+
+StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
+
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddHttpContextAccessor();
-builder.Services.Configure<StripeOptions>(builder.Configuration.GetSection("Stripe"));
 
 // ✅ Register repositories
 builder.Services.AddScoped<IBookingRepository, BookingRepository>();

@@ -2,7 +2,7 @@ using System.Globalization;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RentACar.Application.DTOs;
-using RentACar.Application.Options;
+using RentACar.Application.Settings;
 using RentACar.Core.Repositories;
 using Stripe;
 
@@ -13,11 +13,11 @@ namespace RentACar.Application.Managers
         private readonly IBookingRepository _bookingRepository;
         private readonly StripeClient? _stripeClient;
         private readonly ILogger<StripePaymentManager> _logger;
-        private readonly StripeOptions _options;
+        private readonly StripeSettings _options;
 
         public StripePaymentManager(
             IBookingRepository bookingRepository,
-            IOptions<StripeOptions> stripeOptions,
+            IOptions<StripeSettings> stripeOptions,
             ILogger<StripePaymentManager> logger)
         {
             _bookingRepository = bookingRepository;
@@ -83,7 +83,7 @@ namespace RentACar.Application.Managers
             {
                 PaymentIntentId = paymentIntent.Id,
                 ClientSecret = paymentIntent.ClientSecret,
-                Amount = paymentIntent.Amount ?? intentOptions.Amount.GetValueOrDefault(),
+                Amount = paymentIntent.Amount ,
                 Currency = paymentIntent.Currency
             };
         }

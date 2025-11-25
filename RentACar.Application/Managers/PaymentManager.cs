@@ -10,6 +10,12 @@ using RentACar.Application.DTOs;
 using RentACar.Core.Entities;
 using RentACar.Core.Repositories;
 using AspNetUserEntity = RentACar.Core.Entities.AspNetUser;
+using Microsoft.Extensions.Options;
+using RentACar.Application.Settings;
+using Stripe;
+using Stripe.Checkout;
+using PaymentMethod = Stripe.PaymentMethod;
+
 
 namespace RentACar.Application.Managers
 {
@@ -22,8 +28,10 @@ namespace RentACar.Application.Managers
         private readonly UserManager<IdentityUser> _userManager;
         private readonly IMapper _mapper;
         private readonly ILogger<PaymentManager> _logger;
+        private readonly StripeSettings _stripeSettings;
 
         public PaymentManager(
+            IOptions<StripeSettings> stripeOptions,
             IPaymentRepository paymentRepository,
             IBookingRepository bookingRepository,
             ICreditCardRepository creditCardRepository,
@@ -32,6 +40,7 @@ namespace RentACar.Application.Managers
             IMapper mapper,
             ILogger<PaymentManager> logger)
         {
+            _stripeSettings = stripeOptions.Value;
             _paymentRepository = paymentRepository;
             _bookingRepository = bookingRepository;
             _creditCardRepository = creditCardRepository;
@@ -431,7 +440,57 @@ namespace RentACar.Application.Managers
             }
         }
 
-      
+        public async Task<string?> CreateStripeCheckoutSessionAsync(int bookingId)
+        {
+            // 1) Get booking with details (adapt method name to your repo)
+            var booking = await _bookingRepository.GetBookingByIdAsync(bookingId);
+            if (booking == null)
+            {
+                return null; // booking not found
+            }
+
+            // Example: adapt these property names to your entity
+            // decimal amount = booking.TotalAmount;
+            // string carName = booking.Car?.CarName ?? "Car Rental";
+
+            decimal amount = booking.TotalPrice;                      // e.g. 150.75m
+            string carName = $"Booking #{booking.BookingId}";          // or include car model
+
+            // 2) Ensure Stripe API key is set
+            StripeConfiguration.ApiKey = _stripeSettings.SecretKey;
+
+            // 3) Create checkout session options
+            var options = new SessionCreateOptions
+            {
+                Mode = "payment",
+                SuccessUrl = _stripeSettings.SuccessUrl + $"?bookingId={bookingId}",
+                CancelUrl = _stripeSettings.CancelUrl + $"?bookingId={bookingId}",
+                LineItems = new List<SessionLineItemOptions>
+        {
+            new SessionLineItemOptions
+            {
+                Quantity = 1,
+                PriceData = new SessionLineItemPriceDataOptions
+                {
+                    Currency = _stripeSettings.Currency,
+                    UnitAmount = (long)(amount * 100), // Stripe uses cents
+                    ProductData = new SessionLineItemPriceDataProductDataOptions
+                    {
+                        Name = carName,
+                        Description = $"Online payment for booking #{booking.BookingId}"
+                    }
+                }
+            }
+        }
+            };
+
+            // 4) Call Stripe
+            var service = new SessionService();
+            var session = await service.CreateAsync(options);
+
+            // 5) Return URL so controller can Redirect()
+            return session.Url;
+        }
 
     }
 
