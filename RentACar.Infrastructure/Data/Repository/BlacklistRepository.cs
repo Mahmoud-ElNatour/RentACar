@@ -1,6 +1,5 @@
 ﻿using RentACar.Core.Entities;
 using RentACar.Core.Repositories;
-using RentACar.Infrastructure.Data.Repository.Base;
 using System;
 using System.Collections.Generic;
 using System.Linq;

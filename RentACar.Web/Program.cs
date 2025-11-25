@@ -13,6 +13,12 @@ using Serilog;
 using QuestPDF.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
+var fromConfig = builder.Configuration.GetConnectionString("DefaultConnection");
+var fromEnv = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection");
+Console.WriteLine($"[DEBUG] From config: '{fromConfig}'");
+Console.WriteLine($"[DEBUG] From env   : '{fromEnv}'");
+
+
 
 // ✅ Set QuestPDF license
 QuestPDF.Settings.License = LicenseType.Community;
@@ -25,8 +31,11 @@ Log.Logger = new LoggerConfiguration()
 builder.Host.UseSerilog();
 
 // ✅ Add services to the container
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+var connectionString = fromConfig ?? fromEnv;
+if(string.IsNullOrWhiteSpace(connectionString))
+{
+    throw new InvalidOperationException("Connection string 'DefaultConnection' not found in config or environment.");
+}
 
 builder.Services.AddDbContext<RentACarDbContext>(options =>
     options.UseSqlServer(connectionString));

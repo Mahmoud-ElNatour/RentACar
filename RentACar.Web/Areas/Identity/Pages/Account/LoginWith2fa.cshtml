@@ -1,39 +1,65 @@
-﻿@page
+@page
 @model LoginWith2faModel
 @{
-    ViewData["Title"] = "Two-factor authentication";
+    ViewData["Title"] = "Two-Factor Authentication";
+    Layout = null;
 }
 
-<h1>@ViewData["Title"]</h1>
-<hr />
-<p>Your login is protected with an authenticator app. Enter your authenticator code below.</p>
-<div class="row">
-    <div class="col-md-4">
-        <form method="post" asp-route-returnUrl="@Model.ReturnUrl">
-            <input asp-for="RememberMe" type="hidden" />
-            <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
-            <div class="form-floating mb-3">
-                <input asp-for="Input.TwoFactorCode" class="form-control" autocomplete="off" />
-                <label asp-for="Input.TwoFactorCode" class="form-label"></label>
-                <span asp-validation-for="Input.TwoFactorCode" class="text-danger"></span>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - CarRental</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/login-style.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
+</head>
+<body>
+    @await Html.PartialAsync("_PopupNotifications")
+    <div class="container1">
+        <div class="login-container">
+            <div class="logo-text">
+                <i class="fas fa-car-side"></i>
+                <div>CarRental</div>
             </div>
-            <div class="checkbox mb-3">
-                <label asp-for="Input.RememberMachine" class="form-label">
-                    <input asp-for="Input.RememberMachine" />
-                    @Html.DisplayNameFor(m => m.Input.RememberMachine)
-                </label>
+
+            <h2>Enter Authentication Code</h2>
+            <p style="color: var(--text-secondary); text-align: center;">Your login is protected with an authenticator app.</p>
+
+            <form method="post" asp-route-returnUrl="@Model.ReturnUrl" autocomplete="off">
+                <input asp-for="RememberMe" type="hidden" />
+                <div asp-validation-summary="ModelOnly" class="validation-summary-errors text-danger" role="alert"></div>
+
+                <div class="input mb-3">
+                    <input asp-for="Input.TwoFactorCode" class="form-control" autocomplete="one-time-code" placeholder="Authenticator code" aria-required="true" />
+                    <span asp-validation-for="Input.TwoFactorCode" class="text-danger"></span>
+                </div>
+
+                <div class="remember-me mb-3">
+                    <label asp-for="Input.RememberMachine" class="form-label d-flex align-items-center gap-2">
+                        <input asp-for="Input.RememberMachine" />
+                        @Html.DisplayNameFor(m => m.Input.RememberMachine)
+                    </label>
+                </div>
+
+                <button type="submit" class="login-btn w-100">Verify</button>
+            </form>
+
+            <hr class="my-4" />
+
+            <div class="signup-prompt text-center">
+                <span>Can't access your app?</span>
+                <a class="traverse" id="recovery-code-login" asp-page="./LoginWithRecoveryCode" asp-route-returnUrl="@Model.ReturnUrl">Use a recovery code</a>
             </div>
-            <div>
-                <button type="submit" class="w-100 btn btn-lg btn-primary">Log in</button>
-            </div>
-        </form>
+        </div>
     </div>
-</div>
-<p>
-    Don't have access to your authenticator device? You can
-    <a id="recovery-code-login" asp-page="./LoginWithRecoveryCode" asp-route-returnUrl="@Model.ReturnUrl">log in with a recovery code</a>.
-</p>
 
-@section Scripts {
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
     <partial name="_ValidationScriptsPartial" />
-}
+</body>
+</html>

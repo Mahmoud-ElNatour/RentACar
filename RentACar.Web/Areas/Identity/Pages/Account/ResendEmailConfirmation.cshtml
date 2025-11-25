@@ -1,26 +1,59 @@
-﻿@page
+@page
 @model ResendEmailConfirmationModel
 @{
-    ViewData["Title"] = "Resend email confirmation";
+    ViewData["Title"] = "Resend Email Confirmation";
+    Layout = null;
 }
 
-<h1>@ViewData["Title"]</h1>
-<h2>Enter your email.</h2>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form method="post">
-            <div asp-validation-summary="All" class="text-danger" role="alert"></div>
-            <div class="form-floating mb-3">
-                <input asp-for="Input.Email" class="form-control" aria-required="true" placeholder="name@example.com" />
-                <label asp-for="Input.Email" class="form-label"></label>
-                <span asp-validation-for="Input.Email" class="text-danger"></span>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - CarRental</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/login-style.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
+</head>
+<body>
+    @await Html.PartialAsync("_PopupNotifications")
+    <div class="container1">
+        <div class="login-container">
+            <div class="logo-text">
+                <i class="fas fa-car-side"></i>
+                <div>CarRental</div>
             </div>
-            <button type="submit" class="w-100 btn btn-lg btn-primary">Resend</button>
-        </form>
-    </div>
-</div>
 
-@section Scripts {
+            <h2>Resend Confirmation</h2>
+            <p style="color: var(--text-secondary); text-align: center;">
+                Enter your email address and we will send you a new confirmation link.
+            </p>
+
+            <form method="post" autocomplete="off">
+                <div asp-validation-summary="All" class="validation-summary-errors text-danger" role="alert"></div>
+
+                <div class="input mb-3">
+                    <input asp-for="Input.Email" class="form-control" placeholder="Email" aria-required="true" />
+                    <span asp-validation-for="Input.Email" class="text-danger"></span>
+                </div>
+
+                <button type="submit" class="login-btn w-100">Resend Link</button>
+
+                <hr class="my-4" />
+
+                <div class="signup-prompt text-center">
+                    <span>Already confirmed?</span>
+                    <a class="traverse" asp-page="./Login">Back to Login</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
     <partial name="_ValidationScriptsPartial" />
-}
+</body>
+</html>
