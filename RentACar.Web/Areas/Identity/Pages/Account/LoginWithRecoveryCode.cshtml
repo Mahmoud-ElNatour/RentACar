@@ -1,29 +1,59 @@
-﻿@page
+@page
 @model LoginWithRecoveryCodeModel
 @{
-    ViewData["Title"] = "Recovery code verification";
+    ViewData["Title"] = "Recovery Code Verification";
+    Layout = null;
 }
 
-<h1>@ViewData["Title"]</h1>
-<hr />
-<p>
-    You have requested to log in with a recovery code. This login will not be remembered until you provide
-    an authenticator app code at log in or disable 2FA and log in again.
-</p>
-<div class="row">
-    <div class="col-md-4">
-        <form method="post">
-            <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
-            <div class="form-floating mb-3">
-                <input asp-for="Input.RecoveryCode" class="form-control" autocomplete="off" placeholder="RecoveryCode" />
-                <label asp-for="Input.RecoveryCode" class="form-label"></label>
-                <span asp-validation-for="Input.RecoveryCode" class="text-danger"></span>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - CarRental</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/login-style.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
+</head>
+<body>
+    @await Html.PartialAsync("_PopupNotifications")
+    <div class="container1">
+        <div class="login-container">
+            <div class="logo-text">
+                <i class="fas fa-car-side"></i>
+                <div>CarRental</div>
             </div>
-            <button type="submit" class="w-100 btn btn-lg btn-primary">Log in</button>
-        </form>
-    </div>
-</div>
 
-@section Scripts {
+            <h2>Use a Recovery Code</h2>
+            <p style="color: var(--text-secondary); text-align: center;">
+                Enter one of your saved recovery codes to continue signing in.
+            </p>
+
+            <form method="post" autocomplete="off">
+                <div asp-validation-summary="ModelOnly" class="validation-summary-errors text-danger" role="alert"></div>
+
+                <div class="input mb-3">
+                    <input asp-for="Input.RecoveryCode" class="form-control" autocomplete="one-time-code" placeholder="Recovery code" aria-required="true" />
+                    <span asp-validation-for="Input.RecoveryCode" class="text-danger"></span>
+                </div>
+
+                <button type="submit" class="login-btn w-100">Continue</button>
+            </form>
+
+            <hr class="my-4" />
+
+            <div class="signup-prompt text-center">
+                <span>Found your authenticator?</span>
+                <a class="traverse" asp-page="./LoginWith2fa" asp-route-returnUrl="@Model.ReturnUrl" asp-route-rememberMe="@Model.RememberMe">Return to authenticator login</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
     <partial name="_ValidationScriptsPartial" />
-}
+</body>
+</html>
