@@ -104,6 +104,24 @@ namespace RentACar.Application.Managers
                 return null;
             }
 
+            var existingBookings = await _bookingRepository.GetBookingsByCarIdAsync(requestDto.CarId);
+            var conflictingBookings = existingBookings
+                .Where(b => IsBlockingStatus(b.BookingStatus)
+                            && DatesOverlap(b.Startdate, b.Enddate, requestDto.Startdate, requestDto.Enddate))
+                .ToList();
+
+            if (conflictingBookings.Any())
+            {
+                var firstConflict = conflictingBookings.OrderBy(b => b.Startdate).First();
+                _logger.LogWarning(
+                    "Booking failed: Car {CarId} has {ConflictCount} conflicting bookings. First conflict between {ExistingStart} and {ExistingEnd}",
+                    requestDto.CarId,
+                    conflictingBookings.Count,
+                    firstConflict.Startdate,
+                    firstConflict.Enddate);
+                return null;
+            }
+
             // 🔹 Validate promocode
             Promocode? promocode = null;
             if (!string.IsNullOrEmpty(requestDto.Promocode))
@@ -180,9 +198,25 @@ namespace RentACar.Application.Managers
             addedBooking.PaymentId = addedPayment.PaymentId;
             await _bookingRepository.UpdateAsync(addedBooking);
 
-            await _carRepository.SetCarAvailabilityAsync(booking.CarId, false);
             _logger.LogInformation("✅ Booking created with ID: {BookingId}", addedBooking.BookingId);
             return _mapper.Map<BookingDto>(addedBooking);
+        }
+
+
+        private static bool DatesOverlap(DateOnly existingStart, DateOnly existingEnd, DateOnly newStart, DateOnly newEnd)
+        {
+            return existingStart <= newEnd && existingEnd >= newStart;
+        }
+
+        private static bool IsBlockingStatus(string? status)
+        {
+            if (string.IsNullOrWhiteSpace(status))
+            {
+                return true;
+            }
+
+            return !status.Equals("cancelled", StringComparison.OrdinalIgnoreCase)
+                && !status.Equals("rejected", StringComparison.OrdinalIgnoreCase);
         }
 
 
@@ -260,9 +294,6 @@ namespace RentACar.Application.Managers
 
             // ✅ Then delete the booking
             await _bookingRepository.DeleteAsync(booking);
-
-            // ✅ Update car availability
-            await _carRepository.SetCarAvailabilityAsync(booking.CarId, true);
 
             return true;
         }
