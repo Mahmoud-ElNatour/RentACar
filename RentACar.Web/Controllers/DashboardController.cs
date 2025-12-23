@@ -171,17 +171,56 @@ namespace RentACar.Web.Controllers
                 .ToList();
             var months = Enumerable.Range(1, 12).Select(m => monthCounts.FirstOrDefault(x => x.Month == m)?.Count ?? 0).ToList();
 
-            var unverifiedCustomers = await _dbContext.Customers.CountAsync(c => !c.IsVerified);
-            var waitingBookings = await _dbContext.Bookings.CountAsync(b => b.BookingStatus == "Pending");
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            var activeBookingsSystemWide = await _dbContext.Bookings.CountAsync(b => b.Enddate >= today && b.Startdate <= today);
+            var unverifiedCustomersCount = await _dbContext.Customers.CountAsync(c => !c.IsVerified);
+            var waitingBookingsCount = await _dbContext.Bookings.CountAsync(b => b.BookingStatus == "Pending");
+
+            // Fetch Recent Pending Bookings
+            var recentPending = await _dbContext.Bookings
+                .Include(b => b.Customer)
+                .Include(b => b.Car)
+                .Where(b => b.BookingStatus == "Pending")
+                .OrderByDescending(b => b.BookingId)
+                .Take(5)
+                .Select(b => new EmployeeDashboardBookingDto
+                {
+                    BookingId = b.BookingId,
+                    CustomerName = b.Customer != null ? b.Customer.Name : "Unknown",
+                    CustomerImage = $"https://ui-avatars.com/api/?name={(b.Customer != null ? b.Customer.Name : "User")}&background=random", // Placeholder
+                    CarModel = b.Car != null ? b.Car.ModelName : "Unknown Car",
+                    DateRange = $"{b.Startdate:MMM dd} - {b.Enddate:MMM dd}",
+                    Status = "Pending Review",
+                    StatusColorClass = "bg-yellow-500/10 text-yellow-500"
+                })
+                .ToListAsync();
+
+            // Fetch Unverified Customers
+            var unverifiedList = await _dbContext.Customers
+                .Where(c => !c.IsVerified)
+                .Take(5)
+                .Select(c => new EmployeeDashboardCustomerDto
+                {
+                    CustomerId = c.UserId,
+                    Name = c.Name,
+                    ImageUrl = $"https://ui-avatars.com/api/?name={c.Name}&background=random",
+                    IssueText = "ID Missing", // Logic could be more complex based on actual missing fields
+                    IssueColorClass = "text-red-400",
+                    IssueIcon = "id_card"
+                })
+                .ToListAsync();
 
             var model = new EmployeeDashboardViewModel
             {
                 ProcessedBookings = bookings.Count,
                 TotalCars = (await _carManager.BrowseAllCarsAsync()).Count,
                 AvailableCars = (await _carManager.SearchCarsByFilterAsync(isAvailable: true)).Count,
-                UnverifiedCustomers = unverifiedCustomers,
-                WaitingBookings = waitingBookings,
-                MonthlyProcessedBookings = months
+                UnverifiedCustomers = unverifiedCustomersCount,
+                WaitingBookings = waitingBookingsCount,
+                ActiveBookingsSystemWide = activeBookingsSystemWide,
+                MonthlyProcessedBookings = months,
+                RecentPendingBookings = recentPending,
+                UnverifiedCustomersList = unverifiedList
             };
             return View("~/Views/Dashboard/Employee.cshtml", model);
         }

@@ -58,6 +58,8 @@
     transform: translateX(0);
 }
 
+/* Desktop Visibility rule removed - handled locally in Employee.cshtml */
+
 .sidebar-brand {
     display: flex;
     align-items: center;

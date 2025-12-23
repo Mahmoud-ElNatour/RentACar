@@ -175,5 +175,18 @@ namespace RentACar.Web.Controllers
             await _customerManager.UpdateCustomerDocuments(id, dto);
             return NoContent();
         }
+        [HttpGet("~/Customer/Verify/{id}")]
+        public async Task<IActionResult> Verify(int id)
+        {
+            await _customerManager.UpdateVerificationStatus(id, true);
+            
+            // Return to the previous page (likely the dashboard or customer list)
+            var returnUrl = Request.Headers["Referer"].ToString();
+            if (string.IsNullOrEmpty(returnUrl))
+            {
+                return RedirectToAction("Index", "Dashboard");
+            }
+            return Redirect(returnUrl);
+        }
     }
 }

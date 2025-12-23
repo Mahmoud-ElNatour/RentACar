@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using RentACar.Application.DTOs;
 using RentACar.Application.Managers;
-using RentACar.Application.Managers;
+using AutoMapper;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using System.Collections.Generic;
@@ -27,6 +27,7 @@ namespace RentACar.Web.Controllers
         private readonly PromocodeManager _promocodeManager;
         private readonly EmployeeManager _employeeManager;
         private readonly UserManager<IdentityUser> _userManager;
+        private readonly IMapper _mapper;
         private readonly ILogger<BookingController> _logger;
 
         public BookingController(
@@ -37,6 +38,7 @@ namespace RentACar.Web.Controllers
             PromocodeManager promocodeManager,
             EmployeeManager employeeManager,
             UserManager<IdentityUser> userManager,
+            IMapper mapper,
             ILogger<BookingController> logger)
         {
             _bookingManager = bookingManager;
@@ -46,6 +48,7 @@ namespace RentACar.Web.Controllers
             _promocodeManager = promocodeManager;
             _employeeManager = employeeManager;
             _userManager = userManager;
+            _mapper = mapper;
             _logger = logger;
         }
 
@@ -94,6 +97,21 @@ namespace RentACar.Web.Controllers
                 return NotFound();
 
             return View("~/Views/ControlPanel/Booking/Delete.cshtml", booking);
+        }
+
+        [HttpGet("~/Booking/Approve/{id}")]
+        public async Task<IActionResult> Approve(int id)
+        {
+            var booking = await _bookingManager.GetBookingByIdAsync(id);
+            if (booking == null) return NotFound();
+
+            var editDto = _mapper.Map<BookingEditDto>(booking);
+            editDto.BookingStatus = "Accepted"; // Setting status to Accepted
+            
+            await _bookingManager.UpdateBookingAsync(editDto);
+
+            // Redirect to Edit page as requested ("took me the edit page of this booking")
+            return RedirectToAction("Edit", new { id = booking.BookingId }); 
         }
 
         [HttpGet("~/Booking/Details/{id}")]

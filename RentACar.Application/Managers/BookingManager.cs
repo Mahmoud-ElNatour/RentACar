@@ -346,7 +346,7 @@ namespace RentACar.Application.Managers
             CreateMap<Booking, BookingDto>().ReverseMap();
 
             CreateMap<Booking, BookingEditDto>().ReverseMap();
-
+            CreateMap<BookingDto, BookingEditDto>().ReverseMap();
         }
     }
 }

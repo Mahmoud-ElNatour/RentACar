@@ -52,19 +52,52 @@
                     </div>
                     
                     <div id="controlPanelMenu" class="sidebar-dropdown-menu">
-                        <a href="/Blacklist" class="sidebar-sublink">Blacklist</a>
-                        <a href="/Booking" class="sidebar-sublink">Bookings</a>
-                        <a href="/Car" class="sidebar-sublink">Cars</a>
-                        <a href="/Category" class="sidebar-sublink">Categories</a>
-                        <a href="/CreditCard" class="sidebar-sublink">Credit Cards</a>
-                        <a href="/Customer" class="sidebar-sublink">Customers</a>
-                        <a href="/Employee" class="sidebar-sublink">Employees</a>
-                        <a href="/Payment" class="sidebar-sublink">Financials</a>
-                        <a href="/PaymentMethod" class="sidebar-sublink">Payment Methods</a>
-                        <a href="/Promocode" class="sidebar-sublink">Promocodes</a>
+                        <a href="/Blacklist" class="sidebar-sublink">
+                            <span class="material-symbols-outlined text-[18px]">block</span>
+                            <span>Blacklist</span>
+                        </a>
+                        <a href="/Booking" class="sidebar-sublink">
+                            <span class="material-symbols-outlined text-[18px]">book_online</span>
+                            <span>Bookings</span>
+                        </a>
+                        <a href="/Car" class="sidebar-sublink">
+                            <span class="material-symbols-outlined text-[18px]">directions_car</span>
+                            <span>Cars</span>
+                        </a>
+                        <a href="/Category" class="sidebar-sublink">
+                            <span class="material-symbols-outlined text-[18px]">category</span>
+                            <span>Categories</span>
+                        </a>
+                        <a href="/CreditCard" class="sidebar-sublink">
+                            <span class="material-symbols-outlined text-[18px]">credit_card</span>
+                            <span>Credit Cards</span>
+                        </a>
+                        <a href="/Customer" class="sidebar-sublink">
+                            <span class="material-symbols-outlined text-[18px]">group</span>
+                            <span>Customers</span>
+                        </a>
+                        <a href="/Employee" class="sidebar-sublink">
+                            <span class="material-symbols-outlined text-[18px]">badge</span>
+                            <span>Employees</span>
+                        </a>
+                        <a href="/Payment" class="sidebar-sublink">
+                            <span class="material-symbols-outlined text-[18px]">payments</span>
+                            <span>Financials</span>
+                        </a>
+                        <a href="/PaymentMethod" class="sidebar-sublink">
+                            <span class="material-symbols-outlined text-[18px]">account_balance_wallet</span>
+                            <span>Payment Methods</span>
+                        </a>
+                        <a href="/Promocode" class="sidebar-sublink">
+                            <span class="material-symbols-outlined text-[18px]">local_offer</span>
+                            <span>Promocodes</span>
+                        </a>
                         @if (User.IsInRole("Admin"))
                         {
-                            <a href="/ControlPanel/ChangeRole" class="sidebar-sublink">Change Role</a>
+                            <a href="/ControlPanel/ChangeRole" class="sidebar-sublink">
+                                <span class="material-symbols-outlined text-[18px]">admin_panel_settings</span>
+                                <span>Change Role</span>
+                            </a>
                         }
                     </div>
                 </div>

@@ -118,6 +118,16 @@
             modal.show();
         }
         document.addEventListener('DOMContentLoaded', () => {
+            // Check for URL parameters to pre-fill filter
+            const urlParams = new URLSearchParams(window.location.search);
+            const filterParam = urlParams.get('filter');
+            
+            if (filterParam === 'unverified') {
+                document.querySelector('select[name="verified"]').value = 'false';
+            } else if (filterParam === 'verified') {
+                document.querySelector('select[name="verified"]').value = 'true';
+            }
+
             loadCustomers();
             document.getElementById('filterForm').addEventListener('submit', e => { e.preventDefault(); loadCustomers(); });
             document.getElementById('addCustomer').addEventListener('click', () => loadModal('/Customer/Add'));
