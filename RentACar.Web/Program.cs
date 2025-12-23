@@ -79,11 +79,11 @@ builder.Services.AddScoped<PaymentMethodManager>();
 builder.Services.AddScoped<BookingManager>();
 builder.Services.AddScoped<PaymentManager>();
 
-// ✅ HTTPS redirection
-builder.Services.AddHttpsRedirection(options =>
-{
-    options.HttpsPort = 7192;
-});
+// // ✅ HTTPS redirection
+// builder.Services.AddHttpsRedirection(options =>
+// {
+//     options.HttpsPort = 7192;
+// });
 
 var app = builder.Build();
 

@@ -317,3 +317,26 @@
         });
     });
 })();
+
+// Global Sidebar Toggle Scripts
+function toggleSidebar() {
+    const sidebar = document.getElementById('mainSidebar');
+    const backdrop = document.getElementById('sidebarBackdrop');
+    if (sidebar) sidebar.classList.toggle('open');
+    if (backdrop) backdrop.classList.toggle('show');
+}
+
+function toggleSidebarDropdown(menuId, arrowId) {
+    const menu = document.getElementById(menuId);
+    const arrow = document.getElementById(arrowId);
+    if (menu) {
+        menu.classList.toggle('show');
+        if (arrow) {
+            if (menu.classList.contains('show')) {
+                arrow.style.transform = 'rotate(180deg)';
+            } else {
+                arrow.style.transform = 'rotate(0deg)';
+            }
+        }
+    }
+}

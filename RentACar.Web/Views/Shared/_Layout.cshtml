@@ -20,14 +20,24 @@
 
     <!-- Site CSS -->
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/AdminDashboard.css" asp-append-version="true" />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&amp;display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
     @* <link rel="stylesheet" href="~/css/index-style.css" asp-append-version="true" /> *@
     @* <link rel="stylesheet" href="~/RentACar.Web.styles.css" asp-append-version="true" /> *@
 </head>
 <body class="d-flex flex-column min-vh-100">
+    @await Html.PartialAsync("_Sidebar")
     @await Html.PartialAsync("_PopupNotifications")
     <header>
         <nav class="navbar navbar-expand-lg" style="background-color: #1f1f1f; padding: 1rem;">
             <div class="container-fluid">
+                @if (SignInManager.IsSignedIn(User))
+                {
+                    <button class="btn btn-link text-warning p-0 me-3" onclick="toggleSidebar()" style="text-decoration: none;">
+                        <span class="material-symbols-outlined" style="font-size: 24px;">menu</span>
+                    </button>
+                }
                 <a class="navbar-brand text-warning fw-bold" asp-area="" asp-controller="Home" asp-action="Index">RentACar</a>
                 <button class="navbar-toggler bg-warning" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
                     <i class="fas fa-bars fs-4"></i>

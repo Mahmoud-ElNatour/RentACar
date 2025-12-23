@@ -13,11 +13,22 @@ namespace RentACar.Application.DTOs
         public int TotalCustomers { get; set; }
         public int TotalEmployees { get; set; }
         public int TotalBookings { get; set; }
+        public int ActiveBookings { get; set; }
         public decimal IncomeThisMonth { get; set; }
         public decimal IncomeThisYear { get; set; }
         public decimal ExpectedRevenue { get; set; }
         public decimal SalariesToPay { get; set; }
         public List<int> MonthlyBookings { get; set; } = new();
+        public List<RecentActivityDto> RecentActivities { get; set; } = new();
+    }
+
+    public class RecentActivityDto
+    {
+        public string Title { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public string TimeAgo { get; set; } = string.Empty; // Store formatted string directly or use DateTime and format in View
+        public string Icon { get; set; } = "notifications"; // Material icon name
+        public string IconColorClass { get; set; } = "text-primary"; // Tailwind color class
     }
 
     public class EmployeeDashboardViewModel
