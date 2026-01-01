@@ -19,6 +19,7 @@ namespace RentACar.Application.DTOs
         public decimal ExpectedRevenue { get; set; }
         public decimal SalariesToPay { get; set; }
         public List<int> MonthlyBookings { get; set; } = new();
+        public List<int> AvailableYears { get; set; } = new();
         public List<RecentActivityDto> RecentActivities { get; set; } = new();
     }
 

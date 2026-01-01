@@ -18,6 +18,8 @@ Booking improvement:
 
 Payments:
 - in edit add apply promocode
+- add search and sort
+- add download receipt for a payment
 
 Notes:
 - for deleting we choose to don't delete if it has any action on system, instead we set it inactive
@@ -43,3 +45,7 @@ RentACar.Web/Areas/Identity/Pages/Account/ResendEmailConfirmation.cshtml
 Later on:
 -request panel for canceling the booking from employee nso the admin can approve or deny
 - refunded panel
+- theme panel
+- customer reviews page for customer for each booking , and table in control panel for employees
+- reports (logs, financials,...)
+

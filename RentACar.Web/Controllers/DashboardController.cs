@@ -88,6 +88,11 @@ namespace RentACar.Web.Controllers
                 .ToListAsync();
             var monthCounts = Enumerable.Range(1, 12).Select(m => monthly.FirstOrDefault(x => x.Month == m)?.Count ?? 0).ToList();
 
+            // Calculate Available Years
+            var firstBookingDate = await _dbContext.Bookings.MinAsync(b => (DateOnly?)b.Startdate);
+            var startYear = firstBookingDate?.Year ?? now.Year;
+            var availableYears = Enumerable.Range(startYear, now.Year - startYear + 1).OrderByDescending(y => y).ToList();
+
             // Recent Activity
             var recentActivities = new List<RecentActivityDto>();
 
@@ -147,9 +152,27 @@ namespace RentACar.Web.Controllers
                 SalariesToPay = salaries,
                 ExpectedRevenue = expectedRevenue,
                 MonthlyBookings = monthCounts,
+                AvailableYears = availableYears,
                 RecentActivities = recentActivities
             };
             return View("~/Views/Dashboard/Admin.cshtml", model);
+        }
+
+        [HttpGet("GetChartData")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> GetChartData(int year)
+        {
+            var monthly = await _dbContext.Bookings
+                .Where(b => b.Startdate.Year == year)
+                .GroupBy(b => b.Startdate.Month)
+                .Select(g => new { Month = g.Key, Count = g.Count() })
+                .ToListAsync();
+            
+            var monthCounts = Enumerable.Range(1, 12)
+                .Select(m => monthly.FirstOrDefault(x => x.Month == m)?.Count ?? 0)
+                .ToList();
+
+            return Ok(monthCounts);
         }
 
         [HttpGet("~/Dashboard/Employee")]
