@@ -1,0 +1,160 @@
+@{
+    ViewData["Title"] = "Terms & Conditions";
+}
+
+<div class="bg-footer-bg min-h-screen text-gray-300 font-display p-6 md:p-12">
+    <div class="max-w-4xl mx-auto">
+        <div class="mb-12 text-center">
+            <h1 class="text-4xl md:text-5xl font-bold text-white mb-4 tracking-tight">
+                <span class="text-gold">Terms</span> & Conditions
+            </h1>
+            <p class="text-gold/60 font-medium">Last updated: @DateTime.Now.ToString("MMMM dd, yyyy")</p>
+        </div>
+
+        <div class="bg-white/5 border border-white/10 rounded-3xl p-8 md:p-12 backdrop-blur-sm shadow-2xl relative overflow-hidden">
+             <!-- Decorative background element -->
+            <div class="absolute top-0 left-0 w-64 h-64 bg-gold/5 rounded-full blur-3xl -translate-y-1/2 -translate-x-1/2 pointer-events-none"></div>
+
+            <section class="mb-10 relative z-10">
+                <h2 class="text-2xl font-bold text-white mb-4 flex items-center gap-3">
+                    <span class="text-gold">1.</span> Acceptance of Terms
+                </h2>
+                <p class="leading-relaxed text-gray-400">
+                    By accessing or using the Rent-A-Car Management System, you agree to comply with these Terms and Conditions. If you do not agree, you must not use the system.
+                </p>
+            </section>
+
+             <div class="w-full h-px bg-white/5 mb-10"></div>
+
+            <section class="mb-10 relative z-10">
+                <h2 class="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+                    <span class="text-gold">2.</span> User Accounts
+                </h2>
+                <div class="grid gap-4">
+                     <div class="flex items-start gap-4 p-4 rounded-xl bg-black/20 border border-white/5">
+                        <span class="material-symbols-outlined text-gold mt-1">vpn_key</span>
+                        <div>
+                            <h4 class="text-white font-bold text-sm mb-1">Security</h4>
+                            <p class="text-gray-400 text-sm">Users are responsible for maintaining the confidentiality of their login credentials.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-4 p-4 rounded-xl bg-black/20 border border-white/5">
+                        <span class="material-symbols-outlined text-gold mt-1">badge</span>
+                        <div>
+                            <h4 class="text-white font-bold text-sm mb-1">Roles</h4>
+                            <p class="text-gray-400 text-sm">Each account is assigned a specific role (Customer, Employee, Admin).</p>
+                        </div>
+                    </div>
+                     <div class="flex items-start gap-4 p-4 rounded-xl bg-black/20 border border-white/5">
+                        <span class="material-symbols-outlined text-gold mt-1">gavel</span>
+                        <div>
+                            <h4 class="text-white font-bold text-sm mb-1">Compliance</h4>
+                            <p class="text-gray-400 text-sm">Unauthorized access or misuse may result in account suspension.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <div class="w-full h-px bg-white/5 mb-10"></div>
+
+            <section class="mb-10 relative z-10">
+                <h2 class="text-2xl font-bold text-white mb-4 flex items-center gap-3">
+                    <span class="text-gold">3.</span> System Usage
+                </h2>
+                <p class="mb-4 text-gray-400">Users agree to:</p>
+                <ul class="space-y-3 text-gray-400">
+                    <li class="flex items-center gap-3">
+                        <div class="w-2 h-2 rounded-full bg-gold"></div>
+                        Use the system only for lawful purposes
+                    </li>
+                    <li class="flex items-center gap-3">
+                         <div class="w-2 h-2 rounded-full bg-gold"></div>
+                        Provide accurate and truthful information
+                    </li>
+                    <li class="flex items-center gap-3">
+                         <div class="w-2 h-2 rounded-full bg-gold"></div>
+                        Not attempt to manipulate data, bypass security, or access restricted areas
+                    </li>
+                </ul>
+            </section>
+
+            <div class="w-full h-px bg-white/5 mb-10"></div>
+
+            <section class="mb-10 relative z-10">
+                <h2 class="text-2xl font-bold text-white mb-4 flex items-center gap-3">
+                    <span class="text-gold">4.</span> Reservations & Rentals
+                </h2>
+                <ul class="grid gap-3 text-gray-400">
+                     <li class="flex items-start gap-3 bg-white/5 p-3 rounded-lg">
+                        <span class="material-symbols-outlined text-gold shrink-0 text-sm mt-1">info</span>
+                        <span>Car availability is subject to system data accuracy.</span>
+                    </li>
+                    <li class="flex items-start gap-3 bg-white/5 p-3 rounded-lg">
+                        <span class="material-symbols-outlined text-gold shrink-0 text-sm mt-1">info</span>
+                        <span>Reservations may be approved, rejected, or canceled by administrators.</span>
+                    </li>
+                    <li class="flex items-start gap-3 bg-white/5 p-3 rounded-lg">
+                        <span class="material-symbols-outlined text-gold shrink-0 text-sm mt-1">info</span>
+                        <span>The system serves as a management and tracking platform, not a legal rental contract.</span>
+                    </li>
+                </ul>
+            </section>
+
+             <section class="mb-10 relative z-10">
+                <h2 class="text-2xl font-bold text-white mb-4 flex items-center gap-3">
+                    <span class="text-gold">5.</span> Payments
+                </h2>
+                <ul class="space-y-2 text-gray-400 list-disc list-inside marker:text-gold">
+                    <li>Payment records are stored for reporting purposes</li>
+                    <li>The system does not store sensitive credit card information</li>
+                    <li>Payment gateways (if integrated) follow their own security policies</li>
+                </ul>
+            </section>
+
+             <section class="mb-10 relative z-10">
+                <h2 class="text-2xl font-bold text-white mb-4 flex items-center gap-3">
+                    <span class="text-gold">6.</span> System Availability
+                </h2>
+                 <p class="text-gray-400">
+                    The system may be temporarily unavailable due to maintenance or technical issues. No guarantee is provided for uninterrupted access.
+                </p>
+            </section>
+
+            <section class="mb-10 relative z-10">
+                <h2 class="text-2xl font-bold text-white mb-4 flex items-center gap-3">
+                    <span class="text-gold">7.</span> Limitation of Liability
+                </h2>
+                <div class="bg-red-500/10 border border-red-500/20 p-4 rounded-xl">
+                    <p class="text-red-200 mb-2 font-medium">The system developers and administrators are not responsible for:</p>
+                    <ul class="list-disc list-inside text-red-200/70 space-y-1 text-sm">
+                        <li>Data loss due to user error</li>
+                        <li>Unauthorized access caused by compromised credentials</li>
+                        <li>Business or financial losses resulting from system misuse</li>
+                    </ul>
+                </div>
+            </section>
+
+             <section class="mb-12 relative z-10">
+                <h2 class="text-2xl font-bold text-white mb-4 flex items-center gap-3">
+                    <span class="text-gold">8.</span> Governing Use
+                </h2>
+                <p class="text-gray-400 italic bg-white/5 p-4 rounded-xl border border-white/5">
+                    "These Terms & Conditions are intended for <strong class="text-gold not-italic">educational and system management purposes</strong> and are not a substitute for legal agreements."
+                </p>
+            </section>
+
+            <section class="relative z-10 bg-gradient-to-r from-gold/10 to-transparent p-6 rounded-2xl border-l-4 border-gold">
+                <h2 class="text-xl font-bold text-white mb-2">Contact Information</h2>
+                <p class="text-gray-400 mb-4">For questions regarding these Terms:</p>
+                <div class="flex flex-col sm:flex-row gap-6">
+                    <a href="mailto:support@rentacar.com" class="flex items-center gap-3 text-gold hover:text-white transition-colors">
+                        <span class="material-symbols-outlined">mail</span> support@rentacar.com
+                    </a>
+                    <div class="flex items-center gap-3 text-gold">
+                        <span class="material-symbols-outlined">call</span> +961 1 234 567
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</div>

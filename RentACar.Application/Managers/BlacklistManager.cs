@@ -25,8 +25,9 @@ namespace RentACar.Application.Managers
         private readonly ICustomerRepository _customerRepository;
         private readonly IEmployeeRepository _employeeRepository;
         private readonly ILogger<BlacklistManager> _logger;
+        private readonly AuditLogManager _auditLogManager;
 
-        public BlacklistManager(IBlacklistRepository blacklistRepository, UserManager<IdentityUser> userManager, IMapper mapper, ICustomerRepository customerRepository, IEmployeeRepository employeeRepository, ILogger<BlacklistManager> logger)
+        public BlacklistManager(IBlacklistRepository blacklistRepository, UserManager<IdentityUser> userManager, IMapper mapper, ICustomerRepository customerRepository, IEmployeeRepository employeeRepository, ILogger<BlacklistManager> logger, AuditLogManager auditLogManager)
         {
             _blacklistRepository = blacklistRepository;
             _userManager = userManager;
@@ -34,6 +35,7 @@ namespace RentACar.Application.Managers
             _customerRepository = customerRepository;
             _employeeRepository = employeeRepository;
             _logger = logger;
+            _auditLogManager = auditLogManager;
         }
 
         public async Task<OperationResult<BlacklistDto>> AddToBlacklistAsync(AddToBlacklistRequestDto requestDto, EmployeeDto loggedInEmployeeDto)
@@ -108,6 +110,8 @@ namespace RentACar.Application.Managers
 
             var addedEntity = await _blacklistRepository.AddAsync(blacklistEntry);
 
+            await _auditLogManager.LogAsync("Create", "Blacklist", addedEntity.BlacklistId.ToString(), $"Blacklisted user: {userToBlacklist.UserName}. Reason: {reason}");
+
             // Handle user deactivation
             if (isTargetCustomer)
             {
@@ -156,6 +160,7 @@ namespace RentACar.Application.Managers
             }
 
             await _blacklistRepository.DeleteAsync(blacklistEntry);
+            await _auditLogManager.LogAsync("Delete", "Blacklist", blacklistEntry.BlacklistId.ToString(), $"Removed user from blacklist: {userToRemove.UserName}");
 
             var targetIsCustomer = await _userManager.IsInRoleAsync(userToRemove, "Customer");
             var targetIsEmployee = await _userManager.IsInRoleAsync(userToRemove, "Employee");

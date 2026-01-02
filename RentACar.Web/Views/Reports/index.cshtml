@@ -3,9 +3,40 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 <link rel="stylesheet" href="~/css/control-panel.css" />
-<div class="d-flex justify-content-center align-items-center" style="min-height:70vh;">
-    <div class="text-center text-light">
-        <h2 class="mb-4">Reports</h2>
-        <p class="mb-4">Coming Soon...</p>
+<div class="container py-5">
+    <div class="row">
+        <h2 class="text-light mb-4">Reports Center</h2>
+        
+        <div class="col-md-4">
+            <a asp-action="AuditLog" class="text-decoration-none">
+                <div class="card bg-dark text-white border-warning h-100 hover-effect">
+                    <div class="card-body text-center p-5">
+                        <i class="fas fa-history fa-3x text-warning mb-3"></i>
+                        <h4 class="card-title">Audit Logs</h4>
+                        <p class="card-text text-white-50">View comprehensive logs of system activities, changes, and user actions.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Placeholder for future reports -->
+        <div class="col-md-4">
+            <div class="card bg-dark text-white border-secondary h-100 opacity-50">
+                <div class="card-body text-center p-5">
+                    <i class="fas fa-chart-line fa-3x text-secondary mb-3"></i>
+                    <h4 class="card-title">Sales Report</h4>
+                    <p class="card-text text-white-50">Coming Soon...</p>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
+
+<style>
+    .hover-effect:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+        transition: all 0.3s ease;
+        border-color: #ffc107 !important;
+    }
+</style>

@@ -1,6 +1,173 @@
 ﻿@{
     ViewData["Title"] = "Privacy Policy";
 }
-<h1>@ViewData["Title"]</h1>
 
-<p>Use this page to detail your site's privacy policy.</p>
+<div class="bg-footer-bg min-h-screen text-gray-300 font-display p-6 md:p-12">
+    <div class="max-w-4xl mx-auto">
+        <div class="mb-12 text-center">
+            <h1 class="text-4xl md:text-5xl font-bold text-white mb-4 tracking-tight">
+                <span class="text-gold">Privacy</span> Policy
+            </h1>
+            <p class="text-gold/60 font-medium">Last updated: @DateTime.Now.ToString("MMMM dd, yyyy")</p>
+        </div>
+
+        <div class="bg-white/5 border border-white/10 rounded-3xl p-8 md:p-12 backdrop-blur-sm shadow-2xl relative overflow-hidden">
+            <!-- Decorative background element -->
+            <div class="absolute top-0 right-0 w-64 h-64 bg-gold/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+
+            <section class="mb-10 relative z-10">
+                <h2 class="text-2xl font-bold text-white mb-4 flex items-center gap-3">
+                    <span class="text-gold">1.</span> Introduction
+                </h2>
+                <p class="leading-relaxed text-gray-400">
+                    This Privacy Policy explains how we collect, use, store, and protect user information when using the Rent-A-Car Management System. By accessing or using the system, you agree to the practices described in this policy.
+                </p>
+            </section>
+
+            <div class="w-full h-px bg-white/5 mb-10"></div>
+
+            <section class="mb-10 relative z-10">
+                <h2 class="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+                    <span class="text-gold">2.</span> Information We Collect
+                </h2>
+                <p class="mb-6 text-gray-400">We may collect the following types of information:</p>
+
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="bg-black/20 p-6 rounded-2xl border border-white/5 hover:border-gold/20 transition-colors group">
+                        <h4 class="text-lg font-bold text-white mb-3 group-hover:text-gold transition-colors">a. Personal Information</h4>
+                        <ul class="space-y-2 text-gray-400 list-disc list-inside marker:text-gold/50">
+                            <li>Full name</li>
+                            <li>Email address</li>
+                            <li>Phone number</li>
+                            <li>User role (Customer, Employee, Administrator)</li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-black/20 p-6 rounded-2xl border border-white/5 hover:border-gold/20 transition-colors group">
+                        <h4 class="text-lg font-bold text-white mb-3 group-hover:text-gold transition-colors">b. System & Usage Data</h4>
+                        <ul class="space-y-2 text-gray-400 list-disc list-inside marker:text-gold/50">
+                            <li>Login timestamps</li>
+                            <li>User actions (bookings, updates)</li>
+                            <li>IP address and device information</li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-black/20 p-6 rounded-2xl border border-white/5 hover:border-gold/20 transition-colors group md:col-span-2">
+                        <h4 class="text-lg font-bold text-white mb-3 group-hover:text-gold transition-colors">c. Transaction Data</h4>
+                        <ul class="space-y-2 text-gray-400 list-disc list-inside marker:text-gold/50">
+                            <li>Reservation details</li>
+                            <li>Payment status (no sensitive card data is stored)</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <div class="w-full h-px bg-white/5 mb-10"></div>
+
+            <section class="mb-10 relative z-10">
+                <h2 class="text-2xl font-bold text-white mb-4 flex items-center gap-3">
+                    <span class="text-gold">3.</span> How We Use the Information
+                </h2>
+                <p class="mb-4 text-gray-400">Collected data is used to:</p>
+                <ul class="grid gap-3 text-gray-400">
+                    <li class="flex items-start gap-3">
+                        <span class="material-symbols-outlined text-gold shrink-0 text-sm mt-1">check_circle</span>
+                        <span>Manage car reservations and rentals</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <span class="material-symbols-outlined text-gold shrink-0 text-sm mt-1">check_circle</span>
+                        <span>Authenticate users and control access</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <span class="material-symbols-outlined text-gold shrink-0 text-sm mt-1">check_circle</span>
+                        <span>Maintain audit logs and system security</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <span class="material-symbols-outlined text-gold shrink-0 text-sm mt-1">check_circle</span>
+                        <span>Generate reports and analytics</span>
+                    </li>
+                </ul>
+            </section>
+
+            <div class="w-full h-px bg-white/5 mb-10"></div>
+
+            <section class="mb-10 relative z-10">
+                <h2 class="text-2xl font-bold text-white mb-4 flex items-center gap-3">
+                    <span class="text-gold">4.</span> Data Storage & Security
+                </h2>
+                <div class="bg-gold/5 border border-gold/10 p-6 rounded-2xl">
+                    <ul class="space-y-3 text-gray-300">
+                        <li class="flex items-center gap-3">
+                            <span class="w-1.5 h-1.5 rounded-full bg-gold"></span>
+                            User data is stored securely in the system database
+                        </li>
+                        <li class="flex items-center gap-3">
+                            <span class="w-1.5 h-1.5 rounded-full bg-gold"></span>
+                            Passwords are encrypted using secure hashing techniques
+                        </li>
+                        <li class="flex items-center gap-3">
+                            <span class="w-1.5 h-1.5 rounded-full bg-gold"></span>
+                            Access to sensitive data is restricted to authorized users only
+                        </li>
+                        <li class="flex items-center gap-3">
+                            <span class="w-1.5 h-1.5 rounded-full bg-gold"></span>
+                            Audit logs are maintained to track system activities
+                        </li>
+                    </ul>
+                </div>
+            </section>
+
+             <section class="mb-10 relative z-10">
+                <h2 class="text-2xl font-bold text-white mb-4 flex items-center gap-3">
+                    <span class="text-gold">5.</span> Data Sharing
+                </h2>
+                <p class="text-gray-400 mb-4">We <strong class="text-white">do not sell or share</strong> user data with third parties, except:</p>
+                <div class="flex flex-wrap gap-4">
+                     <span class="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-sm font-medium text-gray-300">When required by law</span>
+                     <span class="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-sm font-medium text-gray-300">For academic evaluation</span>
+                     <span class="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-sm font-medium text-gray-300">System maintenance purposes</span>
+                </div>
+            </section>
+
+             <section class="mb-10 relative z-10">
+                <h2 class="text-2xl font-bold text-white mb-4 flex items-center gap-3">
+                    <span class="text-gold">6.</span> User Rights
+                </h2>
+                <div class="grid md:grid-cols-3 gap-4">
+                    <div class="p-4 rounded-xl bg-white/5 border border-white/10 text-center hover:bg-white/10 transition-colors">
+                        <span class="material-symbols-outlined text-gold text-3xl mb-2 block">visibility</span>
+                        <span class="text-sm font-medium text-gray-300">View Info</span>
+                    </div>
+                    <div class="p-4 rounded-xl bg-white/5 border border-white/10 text-center hover:bg-white/10 transition-colors">
+                         <span class="material-symbols-outlined text-gold text-3xl mb-2 block">edit</span>
+                        <span class="text-sm font-medium text-gray-300">Request Updates</span>
+                    </div>
+                     <div class="p-4 rounded-xl bg-white/5 border border-white/10 text-center hover:bg-white/10 transition-colors">
+                         <span class="material-symbols-outlined text-gold text-3xl mb-2 block">block</span>
+                        <span class="text-sm font-medium text-gray-300">Deactivate Account</span>
+                    </div>
+                </div>
+            </section>
+
+             <section class="mb-12 relative z-10">
+                <h2 class="text-2xl font-bold text-white mb-4 flex items-center gap-3">
+                    <span class="text-gold">7.</span> Changes to This Policy
+                </h2>
+                <p class="text-gray-400">This Privacy Policy may be updated when system features or requirements change. Users will be notified of major changes.</p>
+            </section>
+
+             <section class="relative z-10 bg-gradient-to-r from-gold/10 to-transparent p-6 rounded-2xl border-l-4 border-gold">
+                <h2 class="text-xl font-bold text-white mb-2">Contact Information</h2>
+                <p class="text-gray-400 mb-4">For privacy-related concerns, please contact:</p>
+                <div class="flex flex-col sm:flex-row gap-6">
+                    <a href="mailto:support@rentacar.com" class="flex items-center gap-3 text-gold hover:text-white transition-colors">
+                        <span class="material-symbols-outlined">mail</span> support@rentacar.com
+                    </a>
+                    <div class="flex items-center gap-3 text-gold">
+                        <span class="material-symbols-outlined">call</span> +961 1 234 567
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</div>

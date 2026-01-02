@@ -78,6 +78,7 @@ builder.Services.AddScoped<CreditCardManager>();
 builder.Services.AddScoped<PaymentMethodManager>();
 builder.Services.AddScoped<BookingManager>();
 builder.Services.AddScoped<PaymentManager>();
+builder.Services.AddScoped<AuditLogManager>();
 
 // // ✅ HTTPS redirection
 // builder.Services.AddHttpsRedirection(options =>

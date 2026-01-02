@@ -1,0 +1,172 @@
+@model RentACar.Application.DTOs.AuditLogViewModel
+
+<div class="flex flex-col rounded-xl border border-primary/10 bg-surface-dark overflow-hidden shadow-2xl">
+    <div class="overflow-x-auto custom-scrollbar">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="border-b border-primary/10 bg-surface-dark-lighter">
+                    <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider text-primary">#</th>
+                    <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider text-primary">Timestamp</th>
+                    <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider text-primary">Actor</th>
+                    <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider text-primary">Action</th>
+                    <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider text-primary">Entity</th>
+                    <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider text-primary">Summary</th>
+                    <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider text-primary hidden xl:table-cell">IP Address</th>
+                    <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider text-primary hidden 2xl:table-cell">Device</th>
+                    <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider text-primary text-right">Status</th>
+                </tr>
+            </thead>
+            <tbody class="text-sm divide-y divide-white/5">
+                @if (Model.Logs.Any())
+                {
+                    @foreach (var log in Model.Logs)
+                    {
+                        <tr class="group hover:bg-white/[0.02] transition-colors">
+                            <td class="py-4 px-6 whitespace-nowrap text-white/50 font-mono text-xs">@(((Model.Page - 1) * Model.PageSize) + Model.Logs.IndexOf(log) + 1)</td>
+                            <td class="py-4 px-6 whitespace-nowrap text-white/70 font-mono text-xs">@log.Timestamp.ToString("MMM dd, HH:mm")</td>
+                            <td class="py-4 px-6 whitespace-nowrap">
+                                <div class="flex items-center gap-3">
+                                    <div class="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-xs">
+                                        @log.ActorName.Substring(0, 1).ToUpper()
+                                    </div>
+                                    <div class="flex flex-col">
+                                        <span class="text-white font-medium">@log.ActorName</span>
+                                        <span class="text-white/40 text-xs">@log.ActorRole</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="py-4 px-6 whitespace-nowrap">
+                                @{
+                                    var actionColor = "";
+                                    var actionBg = "";
+                                    
+                                    switch (log.Action?.ToUpper())
+                                    {
+                                        case "CREATE":
+                                            actionColor = "text-blue-400";
+                                            actionBg = "bg-blue-500/10 border-blue-500/20";
+                                            break;
+                                        case "UPDATE":
+                                            actionColor = "text-emerald-500";
+                                            actionBg = "bg-emerald-500/10 border-emerald-500/20";
+                                            break;
+                                        case "DELETE":
+                                            actionColor = "text-red-400";
+                                            actionBg = "bg-red-500/10 border-red-500/20";
+                                            break;
+                                        default:
+                                            actionColor = "text-white/70";
+                                            actionBg = "bg-white/5 border-white/10";
+                                            break;
+                                    }
+                                }
+                                <span class="inline-flex items-center rounded-full @actionBg px-2.5 py-0.5 text-xs font-medium @actionColor border">
+                                    @log.Action?.ToUpper()
+                                </span>
+                            </td>
+                            <td class="py-4 px-6 whitespace-nowrap">
+                                <div class="flex flex-col">
+                                    <span class="text-white">@log.Entity</span>
+                                    <span class="text-primary hover:underline text-xs">#@log.EntityId</span>
+                                </div>
+                            </td>
+                            <td class="py-4 px-6 max-w-xs truncate text-white/80" title="@log.Summary">
+                                @log.Summary
+                            </td>
+                            <td class="py-4 px-6 whitespace-nowrap text-white/50 font-mono text-xs hidden xl:table-cell">@log.IpAddress</td>
+                            <td class="py-4 px-6 whitespace-nowrap text-white/50 text-xs hidden 2xl:table-cell">@log.Device</td>
+                            <td class="py-4 px-6 whitespace-nowrap text-right">
+                                @if (log.Status == "Success")
+                                {
+                                    <span class="inline-flex items-center gap-1.5 rounded text-xs font-medium text-emerald-400">
+                                        <span class="h-1.5 w-1.5 rounded-full bg-emerald-400"></span> Success
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="inline-flex items-center gap-1.5 rounded text-xs font-medium text-red-400">
+                                        <span class="h-1.5 w-1.5 rounded-full bg-red-400"></span> Failed
+                                    </span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="9" class="py-8 text-center text-white/50">
+                            No logs found matching your criteria.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="flex items-center justify-between border-t border-primary/10 px-6 py-4 bg-surface-dark-lighter">
+         <div class="flex flex-1 items-center justify-between">
+            <div>
+                <p class="text-sm text-white/60">
+                    Showing
+                    <span class="font-medium text-white">@((Model.Page - 1) * Model.PageSize + 1)</span>
+                    to
+                    <span class="font-medium text-white">@(Math.Min(Model.Page * Model.PageSize, Model.TotalCount))</span>
+                    of
+                    <span class="font-medium text-white">@Model.TotalCount</span>
+                    results
+                </p>
+            </div>
+            <div>
+                <nav aria-label="Pagination" class="isolate inline-flex -space-x-px rounded-md shadow-sm">
+                    @if (Model.HasPreviousPage)
+                    {
+                        <a asp-action="AuditLog" 
+                           asp-route-page="@(Model.Page - 1)" 
+                           asp-route-search="@Model.SearchTerm"
+                           asp-route-actionType="@Model.ActionType"
+                           asp-route-entity="@Model.EntityName"
+                           asp-route-status="@Model.Status"
+                           class="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-white/10 hover:bg-white/5 focus:z-20 focus:outline-offset-0 bg-surface-dark">
+                            <span class="sr-only">Previous</span>
+                            <span class="material-symbols-outlined text-sm">chevron_left</span>
+                        </a>
+                    }
+                    
+                    @for (int i = 1; i <= Model.TotalPages; i++)
+                    {
+                        if (i == Model.Page)
+                        {
+                            <a href="#" aria-current="page" class="relative z-10 inline-flex items-center bg-primary px-4 py-2 text-sm font-semibold text-background-dark focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">@i</a>
+                        }
+                        else
+                        {
+                             <a asp-action="AuditLog" 
+                                asp-route-page="@i" 
+                                asp-route-search="@Model.SearchTerm"
+                                asp-route-actionType="@Model.ActionType"
+                                asp-route-entity="@Model.EntityName"
+                                asp-route-status="@Model.Status"
+                                class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-white ring-1 ring-inset ring-white/10 hover:bg-white/5 focus:z-20 focus:outline-offset-0 bg-surface-dark">@i</a>
+                        }
+                    }
+
+                    @if (Model.HasNextPage)
+                    {
+                        <a asp-action="AuditLog" 
+                           asp-route-page="@(Model.Page + 1)" 
+                           asp-route-search="@Model.SearchTerm"
+                           asp-route-actionType="@Model.ActionType"
+                           asp-route-entity="@Model.EntityName"
+                           asp-route-status="@Model.Status"
+                           class="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-white/10 hover:bg-white/5 focus:z-20 focus:outline-offset-0 bg-surface-dark">
+                            <span class="sr-only">Next</span>
+                            <span class="material-symbols-outlined text-sm">chevron_right</span>
+                        </a>
+                    }
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>

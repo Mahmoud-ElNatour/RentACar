@@ -20,12 +20,16 @@ namespace RentACar.Application.Managers
         private readonly UserManager<IdentityUser> _userManager;
         private readonly ILogger<CategoryManager> _logger;
 
-        public CategoryManager(ICategoryRepository categoryRepository, IMapper mapper, UserManager<IdentityUser> userManager, ILogger<CategoryManager> logger)
+
+        private readonly AuditLogManager _auditLogManager;
+
+        public CategoryManager(ICategoryRepository categoryRepository, IMapper mapper, UserManager<IdentityUser> userManager, ILogger<CategoryManager> logger, AuditLogManager auditLogManager)
         {
             _categoryRepository = categoryRepository;
             _mapper = mapper;
             _userManager = userManager;
             _logger = logger;
+            _auditLogManager = auditLogManager;
         }
 
         public async Task<CategoryDto?> AddCategoryAsync(CategoryDto categoryDto, string userId)
@@ -47,7 +51,9 @@ namespace RentACar.Application.Managers
 
             var categoryEntity = _mapper.Map<Category>(categoryDto);
             await _categoryRepository.AddAsync(categoryEntity);
+            await _categoryRepository.AddAsync(categoryEntity);
             _logger.LogInformation("Category added with id {Id}", categoryEntity.CategoryId);
+            await _auditLogManager.LogAsync("Create", "Category", categoryEntity.CategoryId.ToString(), $"Added category: {categoryDto.Name}");
             return _mapper.Map<CategoryDto>(categoryEntity);
         }
 
@@ -95,7 +101,9 @@ namespace RentACar.Application.Managers
 
             _mapper.Map(categoryDto, existingCategory);
             await _categoryRepository.UpdateAsync(existingCategory);
+            await _categoryRepository.UpdateAsync(existingCategory);
             _logger.LogInformation("Category {Id} updated", categoryDto.CategoryId);
+            await _auditLogManager.LogAsync("Update", "Category", categoryDto.CategoryId.ToString(), $"Updated category: {categoryDto.Name}");
             return _mapper.Map<CategoryDto>(existingCategory);
         }
 
@@ -117,6 +125,7 @@ namespace RentACar.Application.Managers
             }
 
             await _categoryRepository.DeleteAsync(id);
+            await _auditLogManager.LogAsync("Delete", "Category", id.ToString(), "Deleted category");
             return true;
         }
         public async Task<bool> DeleteCategoryByNameAsync(string name, string userId)
@@ -135,6 +144,7 @@ namespace RentACar.Application.Managers
                 return false; // Or throw KeyNotFoundException
             }
             await _categoryRepository.DeleteAsync(existingCategory.CategoryId);
+            await _auditLogManager.LogAsync("Delete", "Category", existingCategory.CategoryId.ToString(), $"Deleted category by name: {name}");
             return true;
         }
         public async Task<bool> UpdateCategoryNameAsync(int id, string newName, string userId)
@@ -160,7 +170,9 @@ namespace RentACar.Application.Managers
             }
             existingCategory.Name = newName;
             await _categoryRepository.UpdateAsync(existingCategory);
+            await _categoryRepository.UpdateAsync(existingCategory);
             _logger.LogInformation("Category {Id} name updated", id);
+            await _auditLogManager.LogAsync("Update", "Category", id.ToString(), $"Renamed category to: {newName}");
             return true;
         }
 

@@ -20,6 +20,7 @@ namespace RentACar.Application.Managers
         private readonly IMapper _mapper;
         private readonly ILogger<CustomerManager> _logger;
         private readonly IBookingRepository _bookingRepository;
+        private readonly AuditLogManager _auditLogManager;
 
         public CustomerManager(
             UserManager<IdentityUser> userManager,
@@ -27,7 +28,8 @@ namespace RentACar.Application.Managers
             ICustomerRepository customerRepository,
             IBookingRepository bookingRepository,
             IMapper mapper,
-            ILogger<CustomerManager> logger)
+            ILogger<CustomerManager> logger,
+            AuditLogManager auditLogManager)
         {
             _userManager = userManager;
             _roleManager = roleManager;
@@ -35,6 +37,7 @@ namespace RentACar.Application.Managers
             _mapper = mapper;
             _logger = logger;
             _bookingRepository = bookingRepository;
+            _auditLogManager = auditLogManager;
         }
         public async Task<CustomerDTO?> CreateCustomer(CustomerCreateDTO createDto)
         {
@@ -111,6 +114,8 @@ namespace RentACar.Application.Managers
             await _customerRepository.AddAsync(customer);
 
             _logger.LogInformation("Customer created with id {Id}", customer.UserId);
+
+            await _auditLogManager.LogAsync("Create", "Customer", customer.UserId.ToString(), $"Registered new customer: {customer.Name} ({createDto.Email})");
             
             return _mapper.Map<CustomerDTO>(customer);
         }
@@ -165,6 +170,7 @@ namespace RentACar.Application.Managers
             {
                 customer.IsVerified = isVerified;
                 await _customerRepository.UpdateAsync(customer);
+                await _auditLogManager.LogAsync("Update", "Customer", customerId.ToString(), $"Updated verification status to: {isVerified}");
             }
         }
 
@@ -266,6 +272,7 @@ namespace RentACar.Application.Managers
 
             await _customerRepository.DeleteAsync(id);
             await _userManager.DeleteAsync(user);
+            await _auditLogManager.LogAsync("Delete", "Customer", id.ToString(), $"Deleted customer account: {customerEntity.Name}");
         }
 
 
@@ -303,6 +310,7 @@ namespace RentACar.Application.Managers
                 customer.Isactive = dto.Isactive;
 
                 await _customerRepository.UpdateAsync(customer);
+                await _auditLogManager.LogAsync("Update", "Customer", dto.UserId.ToString(), $"Updated profile details for: {customer.Name}");
             }
         }
 

@@ -15,12 +15,15 @@ namespace RentACar.Application.Managers
         private readonly IMapper _mapper;
         private readonly UserManager<IdentityUser> _userManager; // Inject UserManager for role checking
         private readonly ILogger<CarManager> _logger;
-        public CarManager(ICarRepository carRepository, IMapper mapper, UserManager<IdentityUser> userManager, ILogger<CarManager> logger)
+        private readonly AuditLogManager _auditLogManager;
+
+        public CarManager(ICarRepository carRepository, IMapper mapper, UserManager<IdentityUser> userManager, ILogger<CarManager> logger, AuditLogManager auditLogManager)
         {
             _carRepository = carRepository;
             _mapper = mapper;
             _userManager = userManager;
             _logger = logger;
+            _auditLogManager = auditLogManager;
         }
 
         public async Task<CarDto?> AddCarAsync(CarDto carDto, string userId)
@@ -52,6 +55,8 @@ namespace RentACar.Application.Managers
             // 4. Add the entity to the repository
             await _carRepository.AddAsync(carEntity);
             _logger.LogInformation("Car added with id {Id}", carEntity.CarId);
+
+            await _auditLogManager.LogAsync("Create", "Car", carEntity.CarId.ToString(), $"Added new car: {carEntity.ModelName} ({carEntity.ModelYear}) - {carEntity.PlateNumber}");
 
             // 5. Map the created entity back to a DTO and return it
             return _mapper.Map<CarDto>(carEntity);
@@ -104,6 +109,7 @@ namespace RentACar.Application.Managers
         {
             _logger.LogInformation("Updating availability for car {Id} to {Avail}", carId, isAvailable);
             await _carRepository.UpdateCarAvailabilityAsync(carId, isAvailable);
+            await _auditLogManager.LogAsync("Update", "Car", carId.ToString(), $"Updated availability to: {isAvailable}");
         }
 
         public async Task UpdateCarAsync(CarDto carDto)
@@ -114,10 +120,12 @@ namespace RentACar.Application.Managers
                 _logger.LogInformation("Updating car {Id}", carDto.CarId);
                 _mapper.Map(carDto, existingCar);
                 await _carRepository.UpdateAsync(existingCar);
+                await _auditLogManager.LogAsync("Update", "Car", carDto.CarId.ToString(), $"Updated car details: {carDto.ModelName} - {carDto.PlateNumber}");
             }
             else
             {
                 _logger.LogWarning("Car {Id} not found for update", carDto.CarId);
+                await _auditLogManager.LogAsync("Update", "Car", carDto.CarId.ToString(), "Failed to update car: Not found", "Failed");
             }
         }
 
@@ -125,6 +133,7 @@ namespace RentACar.Application.Managers
         {
             _logger.LogInformation("Deleting car {Id}", id);
             await _carRepository.DeleteAsync(id);
+            await _auditLogManager.LogAsync("Delete", "Car", id.ToString(), "Deleted car from fleet");
         }
     }
 

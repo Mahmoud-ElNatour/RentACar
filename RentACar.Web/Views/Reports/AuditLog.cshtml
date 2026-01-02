@@ -1,0 +1,150 @@
+@model RentACar.Application.DTOs.AuditLogViewModel
+@using RentACar.Core.Entities
+
+@{
+    ViewData["Title"] = "Audit Log Report";
+}
+
+<link href="~/css/AuditLog.css" rel="stylesheet" />
+
+<div class="layout-container flex h-full grow flex-col bg-page-dark">
+    <div class="flex flex-1 justify-center py-6 px-4 md:px-8">
+        <div class="layout-content-container flex flex-col w-full max-w-[1400px] flex-1">
+           <!-- Page Header -->
+<div class="flex justify-center items-center min-h-[40vh]">
+    <div class="flex flex-col items-center text-center">
+        <h1 class="text-white text-3xl md:text-4xl font-extrabold leading-tight tracking-tight">
+            Audit Log Report
+        </h1>
+        <p class="text-white/60 text-base font-normal mt-2">
+            Track system changes, user activities, and administrative actions.
+        </p>
+    </div>
+</div>
+
+
+            <!-- Filters Area -->
+            <form method="get" asp-action="AuditLog" class="grid grid-cols-1 lg:grid-cols-12 gap-4 p-4 mb-6 bg-surface-dark rounded-xl border border-primary/10 shadow-lg" id="filterForm">
+                <input type="hidden" name="page" value="1" />
+                
+                <!-- Search Box -->
+                <div class="lg:col-span-4 flex items-center">
+                    <div class="flex w-full items-stretch rounded-lg h-10 bg-surface-dark-lighter border border-primary/10 hover:border-primary/30 focus-within:border-primary/50 transition-colors">
+                        <div class="text-primary/60 flex items-center justify-center pl-3">
+                            <span class="material-symbols-outlined text-[20px]">search</span>
+                        </div>
+                        <input name="search" value="@Model.SearchTerm" class="flex w-full bg-transparent border-none text-white placeholder:text-white/30 focus:ring-0 text-sm px-3" placeholder="Search User, ID, or IP..." />
+                    </div>
+                </div>
+
+                <!-- Dropdown Filters -->
+                <div class="lg:col-span-8 flex flex-wrap items-center gap-3 justify-start lg:justify-end">
+
+                    <!-- Export Button (Moved here) -->
+                    <button type="submit" asp-action="ExportAuditLog" class="flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-lg h-10 px-6 bg-primary hover:bg-primary/90 text-background-dark text-sm font-bold leading-normal tracking-wide transition-colors">
+                        <span class="material-symbols-outlined text-[20px]">download</span>
+                        <span class="truncate">Export Report</span>
+                    </button>
+                    
+                    <!-- Action Type Filter -->
+                    <div class="relative group">
+                        <select name="actionType" class="appearance-none h-10 pl-4 pr-8 rounded-lg bg-surface-dark-lighter border border-primary/10 text-white/80 text-sm font-medium focus:outline-none focus:border-primary/50 hover:bg-primary/10 transition-colors cursor-pointer w-full md:w-auto">
+                            <option value="">All Actions</option>
+                            <!option value="Create" @(Model.ActionType == "Create" ? "selected" : "")>Create</!option>
+                            <!option value="Update" @(Model.ActionType == "Update" ? "selected" : "")>Update</!option>
+                            <!option value="Delete" @(Model.ActionType == "Delete" ? "selected" : "")>Delete</!option>
+                            <!option value="Login" @(Model.ActionType == "Login" ? "selected" : "")>Login</!option>
+                        </select>
+                        <span class="material-symbols-outlined text-white/40 text-[18px] absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">expand_more</span>
+                    </div>
+
+                    <!-- Entity Filter -->
+                    <div class="relative group">
+                        <select name="entity" class="appearance-none h-10 pl-4 pr-8 rounded-lg bg-surface-dark-lighter border border-primary/10 text-white/80 text-sm font-medium focus:outline-none focus:border-primary/50 hover:bg-primary/10 transition-colors cursor-pointer w-full md:w-auto">
+                            <option value="">All Entities</option>
+                            <!option value="Car" @(Model.EntityName == "Car" ? "selected" : "")>Car</!option>
+                            <!option value="Customer" @(Model.EntityName == "Customer" ? "selected" : "")>Customer</!option>
+                            <!option value="Booking" @(Model.EntityName == "Booking" ? "selected" : "")>Booking</!option>
+                            <!option value="Payment" @(Model.EntityName == "Payment" ? "selected" : "")>Payment</!option>
+                            <!option value="Employee" @(Model.EntityName == "Employee" ? "selected" : "")>Employee</!option>
+                            <!option value="Blacklist" @(Model.EntityName == "Blacklist" ? "selected" : "")>Blacklist</!option>
+                        </select>
+                        <span class="material-symbols-outlined text-white/40 text-[18px] absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">expand_more</span>
+                    </div>
+                     <!-- Status Filter -->
+                    <div class="relative group">
+                        <select name="status" class="appearance-none h-10 pl-4 pr-8 rounded-lg bg-surface-dark-lighter border border-primary/10 text-white/80 text-sm font-medium focus:outline-none focus:border-primary/50 hover:bg-primary/10 transition-colors cursor-pointer w-full md:w-auto">
+                            <option value="">All Statuses</option>
+                            <!option value="Success" @(Model.Status == "Success" ? "selected" : "")>Success</!option>
+                            <!option value="Failed" @(Model.Status == "Failed" ? "selected" : "")>Failed</!option>
+                        </select>
+                         <span class="material-symbols-outlined text-white/40 text-[18px] absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">expand_more</span>
+                    </div>
+
+                    <button type="submit" class="h-10 px-4 rounded-lg bg-primary text-background-dark font-bold text-sm hover:bg-primary/90 transition-colors">Apply</button>
+                    <a asp-action="AuditLog" class="h-10 px-4 flex items-center justify-center rounded-lg border border-primary/10 text-white/70 hover:text-white hover:bg-white/5 transition-colors text-sm">Reset</a>
+
+                </div>
+            </form>
+
+            <!-- Table Container -->
+            <div id="audit-log-table-container">
+                @await Html.PartialAsync("_AuditLogTable", Model)
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Intercept Filter Form Submit
+            $('#filterForm').on('submit', function(e) {
+                e.preventDefault();
+                loadTable($(this).attr('action'), $(this).serialize());
+            });
+
+            // Intercept Filter Change (Dropdowns) - Trigger Form Submit
+            $('#filterForm select').on('change', function(e) {
+                 $('#filterForm').trigger('submit');
+            });
+
+            // Intercept Pagination Links (delegated)
+            $(document).on('click', '#audit-log-table-container nav a', function(e) {
+                e.preventDefault();
+                var url = $(this).attr('href');
+                if(url && url !== '#') {
+                    // Extract query params from url and merge with form data if needed?
+                    // Actually, the pagination links generated by ASP.NET Core TagHelpers already contain all the route params (search, filters, page).
+                    // So we just need to fetch the URL.
+                    loadTable(url);
+                }
+            });
+            
+             // Intercept Reset Link
+             $('a[href*="AuditLog"][class*="border-primary"]').on('click', function(e) {
+                 e.preventDefault();
+                 // Reset form
+                 $('#filterForm')[0].reset();
+                 // Load base url
+                 loadTable($(this).attr('href'));
+             });
+
+            function loadTable(url, data) {
+                $.ajax({
+                    url: url,
+                    type: 'GET',
+                    data: data,
+                    headers: { "X-Requested-With": "XMLHttpRequest" },
+                    success: function(result) {
+                        $('#audit-log-table-container').html(result);
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Error loading table:", error);
+                    }
+                });
+            }
+        });
+    </script>
+}

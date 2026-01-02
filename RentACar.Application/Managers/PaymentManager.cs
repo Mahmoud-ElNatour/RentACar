@@ -22,6 +22,7 @@ namespace RentACar.Application.Managers
         private readonly UserManager<IdentityUser> _userManager;
         private readonly IMapper _mapper;
         private readonly ILogger<PaymentManager> _logger;
+        private readonly AuditLogManager _auditLogManager;
 
         public PaymentManager(
             IPaymentRepository paymentRepository,
@@ -30,7 +31,8 @@ namespace RentACar.Application.Managers
             IPaymentMethodRepository paymentMethodRepository,
             UserManager<IdentityUser> userManager,
             IMapper mapper,
-            ILogger<PaymentManager> logger)
+            ILogger<PaymentManager> logger,
+            AuditLogManager auditLogManager)
         {
             _paymentRepository = paymentRepository;
             _bookingRepository = bookingRepository;
@@ -39,6 +41,7 @@ namespace RentACar.Application.Managers
             _userManager = userManager;
             _mapper = mapper;
             _logger = logger;
+            _auditLogManager = auditLogManager;
         }
 
         public async Task<bool> MakePaymentByCustomerAsync(MakePaymentRequestDto paymentDto, int customerUserId)
@@ -85,6 +88,7 @@ namespace RentACar.Application.Managers
                     Status = "done"
                 };
                 await _paymentRepository.AddAsync(payment);
+                await _auditLogManager.LogAsync("Create", "Payment", payment.PaymentId.ToString(), $"Customer payment of {payment.Amount:C} via {payment.PaymentMethod}");
                 return true;
 
             }
@@ -120,6 +124,9 @@ namespace RentACar.Application.Managers
                 };
 
                 await _paymentRepository.AddAsync(payment);
+
+                await _auditLogManager.LogAsync("Create", "Payment", payment.PaymentId.ToString(), $"Employee recorded payment of {payment.Amount:C}");
+
                 return true;
             }
             else
@@ -144,6 +151,7 @@ namespace RentACar.Application.Managers
                 };
 
                 await _paymentRepository.AddAsync(payment);
+                await _auditLogManager.LogAsync("Create", "Payment", payment.PaymentId.ToString(), $"Employee recorded cash payment: {payment.Amount:C}");
                 return true;
             }
         }

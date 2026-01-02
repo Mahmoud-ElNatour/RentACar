@@ -15,17 +15,20 @@ namespace RentACar.Application.Managers
         private readonly IMapper _mapper;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly ILogger<PaymentMethodManager> _logger;
+        private readonly AuditLogManager _auditLogManager;
 
         public PaymentMethodManager(
             IPaymentMethodRepository paymentMethodRepository,
             IMapper mapper,
             UserManager<IdentityUser> userManager,
-            ILogger<PaymentMethodManager> logger)
+            ILogger<PaymentMethodManager> logger,
+            AuditLogManager auditLogManager)
         {
             _paymentMethodRepository = paymentMethodRepository;
             _mapper = mapper;
             _userManager = userManager;
             _logger = logger;
+            _auditLogManager = auditLogManager;
         }
 
         public async Task<PaymentMethodDto?> AddPaymentMethodAsync(PaymentMethodDto dto, string userId)
@@ -48,6 +51,7 @@ namespace RentACar.Application.Managers
 
             var entity = _mapper.Map<PaymentMethod>(dto);
             await _paymentMethodRepository.AddAsync(entity);
+            await _auditLogManager.LogAsync("Create", "PaymentMethod", entity.Id.ToString(), $"Added payment method: {entity.PaymentMethodName}");
             return _mapper.Map<PaymentMethodDto>(entity);
         }
 
@@ -96,6 +100,7 @@ namespace RentACar.Application.Managers
 
             _mapper.Map(dto, existing);
             await _paymentMethodRepository.UpdateAsync(existing);
+            await _auditLogManager.LogAsync("Update", "PaymentMethod", existing.Id.ToString(), $"Updated payment method: {existing.PaymentMethodName}");
             return _mapper.Map<PaymentMethodDto>(existing);
         }
 
@@ -118,6 +123,7 @@ namespace RentACar.Application.Managers
             }
 
             await _paymentMethodRepository.DeleteAsync(id);
+            await _auditLogManager.LogAsync("Delete", "PaymentMethod", id.ToString(), $"Deleted payment method {id}");
             return true;
         }
     }

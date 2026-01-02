@@ -10,6 +10,8 @@ Customers and employees:
 - improve logic in which the DTO for the table not include the image and for change image here should load the imageDTO / same for creating customer, let it 2 pages the first took only the the other attr, and for image (document) to be desscussed if to be done from profile setting or from 2nd step signup.
 --> better to be after login from profile settings (and give note in home page "please submit doc to verfy ur acc like the whish money APP) --> NEED TO CHANGE LOGIC CREATE CUSTOMER AND DTOS
 
+Category:
+- check error sometimes in adding new cat. then added after anyaction or refresh maybe async problem
 
 Booking improvement:
 - booking bug (if car is unavailable in some date range ca't book it in other range)
@@ -48,4 +50,4 @@ Later on:
 - theme panel
 - customer reviews page for customer for each booking , and table in control panel for employees
 - reports (logs, financials,...)
-
+- email services (send notifications, reset password, confirm email, send offers,...)

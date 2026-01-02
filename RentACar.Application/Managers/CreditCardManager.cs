@@ -19,17 +19,22 @@ namespace RentACar.Application.Managers
         private readonly IMapper _mapper;
         private readonly ILogger<CreditCardManager> _logger;
 
+
+        private readonly AuditLogManager _auditLogManager;
+
         public CreditCardManager(ICreditCardRepository repo,
                                  UserManager<IdentityUser> userManager,
                                  CustomerManager customerManager,
                                  IMapper mapper,
-                                 ILogger<CreditCardManager> logger)
+                                 ILogger<CreditCardManager> logger,
+                                 AuditLogManager auditLogManager)
         {
             _repo = repo;
             _userManager = userManager;
             _customerManager = customerManager;
             _mapper = mapper;
             _logger = logger;
+            _auditLogManager = auditLogManager;
         }
 
         public async Task<(List<CreditCardDisplayDto> Cards, int Total)> GetCardsAsync(string? cardNumber, string? customer, int offset, int limit = 30)
@@ -141,7 +146,10 @@ namespace RentACar.Application.Managers
             _mapper.Map(dto, existing);
             await _repo.UpdateAsync(existing);
 
-            _logger.LogInformation("Credit card {Id} updated successfully", dto.CreditCardId);
+            await _repo.UpdateAsync(existing);
+
+            _logger.LogInformation("CreditCard {Id} updated successfully", dto.CreditCardId);
+            await _auditLogManager.LogAsync("Update", "CreditCard", dto.CreditCardId.ToString(), $"Updated credit card ending in {existing.CardNumber.Substring(Math.Max(0, existing.CardNumber.Length - 4))}");
             return _mapper.Map<CreditCardDto>(existing);
         }
 
@@ -164,7 +172,9 @@ namespace RentACar.Application.Managers
             }
 
             await _repo.DeleteAsync(card);
+            await _repo.DeleteAsync(card);
             _logger.LogInformation("Credit card {Id} deleted", id);
+            await _auditLogManager.LogAsync("Delete", "CreditCard", id.ToString(), "Deleted credit card");
             return true;
         }
 
@@ -180,7 +190,9 @@ namespace RentACar.Application.Managers
         {
             _logger.LogInformation("Removing card {CardId} from customer {UserId}", creditCardId, userId);
             await _repo.RemoveCustomerCreditCardAsync(userId, creditCardId);
+            await _repo.RemoveCustomerCreditCardAsync(userId, creditCardId);
             _logger.LogInformation("Removed link between card {CardId} and customer {UserId}", creditCardId, userId);
+            await _auditLogManager.LogAsync("Delete", "CreditCard", creditCardId.ToString(), $"Unlinked card from customer {userId}");
             return true;
         }
 
@@ -234,6 +246,7 @@ namespace RentACar.Application.Managers
             }
 
             _logger.LogInformation("Credit card {CardId} now associated with customer {UserId}", entity.CreditCardId, userId);
+            await _auditLogManager.LogAsync("Create", "CreditCard", entity.CreditCardId.ToString(), $"Added/Linked credit card for customer {userId}");
             return _mapper.Map<CreditCardDto>(entity);
         }
 

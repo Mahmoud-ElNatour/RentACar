@@ -17,12 +17,16 @@ namespace RentACar.Application.Managers
         private readonly UserManager<IdentityUser> _userManager;
         private readonly ILogger<PromocodeManager> _logger;
 
-        public PromocodeManager(IPromocodeRepository promocodeRepository, IMapper mapper, UserManager<IdentityUser> userManager, ILogger<PromocodeManager> logger)
+
+        private readonly AuditLogManager _auditLogManager;
+
+        public PromocodeManager(IPromocodeRepository promocodeRepository, IMapper mapper, UserManager<IdentityUser> userManager, ILogger<PromocodeManager> logger, AuditLogManager auditLogManager)
         {
             _promocodeRepository = promocodeRepository;
             _mapper = mapper;
             _userManager = userManager;
             _logger = logger;
+            _auditLogManager = auditLogManager;
         }
 
         public async Task<PromocodeDto?> AddPromocodeAsync(PromocodeDto promocodeDto, string userId)
@@ -43,7 +47,9 @@ namespace RentACar.Application.Managers
 
             var promocodeEntity = _mapper.Map<Promocode>(promocodeDto);
             var addedEntity = await _promocodeRepository.AddAsync(promocodeEntity);
+
             _logger.LogInformation("Promocode added with id {Id}", addedEntity.PromocodeId);
+            await _auditLogManager.LogAsync("Create", "Promocode", addedEntity.PromocodeId.ToString(), $"Added promocode: {promocodeDto.Name} ({promocodeDto.DiscountPercentage}%)");
             return _mapper.Map<PromocodeDto>(addedEntity);
         }
 
@@ -101,7 +107,9 @@ namespace RentACar.Application.Managers
 
             _mapper.Map(promocodeDto, existingPromocode);
             await _promocodeRepository.UpdateAsync(existingPromocode);
+            await _promocodeRepository.UpdateAsync(existingPromocode);
             _logger.LogInformation("Promocode {Id} updated", promocodeDto.PromocodeId);
+            await _auditLogManager.LogAsync("Update", "Promocode", promocodeDto.PromocodeId.ToString(), $"Updated promocode: {promocodeDto.Name}");
             return _mapper.Map<PromocodeDto>(existingPromocode);
         }
 
@@ -124,7 +132,9 @@ namespace RentACar.Application.Managers
 
             var promocodeToDelete = _mapper.Map<Promocode>(await _promocodeRepository.GetByIdAsync(id));
             await _promocodeRepository.DeleteAsync(promocodeToDelete);
+            await _promocodeRepository.DeleteAsync(promocodeToDelete);
             _logger.LogInformation("Promocode {Id} deleted", id);
+            await _auditLogManager.LogAsync("Delete", "Promocode", id.ToString(), $"Deleted promocode {id}");
             return true;
         }
     }

@@ -21,8 +21,9 @@ namespace RentACar.Application.Managers
         private readonly CustomerManager _customerManager; // To access CustomerManager methods
         private readonly ILogger<EmployeeManager> _logger;
         private readonly IBookingRepository _bookingRepository;
+        private readonly AuditLogManager _auditLogManager;
 
-        public EmployeeManager(UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager, IEmployeeRepository employeeRepository, IBookingRepository bookingRepository, IMapper mapper, CustomerManager customerManager, ILogger<EmployeeManager> logger)
+        public EmployeeManager(UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager, IEmployeeRepository employeeRepository, IBookingRepository bookingRepository, IMapper mapper, CustomerManager customerManager, ILogger<EmployeeManager> logger, AuditLogManager auditLogManager)
         {
             _userManager = userManager;
             _roleManager = roleManager;
@@ -31,6 +32,7 @@ namespace RentACar.Application.Managers
             _customerManager = customerManager;
             _logger = logger;
             _bookingRepository = bookingRepository;
+            _auditLogManager = auditLogManager;
         }
 
         public async Task<EmployeeDto?> CreateEmployee(EmployeeCreateDTO createDto)
@@ -74,6 +76,8 @@ namespace RentACar.Application.Managers
                 employee.aspNetUserId = user.Id;
                 await _employeeRepository.AddAsync(employee);
                 _logger.LogInformation("Employee created with id {Id}", employee.EmployeeId);
+
+                await _auditLogManager.LogAsync("Create", "Employee", employee.EmployeeId.ToString(), $"Created new employee: {employee.Name} ({createDto.Email})");
 
                 return _mapper.Map<EmployeeDto>(employee);
             }
@@ -141,6 +145,7 @@ namespace RentACar.Application.Managers
                 employeeEntity.IsActive = employeeDto.IsActive;
 
                 await _employeeRepository.UpdateAsync(employeeEntity);
+                await _auditLogManager.LogAsync("Update", "Employee", employeeDto.EmployeeId.ToString(), $"Updated employee profile: {employeeDto.Name}");
             }
             else
             {
@@ -189,6 +194,7 @@ namespace RentACar.Application.Managers
             }
 
             await _employeeRepository.DeleteAsync(id);
+            await _auditLogManager.LogAsync("Delete", "Employee", id.ToString(), $"Deleted employee {id}");
         }
 
         public async Task<IList<string>> GetUserRoles(int userId)
@@ -207,6 +213,7 @@ namespace RentACar.Application.Managers
             if (roles.Contains("Admin"))
             {
                 await _customerManager.UpdateActiveStatus(customerId, isActive);
+                await _auditLogManager.LogAsync("Update", "Customer", customerId.ToString(), $"Admin changed active status to: {isActive}");
                 return true;
             }
             return false;

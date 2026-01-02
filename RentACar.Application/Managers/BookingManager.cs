@@ -25,6 +25,7 @@ namespace RentACar.Application.Managers
         private readonly IMapper _mapper;
         private readonly ILogger<BookingManager> _logger;
         private readonly UserManager<IdentityUser> _userManager;
+        private readonly AuditLogManager _auditLogManager;
 
         public BookingManager(
             IEmployeeRepository employeeRepository,
@@ -37,7 +38,8 @@ namespace RentACar.Application.Managers
             PaymentManager paymentManager,
             IMapper mapper,
             UserManager<IdentityUser> userManager,
-            ILogger<BookingManager> logger)
+            ILogger<BookingManager> logger,
+            AuditLogManager auditLogManager)
         {
             _employeeRepository = employeeRepository;
             _bookingRepository = bookingRepository;
@@ -50,6 +52,7 @@ namespace RentACar.Application.Managers
             _paymentManager = paymentManager;
             _mapper = mapper;
             _logger = logger;
+            _auditLogManager = auditLogManager;
         }
 
         public async Task<BookingDto?> MakeBookingAsync(MakeBookingRequestDto requestDto, string loggedInUserId)
@@ -199,6 +202,9 @@ namespace RentACar.Application.Managers
             await _bookingRepository.UpdateAsync(addedBooking);
 
             _logger.LogInformation("✅ Booking created with ID: {BookingId}", addedBooking.BookingId);
+            
+            await _auditLogManager.LogAsync("Create", "Booking", addedBooking.BookingId.ToString(), $"Created new booking for Car {addedBooking.CarId}");
+            
             return _mapper.Map<BookingDto>(addedBooking);
         }
 
@@ -248,6 +254,7 @@ namespace RentACar.Application.Managers
 
             _mapper.Map(bookingDto, booking);
             await _bookingRepository.UpdateAsync(booking);
+            await _auditLogManager.LogAsync("Update", "Booking", bookingDto.BookingId.ToString(), $"Updated booking details. Status: {booking.BookingStatus}");
 
             return _mapper.Map<BookingEditDto>(booking);
         }
@@ -294,6 +301,7 @@ namespace RentACar.Application.Managers
 
             // ✅ Then delete the booking
             await _bookingRepository.DeleteAsync(booking);
+            await _auditLogManager.LogAsync("Delete", "Booking", requestDto.BookingId.ToString(), "Deleted booking and related payments");
 
             return true;
         }
