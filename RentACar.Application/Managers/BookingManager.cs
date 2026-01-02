@@ -138,7 +138,7 @@ namespace RentACar.Application.Managers
             }
 
             // 🔹 Calculate price
-            decimal subtotal = CalculateTotalPrice(requestDto.CarId, requestDto.Startdate, requestDto.Enddate);
+            decimal subtotal = CalculateTotalPrice(car.PricePerDay ?? 0, requestDto.Startdate, requestDto.Enddate);
             decimal totalPrice = promocode != null ? ApplyPromocode(subtotal, promocode) : subtotal;
 
             // 🔹 Validate payment method
@@ -226,10 +226,10 @@ namespace RentACar.Application.Managers
         }
 
 
-        private decimal CalculateTotalPrice(int carId, DateOnly startDate, DateOnly endDate)
+        private decimal CalculateTotalPrice(decimal pricePerDay, DateOnly startDate, DateOnly endDate)
         {
             TimeSpan duration = endDate.ToDateTime(TimeOnly.MinValue) - startDate.ToDateTime(TimeOnly.MinValue);
-            return 50 * (decimal)duration.Days;
+            return pricePerDay * (decimal)duration.Days;
         }
 
         private decimal ApplyPromocode(decimal price, Promocode promocode)
