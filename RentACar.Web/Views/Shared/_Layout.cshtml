@@ -29,9 +29,9 @@
     <style>
         /* Scoped CSS Overrides to fix Bootstrap conflicts on new dark pages only */
         
-        /* Fix Links: Remove blue color and underline */
-        body.bg-background-dark a,
-        body[class*="bg-[#050505]"] a {
+        /* Fix Links: Remove blue color and underline (Excluding Navbar) */
+        body.bg-background-dark a:not(.nav-link):not(.dropdown-item):not(.navbar-brand),
+        body[class*="bg-[#050505]"] a:not(.nav-link):not(.dropdown-item):not(.navbar-brand) {
             text-decoration: none !important;
             color: inherit !important;
         }

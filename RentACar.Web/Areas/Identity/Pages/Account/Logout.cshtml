@@ -1,49 +1,43 @@
 @page
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
 @model LogoutModel
 @{
+    Layout = "/Views/Shared/_Layout.cshtml";
     ViewData["Title"] = "Log out";
-    Layout = null;
+    ViewData["BodyClass"] = "bg-background-dark";
 }
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - CarRental</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/login-style.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
-</head>
-<body>
-    @await Html.PartialAsync("_PopupNotifications")
-    <div class="container1">
-        <div class="login-container text-center">
-            <div class="logo-text">
-                <i class="fas fa-car-side"></i>
-                <div>CarRental</div>
+<div class="flex items-center justify-center min-h-[calc(100vh-300px)] py-16 px-4">
+    <div class="w-full max-w-md space-y-8 bg-[#171717] p-10 rounded-2xl shadow-xl border border-white/5 text-center">
+        <div class="flex justify-center">
+            <div class="h-20 w-20 rounded-full bg-gold/10 flex items-center justify-center border border-gold/20">
+                <span class="material-symbols-outlined text-gold text-5xl">logout</span>
             </div>
-
-            <h2>Log out</h2>
-            @if (User.Identity?.IsAuthenticated ?? false)
-            {
-                <p style="color: var(--text-secondary);">Select logout to end your session.</p>
-                <form class="mt-3" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Page("/", new { area = "" })" method="post">
-                    <button type="submit" class="login-btn w-100">Logout</button>
-                </form>
-            }
-            else
-            {
-                <p style="color: var(--text-secondary);">You have successfully logged out of the application.</p>
-                <a class="login-btn w-100" asp-page="./Login">Return to Login</a>
+        </div>
+        
+        <div class="space-y-4">
+             @{
+                if (User.Identity?.IsAuthenticated ?? false)
+                {
+                    <form class="space-y-6" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Page("/", new { area = "" })" method="post">
+                        <h1 class="text-3xl font-bold text-white">Ready to Leave?</h1>
+                        <p class="text-gray-400 text-lg">Select "Logout" below if you are ready to end your current session.</p>
+                        <button type="submit" class="w-full inline-flex items-center justify-center px-6 py-3.5 border border-transparent text-base font-bold rounded-lg text-black bg-gold hover:bg-gold-hover transition-all duration-300 shadow-lg cursor-pointer">Logout</button>
+                    </form>
+                }
+                else
+                {
+                    <h1 class="text-3xl font-bold text-white">Signed Out</h1>
+                    <p class="text-gray-400 text-lg">You have successfully logged out.</p>
+                    <div class="mt-8">
+                         <a asp-page="./Login" class="inline-flex w-full items-center justify-center px-6 py-3.5 border border-transparent text-base font-bold rounded-lg text-black bg-gold hover:bg-gold-hover transition-all duration-300 shadow-lg">
+                            Sign In Again
+                        </a>
+                    </div>
+                }
             }
         </div>
     </div>
-
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-</body>
-</html>
+</div>
