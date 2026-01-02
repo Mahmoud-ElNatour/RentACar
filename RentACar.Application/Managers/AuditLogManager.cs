@@ -32,7 +32,50 @@ namespace RentACar.Application.Managers
                 var user = _httpContextAccessor.HttpContext?.User;
                 string actorName = explicitActorName ?? user?.Identity?.Name ?? "System";
                 string actorRole = explicitActorRole ?? "Unknown";
-                string ipAddress = _httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString() ?? "Unknown";
+                // improved IP detection logic to handle proxies and load balancers
+                string ipAddress = "Unknown";
+                
+                if (_httpContextAccessor.HttpContext?.Request?.Headers != null)
+                {
+                    var headers = _httpContextAccessor.HttpContext.Request.Headers;
+
+                    // 1. Cloudflare Support
+                    if (headers.ContainsKey("CF-Connecting-IP"))
+                    {
+                        ipAddress = headers["CF-Connecting-IP"].ToString();
+                    }
+                    // 2. Standard X-Forwarded-For (can be a comma-separated list)
+                    else if (headers.ContainsKey("X-Forwarded-For"))
+                    {
+                        var forwardedFor = headers["X-Forwarded-For"].ToString();
+                        if (!string.IsNullOrWhiteSpace(forwardedFor))
+                        {
+                            // The first IP in the list is the original client IP
+                            ipAddress = forwardedFor.Split(',')[0].Trim();
+                        }
+                    }
+                    // 3. Nginx / Standard Proxy "Real IP" header
+                    else if (headers.ContainsKey("X-Real-IP"))
+                    {
+                        ipAddress = headers["X-Real-IP"].ToString();
+                    }
+                }
+                
+                // 4. Fallback to the direct connection IP if headers didn't yield a result
+                if (string.IsNullOrWhiteSpace(ipAddress) || ipAddress == "Unknown")
+                {
+                     // Ensure RemoteIpAddress is not null before checking AddressFamily or converting
+                     var remoteIp = _httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress;
+                     if (remoteIp != null)
+                     {
+                         // If it's an IPv6-mapped IPv4, map it back to IPv4 for readability
+                         if (remoteIp.IsIPv4MappedToIPv6)
+                         {
+                             remoteIp = remoteIp.MapToIPv4();
+                         }
+                         ipAddress = remoteIp.ToString();
+                     }
+                }
                 string userAgent = _httpContextAccessor.HttpContext?.Request?.Headers["User-Agent"].ToString() ?? "Unknown";
 
                 if (user != null && explicitActorRole == null)
