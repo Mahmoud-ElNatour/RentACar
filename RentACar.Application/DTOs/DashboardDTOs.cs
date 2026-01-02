@@ -75,5 +75,17 @@ namespace RentACar.Application.DTOs
         public decimal DiscountSavings { get; set; }
         public string? BestCategory { get; set; }
         public List<int> MonthlyBookings { get; set; } = new();
+        public List<CustomerDashboardBookingDto> RecentBookings { get; set; } = new();
+    }
+
+    public class CustomerDashboardBookingDto
+    {
+        public int BookingId { get; set; }
+        public string CarName { get; set; } = string.Empty;
+        public string CarImage { get; set; } = string.Empty;
+        public string DateRange { get; set; } = string.Empty;
+        public decimal TotalPrice { get; set; }
+        public string Status { get; set; } = string.Empty;
+        public string StatusColorClass { get; set; } = string.Empty;
     }
 }

@@ -279,6 +279,37 @@ namespace RentACar.Web.Controllers
                 .ToList();
             var months = Enumerable.Range(1, 12).Select(m => monthCounts.FirstOrDefault(x => x.Month == m)?.Count ?? 0).ToList();
 
+            var recentBookings = bookings
+                .OrderByDescending(b => b.BookingId)
+                .Take(5)
+                .Select(b => {
+                    string imgData = "";
+                    if (b.Car != null && b.Car.CarImage != null && b.Car.CarImage.Length > 0)
+                    {
+                        string base64 = Convert.ToBase64String(b.Car.CarImage);
+                        imgData = $"data:image/png;base64,{base64}";
+                    }
+                    else
+                    {
+                         // Placeholder
+                         imgData = $"https://ui-avatars.com/api/?name={(b.Car != null ? b.Car.ModelName : "Car")}&background=random";
+                    }
+
+                    return new CustomerDashboardBookingDto
+                    {
+                        BookingId = b.BookingId,
+                        CarName = b.Car != null ? b.Car.ModelName : "Unknown Car",
+                        CarImage = imgData,
+                        DateRange = $"{b.Startdate:MMM dd} - {b.Enddate:MMM dd}",
+                        TotalPrice = b.TotalPrice,
+                        Status = b.BookingStatus,
+                        StatusColorClass = b.BookingStatus == "Accepted" ? "text-green-500 bg-green-500/10" :
+                                           b.BookingStatus == "Pending" ? "text-yellow-500 bg-yellow-500/10" :
+                                           "text-red-500 bg-red-500/10"
+                    };
+                })
+                .ToList();
+
             var model = new CustomerDashboardViewModel
             {
                 TotalBookings = bookings.Count,
@@ -286,7 +317,8 @@ namespace RentACar.Web.Controllers
                 TotalSpent = totalSpent,
                 DiscountSavings = discountSavings,
                 BestCategory = bestCategory,
-                MonthlyBookings = months
+                MonthlyBookings = months,
+                RecentBookings = recentBookings
             };
             return View("~/Views/Dashboard/Customer.cshtml", model);
         }

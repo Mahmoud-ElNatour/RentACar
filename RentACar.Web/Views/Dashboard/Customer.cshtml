@@ -1,0 +1,358 @@
+@model RentACar.Application.DTOs.CustomerDashboardViewModel
+@{
+    Layout = null; // Standalone layout for Dashboard
+}
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Rent A Car Customer Dashboard</title>
+    <!-- Material Symbols -->
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <!-- Theme Configuration -->
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#d4af35", // Gold
+                        "background-light": "#f8f7f6",
+                        "background-dark": "#0c0b08",
+                        "card-dark": "#1d1b14", 
+                        "border-gold": "#332f22"
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&amp;display=swap" rel="stylesheet" />
+    <style>
+        /* Custom Scrollbar for sleek look */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #14120b; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #332f22; 
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #d4af35; 
+        }
+    </style>
+</head>
+<body class="font-display bg-background-light dark:bg-background-dark text-slate-900 dark:text-white antialiased overflow-hidden">
+    <div class="flex h-screen w-full overflow-hidden">
+        <!-- Sidebar -->
+        <aside class="hidden md:flex flex-col w-72 bg-[#14120b] border-r border-[#332f22] flex-shrink-0">
+            <div class="p-6 flex flex-col h-full justify-between">
+                <div class="flex flex-col gap-8">
+                    <!-- Brand -->
+                    <div class="flex items-center gap-3">
+                        <div class="size-10 rounded-full bg-gradient-to-br from-primary to-[#8c7322] flex items-center justify-center text-background-dark">
+                            <span class="material-symbols-outlined font-bold">directions_car</span>
+                        </div>
+                        <div class="flex flex-col">
+                            <h1 class="text-white text-lg font-bold leading-none tracking-tight">Prestige Rent</h1>
+                            <p class="text-primary/80 text-xs font-medium uppercase tracking-wider mt-1">Customer Panel</p>
+                        </div>
+                    </div>
+                    <!-- Navigation -->
+                    <nav class="flex flex-col gap-2">
+                        <!-- Dashboard -->
+                        <a href="/Dashboard" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/10 border border-primary/20 transition-colors">
+                            <span class="material-symbols-outlined text-primary">dashboard</span>
+                            <p class="text-white text-sm font-medium">Dashboard</p>
+                        </a>
+
+                        <a href="/Browse" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 text-[#c3b998] hover:text-white transition-all">
+                             <span class="material-symbols-outlined">search</span>
+                            <p class="text-sm font-medium">Find a Car</p>
+                        </a>
+
+                        <a href="/Bookings/MyBookings" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 text-[#c3b998] hover:text-white transition-all">
+                            <span class="material-symbols-outlined">history</span>
+                            <p class="text-sm font-medium">My Bookings</p>
+                        </a>
+
+                        <a href="/" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 text-[#c3b998] hover:text-white transition-all">
+                            <span class="material-symbols-outlined">home</span>
+                            <p class="text-sm font-medium">Home</p>
+                        </a>
+                        <a href="/Identity/Account/Manage" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 text-[#c3b998] hover:text-white transition-all">
+                            <span class="material-symbols-outlined">person</span>
+                            <p class="text-sm font-medium">Profile</p>
+                        </a>
+                    </nav>
+                </div>
+                <!-- User Profile -->
+                <div class="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5">
+                    <div class="bg-center bg-no-repeat bg-cover rounded-full size-10 ring-2 ring-primary/30" style='background-image: url("https://ui-avatars.com/api/?name=@(User.Identity?.Name ?? "User")&background=d4af35&color=14120b");'></div>
+                    <div class="flex flex-col">
+                        <p class="text-white text-sm font-bold">@User.Identity?.Name</p>
+                        <p class="text-[#c3b998] text-xs">Valued Customer</p>
+                    </div>
+                    <form class="ml-auto" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="/" method="post">
+                        <button type="submit" class="p-2 text-[#c3b998] hover:text-white hover:bg-white/10 rounded-lg transition-colors">
+                            <span class="material-symbols-outlined text-sm">logout</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col h-full overflow-y-auto relative bg-[#0c0b08]">
+            <!-- Mobile Header -->
+            <div class="md:hidden flex items-center justify-between p-4 bg-[#14120b] border-b border-[#332f22]">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">directions_car</span>
+                    <span class="text-white font-bold">Prestige Rent</span>
+                </div>
+                <a href="/" class="text-white"><span class="material-symbols-outlined">home</span></a>
+            </div>
+
+            <div class="p-6 md:p-10 max-w-7xl mx-auto w-full flex flex-col gap-8">
+                <!-- Page Heading -->
+                <header class="flex flex-wrap justify-between items-end gap-4">
+                    <div class="flex flex-col gap-1">
+                        <h1 class="text-white text-3xl md:text-4xl font-black tracking-tight">Welcome Back!</h1>
+                        <p class="text-[#c3b998] text-base">Here is your rental overview.</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                         <a href="/Browse">
+                           <button class="bg-primary hover:bg-[#bfa030] text-black font-bold px-6 py-3 rounded-lg transition-colors flex items-center gap-2 shadow-lg shadow-primary/20">
+                            <span class="material-symbols-outlined text-xl">add_circle</span>
+                            <span>Book New Car</span>
+                        </button>
+                        </a>
+                    </div>
+                </header>
+
+                <!-- KPI Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <!-- Total Spent -->
+                    <div class="bg-[#1d1b14] border border-[#332f22] rounded-xl p-5 flex flex-col justify-between gap-4 group hover:border-primary/30 transition-colors">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-[#c3b998] text-sm font-medium">Total Spent</p>
+                                <p class="text-white text-2xl font-bold mt-1">@Model.TotalSpent.ToString("C0")</p>
+                            </div>
+                            <div class="bg-[#332f22] p-2 rounded-lg text-primary group-hover:bg-primary group-hover:text-black transition-colors">
+                                <span class="material-symbols-outlined">payments</span>
+                            </div>
+                        </div>
+                         <div class="flex items-center gap-2 text-xs text-[#8c8672]">
+                            <span class="text-white font-medium">Lifetime value</span>
+                        </div>
+                    </div>
+
+                    <!-- Upcoming Bookings -->
+                    <div class="bg-[#1d1b14] border border-[#332f22] rounded-xl p-5 flex flex-col justify-between gap-4 group hover:border-primary/30 transition-colors">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-[#c3b998] text-sm font-medium">Upcoming Trips</p>
+                                <p class="text-white text-2xl font-bold mt-1">@Model.UpcomingBookings</p>
+                            </div>
+                            <div class="bg-[#332f22] p-2 rounded-lg text-primary group-hover:bg-primary group-hover:text-black transition-colors">
+                                <span class="material-symbols-outlined">upcoming</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 text-xs text-[#8c8672]">
+                             @if(Model.UpcomingBookings > 0)
+                             {
+                                 <span class="text-green-500 font-bold">Ready to go!</span>
+                             }
+                             else
+                             {
+                                 <span>No upcoming trips</span>
+                             }
+                        </div>
+                    </div>
+
+                    <!-- Total Bookings -->
+                    <div class="bg-[#1d1b14] border border-[#332f22] rounded-xl p-5 flex flex-col justify-between gap-4 group hover:border-primary/30 transition-colors">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-[#c3b998] text-sm font-medium">Total Bookings</p>
+                                <p class="text-white text-2xl font-bold mt-1">@Model.TotalBookings</p>
+                            </div>
+                             <div class="bg-[#332f22] p-2 rounded-lg text-primary group-hover:bg-primary group-hover:text-black transition-colors">
+                                <span class="material-symbols-outlined">history_edu</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 text-xs text-[#8c8672]">
+                            <span>Completed trips</span>
+                        </div>
+                    </div>
+
+                    <!-- Savings -->
+                    <div class="bg-gradient-to-br from-[#1d1b14] to-[#14120b] border border-green-900/30 rounded-xl p-5 flex flex-col justify-between gap-4 relative overflow-hidden">
+                         <div class="absolute right-0 top-0 w-16 h-16 bg-green-500/10 rounded-bl-full -mr-2 -mt-2"></div>
+                        <div class="flex justify-between items-start z-10">
+                            <div>
+                                <p class="text-[#c3b998] text-sm font-medium">You Saved</p>
+                                <p class="text-green-400 text-2xl font-bold mt-1">@Model.DiscountSavings.ToString("C0")</p>
+                            </div>
+                            <div class="bg-green-500/10 p-2 rounded-lg text-green-500">
+                                <span class="material-symbols-outlined">savings</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 text-xs text-[#8c8672] z-10">
+                            <span class="text-green-500 font-medium">Via Promocodes</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Content Split -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Recent Bookings Table -->
+                    <div class="lg:col-span-2 bg-[#1d1b14] border border-[#332f22] rounded-xl overflow-hidden flex flex-col">
+                        <div class="p-6 border-b border-[#332f22] flex justify-between items-center bg-[#14120b]">
+                            <h3 class="text-white text-lg font-bold flex items-center gap-2">
+                                <span class="material-symbols-outlined text-primary">receipt_long</span>
+                                Recent Activity
+                            </h3>
+                            <a href="/Bookings/MyBookings" class="text-xs text-primary hover:underline">View All</a>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="text-[#8c8672] text-xs border-b border-[#332f22] bg-[#14120b]/50">
+                                        <th class="p-4 font-medium uppercase tracking-wider">Car</th>
+                                        <th class="p-4 font-medium uppercase tracking-wider">Dates</th>
+                                        <th class="p-4 font-medium uppercase tracking-wider">Total</th>
+                                        <th class="p-4 font-medium uppercase tracking-wider">Status</th>
+                                        <th class="p-4 font-medium uppercase tracking-wider text-right">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="text-sm divide-y divide-[#332f22]">
+                                    @if(Model.RecentBookings.Any())
+                                    {
+                                        @foreach(var item in Model.RecentBookings)
+                                        {
+                                            <tr class="hover:bg-white/5 transition-colors group">
+                                                <td class="p-4">
+                                                    <div class="flex items-center gap-3">
+                                                        <div class="size-10 rounded-lg bg-[#0c0b08] border border-[#332f22] overflow-hidden flex-shrink-0">
+                                                            @if(!string.IsNullOrEmpty(item.CarImage))
+                                                            {
+                                                                <img src="@item.CarImage" alt="Car" class="w-full h-full object-cover" />
+                                                            }
+                                                            else
+                                                            {
+                                                                <div class="w-full h-full flex items-center justify-center text-[#8c8672]">
+                                                                    <span class="material-symbols-outlined text-base">directions_car</span>
+                                                                </div>
+                                                            }
+                                                        </div>
+                                                        <span class="text-white font-medium">@item.CarName</span>
+                                                    </div>
+                                                </td>
+                                                <td class="p-4 text-[#c3b998]">@item.DateRange</td>
+                                                <td class="p-4 text-white font-bold">@item.TotalPrice.ToString("C0")</td>
+                                                <td class="p-4">
+                                                    <span class="px-2 py-1 rounded text-xs font-bold @item.StatusColorClass">
+                                                        @item.Status
+                                                    </span>
+                                                </td>
+                                                <td class="p-4 text-right">
+                                                    <a href="/Bookings/Ticket/@item.BookingId" target="_blank" class="inline-flex items-center justify-center p-2 text-[#c3b998] hover:text-white hover:bg-white/10 rounded-lg transition-colors" title="Download Ticket">
+                                                        <span class="material-symbols-outlined text-lg">download</span>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <tr>
+                                            <td colspan="5" class="p-6 text-center text-[#8c8672]">
+                                                You haven't made any bookings yet. <a href="/Browse" class="text-primary hover:underline">Find a car now!</a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Activity Chart -->
+                    <div class="lg:col-span-1 bg-[#1d1b14] border border-[#332f22] rounded-xl p-6 flex flex-col h-full">
+                         <h3 class="text-white text-lg font-bold mb-6">Booking Details</h3>
+                         <div class="relative w-full h-64 mb-4">
+                             <canvas id="customerChart"></canvas>
+                         </div>
+                         <div class="mt-auto pt-4 border-t border-[#332f22]">
+                             <p class="text-[#c3b998] text-sm">Targeting a favorite category?</p>
+                             <div class="mt-2 flex items-center gap-2">
+                                 <span class="text-primary font-bold text-xl">@(Model.BestCategory ?? "N/A")</span>
+                                 @if(!string.IsNullOrEmpty(Model.BestCategory))
+                                 {
+                                     <span class="text-[#8c8672] text-xs">(Most Booked)</span>
+                                 }
+                             </div>
+                         </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Chart Script -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const monthData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.MonthlyBookings));
+        const ctx = document.getElementById('customerChart');
+        if (ctx) {
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+                    datasets: [{
+                        label: 'Trips',
+                        data: monthData,
+                        backgroundColor: '#d4af35',
+                        borderRadius: 4,
+                        hoverBackgroundColor: '#eac54b'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: '#332f22',
+                            },
+                            ticks: { color: '#8c8672', stepSize: 1 }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#8c8672', font: {size: 10} }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

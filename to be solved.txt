@@ -46,8 +46,9 @@ RentACar.Web/Areas/Identity/Pages/Account/ResendEmailConfirmation.cshtml
 
 Later on:
 -request panel for canceling the booking from employee nso the admin can approve or deny
-- refunded panel
 - theme panel
-- customer reviews page for customer for each booking , and table in control panel for employees
+- customer reviews page for customer for each booking , and table in control panel for employees to view
 - reports (logs, financials,...)
 - email services (send notifications, reset password, confirm email, send offers,...)
+- refunded panel -- if stripe shta8alet
+
