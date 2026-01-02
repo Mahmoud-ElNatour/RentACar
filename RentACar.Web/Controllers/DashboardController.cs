@@ -312,14 +312,92 @@ namespace RentACar.Web.Controllers
 
             var model = new CustomerDashboardViewModel
             {
+                // Basic Stats
                 TotalBookings = bookings.Count,
                 UpcomingBookings = upcoming,
                 TotalSpent = totalSpent,
                 DiscountSavings = discountSavings,
                 BestCategory = bestCategory,
+                
+                // User Details
+                CustomerName = customer.Name,
+                CustomerImageUrl = $"https://ui-avatars.com/api/?name={customer.Name}&background=d4af35&color=14120b",
+                IsGoldMember = totalSpent > 1000, // Simple logic for Gold Status
+
+                // Charts & Lists
                 MonthlyBookings = months,
                 RecentBookings = recentBookings
             };
+
+            // 1. Next Booking (Hero Card)
+            var nextBooking = bookings
+                .Where(b => b.Startdate.ToDateTime(TimeOnly.MinValue) > DateTime.UtcNow)
+                .OrderBy(b => b.Startdate)
+                .FirstOrDefault();
+
+            if (nextBooking != null)
+            {
+                string nbImg = "";
+                if (nextBooking.Car != null && nextBooking.Car.CarImage != null && nextBooking.Car.CarImage.Length > 0)
+                {
+                    nbImg = $"data:image/png;base64,{Convert.ToBase64String(nextBooking.Car.CarImage)}";
+                }
+                else
+                {
+                    nbImg = $"https://ui-avatars.com/api/?name={(nextBooking.Car?.ModelName ?? "Car")}&background=random";
+                }
+
+                model.NextBooking = new CustomerDashboardBookingDto
+                {
+                    BookingId = nextBooking.BookingId,
+                    CarName = nextBooking.Car?.ModelName ?? "Unknown Car",
+                    CarImage = nbImg,
+                    DateRange = $"{nextBooking.Startdate:MMM dd} - {nextBooking.Enddate:MMM dd}",
+                    TotalPrice = nextBooking.TotalPrice,
+                    Status = nextBooking.BookingStatus,
+                    StatusColorClass = "text-gold-500", // Hero usually gold or white
+                    PickupDate = nextBooking.Startdate.ToDateTime(TimeOnly.MinValue),
+                    ReturnDate = nextBooking.Enddate.ToDateTime(TimeOnly.MinValue),
+                    PickupLocation = "Beirut Airport", // Hardcoded for now or fetch from booking if available
+                    ReturnLocation = "Beirut Airport",
+                    CarYear = (nextBooking.Car?.ModelYear ?? 2023).ToString() + " Model",
+                    CarType = nextBooking.Car?.Category?.Name ?? "Premium"
+                };
+            }
+
+            // 2. Car Categories (for Quick Book)
+            // Assuming Category is accessible via Car or directly. Since we don't have _categoryManager injected here and unsure of DbSet, use Cars.
+            model.CarCategories = await _dbContext.Cars
+                .Where(c => c.Category != null)
+                .Select(c => c.Category.Name)
+                .Distinct()
+                .ToListAsync();
+
+            // 3. Suggested Cars (Sidebar)
+            // Logic: 2 Available cars of BestCategory, excluding current bookings
+            var suggestedQuery = _dbContext.Cars.Include(c => c.Category).Where(c => c.IsAvailable);
+            if (!string.IsNullOrEmpty(bestCategory))
+            {
+                suggestedQuery = suggestedQuery.Where(c => c.Category.Name == bestCategory);
+            }
+            
+            var suggestedCars = await suggestedQuery.Take(2).ToListAsync();
+            model.SuggestedCars = suggestedCars.Select(c => {
+                 string cImg = "";
+                 if(c.CarImage != null && c.CarImage.Length > 0) cImg = $"data:image/png;base64,{Convert.ToBase64String(c.CarImage)}";
+                 else cImg = $"https://ui-avatars.com/api/?name={c.ModelName}&background=random";
+
+                 return new CustomerDashboardSuggestedCarDto 
+                 {
+                     CarId = c.CarId,
+                     ModelName = c.ModelName,
+                     PricePerDay = c.PricePerDay ?? 0,
+                     ImageUrl = cImg,
+                     Transmission = "Automatic", // Default as property doesn't exist on entity
+                     FuelType = "Petrol" // Placeholder
+                 };
+            }).ToList();
+
             return View("~/Views/Dashboard/Customer.cshtml", model);
         }
     }

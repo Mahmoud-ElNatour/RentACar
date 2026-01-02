@@ -74,6 +74,15 @@ namespace RentACar.Application.DTOs
         public decimal TotalSpent { get; set; }
         public decimal DiscountSavings { get; set; }
         public string? BestCategory { get; set; }
+        
+        // New Fields for Redesign
+        public string CustomerName { get; set; } = string.Empty;
+        public string CustomerImageUrl { get; set; } = string.Empty;
+        public bool IsGoldMember { get; set; }
+        public CustomerDashboardBookingDto? NextBooking { get; set; }
+        public List<string> CarCategories { get; set; } = new();
+        public List<CustomerDashboardSuggestedCarDto> SuggestedCars { get; set; } = new();
+
         public List<int> MonthlyBookings { get; set; } = new();
         public List<CustomerDashboardBookingDto> RecentBookings { get; set; } = new();
     }
@@ -87,5 +96,23 @@ namespace RentACar.Application.DTOs
         public decimal TotalPrice { get; set; }
         public string Status { get; set; } = string.Empty;
         public string StatusColorClass { get; set; } = string.Empty;
+        
+        // Extended for Hero Display
+        public DateTime? PickupDate { get; set; }
+        public DateTime? ReturnDate { get; set; }
+        public string PickupLocation { get; set; } = string.Empty;
+        public string ReturnLocation { get; set; } = string.Empty;
+        public string CarYear { get; set; } = string.Empty; // e.g. "2023 Model"
+        public string CarType { get; set; } = string.Empty; // e.g. "Luxury Sedan"
+    }
+
+    public class CustomerDashboardSuggestedCarDto
+    {
+        public int CarId { get; set; }
+        public string ModelName { get; set; } = string.Empty;
+        public decimal PricePerDay { get; set; }
+        public string ImageUrl { get; set; } = string.Empty;
+        public string Transmission { get; set; } = string.Empty; // Automatic/Manual
+        public string FuelType { get; set; } = string.Empty; // Petrol/Hybrid
     }
 }

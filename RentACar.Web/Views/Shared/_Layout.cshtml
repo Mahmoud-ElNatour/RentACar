@@ -22,11 +22,50 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/AdminDashboard.css" asp-append-version="true" />
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&amp;family=Noto+Sans:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="~/css/footer.css" asp-append-version="true" />
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <style>
+        /* Scoped CSS Overrides to fix Bootstrap conflicts on new dark pages only */
+        
+        /* Fix Links: Remove blue color and underline */
+        body.bg-background-dark a,
+        body[class*="bg-[#050505]"] a {
+            text-decoration: none !important;
+            color: inherit !important;
+        }
+
+        /* Fix TOC styling specifically */
+        body.bg-background-dark .toc-item,
+        body[class*="bg-[#050505]"] .toc-item {
+            color: #b9b29d !important;
+            text-decoration: none !important;
+        }
+        body.bg-background-dark .toc-item:hover,
+        body.bg-background-dark .toc-item.active,
+        body[class*="bg-[#050505]"] .toc-item:hover,
+        body[class*="bg-[#050505]"] .toc-item.active {
+            color: #ffffff !important;
+        }
+        
+        /* Fix Borders: Bootstrap .border adds a white border.  */
+        body.bg-background-dark .border,
+        body[class*="bg-[#050505]"] .border {
+            border-color: #262626 !important;
+            border-style: solid !important;
+            border-width: 1px !important;
+        }
+
+        /* Fix Box Sizing if Bootstrap is messing with it */
+        body.bg-background-dark *,
+        body[class*="bg-[#050505]"] * {
+             box-sizing: border-box;
+        }
+    </style>
     <script id="tailwind-config">
         tailwind.config = {
+            /* important: true, -- removed to prevent global side effects */
             blocklist: ['collapse'],
             corePlugins: {
                 preflight: false,
@@ -39,20 +78,26 @@
                         "gold": "#f2b90d",
                         "gold-light": "#fce186", 
                         "gold-hover": "#d9a60c",
+                        "brand": "#eec02b", // Renamed from primary to avoid Bootstrap conflict
                         "background-light": "#f8f8f5",
-                        "background-dark": "#0a0a0a",
-                        "surface-dark": "#171717",
+                        "background-dark": "#050505", // Updated to match user request
+                        "surface-dark": "#171717", // Existing surface
                         "surface-dark-lighter": "#262626",
+                        "surface-accent": "#1a1a1a", // New design accent
+                        "text-body": "#d1d5db", // New design text body
+                        "text-secondary": "#b9b29d", // New design text secondary
                         "footer-bg": "#0a0a0a",
                         "footer-surface": "#171717",
-                        "footer-border": "#f2b90d33", /* primay/20 approx */
+                        "footer-border": "#f2b90d33", 
                     },
                     fontFamily: {
-                        "display": ["Manrope", "sans-serif"]
+                        "display": ["Manrope", "Plus Jakarta Sans", "sans-serif"], // Merged display fonts
+                        "body": ["Noto Sans", "sans-serif"], // New body font
                     },
                     boxShadow: {
                         "glow": "0 0 20px rgba(212, 175, 55, 0.15)"
-                    }
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
                 },
             },
         }
@@ -60,7 +105,7 @@
     @* <link rel="stylesheet" href="~/css/index-style.css" asp-append-version="true" /> *@
     @* <link rel="stylesheet" href="~/RentACar.Web.styles.css" asp-append-version="true" /> *@
 </head>
-<body class="d-flex flex-column min-vh-100">
+<body class="d-flex flex-column min-vh-100 @ViewData["BodyClass"]">
     @await Html.PartialAsync("_Sidebar")
     @await Html.PartialAsync("_PopupNotifications")
     <header>

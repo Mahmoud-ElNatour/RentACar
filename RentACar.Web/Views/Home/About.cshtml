@@ -1,85 +1,119 @@
 @{
     ViewData["Title"] = "About Us";
+    ViewData["BodyClass"] = "bg-background-dark text-text-body font-display selection:bg-brand selection:text-black";
 }
 
-<div class="bg-footer-bg min-h-screen text-gray-300 font-display p-6 md:p-12">
-    <div class="max-w-6xl mx-auto">
-        <!-- Hero Section -->
-        <div class="text-center mb-16 relative">
-            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gold/10 rounded-full blur-3xl pointer-events-none"></div>
-            <h1 class="text-4xl md:text-6xl font-bold text-white mb-6 tracking-tight relative z-10">
-                Driven by <span class="text-gold">Excellence</span>
-            </h1>
-            <p class="text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed relative z-10">
-                We are more than just a car rental company. We are your partner in exploring Lebanon with comfort, style, and reliability.
-            </p>
+<section class="relative w-full flex flex-col items-center justify-center min-h-[60vh] px-6 py-24 text-center overflow-hidden">
+    <div class="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAYN7lV0Ib885RLBkCavZhkyO0JK2iwV3KraX5X3Grh77IuTJPvRnEzLli4aha4ZzwXCDI8Iwvv_7FlcBhsDnX4EFvoFtaOGZcQmLUCUnc_Xxn8chY3JSUCl27MNwMMb-ujNEb6iIeBqyqFV_UfvCe23Z_xLqgATg-GmwoCB4MNNFAShFIXzxsqhfwDotiWkfUGOMMEM2x3B5lOJRqhhneDPC5pEDfbEEplr6Blxy32Ofjnm688j-rPL3-QemkcugIVfA1ezuZp4dLr");'>
+    </div>
+    <div class="absolute inset-0 z-0 bg-gradient-to-b from-background-dark/90 via-background-dark/95 to-background-dark"></div>
+    <div class="relative z-10 max-w-4xl space-y-8 animate-fade-in-up mt-10">
+        <div class="inline-flex items-center justify-center p-2 rounded-full bg-surface-dark/50 border border-brand/20 backdrop-blur-sm mb-4">
+            <span class="px-3 text-brand text-xs font-bold uppercase tracking-widest">Est. 2014</span>
         </div>
-
-        <!-- Mission & Vision Cards -->
-        <div class="grid md:grid-cols-2 gap-8 mb-20">
-            <div class="bg-white/5 border border-white/10 rounded-3xl p-8 backdrop-blur-sm relative overflow-hidden group hover:border-gold/30 transition-all duration-500">
-                <div class="absolute top-0 right-0 w-32 h-32 bg-gold/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:bg-gold/10 transition-colors"></div>
-                <div class="w-12 h-12 bg-gradient-to-br from-gold/20 to-gold/5 rounded-xl flex items-center justify-center mb-6 text-gold ring-1 ring-gold/20 group-hover:scale-110 transition-transform duration-500">
-                    <span class="material-symbols-outlined text-2xl">rocket_launch</span>
-                </div>
-                <h2 class="text-2xl font-bold text-white mb-4">Our Mission</h2>
-                <p class="text-gray-400 leading-relaxed">
-                    To provide a seamless, premium car rental experience that empowers our customers to discover the beauty of Lebanon. We strive to offer the highest quality fleet and exceptional customer service at every turn.
-                </p>
+        <h1 class="text-5xl md:text-7xl font-black tracking-tight text-white">
+            About <span class="text-brand">Us</span>
+        </h1>
+        <h2 class="text-xl md:text-2xl font-bold text-white/90">
+            Driving Lebanon <span class="text-brand">Forward</span>
+        </h2>
+        <p class="text-lg md:text-xl text-gray-400 max-w-3xl mx-auto leading-relaxed font-body">
+            RentCarLB is Lebanon's premier online car rental solution. We combine seamless technology with a premium fleet to empower your journey with reliability and luxury. From our humble beginnings to becoming a market leader, our focus has always been on the road ahead.
+        </p>
+    </div>
+</section>
+<section class="w-full px-6 -mt-20 relative z-20 mb-20">
+    <div class="max-w-[1200px] mx-auto">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="group flex flex-col items-center justify-center gap-2 rounded-xl p-10 bg-surface-dark border border-[#262626] hover:border-brand/50 transition-all duration-300 shadow-2xl">
+                <span class="material-symbols-outlined text-5xl text-brand mb-2">history</span>
+                <p class="text-5xl font-bold text-white">10+</p>
+                <p class="text-sm font-medium text-gray-500 uppercase tracking-widest mt-2">Years of Service</p>
             </div>
-
-            <div class="bg-white/5 border border-white/10 rounded-3xl p-8 backdrop-blur-sm relative overflow-hidden group hover:border-gold/30 transition-all duration-500">
-                <div class="absolute top-0 right-0 w-32 h-32 bg-gold/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:bg-gold/10 transition-colors"></div>
-                <div class="w-12 h-12 bg-gradient-to-br from-gold/20 to-gold/5 rounded-xl flex items-center justify-center mb-6 text-gold ring-1 ring-gold/20 group-hover:scale-110 transition-transform duration-500">
-                    <span class="material-symbols-outlined text-2xl">visibility</span>
-                </div>
-                <h2 class="text-2xl font-bold text-white mb-4">Our Vision</h2>
-                <p class="text-gray-400 leading-relaxed">
-                    To become the leading car rental service in the region, known for innovation, trust, and setting new standards in the luxury and economy mobility sectors.
-                </p>
+            <div class="group flex flex-col items-center justify-center gap-2 rounded-xl p-10 bg-surface-dark border border-[#262626] hover:border-brand/50 transition-all duration-300 shadow-2xl">
+                <span class="material-symbols-outlined text-5xl text-brand mb-2">directions_car</span>
+                <p class="text-5xl font-bold text-white">500+</p>
+                <p class="text-sm font-medium text-gray-500 uppercase tracking-widest mt-2">Premium Vehicles</p>
             </div>
-        </div>
-
-        <!-- Why Choose Us -->
-        <div class="mb-20">
-            <h2 class="text-3xl font-bold text-white mb-10 text-center">Why Choose <span class="text-gold">RentCarLB</span></h2>
-            <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div class="bg-black/20 border border-white/5 p-6 rounded-2xl hover:bg-white/5 transition-colors text-center group">
-                    <span class="material-symbols-outlined text-4xl text-gold mb-4 group-hover:scale-110 transition-transform duration-300">directions_car</span>
-                    <h3 class="text-lg font-bold text-white mb-2">Premium Fleet</h3>
-                    <p class="text-sm text-gray-400">Maintained to the highest standards for your safety and comfort.</p>
-                </div>
-                <div class="bg-black/20 border border-white/5 p-6 rounded-2xl hover:bg-white/5 transition-colors text-center group">
-                    <span class="material-symbols-outlined text-4xl text-gold mb-4 group-hover:scale-110 transition-transform duration-300">support_agent</span>
-                    <h3 class="text-lg font-bold text-white mb-2">24/7 Support</h3>
-                    <p class="text-sm text-gray-400">Our dedicated team is always ready to assist you on your journey.</p>
-                </div>
-                <div class="bg-black/20 border border-white/5 p-6 rounded-2xl hover:bg-white/5 transition-colors text-center group">
-                    <span class="material-symbols-outlined text-4xl text-gold mb-4 group-hover:scale-110 transition-transform duration-300">payments</span>
-                    <h3 class="text-lg font-bold text-white mb-2">Transparent Pricing</h3>
-                    <p class="text-sm text-gray-400">No hidden fees. What you see is exactly what you pay.</p>
-                </div>
-                <div class="bg-black/20 border border-white/5 p-6 rounded-2xl hover:bg-white/5 transition-colors text-center group">
-                    <span class="material-symbols-outlined text-4xl text-gold mb-4 group-hover:scale-110 transition-transform duration-300">verified_user</span>
-                    <h3 class="text-lg font-bold text-white mb-2">Secure & Easy</h3>
-                    <p class="text-sm text-gray-400">Seamless booking process with top-tier data security.</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Contact CTA -->
-        <div class="bg-gradient-to-r from-gold/20 to-gold/5 border border-gold/10 rounded-3xl p-10 text-center relative overflow-hidden">
-             <div class="absolute inset-0 bg-[url('/img/pattern.png')] opacity-10 mix-blend-overlay"></div>
-            <h2 class="text-2xl md:text-3xl font-bold text-white mb-4 relative z-10">Ready to start your journey?</h2>
-            <p class="text-gray-300 mb-8 max-w-xl mx-auto relative z-10">Browse our extensive collection of vehicles and find the perfect one for your next adventure.</p>
-            <div class="flex justify-center gap-4 relative z-10">
-                <a asp-controller="Browse" asp-action="Index" class="px-8 py-3 rounded-xl bg-gold text-footer-bg font-bold hover:bg-gold-hover hover:scale-105 transition-all shadow-lg shadow-gold/20">
-                    Browse Fleet
-                </a>
-                <a asp-controller="Home" asp-action="Contact" class="px-8 py-3 rounded-xl bg-white/10 text-white font-bold border border-white/10 hover:bg-white/20 hover:scale-105 transition-all">
-                    Contact Us
-                </a>
+            <div class="group flex flex-col items-center justify-center gap-2 rounded-xl p-10 bg-surface-dark border border-[#262626] hover:border-brand/50 transition-all duration-300 shadow-2xl">
+                <span class="material-symbols-outlined text-5xl text-brand mb-2">sentiment_satisfied</span>
+                <p class="text-5xl font-bold text-white">15k+</p>
+                <p class="text-sm font-medium text-gray-500 uppercase tracking-widest mt-2">Happy Customers</p>
             </div>
         </div>
     </div>
-</div>
+</section>
+<section class="w-full py-20 px-6 md:px-20 bg-gradient-to-b from-background-dark to-surface-dark/30">
+    <div class="max-w-[1200px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
+        <div class="space-y-12">
+            <div>
+                <h2 class="text-3xl font-bold mb-6 flex items-center gap-4 text-white">
+                    <span class="w-1.5 h-10 bg-brand rounded-full box-border shadow-[0_0_10px_rgba(238,192,43,0.5)]"></span>
+                    Our Mission
+                </h2>
+                <p class="text-gray-400 text-lg leading-relaxed font-body">
+                    To provide a seamless, transparent, and luxurious car rental experience across Lebanon, empowering travelers and businesses alike with administrative excellence and unwavering reliability. We believe renting a car should be as enjoyable as driving one.
+                </p>
+            </div>
+            <div>
+                <h2 class="text-3xl font-bold mb-6 flex items-center gap-4 text-white">
+                    <span class="w-1.5 h-10 bg-brand rounded-full box-border shadow-[0_0_10px_rgba(238,192,43,0.5)]"></span>
+                    Our Vision
+                </h2>
+                <p class="text-gray-400 text-lg leading-relaxed font-body">
+                    To become the undisputed leader in mobility solutions in the Middle East, setting the standard for quality, safety, and customer satisfaction through innovation and a customer-first approach.
+                </p>
+            </div>
+        </div>
+        <div class="relative h-[500px] w-full rounded-2xl overflow-hidden shadow-2xl ring-1 ring-[#262626]">
+            <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent z-10"></div>
+            <img alt="Fleet of black luxury cars parked in a row" class="w-full h-full object-cover opacity-80" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDhk64CqBgW2MJu3AG5JkCGtoRHdcrf6GloNG5HXYDQya_L_LGtTsnJ-WnWbUTosOox5Su9Tsq3r2k96MXbNV4v-wUpbf6OCtopWOD9JavTAYWfTnaKHQu771k9fUhCzlwL7RxG0-3PPIoasXqNCs1qvy3qF_NOVsUv3gD2e30GX4ET695LgLNsSJOer0aBPKTzC8ocqSztIJZ0gVofCdjAIKcFBCBEzKrVunMy-pF_Xj35zhhupG_C8gY73I2PnxGC8V3PwPQ8LntA" />
+            <div class="absolute bottom-8 left-8 right-8 z-20">
+                <div class="bg-black/60 backdrop-blur-md p-6 rounded-xl border border-[#393528]">
+                    <div class="flex items-center gap-4 mb-3">
+                        <div class="p-2 bg-brand/20 rounded-full text-brand border border-brand/20">
+                            <span class="material-symbols-outlined">verified_user</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-white">Trust &amp; Security</h3>
+                    </div>
+                    <p class="text-gray-400 text-sm">Every vehicle in our fleet undergoes rigorous 150-point inspection before it reaches you.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<section class="w-full py-24 px-6 md:px-20 bg-background-dark">
+    <div class="max-w-[1200px] mx-auto text-center mb-16">
+        <span class="text-brand font-bold tracking-widest uppercase text-sm mb-2 block">Our Core Values</span>
+        <h2 class="text-3xl md:text-5xl font-black text-white">Why Choose <span class="text-brand">RentCarLB</span>?</h2>
+    </div>
+    <div class="max-w-[1200px] mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div class="bg-surface-dark p-8 rounded-2xl border border-[#262626] hover:border-brand/40 transition-all duration-300 group">
+            <div class="w-14 h-14 bg-surface-accent rounded-xl flex items-center justify-center text-brand mb-6 group-hover:scale-110 transition-transform duration-300 border border-[#333]">
+                <span class="material-symbols-outlined text-3xl">support_agent</span>
+            </div>
+            <h3 class="text-xl font-bold mb-4 text-white">24/7 Support</h3>
+            <p class="text-gray-400 text-sm leading-relaxed">
+                Our dedicated team is always on standby to assist you, whether it's a booking inquiry or roadside assistance, ensuring peace of mind around the clock.
+            </p>
+        </div>
+        <div class="bg-surface-dark p-8 rounded-2xl border border-[#262626] hover:border-brand/40 transition-all duration-300 group">
+            <div class="w-14 h-14 bg-surface-accent rounded-xl flex items-center justify-center text-brand mb-6 group-hover:scale-110 transition-transform duration-300 border border-[#333]">
+                <span class="material-symbols-outlined text-3xl">payments</span>
+            </div>
+            <h3 class="text-xl font-bold mb-4 text-white">Transparent Pricing</h3>
+            <p class="text-gray-400 text-sm leading-relaxed">
+                What you see is what you pay. No hidden fees, no surprises at the counter. We pride ourselves on clear, upfront pricing models.
+            </p>
+        </div>
+        <div class="bg-surface-dark p-8 rounded-2xl border border-[#262626] hover:border-brand/40 transition-all duration-300 group">
+            <div class="w-14 h-14 bg-surface-accent rounded-xl flex items-center justify-center text-brand mb-6 group-hover:scale-110 transition-transform duration-300 border border-[#333]">
+                <span class="material-symbols-outlined text-3xl">diamond</span>
+            </div>
+            <h3 class="text-xl font-bold mb-4 text-white">Premium Fleet</h3>
+            <p class="text-gray-400 text-sm leading-relaxed">
+                From economical city cars to high-end luxury SUVs, our diverse fleet is meticulously maintained to offer the best driving experience.
+            </p>
+        </div>
+    </div>
+</section>

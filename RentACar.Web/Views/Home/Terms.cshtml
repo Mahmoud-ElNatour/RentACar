@@ -1,160 +1,223 @@
 @{
     ViewData["Title"] = "Terms & Conditions";
+    ViewData["BodyClass"] = "bg-background-dark font-display antialiased text-white";
+}
+@section Scripts {
+    <script src="~/js/terms.js"></script>
 }
 
-<div class="bg-footer-bg min-h-screen text-gray-300 font-display p-6 md:p-12">
-    <div class="max-w-4xl mx-auto">
-        <div class="mb-12 text-center">
-            <h1 class="text-4xl md:text-5xl font-bold text-white mb-4 tracking-tight">
-                <span class="text-gold">Terms</span> & Conditions
-            </h1>
-            <p class="text-gold/60 font-medium">Last updated: @DateTime.Now.ToString("MMMM dd, yyyy")</p>
+<link href="~/css/terms.css" rel="stylesheet" />
+
+<div class="relative flex min-h-screen w-full flex-col overflow-x-hidden p-6 md:p-12 lg:p-20">
+    <main class="mx-auto w-full max-w-7xl">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20 relative">
+            <aside class="hidden lg:block lg:col-span-3">
+                <div class="sticky top-12 flex flex-col gap-8">
+                    <div class="flex items-center gap-2 text-brand">
+                        <span class="material-symbols-outlined text-2xl">menu_book</span>
+                        <span class="font-bold tracking-wider uppercase text-xs">Table of Contents</span>
+                    </div>
+                    <nav>
+                        <ul class="list-none flex flex-col text-sm text-text-secondary !border-l !border-[#393528]/50 ml-0">
+                            <li>
+                                <a class="toc-item block py-3 pl-4 !border-l-2 !border-transparent hover:text-white hover:border-primary/30 transition-all duration-300" href="#intro">
+                                    01. Introduction
+                                </a>
+                            </li>
+                            <li>
+                                <a class="toc-item block py-3 pl-4 !border-l-2 !border-transparent hover:text-white hover:border-brand/30 transition-all duration-300" href="#eligibility">
+                                    02. Eligibility Requirements
+                                </a>
+                            </li>
+                            <li>
+                                <a class="toc-item block py-3 pl-4 !border-l-2 !border-transparent hover:text-white hover:border-brand/30 transition-all duration-300" href="#booking">
+                                    03. Booking &amp; Payments
+                                </a>
+                            </li>
+                            <li>
+                                <a class="toc-item block py-3 pl-4 !border-l-2 !border-transparent hover:text-white hover:border-brand/30 transition-all duration-300" href="#cancellations">
+                                    04. Cancellations &amp; Refunds
+                                </a>
+                            </li>
+                            <li>
+                                <a class="toc-item block py-3 pl-4 !border-l-2 !border-transparent hover:text-white hover:border-brand/30 transition-all duration-300" href="#fleet">
+                                    05. Fleet Usage Policy
+                                </a>
+                            </li>
+                            <li>
+                                <a class="toc-item block py-3 pl-4 !border-l-2 !border-transparent hover:text-white hover:border-brand/30 transition-all duration-300" href="#insurance">
+                                    06. Insurance &amp; Liability
+                                </a>
+                            </li>
+                            <li>
+                                <a class="toc-item block py-3 pl-4 border-l-2 border-transparent hover:text-white hover:border-brand/30 transition-all duration-300" href="#jurisdiction">
+                                    07. Jurisdiction
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                    <div class="p-6 rounded-xl bg-surface-dark border border-[#393528]/30">
+                        <p class="text-xs text-text-secondary uppercase tracking-widest font-bold mb-2">Have Questions?</p>
+                        <p class="text-sm text-white/80 leading-relaxed mb-4">Our support team is available 24/7 to clarify any terms.</p>
+                        <div class="flex items-center gap-2 text-brand text-sm font-bold cursor-pointer hover:underline">
+                            Contact Support <span class="material-symbols-outlined text-base">arrow_forward</span>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+            <div class="lg:col-span-9">
+                <div class="flex flex-col gap-6 mb-16 pb-8 border-b border-[#393528]">
+                    <div class="flex flex-col gap-4">
+                        <div class="flex items-center gap-2 mb-2">
+                            <div class="size-8 flex items-center justify-center text-brand">
+                                <span class="material-symbols-outlined text-3xl">policy</span>
+                            </div>
+                            <span class="text-brand font-bold tracking-wider uppercase text-sm">Legal Document</span>
+                        </div>
+                        <h1 class="text-white text-4xl md:text-5xl lg:text-6xl font-black leading-tight tracking-[-0.033em]">Terms &amp; Conditions</h1>
+                        <p class="text-text-secondary text-lg font-normal leading-relaxed max-w-2xl">
+                            Last updated: October 25, 2023. <br />
+                            Please read these terms carefully before using our booking services or renting a vehicle from Prestige Car Rental.
+                        </p>
+                    </div>
+                </div>
+                <div class="flex flex-col gap-20 text-white/90">
+                    <section id="intro" class="scroll-mt-24">
+                        <div class="flex items-baseline gap-4 mb-6">
+                            <span class="text-brand text-sm font-bold opacity-60">01</span>
+                            <h2 class="text-2xl md:text-3xl font-bold text-brand">Introduction</h2>
+                        </div>
+                        <div class="prose prose-invert max-w-none text-text-secondary leading-8 text-lg">
+                            <p class="mb-4">
+                                Welcome to Prestige Car Rental. By accessing our website, mobile application, or utilizing our fleet services, you agree to be bound by these Terms and Conditions. These terms constitute a legally binding agreement between you ("the Renter") and Prestige Car Rental ("the Company").
+                            </p>
+                            <p>
+                                If you do not agree with any part of these terms, you must discontinue use of our services immediately. We reserve the right to modify these terms at any time, and such modifications shall be effective immediately upon posting.
+                            </p>
+                        </div>
+                    </section>
+                    <section id="eligibility" class="scroll-mt-24">
+                        <div class="flex items-baseline gap-4 mb-6">
+                            <span class="text-brand text-sm font-bold opacity-60">02</span>
+                            <h2 class="text-2xl md:text-3xl font-bold text-brand">Eligibility Requirements</h2>
+                        </div>
+                        <div class="bg-surface-dark p-8 rounded-2xl border border-[#393528]/50">
+                            <ul class="flex flex-col gap-6 text-text-secondary">
+                                <li class="flex items-start gap-4">
+                                    <span class="material-symbols-outlined text-brand mt-1">check_circle</span>
+                                    <span class="text-lg"><strong>Age:</strong> Renters must be at least 21 years of age for economy vehicles and 25 years of age for luxury/sport categories.</span>
+                                </li>
+                                <li class="flex items-start gap-4">
+                                    <span class="material-symbols-outlined text-brand mt-1">check_circle</span>
+                                    <span class="text-lg"><strong>License:</strong> A valid driver's license held for at least 1 year is mandatory. International renters must present an International Driving Permit (IDP) alongside their national license.</span>
+                                </li>
+                                <li class="flex items-start gap-4">
+                                    <span class="material-symbols-outlined text-brand mt-1">check_circle</span>
+                                    <span class="text-lg"><strong>Identification:</strong> A valid Passport or National ID card is required at the time of pickup.</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </section>
+                    <section id="booking" class="scroll-mt-24">
+                        <div class="flex items-baseline gap-4 mb-6">
+                            <span class="text-brand text-sm font-bold opacity-60">03</span>
+                            <h2 class="text-2xl md:text-3xl font-bold text-brand">Booking &amp; Payments</h2>
+                        </div>
+                        <div class="prose prose-invert max-w-none text-text-secondary leading-8 text-lg">
+                            <p class="mb-6">
+                                <strong>Reservation Confirmation:</strong> A booking is considered confirmed only upon receipt of a booking confirmation email and successful authorization of the security deposit.
+                            </p>
+                            <p class="mb-6">
+                                <strong>Payment Methods:</strong> We accept all major credit cards (Visa, MasterCard, Amex) and cash payments in USD or LBP (Lebanese Pounds) at the daily market exchange rate prevalent on the date of transaction.
+                            </p>
+                            <p>
+                                <strong>Security Deposit:</strong> A refundable security deposit is required for all rentals. The amount varies by vehicle category and will be blocked on your credit card. This block will be released within 14-21 business days after the vehicle is returned, provided no damages or fines are incurred.
+                            </p>
+                        </div>
+                    </section>
+                    <section id="cancellations" class="scroll-mt-24">
+                        <div class="flex items-baseline gap-4 mb-6">
+                            <span class="text-brand text-sm font-bold opacity-60">04</span>
+                            <h2 class="text-2xl md:text-3xl font-bold text-brand">Cancellations &amp; Refunds</h2>
+                        </div>
+                        <div class="prose prose-invert max-w-none text-text-secondary leading-8 text-lg">
+                            <p class="mb-6">
+                                We understand plans change. Our cancellation policy is designed to be fair:
+                            </p>
+                            <ul class="list-disc pl-5 space-y-4 mb-4 marker:text-brand">
+                                <li><strong>Free Cancellation:</strong> Up to 48 hours before the scheduled pickup time.</li>
+                                <li><strong>Late Cancellation:</strong> Cancellations made within 48 hours of pickup will incur a fee equivalent to 1 day's rental.</li>
+                                <li><strong>No-Show:</strong> If the renter fails to pick up the vehicle without prior notice, the full rental amount or a minimum of 3 days rental fee (whichever is lower) will be charged.</li>
+                            </ul>
+                        </div>
+                    </section>
+                    <section id="fleet" class="scroll-mt-24">
+                        <div class="flex items-baseline gap-4 mb-6">
+                            <span class="text-brand text-sm font-bold opacity-60">05</span>
+                            <h2 class="text-2xl md:text-3xl font-bold text-brand">Fleet Usage Policy</h2>
+                        </div>
+                        <div class="prose prose-invert max-w-none text-text-secondary leading-8 text-lg">
+                            <p class="mb-8">
+                                Vehicles must be operated responsibly. The following uses are strictly prohibited and will void all insurance coverage:
+                            </p>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div class="p-6 bg-[#0f0f0f] border border-red-900/20 rounded-xl flex items-center gap-4 hover:bg-[#1a0f0f] transition-colors group">
+                                    <span class="material-symbols-outlined text-red-500/80 group-hover:text-red-500 text-3xl transition-colors">block</span>
+                                    <span class="text-base font-medium text-gray-300 group-hover:text-white transition-colors">Off-road driving on unpaved surfaces.</span>
+                                </div>
+                                <div class="p-6 bg-[#0f0f0f] border border-red-900/20 rounded-xl flex items-center gap-4 hover:bg-[#1a0f0f] transition-colors group">
+                                    <span class="material-symbols-outlined text-red-500/80 group-hover:text-red-500 text-3xl transition-colors">block</span>
+                                    <span class="text-base font-medium text-gray-300 group-hover:text-white transition-colors">Transporting illegal substances.</span>
+                                </div>
+                                <div class="p-6 bg-[#0f0f0f] border border-red-900/20 rounded-xl flex items-center gap-4 hover:bg-[#1a0f0f] transition-colors group">
+                                    <span class="material-symbols-outlined text-red-500/80 group-hover:text-red-500 text-3xl transition-colors">block</span>
+                                    <span class="text-base font-medium text-gray-300 group-hover:text-white transition-colors">Sub-renting to third parties.</span>
+                                </div>
+                                <div class="p-6 bg-[#0f0f0f] border border-red-900/20 rounded-xl flex items-center gap-4 hover:bg-[#1a0f0f] transition-colors group">
+                                    <span class="material-symbols-outlined text-red-500/80 group-hover:text-red-500 text-3xl transition-colors">block</span>
+                                    <span class="text-base font-medium text-gray-300 group-hover:text-white transition-colors">Driving under the influence.</span>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                    <section id="insurance" class="scroll-mt-24">
+                        <div class="flex items-baseline gap-4 mb-6">
+                            <span class="text-brand text-sm font-bold opacity-60">06</span>
+                            <h2 class="text-2xl md:text-3xl font-bold text-brand">Insurance &amp; Liability</h2>
+                        </div>
+                        <div class="prose prose-invert max-w-none text-text-secondary leading-8 text-lg">
+                            <p class="mb-6">
+                                <strong>Collision Damage Waiver (CDW):</strong> Included in most rates, limiting your financial liability for damage to the vehicle, subject to an excess amount.
+                            </p>
+                            <p class="mb-6">
+                                <strong>Theft Protection (TP):</strong> Covers the cost of replacing the vehicle if it is stolen.
+                            </p>
+                            <div class="mt-8 p-6 bg-brand/5 rounded-xl border-l-4 border-brand">
+                                <div class="flex gap-4">
+                                    <span class="material-symbols-outlined text-brand">info</span>
+                                    <p class="italic text-base text-gray-300">
+                                        Note: Insurance does not cover damage to tires, windshields, or the undercarriage unless specifically added as an extra protection package. Personal belongings left in the car are not covered.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                    <section id="jurisdiction" class="scroll-mt-24">
+                        <div class="flex items-baseline gap-4 mb-6">
+                            <span class="text-brand text-sm font-bold opacity-60">07</span>
+                            <h2 class="text-2xl md:text-3xl font-bold text-brand">Jurisdiction</h2>
+                        </div>
+                        <div class="prose prose-invert max-w-none text-text-secondary leading-8 text-lg">
+                            <p>
+                                These Terms and Conditions shall be governed by and construed in accordance with the laws of the Republic of Lebanon. Any disputes arising out of or in connection with this agreement shall be subject to the exclusive jurisdiction of the courts of Beirut.
+                            </p>
+                            <p class="mt-8 text-white font-medium pt-8 border-t border-[#393528]">
+                                By signing the rental agreement or completing an online booking, you acknowledge that you have read and understood these terms.
+                            </p>
+                        </div>
+                    </section>
+                </div>
+            </div>
         </div>
-
-        <div class="bg-white/5 border border-white/10 rounded-3xl p-8 md:p-12 backdrop-blur-sm shadow-2xl relative overflow-hidden">
-             <!-- Decorative background element -->
-            <div class="absolute top-0 left-0 w-64 h-64 bg-gold/5 rounded-full blur-3xl -translate-y-1/2 -translate-x-1/2 pointer-events-none"></div>
-
-            <section class="mb-10 relative z-10">
-                <h2 class="text-2xl font-bold text-white mb-4 flex items-center gap-3">
-                    <span class="text-gold">1.</span> Acceptance of Terms
-                </h2>
-                <p class="leading-relaxed text-gray-400">
-                    By accessing or using the Rent-A-Car Management System, you agree to comply with these Terms and Conditions. If you do not agree, you must not use the system.
-                </p>
-            </section>
-
-             <div class="w-full h-px bg-white/5 mb-10"></div>
-
-            <section class="mb-10 relative z-10">
-                <h2 class="text-2xl font-bold text-white mb-6 flex items-center gap-3">
-                    <span class="text-gold">2.</span> User Accounts
-                </h2>
-                <div class="grid gap-4">
-                     <div class="flex items-start gap-4 p-4 rounded-xl bg-black/20 border border-white/5">
-                        <span class="material-symbols-outlined text-gold mt-1">vpn_key</span>
-                        <div>
-                            <h4 class="text-white font-bold text-sm mb-1">Security</h4>
-                            <p class="text-gray-400 text-sm">Users are responsible for maintaining the confidentiality of their login credentials.</p>
-                        </div>
-                    </div>
-                    <div class="flex items-start gap-4 p-4 rounded-xl bg-black/20 border border-white/5">
-                        <span class="material-symbols-outlined text-gold mt-1">badge</span>
-                        <div>
-                            <h4 class="text-white font-bold text-sm mb-1">Roles</h4>
-                            <p class="text-gray-400 text-sm">Each account is assigned a specific role (Customer, Employee, Admin).</p>
-                        </div>
-                    </div>
-                     <div class="flex items-start gap-4 p-4 rounded-xl bg-black/20 border border-white/5">
-                        <span class="material-symbols-outlined text-gold mt-1">gavel</span>
-                        <div>
-                            <h4 class="text-white font-bold text-sm mb-1">Compliance</h4>
-                            <p class="text-gray-400 text-sm">Unauthorized access or misuse may result in account suspension.</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <div class="w-full h-px bg-white/5 mb-10"></div>
-
-            <section class="mb-10 relative z-10">
-                <h2 class="text-2xl font-bold text-white mb-4 flex items-center gap-3">
-                    <span class="text-gold">3.</span> System Usage
-                </h2>
-                <p class="mb-4 text-gray-400">Users agree to:</p>
-                <ul class="space-y-3 text-gray-400">
-                    <li class="flex items-center gap-3">
-                        <div class="w-2 h-2 rounded-full bg-gold"></div>
-                        Use the system only for lawful purposes
-                    </li>
-                    <li class="flex items-center gap-3">
-                         <div class="w-2 h-2 rounded-full bg-gold"></div>
-                        Provide accurate and truthful information
-                    </li>
-                    <li class="flex items-center gap-3">
-                         <div class="w-2 h-2 rounded-full bg-gold"></div>
-                        Not attempt to manipulate data, bypass security, or access restricted areas
-                    </li>
-                </ul>
-            </section>
-
-            <div class="w-full h-px bg-white/5 mb-10"></div>
-
-            <section class="mb-10 relative z-10">
-                <h2 class="text-2xl font-bold text-white mb-4 flex items-center gap-3">
-                    <span class="text-gold">4.</span> Reservations & Rentals
-                </h2>
-                <ul class="grid gap-3 text-gray-400">
-                     <li class="flex items-start gap-3 bg-white/5 p-3 rounded-lg">
-                        <span class="material-symbols-outlined text-gold shrink-0 text-sm mt-1">info</span>
-                        <span>Car availability is subject to system data accuracy.</span>
-                    </li>
-                    <li class="flex items-start gap-3 bg-white/5 p-3 rounded-lg">
-                        <span class="material-symbols-outlined text-gold shrink-0 text-sm mt-1">info</span>
-                        <span>Reservations may be approved, rejected, or canceled by administrators.</span>
-                    </li>
-                    <li class="flex items-start gap-3 bg-white/5 p-3 rounded-lg">
-                        <span class="material-symbols-outlined text-gold shrink-0 text-sm mt-1">info</span>
-                        <span>The system serves as a management and tracking platform, not a legal rental contract.</span>
-                    </li>
-                </ul>
-            </section>
-
-             <section class="mb-10 relative z-10">
-                <h2 class="text-2xl font-bold text-white mb-4 flex items-center gap-3">
-                    <span class="text-gold">5.</span> Payments
-                </h2>
-                <ul class="space-y-2 text-gray-400 list-disc list-inside marker:text-gold">
-                    <li>Payment records are stored for reporting purposes</li>
-                    <li>The system does not store sensitive credit card information</li>
-                    <li>Payment gateways (if integrated) follow their own security policies</li>
-                </ul>
-            </section>
-
-             <section class="mb-10 relative z-10">
-                <h2 class="text-2xl font-bold text-white mb-4 flex items-center gap-3">
-                    <span class="text-gold">6.</span> System Availability
-                </h2>
-                 <p class="text-gray-400">
-                    The system may be temporarily unavailable due to maintenance or technical issues. No guarantee is provided for uninterrupted access.
-                </p>
-            </section>
-
-            <section class="mb-10 relative z-10">
-                <h2 class="text-2xl font-bold text-white mb-4 flex items-center gap-3">
-                    <span class="text-gold">7.</span> Limitation of Liability
-                </h2>
-                <div class="bg-red-500/10 border border-red-500/20 p-4 rounded-xl">
-                    <p class="text-red-200 mb-2 font-medium">The system developers and administrators are not responsible for:</p>
-                    <ul class="list-disc list-inside text-red-200/70 space-y-1 text-sm">
-                        <li>Data loss due to user error</li>
-                        <li>Unauthorized access caused by compromised credentials</li>
-                        <li>Business or financial losses resulting from system misuse</li>
-                    </ul>
-                </div>
-            </section>
-
-             <section class="mb-12 relative z-10">
-                <h2 class="text-2xl font-bold text-white mb-4 flex items-center gap-3">
-                    <span class="text-gold">8.</span> Governing Use
-                </h2>
-                <p class="text-gray-400 italic bg-white/5 p-4 rounded-xl border border-white/5">
-                    "These Terms & Conditions are intended for <strong class="text-gold not-italic">educational and system management purposes</strong> and are not a substitute for legal agreements."
-                </p>
-            </section>
-
-            <section class="relative z-10 bg-gradient-to-r from-gold/10 to-transparent p-6 rounded-2xl border-l-4 border-gold">
-                <h2 class="text-xl font-bold text-white mb-2">Contact Information</h2>
-                <p class="text-gray-400 mb-4">For questions regarding these Terms:</p>
-                <div class="flex flex-col sm:flex-row gap-6">
-                    <a href="mailto:support@rentacar.com" class="flex items-center gap-3 text-gold hover:text-white transition-colors">
-                        <span class="material-symbols-outlined">mail</span> support@rentacar.com
-                    </a>
-                    <div class="flex items-center gap-3 text-gold">
-                        <span class="material-symbols-outlined">call</span> +961 1 234 567
-                    </div>
-                </div>
-            </section>
-        </div>
-    </div>
+    </main>
 </div>

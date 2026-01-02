@@ -32,17 +32,17 @@
                 <div class="relative group w-full xl:w-auto xl:flex-1 max-w-md">
                     <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-gold transition-colors">search</span>
                     <input type="text" name="search" value="@Model.SearchTerm" placeholder="Search User, ID, or IP..." 
-                           class="w-full h-10 pl-12 pr-4 rounded-lg bg-surface-dark-lighter text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-gold/50 transition-all border border-transparent" />
+                           class="w-full h-10 pl-12 pr-4 rounded-lg bg-surface-dark-lighter text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-gold/50 transition-all border-transparent" />
                 </div>
 
                 <!-- Date Range Filter -->
                 <div class="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
                     <div class="relative group shrink-0">
-                        <input type="date" name="startDate" value="@(Model.StartDate?.ToString("yyyy-MM-dd"))" class="h-10 px-4 rounded-lg bg-surface-dark-lighter text-white/80 text-sm font-medium focus:outline-none focus:border-gold/50 hover:bg-gold/10 transition-colors border border-transparent placeholder-gray-500 w-full md:w-auto" placeholder="Start Date">
+                        <input type="date" name="startDate" value="@(Model.StartDate?.ToString("yyyy-MM-dd"))" class="h-10 px-4 rounded-lg bg-surface-dark-lighter text-white/80 text-sm font-medium focus:outline-none focus:border-gold/50 hover:bg-gold/10 transition-colors border-transparent placeholder-gray-500 w-full md:w-auto" placeholder="Start Date">
                     </div>
                     <span class="text-gray-500 shrink-0">-</span>
                     <div class="relative group shrink-0">
-                        <input type="date" name="endDate" value="@(Model.EndDate?.ToString("yyyy-MM-dd"))" class="h-10 px-4 rounded-lg bg-surface-dark-lighter text-white/80 text-sm font-medium focus:outline-none focus:border-gold/50 hover:bg-gold/10 transition-colors border border-transparent placeholder-gray-500 w-full md:w-auto" placeholder="End Date">
+                        <input type="date" name="endDate" value="@(Model.EndDate?.ToString("yyyy-MM-dd"))" class="h-10 px-4 rounded-lg bg-surface-dark-lighter text-white/80 text-sm font-medium focus:outline-none focus:border-gold/50 hover:bg-gold/10 transition-colors border-transparent placeholder-gray-500 w-full md:w-auto" placeholder="End Date">
                     </div>
                 </div>
 
@@ -58,7 +58,7 @@
                     
                     <!-- Action Type Filter -->
                     <div class="relative group shrink-0">
-                        <select name="actionType" class="appearance-none h-10 pl-4 pr-8 rounded-lg bg-surface-dark-lighter text-white/80 text-sm font-medium focus:outline-none focus:border-gold/50 hover:bg-gold/10 transition-colors cursor-pointer w-full md:w-auto border border-transparent">
+                        <select name="actionType" class="appearance-none h-10 pl-4 pr-8 rounded-lg bg-surface-dark-lighter text-white/80 text-sm font-medium focus:outline-none focus:border-gold/50 hover:bg-gold/10 transition-colors cursor-pointer w-full md:w-auto border-transparent">
                             <option value="" class="bg-surface-dark-lighter text-white">All Actions</option>
                             <!option value="Create" class="bg-surface-dark-lighter text-white" @(Model.ActionType == "Create" ? "selected" : "")>Create</!option>
                             <!option value="Update" class="bg-surface-dark-lighter text-white" @(Model.ActionType == "Update" ? "selected" : "")>Update</!option>
@@ -70,7 +70,7 @@
 
                     <!-- Entity Filter -->
                     <div class="relative group shrink-0">
-                        <select name="entity" class="appearance-none h-10 pl-4 pr-8 rounded-lg bg-surface-dark-lighter text-white/80 text-sm font-medium focus:outline-none focus:border-gold/50 hover:bg-gold/10 transition-colors cursor-pointer w-full md:w-auto border border-transparent">
+                        <select name="entity" class="appearance-none h-10 pl-4 pr-8 rounded-lg bg-surface-dark-lighter text-white/80 text-sm font-medium focus:outline-none focus:border-gold/50 hover:bg-gold/10 transition-colors cursor-pointer w-full md:w-auto border-transparent">
                             <option value="" class="bg-surface-dark-lighter text-white">All Entities</option>
                             <!option value="Car" class="bg-surface-dark-lighter text-white" @(Model.EntityName == "Car" ? "selected" : "")>Car</!option>
                             <!option value="Customer" class="bg-surface-dark-lighter text-white" @(Model.EntityName == "Customer" ? "selected" : "")>Customer</!option>
@@ -84,7 +84,7 @@
 
                      <!-- Status Filter -->
                     <div class="relative group shrink-0">
-                        <select name="status" class="appearance-none h-10 pl-4 pr-8 rounded-lg bg-surface-dark-lighter text-white/80 text-sm font-medium focus:outline-none focus:border-gold/50 hover:bg-gold/10 transition-colors cursor-pointer w-full md:w-auto border border-transparent">
+                        <select name="status" class="appearance-none h-10 pl-4 pr-8 rounded-lg bg-surface-dark-lighter text-white/80 text-sm font-medium focus:outline-none focus:border-gold/50 hover:bg-gold/10 transition-colors cursor-pointer w-full md:w-auto border-transparent">
                             <option value="" class="bg-surface-dark-lighter text-white">All Statuses</option>
                             <!option value="Success" class="bg-surface-dark-lighter text-white" @(Model.Status == "Success" ? "selected" : "")>Success</!option>
                             <!option value="Failed" class="bg-surface-dark-lighter text-white" @(Model.Status == "Failed" ? "selected" : "")>Failed</!option>
