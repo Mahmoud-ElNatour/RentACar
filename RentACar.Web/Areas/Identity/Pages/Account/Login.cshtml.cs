@@ -27,13 +27,15 @@ namespace RentACar.Web.Areas.Identity.Pages.Account
         private readonly BlacklistManager _blacklistManager;
         private readonly ICustomerRepository _customerRepository;
         private readonly IEmployeeRepository _employeeRepository;
+        private readonly AuditLogManager _auditLogManager;
 
         public LoginModel(SignInManager<IdentityUser> signInManager,
                           ILogger<LoginModel> logger,
                           UserManager<IdentityUser> userManager,
                           BlacklistManager blacklistManager,
                           ICustomerRepository customerRepository,
-                          IEmployeeRepository employeeRepository)
+                          IEmployeeRepository employeeRepository,
+                          AuditLogManager auditLogManager)
         {
             _signInManager = signInManager;
             _logger = logger;
@@ -41,6 +43,7 @@ namespace RentACar.Web.Areas.Identity.Pages.Account
             _blacklistManager = blacklistManager;
             _customerRepository = customerRepository;
             _employeeRepository = employeeRepository;
+            _auditLogManager = auditLogManager;
         }
 
         /// <summary>
@@ -101,6 +104,7 @@ namespace RentACar.Web.Areas.Identity.Pages.Account
 
         public async Task OnGetAsync(string returnUrl = null)
         {
+            // ... (OnGetBody remains the same)
             if (!string.IsNullOrEmpty(ErrorMessage))
             {
                 ModelState.AddModelError(string.Empty, ErrorMessage);
@@ -127,7 +131,8 @@ namespace RentACar.Web.Areas.Identity.Pages.Account
                 var user = await _userManager.FindByEmailAsync(Input.Email);
                 if (user != null)
                 {
-                    var bl = await _blacklistManager.GetBlacklistByUserIdAsync(user.Id);
+                    // ... (Blacklist and Inactive checks remain same)
+                     var bl = await _blacklistManager.GetBlacklistByUserIdAsync(user.Id);
                     if (bl != null)
                     {
                         ModelState.AddModelError(string.Empty, "You are blacklisted.");
@@ -155,6 +160,11 @@ namespace RentACar.Web.Areas.Identity.Pages.Account
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User logged in.");
+                    // Log to Audit Log
+                    var roles = await _userManager.GetRolesAsync(user);
+                    string roleStr = roles.Any() ? string.Join(", ", roles) : "User";
+                    await _auditLogManager.LogAsync("Login", "User", user?.Id ?? "Unknown", $"User {Input.Email} logged in successfully.", "Success", Input.Email, roleStr);
+                    
                     return LocalRedirect(returnUrl);
                 }
                 if (result.RequiresTwoFactor)
@@ -164,11 +174,13 @@ namespace RentACar.Web.Areas.Identity.Pages.Account
                 if (result.IsLockedOut)
                 {
                     _logger.LogWarning("User account locked out.");
+                     await _auditLogManager.LogAsync("Login", "User", user?.Id ?? "Unknown", $"User {Input.Email} account locked out.", "Failed", Input.Email, "User");
                     return RedirectToPage("./Lockout");
                 }
                 else
                 {
                     ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+                     await _auditLogManager.LogAsync("Login", "User", "Unknown", $"Invalid login attempt for {Input.Email}.", "Failed", Input.Email, "Anonymous");
                     return Page();
                 }
             }

@@ -36,14 +36,16 @@
             theme: {
                 extend: {
                     colors: {
-                        "gold": "#d4af37",
-                        "gold-light": "#eacc68",
-                        "gold-hover": "#c19b2e",
-                        "background-light": "#f8f7f6",
-                        "background-dark": "#201d12",
-                        "footer-bg": "#0a0c0e", 
-                        "footer-surface": "#13161a",
-                        "footer-border": "#272a30",
+                        "gold": "#f2b90d",
+                        "gold-light": "#fce186", 
+                        "gold-hover": "#d9a60c",
+                        "background-light": "#f8f8f5",
+                        "background-dark": "#0a0a0a",
+                        "surface-dark": "#171717",
+                        "surface-dark-lighter": "#262626",
+                        "footer-bg": "#0a0a0a",
+                        "footer-surface": "#171717",
+                        "footer-border": "#f2b90d33", /* primay/20 approx */
                     },
                     fontFamily: {
                         "display": ["Manrope", "sans-serif"]
@@ -240,9 +242,15 @@
                 </div>
                 <div class="flex flex-col gap-5">
                     <h3 class="text-gold font-bold text-lg mb-2 flex items-center gap-2">
-                        <span class="material-symbols-outlined text-xl">policy</span> Legal & Policies
+                        <span class="material-symbols-outlined text-xl">info</span> Information
                     </h3>
                     <div class="flex flex-col gap-4">
+                        <a class="flex items-center gap-3.5 text-gray-400 hover:text-white transition-colors group" asp-controller="Home" asp-action="About">
+                            <div class="w-6 flex justify-center">
+                                <span class="material-symbols-outlined text-gold group-hover:scale-110 transition-transform text-[20px]">business</span>
+                            </div>
+                            <span class="text-sm font-medium hover:underline decoration-gold decoration-1 underline-offset-4">About Us</span>
+                        </a>
                         <a class="flex items-center gap-3.5 text-gray-400 hover:text-white transition-colors group" asp-controller="Home" asp-action="Terms">
                             <div class="w-6 flex justify-center">
                                 <span class="material-symbols-outlined text-gold group-hover:scale-110 transition-transform text-[20px]">gavel</span>

@@ -23,10 +23,10 @@ namespace RentACar.Web.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> AuditLog(string? search, string? actionType, string? entity, string? status, int page = 1)
+        public async Task<IActionResult> AuditLog(string? search, string? actionType, string? entity, string? status, DateTime? startDate, DateTime? endDate, int page = 1)
         {
             int pageSize = 10;
-            var (logs, totalCount) = await _auditLogManager.GetLogsAsync(search, actionType, entity, status, page, pageSize);
+            var (logs, totalCount) = await _auditLogManager.GetLogsAsync(search, actionType, entity, status, startDate, endDate, page, pageSize);
 
             var model = new AuditLogViewModel
             {
@@ -35,6 +35,8 @@ namespace RentACar.Web.Controllers
                 ActionType = actionType,
                 EntityName = entity,
                 Status = status,
+                StartDate = startDate,
+                EndDate = endDate,
                 Page = page,
                 PageSize = pageSize,
                 TotalCount = totalCount
@@ -49,10 +51,10 @@ namespace RentACar.Web.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> ExportAuditLog(string? search, string? actionType, string? entity, string? status)
+        public async Task<IActionResult> ExportAuditLog(string? search, string? actionType, string? entity, string? status, DateTime? startDate, DateTime? endDate)
         {
             // Get all logs matching the criteria (no pagination)
-            var (logs, _) = await _auditLogManager.GetLogsAsync(search, actionType, entity, status, 1, int.MaxValue);
+            var (logs, _) = await _auditLogManager.GetLogsAsync(search, actionType, entity, status, startDate, endDate, 1, int.MaxValue);
 
             var builder = new System.Text.StringBuilder();
             builder.AppendLine("Timestamp,Actor,Role,Action,Entity,EntityId,Summary,IP Address,Status");

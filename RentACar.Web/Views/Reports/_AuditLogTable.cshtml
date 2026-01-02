@@ -1,19 +1,19 @@
 @model RentACar.Application.DTOs.AuditLogViewModel
 
-<div class="flex flex-col rounded-xl border border-primary/10 bg-surface-dark overflow-hidden shadow-2xl">
+<div class="flex flex-col rounded-xl bg-surface-dark overflow-hidden shadow-2xl">
     <div class="overflow-x-auto custom-scrollbar">
         <table class="w-full text-left border-collapse">
             <thead>
-                <tr class="border-b border-primary/10 bg-surface-dark-lighter">
-                    <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider text-primary">#</th>
-                    <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider text-primary">Timestamp</th>
-                    <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider text-primary">Actor</th>
-                    <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider text-primary">Action</th>
-                    <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider text-primary">Entity</th>
-                    <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider text-primary">Summary</th>
-                    <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider text-primary hidden xl:table-cell">IP Address</th>
-                    <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider text-primary hidden 2xl:table-cell">Device</th>
-                    <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider text-primary text-right">Status</th>
+                <tr class="border-b border-gold/10 bg-surface-dark-lighter">
+                    <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider text-gold">#</th>
+                    <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider text-gold">Timestamp</th>
+                    <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider text-gold">Actor</th>
+                    <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider text-gold">Action</th>
+                    <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider text-gold">Entity</th>
+                    <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider text-gold">Summary</th>
+                    <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider text-gold hidden xl:table-cell">IP Address</th>
+                    <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider text-gold hidden 2xl:table-cell">Device</th>
+                    <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider text-gold text-right">Status</th>
                 </tr>
             </thead>
             <tbody class="text-sm divide-y divide-white/5">
@@ -26,7 +26,7 @@
                             <td class="py-4 px-6 whitespace-nowrap text-white/70 font-mono text-xs">@log.Timestamp.ToString("MMM dd, HH:mm")</td>
                             <td class="py-4 px-6 whitespace-nowrap">
                                 <div class="flex items-center gap-3">
-                                    <div class="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-xs">
+                                    <div class="h-8 w-8 rounded-full bg-gold/20 flex items-center justify-center text-gold font-bold text-xs">
                                         @log.ActorName.Substring(0, 1).ToUpper()
                                     </div>
                                     <div class="flex flex-col">
@@ -67,7 +67,7 @@
                             <td class="py-4 px-6 whitespace-nowrap">
                                 <div class="flex flex-col">
                                     <span class="text-white">@log.Entity</span>
-                                    <span class="text-primary hover:underline text-xs">#@log.EntityId</span>
+                                    <span class="text-gold hover:underline text-xs">#@log.EntityId</span>
                                 </div>
                             </td>
                             <td class="py-4 px-6 max-w-xs truncate text-white/80" title="@log.Summary">
@@ -105,7 +105,7 @@
     </div>
 
     <!-- Pagination -->
-    <div class="flex items-center justify-between border-t border-primary/10 px-6 py-4 bg-surface-dark-lighter">
+    <div class="flex items-center justify-between border-t border-gold/10 px-6 py-4 bg-surface-dark-lighter">
          <div class="flex flex-1 items-center justify-between">
             <div>
                 <p class="text-sm text-white/60">
@@ -138,7 +138,7 @@
                     {
                         if (i == Model.Page)
                         {
-                            <a href="#" aria-current="page" class="relative z-10 inline-flex items-center bg-primary px-4 py-2 text-sm font-semibold text-background-dark focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">@i</a>
+                            <a href="#" aria-current="page" class="relative z-10 inline-flex items-center bg-gold px-4 py-2 text-sm font-semibold text-background-dark focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold">@i</a>
                         }
                         else
                         {

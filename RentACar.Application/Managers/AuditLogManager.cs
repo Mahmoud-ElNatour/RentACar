@@ -25,17 +25,17 @@ namespace RentACar.Application.Managers
             _userManager = userManager;
         }
 
-        public async Task LogAsync(string action, string entity, string entityId, string summary, string status = "Success")
+        public async Task LogAsync(string action, string entity, string entityId, string summary, string status = "Success", string? explicitActorName = null, string? explicitActorRole = null)
         {
             try
             {
                 var user = _httpContextAccessor.HttpContext?.User;
-                string actorName = user?.Identity?.Name ?? "System";
-                string actorRole = "Unknown";
+                string actorName = explicitActorName ?? user?.Identity?.Name ?? "System";
+                string actorRole = explicitActorRole ?? "Unknown";
                 string ipAddress = _httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString() ?? "Unknown";
                 string userAgent = _httpContextAccessor.HttpContext?.Request?.Headers["User-Agent"].ToString() ?? "Unknown";
 
-                if (user != null)
+                if (user != null && explicitActorRole == null)
                 {
                     // Basic role check - takes the first role found
                     var roles = user.FindAll(ClaimTypes.Role);
@@ -69,7 +69,7 @@ namespace RentACar.Application.Managers
             }
         }
 
-        public async Task<(List<AuditLog> Logs, int TotalCount)> GetLogsAsync(string? searchTerm, string? actionType, string? entityName, string? status, int page, int pageSize)
+        public async Task<(List<AuditLog> Logs, int TotalCount)> GetLogsAsync(string? searchTerm, string? actionType, string? entityName, string? status, DateTime? startDate, DateTime? endDate, int page, int pageSize)
         {
             var query = _dbContext.AuditLogs.AsQueryable();
 
@@ -96,6 +96,18 @@ namespace RentACar.Application.Managers
             if (!string.IsNullOrWhiteSpace(status))
             {
                 query = query.Where(l => l.Status == status);
+            }
+
+            if (startDate.HasValue)
+            {
+                query = query.Where(l => l.Timestamp >= startDate.Value);
+            }
+
+            if (endDate.HasValue)
+            {
+                // Include the entire end day
+                var endProp = endDate.Value.Date.AddDays(1).AddTicks(-1);
+                query = query.Where(l => l.Timestamp <= endProp);
             }
 
             var totalCount = await query.CountAsync();
