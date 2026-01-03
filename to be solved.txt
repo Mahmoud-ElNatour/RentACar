@@ -8,8 +8,7 @@ Category:
 - check error sometimes in adding new cat. then added after anyaction or refresh maybe async problem or ajax/js problem
 
 Payments:
-- in edit add apply promocode in action column for each row to be displaye icon
-- add search and sort for each column by pressing the header of column and print receipt to be icon in action colmn and in view details page
+- fix apply promocode
 
 Notes:
 - for deleting we choose to don't delete if it has any action on system, instead we set it inactive
@@ -22,4 +21,5 @@ Later on:
 - reports (logs, financials,...)
 - email services (send notifications, reset password, confirm email, send offers,...)
 - refunded panel -- if stripe shta8alet
+- - add search and sort for each column by pressing the header of column in all tables
 
