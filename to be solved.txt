@@ -14,6 +14,8 @@ Notes:
 - for deleting we choose to don't delete if it has any action on system, instead we set it inactive
 --> add attr to all needed tables (category, paymentmethod).
 
+- when pressing logout, it should took the user to page logout to press are yu sure...
+
 Later on:
 -request panel for canceling the booking from employee nso the admin can approve or deny
 - theme panel
