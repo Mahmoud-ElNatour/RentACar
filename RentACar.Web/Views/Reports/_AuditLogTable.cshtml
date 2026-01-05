@@ -11,7 +11,7 @@
                     <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider text-gold">Action</th>
                     <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider text-gold">Entity</th>
                     <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider text-gold">Summary</th>
-                    <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider text-gold hidden xl:table-cell">IP Address</th>
+                    <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider text-gold">IP Address</th>
                     <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider text-gold hidden 2xl:table-cell">Device</th>
                     <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider text-gold text-right">Status</th>
                 </tr>
@@ -73,7 +73,7 @@
                             <td class="py-4 px-6 max-w-xs truncate text-white/80" title="@log.Summary">
                                 @log.Summary
                             </td>
-                            <td class="py-4 px-6 whitespace-nowrap text-white/50 font-mono text-xs hidden xl:table-cell">@log.IpAddress</td>
+                            <td class="py-4 px-6 whitespace-nowrap text-white/50 font-mono text-xs">@log.IpAddress</td>
                             <td class="py-4 px-6 whitespace-nowrap text-white/50 text-xs hidden 2xl:table-cell">@log.Device</td>
                             <td class="py-4 px-6 whitespace-nowrap text-right">
                                 @if (log.Status == "Success")
