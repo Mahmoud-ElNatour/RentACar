@@ -364,6 +364,11 @@ namespace RentACar.Application.Managers
                 await _customerRepository.UpdateAsync(customer);
             }
         }
+        public async Task<List<CustomerListDto>> GetAllCustomersForListAsync()
+        {
+            var customers = await _customerRepository.GetAllAsync();
+            return _mapper.Map<List<CustomerListDto>>(customers);
+        }
     }
 
     public class CustomerProfile : Profile
@@ -376,6 +381,11 @@ namespace RentACar.Application.Managers
                 .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.User.PhoneNumber))
                 .ReverseMap()
                 .ForMember(dest => dest.User, opt => opt.Ignore()); // skip reverse mapping User
+                
+            CreateMap<Customer, CustomerListDto>()
+                .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.User.Email))
+                .ForMember(dest => dest.username, opt => opt.MapFrom(src => src.User.UserName))
+                .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.User.PhoneNumber));
         }
     }
 

@@ -83,12 +83,24 @@ namespace RentACar.Web.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<CarDto>>> Get([FromQuery] string? name, [FromQuery] int? categoryId, [FromQuery] bool? available)
+        public async Task<ActionResult<IEnumerable<CarListDto>>> Get([FromQuery] string? name, [FromQuery] int? categoryId, [FromQuery] bool? available)
         {
             _logger.LogInformation("📥 [Get] Querying cars - Name: {Name}, CategoryId: {CategoryId}, Available: {Available}", name, categoryId, available);
-            var carDtos = await _carManager.SearchCarsByFilterAsync(name, null, categoryId, available);
+            var carDtos = await _carManager.SearchCarsForListAsync(name, null, categoryId, available);
             _logger.LogInformation("📦 [Get] Retrieved {Count} cars", carDtos.Count);
             return Ok(carDtos);
+        }
+
+        [HttpGet("Image/{id}")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetImage(int id)
+        {
+            var car = await _carManager.GetCarByIdAsync(id);
+            if (car == null || car.CarImage == null || car.CarImage.Length == 0)
+            {
+                 return NotFound();
+            }
+            return File(car.CarImage, "image/jpeg");
         }
 
         [HttpGet("{id}")]

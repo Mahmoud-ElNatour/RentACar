@@ -120,9 +120,7 @@
             grid.innerHTML = '';
 
             filtered.forEach(c => {
-                const imageSrc = c.imageBase64 
-                    ? `data:image/jpeg;base64,${c.imageBase64}` 
-                    : 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&w=1000&q=80'; // Fallback
+                const imageSrc = `/api/Category/Image/${c.categoryId}`;
                 
                 const statusHtml = c.isActive 
                     ? `<span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/20 backdrop-blur-md border border-primary/30 text-primary text-xs font-bold uppercase tracking-wider">
@@ -137,10 +135,16 @@
                 const card = document.createElement('div');
                 card.className = 'group flex flex-col bg-surface-dark rounded-xl overflow-hidden border border-surface-accent hover:border-primary/50 transition-all duration-300 shadow-lg hover:shadow-[0_0_20px_rgba(237,188,29,0.1)]';
                 
+                // Add error handling for image: if /api/Category/Image/ID returns 404, we might want a fallback.
+                // Since it's a background-image, we can set a fallback in CSS or use multiple bg images.
+                // But simplified: just use the URL. Browsers handle 404s by showing nothing or the background color.
+                // To support fallback, we can use: background-image: url(...), url(fallback)
+                const fallbackImg = 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&w=1000&q=80';
+                
                 card.innerHTML = `
                     <div class="relative h-56 overflow-hidden ${grayscaleClass} transition-all duration-300">
                         <div class="absolute inset-0 bg-gradient-to-t from-surface-dark to-transparent opacity-60 z-10"></div>
-                        <div class="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-110" style='background-image: url("${imageSrc}");'></div>
+                        <div class="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-110" style='background-image: url("${imageSrc}"), url("${fallbackImg}");'></div>
                         <div class="absolute top-4 right-4 z-20">
                             ${statusHtml}
                         </div>

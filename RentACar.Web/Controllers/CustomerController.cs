@@ -71,9 +71,14 @@ namespace RentACar.Web.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<CustomerDTO>>> Get([FromQuery] string? search, [FromQuery] bool? verified, [FromQuery] bool? active)
+        public async Task<ActionResult<IEnumerable<CustomerListDto>>> Get([FromQuery] string? search, [FromQuery] bool? verified, [FromQuery] bool? active)
         {
-            var customers = await _customerManager.GetAllCustomers();
+            // Note: Since search is done in memory (Customers.Where...), we should ideally have a method in Manager that does filtering on DB or returns ListDto.
+            // But existing GetAllCustomers returns full DTOs.
+            // We need to use GetAllCustomersForListAsync but we lose the specific filtering logic if we don't move it to Manager or replicate it here.
+            // The existing code fetched ALL then filtered in memory. We can do the same with ListDto.
+            var customers = await _customerManager.GetAllCustomersForListAsync();
+            
             if (!string.IsNullOrEmpty(search))
             {
                 customers = customers.Where(c => (c.Name != null && c.Name.Contains(search, System.StringComparison.OrdinalIgnoreCase)) || c.UserId.ToString() == search).ToList();
@@ -83,6 +88,28 @@ namespace RentACar.Web.Controllers
             if (active.HasValue)
                 customers = customers.Where(c => c.Isactive == active.Value).ToList();
             return Ok(customers);
+        }
+
+        [HttpGet("Document/{id}/{type}")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetDocument(int id, string type)
+        {
+            var customer = await _customerManager.GetCustomerById(id);
+            if (customer == null) return NotFound();
+
+            byte[]? imageBytes = type switch
+            {
+                "license-front" => customer.DrivingLicenseFront,
+                "license-back" => customer.DrivingLicenseBack,
+                "id-front" => customer.NationalIdfront,
+                "id-back" => customer.NationalIdback,
+                _ => null
+            };
+
+            if (imageBytes == null || imageBytes.Length == 0)
+                return NotFound();
+
+            return File(imageBytes, "image/jpeg");
         }
 
         [HttpGet("{id}")]

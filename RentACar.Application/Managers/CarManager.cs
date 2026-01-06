@@ -135,6 +135,11 @@ namespace RentACar.Application.Managers
             await _carRepository.DeleteAsync(id);
             await _auditLogManager.LogAsync("Delete", "Car", id.ToString(), "Deleted car from fleet");
         }
+        public async Task<List<CarListDto>> SearchCarsForListAsync(string? modelName = null, int? modelYear = null, int? categoryId = null, bool? isAvailable = null)
+        {
+            var cars = await _carRepository.SearchByFilterAsync(modelName, modelYear, categoryId, isAvailable);
+            return _mapper.Map<List<CarListDto>>(cars);
+        }
     }
 
     public class CarProfile : Profile
@@ -146,7 +151,10 @@ namespace RentACar.Application.Managers
                 .ReverseMap()
                 .ForMember(dest => dest.Category, opt => opt.Ignore())
                 .ForMember(dest => dest.CarImage, opt => opt.Condition(src => src.CarImage != null)); // only map image if provided
-            }
+            
+            CreateMap<Car, CarListDto>()
+                .ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.Category != null ? src.Category.Name : null));
+        }
     }
 
 }

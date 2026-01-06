@@ -92,6 +92,12 @@ namespace RentACar.Application.Managers
             return _mapper.Map<List<CategoryDto>>(categories);
         }
 
+        public async Task<List<CategoryListDto>> GetAllCategoriesForListAsync()
+        {
+            var categories = await _categoryRepository.GetAllAsync();
+            return _mapper.Map<List<CategoryListDto>>(categories);
+        }
+
         public async Task<CategoryDto?> UpdateCategoryAsync(CategoryDto categoryDto, string userId)
         {
             _logger.LogInformation("Updating category {Id}", categoryDto.CategoryId);
@@ -242,6 +248,9 @@ namespace RentACar.Application.Managers
                 .ForMember(dest => dest.ImageBase64, opt => opt.MapFrom(src => src.Image != null ? Convert.ToBase64String(src.Image) : null))
                 .ReverseMap()
                 .ForMember(dest => dest.Image, opt => opt.Ignore()); // Ignore Image on reverse map, handle manually
+
+            CreateMap<Category, CategoryListDto>()
+                .ForMember(dest => dest.CarsCount, opt => opt.MapFrom(src => src.Cars.Count));
         }
     }
 

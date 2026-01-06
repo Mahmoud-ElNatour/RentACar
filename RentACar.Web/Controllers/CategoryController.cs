@@ -64,10 +64,37 @@ namespace RentACar.Web.Controllers
 
         [HttpGet]
         [Authorize(Roles = "Admin,Employee")]
-        public async Task<ActionResult<IEnumerable<CategoryDto>>> Get()
+        public async Task<ActionResult<IEnumerable<CategoryListDto>>> Get()
         {
-            var categories = await _categoryManager.GetAllCategoriesAsync();
+            var categories = await _categoryManager.GetAllCategoriesForListAsync();
             return Ok(categories);
+        }
+
+        [HttpGet("Image/{id}")]
+        [AllowAnonymous] 
+        public async Task<IActionResult> GetImage(int id)
+        {
+            var category = await _categoryManager.GetCategoryByIdAsync(id);
+            if (category == null || string.IsNullOrEmpty(category.ImageBase64))
+            {
+                // Serve a default placeholder or return 404
+                return NotFound("Image not found");
+                // Alternatively serve a static file:
+                // return File(System.IO.File.ReadAllBytes("wwwroot/images/default.jpg"), "image/jpeg");
+            }
+            
+            // The DTO has ImageBase64 string. We need to convert it back to bytes to serve as file.
+            // Ideally Manager should return bytes for this specific purpose, but GetCategoryByIdAsync returns DTO.
+            // Let's rely on the fact that we have the Base64 in DTO.
+            try 
+            {
+                var bytes = Convert.FromBase64String(category.ImageBase64);
+                return File(bytes, "image/jpeg");
+            }
+            catch
+            {
+                return NotFound();
+            }
         }
 
         [HttpGet("{id}")]
