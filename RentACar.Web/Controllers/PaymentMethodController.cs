@@ -68,10 +68,16 @@ namespace RentACar.Web.Controllers
 
 
         [HttpGet]
-
         public async Task<ActionResult<IEnumerable<PaymentMethodDto>>> Get()
         {
             var methods = await _paymentMethodManager.GetAllPaymentMethodsAsync();
+            return Ok(methods);
+        }
+
+        [HttpGet("active")]
+        public async Task<ActionResult<IEnumerable<PaymentMethodDto>>> GetActive()
+        {
+            var methods = await _paymentMethodManager.GetAllActivePaymentMethodsAsync();
             return Ok(methods);
         }
 

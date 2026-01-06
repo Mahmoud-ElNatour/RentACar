@@ -28,5 +28,15 @@ namespace RentACar.Infrastructure.Data.Repository
         {
             return await _dbContext.PaymentMethods.FirstOrDefaultAsync(p => p.PaymentMethodName == name);
         }
+
+        public async Task<bool> IsUsedInPaymentsAsync(string methodName)
+        {
+            return await _dbContext.Payments.AnyAsync(p => p.PaymentMethod == methodName);
+        }
+
+        public async Task<List<PaymentMethod>> GetAllActiveAsync()
+        {
+            return await _dbContext.PaymentMethods.Where(p => p.IsActive).ToListAsync();
+        }
     }
 }

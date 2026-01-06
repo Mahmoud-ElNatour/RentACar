@@ -16,4 +16,6 @@ public partial class PaymentMethod
     [Required]
     [MaxLength(50)]
     public string PaymentMethodName { get; set; } = null!;
+
+    public bool IsActive { get; set; } = true;
 }

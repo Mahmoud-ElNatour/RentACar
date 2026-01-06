@@ -75,6 +75,12 @@ namespace RentACar.Application.Managers
             return _mapper.Map<List<CategoryDto>>(categories);
         }
 
+        public async Task<List<CategoryDto>> GetAllActiveCategoriesAsync()
+        {
+            var categories = await _categoryRepository.GetAllActiveAsync();
+            return _mapper.Map<List<CategoryDto>>(categories);
+        }
+
         public async Task<CategoryDto?> UpdateCategoryAsync(CategoryDto categoryDto, string userId)
         {
             _logger.LogInformation("Updating category {Id}", categoryDto.CategoryId);
@@ -124,8 +130,27 @@ namespace RentACar.Application.Managers
                 return false; // Or throw KeyNotFoundException
             }
 
-            await _categoryRepository.DeleteAsync(id);
-            await _auditLogManager.LogAsync("Delete", "Category", id.ToString(), "Deleted category");
+            var hasCars = await _categoryRepository.HasCarsAsync(id);
+            if (hasCars)
+            {
+                // Soft delete
+                existingCategory.IsActive = false;
+                await _categoryRepository.UpdateAsync(existingCategory);
+
+                // Cascade soft delete to cars
+                await _categoryRepository.DeactivateCarsAsync(id);
+
+                _logger.LogInformation("Category {Id} soft deleted (has related cars)", id);
+                await _auditLogManager.LogAsync("Delete", "Category", id.ToString(), "Soft deleted category (has cars) and deactivated associated cars");
+            }
+            else
+            {
+                // Hard delete
+                await _categoryRepository.DeleteAsync(id);
+                _logger.LogInformation("Category {Id} hard deleted (no related cars)", id);
+                await _auditLogManager.LogAsync("Delete", "Category", id.ToString(), "Hard deleted category");
+            }
+            
             return true;
         }
         public async Task<bool> DeleteCategoryByNameAsync(string name, string userId)
@@ -143,8 +168,12 @@ namespace RentACar.Application.Managers
                 _logger.LogWarning("Category {Name} not found", name);
                 return false; // Or throw KeyNotFoundException
             }
-            await _categoryRepository.DeleteAsync(existingCategory.CategoryId);
-            await _auditLogManager.LogAsync("Delete", "Category", existingCategory.CategoryId.ToString(), $"Deleted category by name: {name}");
+            // Soft delete
+            existingCategory.IsActive = false;
+            await _categoryRepository.UpdateAsync(existingCategory);
+
+            _logger.LogInformation("Category {Name} soft deleted", name);
+            await _auditLogManager.LogAsync("Delete", "Category", existingCategory.CategoryId.ToString(), $"Soft deleted category by name: {name}");
             return true;
         }
         public async Task<bool> UpdateCategoryNameAsync(int id, string newName, string userId)

@@ -11,43 +11,24 @@
 
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/creditcards.css" />
+    <link rel="stylesheet" href="~/css/payment-methods.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
 </head>
 <body>
     @await Html.PartialAsync("_PopupNotifications")
-    <div class="creditcard-container container">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <a href="../ControlPanel"
-               class="btn btn-outline-warning rounded-circle d-inline-flex align-items-center justify-content-center"
-               style="width: 40px; height: 40px;" title="Back">
-                <i class="fas fa-arrow-left"></i>
-            </a>
-            <h2 class="flex-grow-1 text-center m-0">Payment Methods</h2>
-            <div style="width: 40px;"></div>
-        </div>
-
+    <div class="payment-method-container">
+        <a href="../ControlPanel" class="btn btn-outline-warning mb-3 rounded-circle d-inline-flex align-items-center justify-content-center" style="width:40px;height:40px" title="Back">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <h2 class="page-title mb-4 text-center" style="color:white; font-size: 2rem; font-weight:600;">Payment Methods</h2>
         <div class="text-end mb-3">
-            <a href="/PaymentMethod/Add" class="btn btn-primary">
-                <i class="fas fa-plus me-1"></i> Add Method
-            </a>
+            <button class="btn btn-primary add-method">Add Method</button>
         </div>
-
-        <div class="table-responsive">
-            <table class="table table-striped table-dark align-middle">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th style="width: 100px;" class="text-end">Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="methodRows">
-                    <!-- Populated by JavaScript -->
-                </tbody>
-            </table>
+        <div class="payment-method-grid" id="methodGrid">
         </div>
     </div>
+    <div id="methodModalPlaceholder"></div>
 
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
@@ -56,23 +37,25 @@
             try {
                 const res = await fetch('/api/PaymentMethod');
                 const data = await res.json();
-
-                const tbody = document.getElementById('methodRows');
-                tbody.innerHTML = '';
+                const grid = document.getElementById('methodGrid');
+                grid.innerHTML = '';
 
                 data.forEach(m => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td>${m.paymentMethodName}</td>
-                        <td class="text-end">
-                            <a href='/PaymentMethod/Edit/${m.id}' class='text-warning me-2' title="Edit">
-                                <i class='fas fa-pencil-alt'></i>
-                            </a>
-                            <a href='/PaymentMethod/Delete/${m.id}' class='text-danger' title="Delete">
-                                <i class='fas fa-trash'></i>
-                            </a>
-                        </td>`;
-                    tbody.appendChild(tr);
+                    const div = document.createElement('div');
+                    div.className = `payment-method-card ${m.isActive ? '' : 'inactive'}`;
+                    div.dataset.id = m.id;
+
+                    const statusBadge = m.isActive 
+                        ? `<span class="status-badge status-active">Active</span>`
+                        : `<span class="status-badge status-inactive">Inactive</span>`;
+
+                    div.innerHTML = statusBadge +
+                        `<span class="payment-method-name">${m.paymentMethodName}</span>` +
+                        `<div class="actions">` +
+                        `<a href="#" class="edit-method" data-id="${m.id}"><i class="fas fa-pencil-alt"></i></a>` +
+                        `<a href="#" class="delete-method" data-id="${m.id}" title="${m.isActive ? 'Deactivate' : 'Already Inactive'}"><i class="fas fa-trash"></i></a>` +
+                        `</div>`;
+                    grid.appendChild(div);
                 });
 
             } catch (error) {
@@ -81,7 +64,38 @@
             }
         }
 
-        document.addEventListener('DOMContentLoaded', loadMethods);
+        async function loadModal(url) {
+            const res = await fetch(url);
+            const html = await res.text();
+            const placeholder = document.getElementById('methodModalPlaceholder');
+            placeholder.innerHTML = html;
+            placeholder.querySelectorAll('script').forEach(scr => {
+                const s = document.createElement('script');
+                s.textContent = scr.textContent;
+                document.body.appendChild(s);
+                document.body.removeChild(s);
+            });
+            const modalEl = placeholder.querySelector('.modal');
+            const modal = new bootstrap.Modal(modalEl);
+            modal.show();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadMethods();
+            document.querySelector('.add-method').addEventListener('click', () => loadModal('/PaymentMethod/Add'));
+
+            document.getElementById('methodGrid').addEventListener('click', (e) => {
+                const edit = e.target.closest('.edit-method');
+                const del = e.target.closest('.delete-method');
+                if (edit) {
+                    e.preventDefault();
+                    loadModal('/PaymentMethod/Edit/' + edit.dataset.id);
+                } else if (del) {
+                    e.preventDefault();
+                    loadModal('/PaymentMethod/Delete/' + del.dataset.id);
+                }
+            });
+        });
     </script>
 </body>
 </html>

@@ -14,5 +14,8 @@ namespace RentACar.Core.Repositories
         Task<Category?> GetByNameAsync(string name);
         Task<Category?> UpdateCategoryNameAsync(int id, string newName);
         Task<Category?> DeleteCategoryByNameAsync(string name, string userId);
+        Task<bool> HasCarsAsync(int id);
+        Task DeactivateCarsAsync(int categoryId);
+        Task<List<Category>> GetAllActiveAsync();
     }
 }

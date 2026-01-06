@@ -73,6 +73,12 @@ namespace RentACar.Application.Managers
             return _mapper.Map<List<PaymentMethodDto>>(list);
         }
 
+        public async Task<List<PaymentMethodDto>> GetAllActivePaymentMethodsAsync()
+        {
+            var list = await _paymentMethodRepository.GetAllActiveAsync();
+            return _mapper.Map<List<PaymentMethodDto>>(list);
+        }
+
         public async Task<PaymentMethodDto?> UpdatePaymentMethodAsync(PaymentMethodDto dto, string userId)
         {
             _logger.LogInformation("Updating payment method {Id}", dto.Id);
@@ -122,8 +128,24 @@ namespace RentACar.Application.Managers
                 return false;
             }
 
-            await _paymentMethodRepository.DeleteAsync(id);
-            await _auditLogManager.LogAsync("Delete", "PaymentMethod", id.ToString(), $"Deleted payment method {id}");
+            var isUsed = await _paymentMethodRepository.IsUsedInPaymentsAsync(existing.PaymentMethodName);
+
+            if (isUsed)
+            {
+                // Soft delete
+                existing.IsActive = false;
+                await _paymentMethodRepository.UpdateAsync(existing);
+
+                _logger.LogInformation("Payment method {Id} soft deleted (used in payments)", id);
+                await _auditLogManager.LogAsync("Delete", "PaymentMethod", id.ToString(), $"Soft deleted payment method {id} (used)");
+            }
+            else
+            {
+                // Hard delete
+                await _paymentMethodRepository.DeleteAsync(id);
+                _logger.LogInformation("Payment method {Id} hard deleted (unused)", id);
+                await _auditLogManager.LogAsync("Delete", "PaymentMethod", id.ToString(), $"Hard deleted payment method {id}");
+            }
             return true;
         }
     }

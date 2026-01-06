@@ -9,4 +9,6 @@ public class PaymentMethodDto
     [Required]
     [MaxLength(50)]
     public string PaymentMethodName { get; set; } = null!;
+
+    public bool IsActive { get; set; }
 }

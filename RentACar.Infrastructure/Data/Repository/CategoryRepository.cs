@@ -57,5 +57,25 @@ namespace RentACar.Infrastructure.Data.Repository
             }
             return null;
         }
+
+        public async Task<bool> HasCarsAsync(int id)
+        {
+            return await _dbContext.Cars.AnyAsync(c => c.CategoryId == id);
+        }
+
+        public async Task DeactivateCarsAsync(int categoryId)
+        {
+            var cars = await _dbContext.Cars.Where(c => c.CategoryId == categoryId).ToListAsync();
+            foreach (var car in cars)
+            {
+                car.IsAvailable = false;
+            }
+            await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task<List<Category>> GetAllActiveAsync()
+        {
+            return await _dbContext.Categories.Where(c => c.IsActive).ToListAsync();
+        }
     }
 }

@@ -17,7 +17,7 @@ body {
     color: var(--text-primary);
 }
 
-.category-container {
+.payment-method-container {
     background: var(--secondary-dark);
     padding: 40px;
     border-radius: 20px;
@@ -26,13 +26,13 @@ body {
     max-width: 800px;
 }
 
-.category-grid {
+.payment-method-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 20px;
 }
 
-.category-card {
+.payment-method-card {
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 12px;
@@ -42,22 +42,45 @@ body {
     transition: all 0.3s ease;
 }
 
-.category-card:hover {
+.payment-method-card:hover {
     transform: translateY(-5px);
     box-shadow: 0 5px 15px rgba(212, 175, 55, 0.1);
     border-color: var(--accent-gold);
 }
 
-.category-card.inactive {
+.payment-method-card.inactive {
     opacity: 0.7;
     border-color: rgba(255, 68, 68, 0.3);
+}
+
+.payment-method-name {
+    font-weight: 500;
+    font-size: 1.1rem;
+    margin-bottom: 10px;
+    display: block;
+}
+
+.actions {
+    margin-top: 15px;
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+.actions a {
+    color: var(--accent-gold);
+    transition: color 0.2s;
+}
+
+.actions a:hover {
+    color: var(--accent-gold-hover);
 }
 
 .status-badge {
     position: absolute;
     top: 10px;
     right: 10px;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     padding: 2px 8px;
     border-radius: 12px;
     font-weight: 500;
@@ -75,56 +98,7 @@ body {
     border: 1px solid rgba(248, 113, 113, 0.2);
 }
 
-.category-name {
-    font-weight: 500;
-}
-
-.category-card .actions {
-    margin-top: 12px;
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-}
-
-.category-card .actions a {
-    color: var(--accent-gold);
-    margin-left: 8px;
-}
-
-.category-card .actions a:hover {
-    color: var(--accent-gold-hover);
-}
-
+/* Modal Styles matching the theme */
 .custom-modal {
     background: var(--secondary-dark);
-    color: var(--text-primary);
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.custom-modal .modal-header,
-.custom-modal .modal-footer {
-    border-color: rgba(255, 255, 255, 0.1);
-}
-
-.custom-modal .btn-primary {
-    background: var(--accent-gold);
-    border-color: var(--accent-gold);
-    color: var(--primary-dark);
-}
-
-.custom-modal .btn-primary:hover {
-    background: var(--accent-gold-hover);
-    border-color: var(--accent-gold-hover);
-}
-
-.custom-modal .btn-secondary {
-    background: transparent;
-    border-color: rgba(255, 255, 255, 0.2);
-    color: var(--text-primary);
-}
-
-.custom-modal .btn-secondary:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: var(--text-primary);
 }

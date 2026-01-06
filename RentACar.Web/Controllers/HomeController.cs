@@ -45,7 +45,7 @@ namespace RentACar.Web.Controllers
             }
 
             var cars = await _carManager.BrowseAllCarsAsync();
-            var categories = await _categoryManager.GetAllCategoriesAsync();
+            var categories = await _categoryManager.GetAllActiveCategoriesAsync();
 
             ViewBag.UserRole = userRole;
             ViewBag.CarsCount = cars.Count;

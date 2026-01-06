@@ -39,17 +39,21 @@
             grid.innerHTML = '';
             data.forEach(p => {
                 const div = document.createElement('div');
-                div.className = 'promocode-card';
+                div.className = `promocode-card ${p.isActive ? '' : 'inactive'}`;
                 div.dataset.id = p.promocodeId;
-                const valid = p.validUntil ? p.validUntil : '';
-                div.innerHTML =
-                    `<div class="promocode-name">${p.name ?? ''}</div>` +
+                
+                const statusBadge = p.isActive 
+                    ? `<span class="status-badge status-active">Active</span>`
+                    : `<span class="status-badge status-inactive">Inactive</span>`;
+
+                const valid = p.validUntil ? p.validUntil : 'No Expiry';
+                div.innerHTML = statusBadge +
+                    `<div class="promocode-name">${p.name ?? 'No Name'}</div>` +
                     `<div class="promocode-discount">Discount: ${p.discountPercentage}%</div>` +
                     `<div class="promocode-valid">Valid Until: ${valid}</div>` +
-                    `<div class="promocode-active">${p.isActive ? '<i class=\'fas fa-check text-success\'></i>' : '<i class=\'fas fa-times text-danger\'></i>'}</div>` +
                     `<div class="actions">` +
                     `<a href="#" class="edit-promocode" data-id="${p.promocodeId}"><i class=\'fas fa-pencil-alt\'></i></a>` +
-                    `<a href="#" class="delete-promocode" data-id="${p.promocodeId}"><i class=\'fas fa-trash\'></i></a>` +
+                    `<a href="#" class="delete-promocode" data-id="${p.promocodeId}" title="${p.isActive ? 'Deactivate' : 'Already Inactive'}"><i class=\'fas fa-trash\'></i></a>` +
                     `</div>`;
                 grid.appendChild(div);
             });

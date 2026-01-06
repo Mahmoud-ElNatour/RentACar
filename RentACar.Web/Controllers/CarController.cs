@@ -173,8 +173,8 @@ namespace RentACar.Web.Controllers
 
         private async Task PopulateCategories()
         {
-            _logger.LogInformation("📋 [PopulateCategories] Loading categories for dropdown");
-            var cats = await _categoryManager.GetAllCategoriesAsync();
+            _logger.LogInformation("📋 [PopulateCategories] Loading active categories for dropdown");
+            var cats = await _categoryManager.GetAllActiveCategoriesAsync();
             ViewBag.Categories = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(cats, "CategoryId", "Name");
         }
 

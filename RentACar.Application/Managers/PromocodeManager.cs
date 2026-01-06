@@ -130,11 +130,12 @@ namespace RentACar.Application.Managers
                 return false; // Or throw KeyNotFoundException
             }
 
-            var promocodeToDelete = _mapper.Map<Promocode>(await _promocodeRepository.GetByIdAsync(id));
-            await _promocodeRepository.DeleteAsync(promocodeToDelete);
-            await _promocodeRepository.DeleteAsync(promocodeToDelete);
-            _logger.LogInformation("Promocode {Id} deleted", id);
-            await _auditLogManager.LogAsync("Delete", "Promocode", id.ToString(), $"Deleted promocode {id}");
+            var promocode = await _promocodeRepository.GetByIdAsync(id); // Use EF tracked entity
+            promocode.IsActive = false;
+            await _promocodeRepository.UpdateAsync(promocode);
+
+            _logger.LogInformation("Promocode {Id} soft deleted", id);
+            await _auditLogManager.LogAsync("Delete", "Promocode", id.ToString(), $"Soft deleted promocode {id}");
             return true;
         }
     }

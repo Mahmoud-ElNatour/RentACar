@@ -18,5 +18,12 @@ namespace RentACar.Core.Repositories
         /// <param name="name">The name of the payment method.</param>
         /// <returns>The matching PaymentMethod entity, or null if not found.</returns>
         Task<PaymentMethod?> GetByNameAsync(string name);
+
+        /// <summary>
+        /// Checks if the payment method is used in any payments.
+        /// </summary>
+        Task<bool> IsUsedInPaymentsAsync(string methodName);
+
+        Task<List<PaymentMethod>> GetAllActiveAsync();
     }
 }

@@ -2,11 +2,8 @@ Reset pass and email api
 -reset pass should be random and send it by email and before ask to enter admin pass (loggedin user pass)
 
 Payments:
+- redesign the page and popups
 - fix apply promocode (design + backend)
-
-Notes:
-- for deleting we choose to don't delete if it has any action on system, instead we set it inactive
---> add attr to all needed tables (category, paymentmethod).
 
 - when pressing logout, it should took the user to page logout to press are yu sure...
 

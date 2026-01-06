@@ -77,7 +77,7 @@
             try {
                 const [bookingRes, methodRes] = await Promise.all([
                     fetch('/api/Booking'),
-                    fetch('/api/PaymentMethod')
+                    fetch('/api/PaymentMethod/active')
                 ]);
                 if (!bookingRes.ok) {
                     throw new Error('Failed to load bookings');
