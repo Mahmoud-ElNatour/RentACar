@@ -1,19 +1,54 @@
-Import-Module WebAdministration
+name: Deploy to IIS (Windows Server)
 
-$sitePath = "${{ env.SITE_PATH }}"
-$publishPath = "${{ env.PUBLISH_PATH }}"
-$appPool = "${{ env.APP_POOL }}"
+on:
+  push:
+    branches: [ "master" ]
 
-Stop-WebAppPool -Name $appPool
+jobs:
+  deploy:
+    runs-on: self-hosted
 
-# Put app offline (optional with app pool stopped, but fine)
-"offline" | Out-File (Join-Path $sitePath "app_offline.htm") -Encoding ASCII
+    env:
+      SITE_PATH: "C:\inetpub\wwwroot\MyApp"
+      PUBLISH_PATH: "C:\deploy\MyApp\publish"
+      APP_POOL: "MyAppPool"
 
-robocopy $publishPath $sitePath /MIR /R:2 /W:2 /NFL /NDL /NP
-$rc = $LASTEXITCODE
-if ($rc -ge 8) { throw "Robocopy failed with exit code $rc" }
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-Remove-Item (Join-Path $sitePath "app_offline.htm") -ErrorAction SilentlyContinue
-Start-WebAppPool -Name $appPool
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
 
-exit 0
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build -c Release --no-restore
+
+      - name: Publish (Web)
+        run: dotnet publish .\RentACar.Web\RentACar.Web.csproj -c Release -o "${{ env.PUBLISH_PATH }}" --no-build
+
+      - name: Deploy to IIS
+        shell: powershell
+        run: |
+          Import-Module WebAdministration
+
+          $sitePath = "${{ env.SITE_PATH }}"
+          $publishPath = "${{ env.PUBLISH_PATH }}"
+          $appPool = "${{ env.APP_POOL }}"
+
+          Stop-WebAppPool -Name $appPool
+
+          "offline" | Out-File (Join-Path $sitePath "app_offline.htm") -Encoding ASCII
+
+          robocopy $publishPath $sitePath /MIR /R:2 /W:2 /NFL /NDL /NP
+          $rc = $LASTEXITCODE
+          if ($rc -ge 8) { throw "Robocopy failed with exit code $rc" }
+
+          Remove-Item (Join-Path $sitePath "app_offline.htm") -ErrorAction SilentlyContinue
+          Start-WebAppPool -Name $appPool
+
+          exit 0
