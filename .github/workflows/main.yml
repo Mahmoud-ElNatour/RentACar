@@ -2,7 +2,8 @@ name: Deploy to IIS (Windows Server)
 
 on:
   push:
-    branches: [ "master" ]
+    branches:
+      - master
 
 jobs:
   deploy:
@@ -40,15 +41,30 @@ jobs:
           $publishPath = "${{ env.PUBLISH_PATH }}"
           $appPool = "${{ env.APP_POOL }}"
 
-          Stop-WebAppPool -Name $appPool
+          # Stop app pool (ignore if already stopped)
+          try { Stop-WebAppPool -Name $appPool } catch { }
 
+          Start-Sleep -Seconds 2
+
+          # Put app offline
           "offline" | Out-File (Join-Path $sitePath "app_offline.htm") -Encoding ASCII
 
+          # Copy files (Robocopy: 0..7 = success, 8+ = failure)
           robocopy $publishPath $sitePath /MIR /R:2 /W:2 /NFL /NDL /NP
           $rc = $LASTEXITCODE
           if ($rc -ge 8) { throw "Robocopy failed with exit code $rc" }
 
+          # Remove offline file before starting
           Remove-Item (Join-Path $sitePath "app_offline.htm") -ErrorAction SilentlyContinue
-          Start-WebAppPool -Name $appPool
 
-          exit 0
+          # Start app pool with retries (fixes 0x80070425)
+          $maxTries = 10
+          for ($i = 1; $i -le $maxTries; $i++) {
+            try {
+              Start-WebAppPool -Name $appPool
+              break
+            } catch {
+              if ($i -eq $maxTries) { throw }
+              Start-Sleep -Seconds 2
+            }
+          }
