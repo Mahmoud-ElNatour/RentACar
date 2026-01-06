@@ -16,6 +16,9 @@ public partial class Category
     [StringLength(50)]
     public string Name { get; set; } = null!;
 
+    [Column("image")]
+    public byte[]? Image { get; set; }
+
     public bool IsActive { get; set; } = true;
 
     [InverseProperty("Category")]

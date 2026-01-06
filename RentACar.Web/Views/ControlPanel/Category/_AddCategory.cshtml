@@ -1,34 +1,53 @@
 @model RentACar.Application.DTOs.CategoryDto
-<div class="modal fade" id="addCategoryModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content custom-modal">
-            <div class="modal-header">
-                <h5 class="modal-title">Add Category</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+
+<div class="modal fade" id="addCategoryModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-[#121212] border border-[#2a2a2a] text-white rounded-xl shadow-2xl">
+            <div class="modal-header border-b border-[#2a2a2a] p-6">
+                <h5 class="modal-title text-xl font-bold text-white flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">add_circle</span> Add Category
+                </h5>
+                <button type="button" class="text-gray-400 hover:text-white transition-colors" data-bs-dismiss="modal">
+                     <span class="material-symbols-outlined">close</span>
+                </button>
             </div>
-            <form id="addCategoryForm">
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label asp-for="Name" class="form-label"></label>
-                        <input asp-for="Name" class="form-control" />
-                        <span asp-validation-for="Name" class="text-danger"></span>
+            <form id="addCategoryForm" enctype="multipart/form-data">
+                <div class="modal-body p-6 space-y-4">
+                    <div>
+                        <label asp-for="Name" class="block text-sm font-medium text-gray-400 mb-1.5"></label>
+                        <input asp-for="Name" class="w-full bg-[#0a0a0a] text-white border border-[#2a2a2a] rounded-lg px-4 py-2.5 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all placeholder-zinc-600" placeholder="e.g. Luxury SUV" />
+                        <span asp-validation-for="Name" class="text-red-400 text-xs mt-1"></span>
+                    </div>
+                    <div>
+                        <label asp-for="ImageFile" class="block text-sm font-medium text-gray-400 mb-1.5">Category Image</label>
+                        <input type="file" asp-for="ImageFile" class="w-full bg-[#0a0a0a] text-white border border-[#2a2a2a] rounded-lg px-4 py-2.5 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20" accept="image/*" />
+                        <p class="text-xs text-text-muted mt-1">Upload an image for the category card (Max 2MB)</p>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-primary">Save</button>
+                <div class="modal-footer border-t border-[#2a2a2a] p-6 flex justify-end gap-3">
+                    <button type="button" class="px-4 py-2 rounded-lg text-red-400 hover:bg-red-400/10 transition-colors font-medium text-sm border border-transparent hover:border-red-400/20" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="bg-primary hover:bg-[#dcae1a] text-black font-bold py-2 px-6 rounded-lg transition-all duration-200 shadow-[0_0_15px_rgba(237,188,29,0.2)] hover:shadow-[0_0_20px_rgba(237,188,29,0.4)] flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[20px]">check</span>
+                        <span>Save Category</span>
+                    </button>
                 </div>
             </form>
             <script>
                 document.getElementById('addCategoryForm').addEventListener('submit', async function (e) {
                     e.preventDefault();
                     const form = e.target;
-                    const data = { name: form.Name.value };
+                    const btn = form.querySelector('button[type="submit"]');
+                    const originalContent = btn.innerHTML;
+                    
+                    btn.disabled = true;
+                    btn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...`;
+
+                    const formData = new FormData(form);
+
                     try {
                         const response = await fetch('/api/Category', {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(data)
+                            body: formData
                         });
 
                         if (!response.ok) {
@@ -42,6 +61,9 @@
                         if (window.loadCategories) loadCategories();
                     } catch {
                         showPopup('Unable to add category right now.', 'error');
+                    } finally {
+                        btn.disabled = false;
+                        btn.innerHTML = originalContent;
                     }
                 });
             </script>

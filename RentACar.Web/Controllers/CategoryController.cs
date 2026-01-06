@@ -81,7 +81,7 @@ namespace RentACar.Web.Controllers
 
         [HttpPost]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult<CategoryDto>> Create([FromBody] CategoryDto dto)
+        public async Task<ActionResult<CategoryDto>> Create([FromForm] CategoryDto dto)
         {
             _logger.LogInformation("Creating category");
             var userId = _userManager.GetUserId(User) ?? string.Empty;
@@ -92,7 +92,7 @@ namespace RentACar.Web.Controllers
 
         [HttpPut("{id}")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Update(int id, [FromBody] CategoryDto dto)
+        public async Task<IActionResult> Update(int id, [FromForm] CategoryDto dto)
         {
             if (id != dto.CategoryId) return BadRequest();
             _logger.LogInformation("Updating category {Id}", id);

@@ -14,6 +14,15 @@ namespace RentACar.Application.DTOs
         [MaxLength(50)]
         public string Name { get; set; } = null!;
 
+        // For Display
+        public string? ImageBase64 { get; set; }
+
+        // For Upload
+        [System.Text.Json.Serialization.JsonIgnore] 
+        public Microsoft.AspNetCore.Http.IFormFile? ImageFile { get; set; }
+
+        public int CarsCount { get; set; }
+
         public bool IsActive { get; set; }
     }
 }

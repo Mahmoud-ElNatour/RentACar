@@ -1,93 +1,283 @@
 @{
-    ViewData["Title"] = "Categories";
-    Layout = null;
+    ViewData["Title"] = "Category Management";
+    // Ensure body class matches the layout expectation for dark theme
+    ViewData["BodyClass"] = "bg-background-dark text-white font-display overflow-x-hidden";
 }
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"]</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/categories.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
-</head>
-<body>
-    @await Html.PartialAsync("_PopupNotifications")
-    <div class="category-container">
-        <a href="../ControlPanel" class="btn btn-outline-warning mb-3 rounded-circle d-inline-flex align-items-center justify-content-center" style="width:40px;height:40px" title="Back">
-            <i class="fas fa-arrow-left"></i>
-        </a>
-        <h2 class="page-title mb-4 text-center">Categories</h2>
-        <div class="text-end mb-3">
-            <button class="btn btn-primary add-category">Add Category</button>
+
+<script id="tailwind-config">
+    tailwind.config = {
+        important: true, /* FORCE OVERRIDE OF BOOTSTRAP STYLES */
+        blocklist: ['collapse'],
+        corePlugins: {
+            preflight: false,
+        },
+        darkMode: "class",
+        theme: {
+            extend: {
+                colors: {
+                    "primary": "#edbc1d",
+                    "background-dark": "#0a0a0a", // Almost black
+                    "surface-dark": "#171717", // Dark neutral gray for cards
+                    "surface-accent": "#262626", // Lighter neutral gray for borders/inputs
+                },
+                fontFamily: {
+                    "display": ["Manrope", "sans-serif"]
+                },
+                borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+            },
+        },
+    }
+</script>
+
+<style>
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: #0a0a0a;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: #262626;
+        border-radius: 4px;
+    }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #edbc1d;
+        }
+
+    .toggle-checkbox:checked {
+        right: 0;
+        border-color: #edbc1d;
+    }
+
+    .toggle-checkbox:checked + .toggle-label {
+        background-color: #edbc1d;
+    }
+</style>
+
+@await Html.PartialAsync("_PopupNotifications")
+
+<!-- Modal Placeholder -->
+<div id="categoryModalPlaceholder"></div>
+
+<main class="max-w-[1600px] mx-auto px-6 py-10 md:px-10 md:py-12">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+        <div class="flex flex-col gap-3">
+            <h1 class="font-black leading-tight tracking-tighter mb-2 flex items-baseline gap-3">
+                <span class="text-primary text-5xl md:text-7xl">Category</span>
+                <span class="text-white text-5xl">Management</span>
+            </h1>
+            <p class="text-[#a3a3a3] text-lg font-normal max-w-2xl">Manage vehicle classifications, pricing rules, and fleet availability.</p>
         </div>
-        <div class="category-grid" id="categoryGrid">
+        <button class="add-category flex-shrink-0 flex items-center justify-center gap-2 rounded-lg bg-primary hover:bg-[#dcae1b] text-background-dark h-12 px-8 font-bold text-sm tracking-wide shadow-[0_0_15px_rgba(237,188,29,0.3)] transition-all">
+            <span class="material-symbols-outlined text-[20px]">add</span>
+            <span>Add New Category</span>
+        </button>
+    </div>
+
+    <div class="mb-10">
+        <div class="flex w-full md:w-1/2 lg:w-1/3 items-center rounded-xl h-14 bg-surface-dark border border-surface-accent focus-within:border-primary/50 transition-colors shadow-lg">
+            <div class="text-[#a3a3a3] flex items-center justify-center pl-5 pr-3">
+                <span class="material-symbols-outlined text-[22px]">search</span>
+            </div>
+            <input id="searchInput" class="w-full bg-transparent text-white border-none focus:ring-0 placeholder:text-[#a3a3a3]/70 h-full text-base font-normal" placeholder="Search category name..." type="text" />
         </div>
     </div>
-    <div id="categoryModalPlaceholder"></div>
 
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
+    <div id="categoryGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+        <!-- Categories will be rendered here -->
+    </div>
+</main>
+
+@section Scripts {
     <script>
-        async function loadCategories() {
-            const res = await fetch('/api/Category');
-            const data = await res.json();
-            const grid = document.getElementById('categoryGrid');
-            grid.innerHTML = '';
-            data.forEach(cat => {
-                const div = document.createElement('div');
-                div.className = `category-card ${cat.isActive ? '' : 'inactive'}`;
-                div.dataset.id = cat.categoryId;
-                
-                const statusBadge = cat.isActive 
-                    ? `<span class="status-badge status-active">Active</span>`
-                    : `<span class="status-badge status-inactive">Inactive</span>`;
+        let allCategories = [];
 
-                div.innerHTML = statusBadge + 
-                    `<span class="category-name">${cat.name}</span>` +
-                    `<div class="actions">` +
-                    `<a href="#" class="edit-category" data-id="${cat.categoryId}"><i class="fas fa-pencil-alt"></i></a>` +
-                    `<a href="#" class="delete-category" data-id="${cat.categoryId}" title="${cat.isActive ? 'Deactivate' : 'Already Inactive'}"><i class="fas fa-trash"></i></a>` +
-                    `</div>`;
-                grid.appendChild(div);
+        async function loadCategories() {
+            try {
+                const res = await fetch('/api/Category');
+                if (!res.ok) throw new Error('Failed to fetch categories');
+                allCategories = await res.json();
+                renderCategories();
+            } catch (error) {
+                console.error('Error loading categories:', error);
+                showToast('Error loading categories', 'error');
+            }
+        }
+
+        function renderCategories() {
+            const grid = document.getElementById('categoryGrid');
+            const search = document.getElementById('searchInput').value.toLowerCase();
+
+            // Filter
+            const filtered = allCategories.filter(c => 
+                c.name && c.name.toLowerCase().includes(search)
+            );
+
+            grid.innerHTML = '';
+
+            filtered.forEach(c => {
+                const imageSrc = c.imageBase64 
+                    ? `data:image/jpeg;base64,${c.imageBase64}` 
+                    : 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&w=1000&q=80'; // Fallback
+                
+                const statusHtml = c.isActive 
+                    ? `<span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/20 backdrop-blur-md border border-primary/30 text-primary text-xs font-bold uppercase tracking-wider">
+                           <span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span> Active
+                       </span>`
+                    : `<span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-accent/80 backdrop-blur-md border border-white/10 text-[#a3a3a3] text-xs font-bold uppercase tracking-wider">
+                           <span class="w-1.5 h-1.5 rounded-full bg-[#a3a3a3]"></span> Inactive
+                       </span>`;
+
+                const grayscaleClass = c.isActive ? '' : 'grayscale group-hover:grayscale-0';
+
+                const card = document.createElement('div');
+                card.className = 'group flex flex-col bg-surface-dark rounded-xl overflow-hidden border border-surface-accent hover:border-primary/50 transition-all duration-300 shadow-lg hover:shadow-[0_0_20px_rgba(237,188,29,0.1)]';
+                
+                card.innerHTML = `
+                    <div class="relative h-56 overflow-hidden ${grayscaleClass} transition-all duration-300">
+                        <div class="absolute inset-0 bg-gradient-to-t from-surface-dark to-transparent opacity-60 z-10"></div>
+                        <div class="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-110" style='background-image: url("${imageSrc}");'></div>
+                        <div class="absolute top-4 right-4 z-20">
+                            ${statusHtml}
+                        </div>
+                    </div>
+                    <div class="p-6 flex flex-col flex-1 gap-5">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h3 class="text-xl font-bold text-white group-hover:text-primary transition-colors">${c.name}</h3>
+                                <p class="text-[#a3a3a3] text-sm mt-1">Explore our ${c.name} fleet</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 text-[#a3a3a3] text-sm bg-surface-accent/50 p-2.5 rounded-lg w-fit">
+                            <span class="material-symbols-outlined text-primary text-[20px]">directions_car</span>
+                            <span>${c.carsCount || 0} Vehicles in fleet</span>
+                        </div>
+                        <div class="mt-auto pt-5 border-t border-surface-accent flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <label class="relative inline-flex items-center cursor-pointer group/toggle">
+                                    <input type="checkbox" class="sr-only peer toggle-active" data-id="${c.categoryId}" ${c.isActive ? 'checked' : ''}/>
+                                    <div class="w-10 h-6 bg-surface-accent peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                                    <span class="ms-2 text-xs font-medium text-[#a3a3a3] group-hover/toggle:text-white transition-colors">${c.isActive ? 'Visible' : 'Hidden'}</span>
+                                </label>
+                            </div>
+                            <div class="flex gap-2">
+                                <button class="edit-category size-9 flex items-center justify-center rounded-lg bg-surface-accent text-[#a3a3a3] hover:bg-primary hover:text-background-dark transition-all" data-id="${c.categoryId}" title="Edit">
+                                    <span class="material-symbols-outlined text-[20px]">edit</span>
+                                </button>
+                                <button class="delete-category size-9 flex items-center justify-center rounded-lg bg-surface-accent text-[#a3a3a3] hover:bg-red-500 hover:text-white transition-all" data-id="${c.categoryId}" title="Delete">
+                                    <span class="material-symbols-outlined text-[20px]">delete</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+
+            // "Create New" Card appended to grid
+            const createCard = document.createElement('button');
+            createCard.className = 'add-category group flex flex-col items-center justify-center min-h-[400px] bg-surface-dark/30 rounded-xl border-2 border-dashed border-surface-accent hover:border-primary hover:bg-surface-dark/50 transition-all duration-300';
+            createCard.innerHTML = `
+                <div class="flex items-center justify-center size-20 rounded-full bg-surface-accent group-hover:bg-primary mb-6 transition-colors shadow-lg">
+                    <span class="material-symbols-outlined text-[#a3a3a3] group-hover:text-background-dark text-4xl">add</span>
+                </div>
+                <h3 class="text-xl font-bold text-white group-hover:text-primary transition-colors">Create New Category</h3>
+                <p class="text-[#a3a3a3] text-sm mt-2 font-medium">Add a new vehicle class to fleet</p>
+            `;
+            grid.appendChild(createCard);
+
+            attachEventListeners();
+        }
+
+        function attachEventListeners() {
+            document.querySelectorAll('.add-category').forEach(btn => {
+                btn.onclick = () => loadModal('/Category/Add');
+            });
+
+            document.querySelectorAll('.edit-category').forEach(btn => {
+                btn.onclick = (e) => {
+                    e.stopPropagation(); // Prevent card click if any
+                    loadModal('/Category/Edit/' + btn.dataset.id);
+                };
+            });
+
+            document.querySelectorAll('.delete-category').forEach(btn => {
+                btn.onclick = (e) => {
+                    e.stopPropagation();
+                    loadModal('/Category/Delete/' + btn.dataset.id);
+                };
+            });
+
+            document.querySelectorAll('.toggle-active').forEach(input => {
+                input.onchange = async (e) => {
+                    const id = e.target.dataset.id;
+                    const isActive = e.target.checked;
+                    // Optimistic update
+                    const cat = allCategories.find(c => c.categoryId == id);
+                    if(cat) cat.isActive = isActive;
+                    renderCategories();
+
+                    // API Call to toggle
+                    try {
+                        const formData = new FormData();
+                        formData.append('categoryId', id);
+                        formData.append('name', cat.name); // Required field
+                        formData.append('isActive', isActive);
+                        // We do NOT send image back, assuming Patch-like behavior where missing image means no update?
+                        // BUT my update logic overwrites logic if image is missing?
+                        // "if (categoryDto.ImageFile != null)... else keep existing"
+                        // So sending null ImageFile is safe.
+
+                        const res = await fetch(`/api/Category/${id}`, {
+                            method: 'PUT',
+                            body: formData
+                        });
+                        
+                        if(!res.ok) throw new Error("Update failed");
+                    } catch (err) {
+                        console.error(err);
+                        // Revert
+                        if(cat) cat.isActive = !isActive;
+                        renderCategories();
+                        showToast("Failed to update status", "error");
+                    }
+                };
             });
         }
 
         async function loadModal(url) {
-            const res = await fetch(url);
-            const html = await res.text();
-            const placeholder = document.getElementById('categoryModalPlaceholder');
-            placeholder.innerHTML = html;
-            placeholder.querySelectorAll('script').forEach(scr => {
-                const s = document.createElement('script');
-                s.textContent = scr.textContent;
-                document.body.appendChild(s);
-                document.body.removeChild(s);
-            });
-            const modalEl = placeholder.querySelector('.modal');
-            const modal = new bootstrap.Modal(modalEl);
-            modal.show();
+            try {
+                const res = await fetch(url);
+                const html = await res.text();
+                const placeholder = document.getElementById('categoryModalPlaceholder');
+                placeholder.innerHTML = html;
+                
+                // Execute scripts
+                placeholder.querySelectorAll('script').forEach(scr => {
+                    const s = document.createElement('script');
+                    s.textContent = scr.textContent;
+                    document.body.appendChild(s);
+                    document.body.removeChild(s);
+                });
+
+                const modalEl = placeholder.querySelector('.modal');
+                if(modalEl && window.bootstrap) {
+                    const modal = new bootstrap.Modal(modalEl);
+                    modal.show();
+                } else {
+                     console.error("Modal element or Bootstrap not found");
+                }
+            } catch (err) {
+                console.error("Failed to load modal", err);
+            }
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            loadCategories();
-            document.querySelector('.add-category').addEventListener('click', () => loadModal('/Category/Add'));
+        document.getElementById('searchInput').addEventListener('input', renderCategories);
 
-            document.getElementById('categoryGrid').addEventListener('click', (e) => {
-                const edit = e.target.closest('.edit-category');
-                const del = e.target.closest('.delete-category');
-                if (edit) {
-                    e.preventDefault();
-                    loadModal('/Category/Edit/' + edit.dataset.id);
-                } else if (del) {
-                    e.preventDefault();
-                    loadModal('/Category/Delete/' + del.dataset.id);
-                }
-            });
-        });
+        document.addEventListener('DOMContentLoaded', loadCategories);
     </script>
-</body>
-</html>
+}

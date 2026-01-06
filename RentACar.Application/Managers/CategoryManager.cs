@@ -39,17 +39,28 @@ namespace RentACar.Application.Managers
             if (user == null || !await _userManager.IsInRoleAsync(user, "Admin"))
             {
                 _logger.LogWarning("User {UserId} not authorized to add categories", userId);
-                return null; // Or throw UnauthorizedAccessException
+                return null;
             }
 
             var existingCategory = await _categoryRepository.GetByNameAsync(categoryDto.Name);
             if (existingCategory != null)
             {
                 _logger.LogWarning("Category name {Name} already exists", categoryDto.Name);
-                return null; // Or throw InvalidOperationException
+                return null; 
             }
 
             var categoryEntity = _mapper.Map<Category>(categoryDto);
+            
+            // Handle Image Upload
+            if (categoryDto.ImageFile != null && categoryDto.ImageFile.Length > 0)
+            {
+                using (var memoryStream = new MemoryStream())
+                {
+                    await categoryDto.ImageFile.CopyToAsync(memoryStream);
+                    categoryEntity.Image = memoryStream.ToArray();
+                }
+            }
+
             await _categoryRepository.AddAsync(categoryEntity);
 
             _logger.LogInformation("Category added with id {Id}", categoryEntity.CategoryId);
@@ -88,24 +99,40 @@ namespace RentACar.Application.Managers
             if (user == null || !await _userManager.IsInRoleAsync(user, "Admin"))
             {
                 _logger.LogWarning("User {UserId} not authorized to update categories", userId);
-                return null; // Or throw UnauthorizedAccessException
+                return null;
             }
 
             var existingCategory = await _categoryRepository.GetByIdAsync(categoryDto.CategoryId);
             if (existingCategory == null)
             {
                 _logger.LogWarning("Category {Id} not found", categoryDto.CategoryId);
-                return null; // Or throw KeyNotFoundException
+                return null;
             }
 
             var categoryWithNameExists = await _categoryRepository.GetByNameAsync(categoryDto.Name);
             if (categoryWithNameExists != null && categoryWithNameExists.CategoryId != categoryDto.CategoryId)
             {
                 _logger.LogWarning("Category name {Name} already exists", categoryDto.Name);
-                return null; // Or throw InvalidOperationException
+                return null;
             }
 
+            // Map properties but handle Image differently
             _mapper.Map(categoryDto, existingCategory);
+
+            // Handle Image Upload if provided
+            if (categoryDto.ImageFile != null && categoryDto.ImageFile.Length > 0)
+            {
+                using (var memoryStream = new MemoryStream())
+                {
+                    await categoryDto.ImageFile.CopyToAsync(memoryStream);
+                    existingCategory.Image = memoryStream.ToArray();
+                }
+            }
+            // If ImageFile is null, we keep the existing Image (which is consistent with standard partial update logic, though mapper might have overwritten it if we are not careful. 
+            // `_mapper.Map(dto, entity)` usually overwrites. Since DTO doesn't have `Image` property (I removed it from DTO in previous step - wait, I removed ImageUrl but didn't add byte[] Image to DTO), 
+            // so `Image` property on Entity should be untouched by Mapper if DTO doesn't have it.
+            // Wait, I need to check if I updated AutoMapper profile correctly.
+
             await _categoryRepository.UpdateAsync(existingCategory);
 
             _logger.LogInformation("Category {Id} updated", categoryDto.CategoryId);
@@ -210,7 +237,11 @@ namespace RentACar.Application.Managers
     {
         public CategoryProfile()
         {
-            CreateMap<Category, CategoryDto>().ReverseMap();
+            CreateMap<Category, CategoryDto>()
+                .ForMember(dest => dest.CarsCount, opt => opt.MapFrom(src => src.Cars.Count))
+                .ForMember(dest => dest.ImageBase64, opt => opt.MapFrom(src => src.Image != null ? Convert.ToBase64String(src.Image) : null))
+                .ReverseMap()
+                .ForMember(dest => dest.Image, opt => opt.Ignore()); // Ignore Image on reverse map, handle manually
         }
     }
 

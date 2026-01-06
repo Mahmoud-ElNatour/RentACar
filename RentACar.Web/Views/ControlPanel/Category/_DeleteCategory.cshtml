@@ -1,39 +1,64 @@
 @model RentACar.Application.DTOs.CategoryDto
-<div class="modal fade" id="deleteCategoryModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content custom-modal">
-            <div class="modal-header">
-                <h5 class="modal-title">Delete Category</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+
+<div class="modal fade" id="deleteCategoryModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-[#121212] border border-[#2a2a2a] text-white rounded-xl shadow-2xl">
+            <div class="modal-header border-b border-[#2a2a2a] p-6">
+                <h5 class="modal-title text-xl font-bold text-red-500 flex items-center gap-2">
+                    <span class="material-symbols-outlined">warning</span> Delete Category
+                </h5>
+                <button type="button" class="text-gray-400 hover:text-white transition-colors" data-bs-dismiss="modal">
+                     <span class="material-symbols-outlined">close</span>
+                </button>
             </div>
             <form id="deleteCategoryForm">
-                <div class="modal-body">
-                    <div class="alert alert-danger d-none" id="deleteCategoryError" role="alert"></div>
+                <div class="modal-body p-6 space-y-4">
+                    <div class="alert alert-danger d-none bg-red-900/20 border border-red-900 text-red-400 rounded-lg p-3" id="deleteCategoryError" role="alert"></div>
                     <input type="hidden" asp-for="CategoryId" />
-                    <p>Are you sure you want to delete <strong>@Model.Name</strong>?</p>
+                    
+                    <div class="flex items-start gap-4 p-4 bg-red-500/5 border border-red-500/10 rounded-lg">
+                        <div class="p-3 bg-red-500/10 rounded-full shrink-0">
+                             <span class="material-symbols-outlined text-red-500">delete_forever</span>
+                        </div>
+                        <div>
+                            <h4 class="text-white font-bold mb-1">Confirm Deletion</h4>
+                             <p class="text-gray-400 text-sm leading-relaxed">
+                                Are you sure you want to delete <strong>@Model.Name</strong>? This action cannot be undone if not recoverable.
+                            </p>
+                        </div>
+                    </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-danger">Delete</button>
+                <div class="modal-footer border-t border-[#2a2a2a] p-6 flex justify-end gap-3">
+                    <button type="button" class="px-4 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors font-medium text-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-6 rounded-lg transition-all duration-200 shadow-[0_0_15px_rgba(239,68,68,0.2)] hover:shadow-[0_0_20px_rgba(239,68,68,0.4)] flex items-center gap-2">
+                        <span>Delete Category</span>
+                    </button>
                 </div>
             </form>
             <script>
                 document.getElementById('deleteCategoryForm').addEventListener('submit', async function (e) {
                     e.preventDefault();
-                    const id = this.CategoryId.value;
-                    const errorAlert = this.querySelector('#deleteCategoryError');
+                    const form = e.target;
+                    const id = form.CategoryId.value;
+                    const errorAlert = form.querySelector('#deleteCategoryError');
+                    const btn = form.querySelector('button[type="submit"]');
+                    const originalContent = btn.innerHTML;
+                    
                     if (errorAlert) {
                         errorAlert.classList.add('d-none');
                         errorAlert.textContent = '';
                     }
+                    
+                    btn.disabled = true;
+                    btn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Deleting...`;
 
                     try {
                         const response = await fetch('/api/Category/' + id, { method: 'DELETE' });
 
                         if (!response.ok) {
                             let message = 'An error occurred while deleting the category.';
-                            const contentType = response.headers.get('Content-Type') || '';
-
+                            // ... existing error parsing logic ...
+                             const contentType = response.headers.get('Content-Type') || '';
                             try {
                                 if (contentType.includes('application/json')) {
                                     const data = await response.json();
@@ -46,9 +71,8 @@
                                         message = text;
                                     }
                                 }
-                            } catch {
-                                // ignore
-                            }
+                            } catch { }
+
 
                             if (errorAlert) {
                                 errorAlert.textContent = message;
@@ -67,6 +91,9 @@
                             errorAlert.classList.remove('d-none');
                         }
                         showPopup('Unable to delete category right now.', 'error');
+                    } finally {
+                        btn.disabled = false;
+                        btn.innerHTML = originalContent;
                     }
                 });
             </script>

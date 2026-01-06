@@ -18,6 +18,11 @@ namespace RentACar.Infrastructure.Data.Repository
             _dbContext = dbContext;
         }
 
+        public async Task<IReadOnlyList<Category>> GetAllAsync()
+        {
+            return await _dbContext.Categories.Include(c => c.Cars).ToListAsync();
+        }
+
         public Task DeleteAsync(int id)
         {
             var category = _dbContext.Categories.Find(id);
