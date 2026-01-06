@@ -8,24 +8,29 @@
     --shadow-color: rgba(0, 0, 0, 0.5);
     --gradient-overlay: linear-gradient(135deg, rgba(20, 20, 20, 0.9), rgba(30, 30, 30, 0.8));
 }
+
 html {
-  margin:0;
-  padding:0;
+    margin: 0;
+    padding: 0;
 }
 
 @media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
+    html {
+        font-size: 16px;
+    }
 }
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+.btn:focus,
+.btn:active:focus,
+.btn-link.nav-link:focus,
+.form-control:focus,
+.form-check-input:focus {
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
 }
 
 html {
-  position: relative;
-  min-height: 100%;
+    position: relative;
+    min-height: 100%;
 }
 
 
@@ -35,9 +40,12 @@ html {
 .nav-item.dropdown:hover .nav-link,
 .nav-item.dropdown .nav-link:hover,
 .dropdown-menu .dropdown-item:hover {
-    color: #d4af37 !important; /* Gold color */
-    background-color: transparent; /* Keep background dark */
+    color: #d4af37 !important;
+    /* Gold color */
+    background-color: transparent;
+    /* Keep background dark */
 }
+
 .nav-item.dropdown:hover .fa-user-circle {
     color: #d4af37 !important;
 }
@@ -76,6 +84,7 @@ html {
     background-color: #3a3a3a;
     color: var(--accent-yellow, #f8dc75);
 }
+
 /* Navigation Styles */
 .navbar {
     background: rgba(20, 20, 20, 0.95) !important;
@@ -83,12 +92,13 @@ html {
     transition: all 0.3s ease;
     box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
     /* position: absolute; */
-    z-index: 1050; /* Higher than most Bootstrap elements */
+    z-index: 1050;
+    /* Higher than most Bootstrap elements */
 }
 
-    .navbar.scrolled {
-        background: rgba(20, 20, 20, 0.98) !important;
-    }
+.navbar.scrolled {
+    background: rgba(20, 20, 20, 0.98) !important;
+}
 
 .navbar-brand {
     font-size: 1.5rem;
@@ -101,25 +111,26 @@ html {
     position: relative;
 }
 
-    .nav-link:hover {
-        color: var(--accent-yellow) !important;
-    }
+.nav-link:hover {
+    color: var(--accent-yellow) !important;
+}
 
-    .nav-link::after {
-        content: '';
-        position: absolute;
-        width: 0;
-        height: 2px;
-        bottom: 0;
-        left: 50%;
-        background-color: var(--accent-yellow);
-        transition: all 0.3s ease;
-    }
+.nav-link::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: 0;
+    left: 50%;
+    background-color: var(--accent-yellow);
+    transition: all 0.3s ease;
+}
 
-    .nav-link:hover::after {
-        width: 100%;
-        left: 0;
-    }
+.nav-link:hover::after {
+    width: 100%;
+    left: 0;
+}
+
 /* Notification toasts */
 .notification-container {
     position: fixed;

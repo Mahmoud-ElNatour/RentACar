@@ -8,7 +8,7 @@ Category:
 - check error sometimes in adding new cat. then added after anyaction or refresh maybe async problem or ajax/js problem
 
 Payments:
-- fix apply promocode
+- fix apply promocode (design + backend)
 
 Notes:
 - for deleting we choose to don't delete if it has any action on system, instead we set it inactive
