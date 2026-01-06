@@ -9,8 +9,8 @@ jobs:
     runs-on: self-hosted
 
     env:
-      SITE_PATH: "C:\inetpub\wwwroot\MyApp"
-      PUBLISH_PATH: "C:\deploy\MyApp\publish"
+      SITE_PATH: "C:\\inetpub\\wwwroot\\MyApp"
+      PUBLISH_PATH: "C:\\deploy\\MyApp\\publish"
       APP_POOL: "MyAppPool"
 
     steps:
