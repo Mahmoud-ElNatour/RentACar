@@ -51,7 +51,7 @@ namespace RentACar.Application.Managers
 
             var categoryEntity = _mapper.Map<Category>(categoryDto);
             await _categoryRepository.AddAsync(categoryEntity);
-            await _categoryRepository.AddAsync(categoryEntity);
+
             _logger.LogInformation("Category added with id {Id}", categoryEntity.CategoryId);
             await _auditLogManager.LogAsync("Create", "Category", categoryEntity.CategoryId.ToString(), $"Added category: {categoryDto.Name}");
             return _mapper.Map<CategoryDto>(categoryEntity);
@@ -101,7 +101,7 @@ namespace RentACar.Application.Managers
 
             _mapper.Map(categoryDto, existingCategory);
             await _categoryRepository.UpdateAsync(existingCategory);
-            await _categoryRepository.UpdateAsync(existingCategory);
+
             _logger.LogInformation("Category {Id} updated", categoryDto.CategoryId);
             await _auditLogManager.LogAsync("Update", "Category", categoryDto.CategoryId.ToString(), $"Updated category: {categoryDto.Name}");
             return _mapper.Map<CategoryDto>(existingCategory);
@@ -170,7 +170,7 @@ namespace RentACar.Application.Managers
             }
             existingCategory.Name = newName;
             await _categoryRepository.UpdateAsync(existingCategory);
-            await _categoryRepository.UpdateAsync(existingCategory);
+
             _logger.LogInformation("Category {Id} name updated", id);
             await _auditLogManager.LogAsync("Update", "Category", id.ToString(), $"Renamed category to: {newName}");
             return true;

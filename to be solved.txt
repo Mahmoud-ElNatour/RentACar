@@ -1,11 +1,5 @@
-Blacklist panel and inactive users:
-- when unblacklist from blacklist panelor setactive from customer or employee panelagain in db it remains lockedout (fix) - fix design of lockedout page
-
 Reset pass and email api
 -reset pass should be random and send it by email and before ask to enter admin pass (loggedin user pass)
-
-Category:
-- check error sometimes in adding new cat. then added after anyaction or refresh maybe async problem or ajax/js problem
 
 Payments:
 - fix apply promocode (design + backend)
