@@ -1,0 +1,55 @@
+name: Deploy to IIS (Windows Server)
+
+on:
+  push:
+    branches: [ "master" ]
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+
+    env:
+      SITE_PATH: C:\inetpub\wwwroot\MyApp
+      PUBLISH_PATH: C:\deploy\MyApp\publish
+      APP_POOL: MyAppPool
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build -c Release --no-restore
+
+      - name: Publish (Web)
+        run: dotnet publish .\RentACar.Web\RentACar.Web.csproj -c Release -o "${{ env.PUBLISH_PATH }}" --no-build
+
+      - name: Deploy to IIS
+        shell: powershell
+        run: |
+          Import-Module WebAdministration
+
+          $sitePath = "${{ env.SITE_PATH }}"
+          $publishPath = "${{ env.PUBLISH_PATH }}"
+          $appPool = "${{ env.APP_POOL }}"
+
+          if (!(Test-Path $sitePath)) { New-Item -ItemType Directory -Force -Path $sitePath | Out-Null }
+
+          # Take app offline to avoid locked DLL issues
+          "offline" | Out-File (Join-Path $sitePath "app_offline.htm") -Encoding ASCII
+
+          Stop-WebAppPool -Name $appPool
+
+          robocopy $publishPath $sitePath /MIR /R:2 /W:2 /NFL /NDL /NP
+          if ($LASTEXITCODE -ge 8) { throw "Robocopy failed with exit code $LASTEXITCODE" }
+
+          Start-WebAppPool -Name $appPool
+
+          Remove-Item (Join-Path $sitePath "app_offline.htm") -ErrorAction SilentlyContinue
