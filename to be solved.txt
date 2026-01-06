@@ -1,5 +1,10 @@
+changing design all pages in control panel
+
 Reset pass and email api
 -reset pass should be random and send it by email and before ask to enter admin pass (loggedin user pass)
+
+Category:
+lets add image to the categories entity in which each category has image and in the fleet section in the home page so the images will we loaded from db dynamically instead of img local path.
 
 Payments:
 - redesign the page and popups

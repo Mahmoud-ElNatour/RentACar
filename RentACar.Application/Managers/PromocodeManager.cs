@@ -123,19 +123,34 @@ namespace RentACar.Application.Managers
                 return false; // Or throw UnauthorizedAccessException
             }
 
-            var existingPromocode = await _promocodeRepository.GetByIdAsync(id);
-            if (existingPromocode == null)
+            var promocode = await _promocodeRepository.GetByIdAsync(id);
+            if (promocode == null)
             {
                 _logger.LogWarning("Promocode {Id} not found", id);
                 return false; // Or throw KeyNotFoundException
             }
 
-            var promocode = await _promocodeRepository.GetByIdAsync(id); // Use EF tracked entity
-            promocode.IsActive = false;
-            await _promocodeRepository.UpdateAsync(promocode);
+            // Ensure bookings is not null
+            var usageCount = promocode.Bookings?.Count ?? 0;
 
-            _logger.LogInformation("Promocode {Id} soft deleted", id);
-            await _auditLogManager.LogAsync("Delete", "Promocode", id.ToString(), $"Soft deleted promocode {id}");
+            if (usageCount > 0)
+            {
+                // Soft Delete: Promocode has been used
+                promocode.IsActive = false;
+                await _promocodeRepository.UpdateAsync(promocode);
+                
+                _logger.LogInformation("Promocode {Id} soft deleted (Usage: {Count})", id, usageCount);
+                await _auditLogManager.LogAsync("Delete", "Promocode", id.ToString(), $"Soft deleted promocode {id} (Used {usageCount} times)");
+            }
+            else
+            {
+                // Hard Delete: Promocode has never been used
+                await _promocodeRepository.DeleteAsync(promocode);
+                
+                _logger.LogInformation("Promocode {Id} hard deleted (Unused)", id);
+                await _auditLogManager.LogAsync("Delete", "Promocode", id.ToString(), $"Hard deleted unused promocode {id}");
+            }
+
             return true;
         }
     }
@@ -144,7 +159,9 @@ namespace RentACar.Application.Managers
     {
         public PromocodeProfile()
         {
-            CreateMap<Promocode, PromocodeDto>().ReverseMap();
+            CreateMap<Promocode, PromocodeDto>()
+                .ForMember(d => d.UsageCount, o => o.MapFrom(s => s.Bookings.Count))
+                .ReverseMap();
         }
     }
 

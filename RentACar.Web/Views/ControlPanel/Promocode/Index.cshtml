@@ -1,64 +1,267 @@
 @{
-    ViewData["Title"] = "Promo Codes";
-    Layout = null;
+    ViewData["Title"] = "Promocode Management";
+    ViewData["BodyClass"] = "bg-background-dark text-white font-display overflow-x-hidden";
 }
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"]</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/promocodes.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
-</head>
-<body>
-    @await Html.PartialAsync("_PopupNotifications")
-    <div class="promocode-container">
-        <a href="../ControlPanel" class="btn btn-outline-warning mb-3 rounded-circle d-inline-flex align-items-center justify-content-center" style="width:40px;height:40px" title="Back">
-            <i class="fas fa-arrow-left"></i>
-        </a>
-        <h2 class="page-title mb-4 text-center">Promo Codes</h2>
-        <div class="text-end mb-3">
-            <button class="btn btn-primary add-promocode">Add Promocode</button>
+
+<script id="tailwind-config">
+    tailwind.config = {
+        important: true, /* FORCE OVERRIDE OF BOOTSTRAP STYLES */
+        blocklist: ['collapse'],
+        corePlugins: {
+            preflight: false,
+        },
+        darkMode: "class",
+        theme: {
+            extend: {
+                colors: {
+                    "gold": "#edbc1d",
+                    "background-dark": "#050505", 
+                    "card-dark": "#121212",
+                    "border-dark": "#2a2a2a",
+                    "text-muted": "#888888",
+                },
+                fontFamily: {
+                    "display": ["Manrope", "Noto Sans", "sans-serif"]
+                },
+                borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px" },
+            },
+        },
+    }
+</script>
+
+<style>
+    .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .icon-filled {
+        font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    /* Scope scrollbar styles to avoid conflict if layout has them, 
+       but here we want them for this page specifically */
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+        background: #050505; 
+    }
+    ::-webkit-scrollbar-thumb {
+        background: #333; 
+        border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: #edbc1d; 
+    }
+
+    /* Modal tweaks */
+    .modal-content {
+        background-color: #121212 !important;
+        color: white !important;
+        border: 1px solid #2a2a2a !important;
+    }
+    .modal-header {
+        border-bottom: 1px solid #2a2a2a !important;
+    }
+    .modal-footer {
+        border-top: 1px solid #2a2a2a !important;
+    }
+    .btn-close {
+        filter: invert(1) grayscale(100%) brightness(200%);
+    }
+</style>
+
+@await Html.PartialAsync("_PopupNotifications")
+
+<!-- Modal Placeholder -->
+<div id="promocodeModalPlaceholder"></div>
+
+<main class="w-full px-4 md:px-10 mx-auto max-w-7xl py-12">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+        <div class="flex flex-col gap-2">
+                <h1 class="font-black leading-tight tracking-tighter mb-2 flex items-baseline gap-3">
+                    <span class="text-gold text-5xl md:text-7xl">Promocode</span>
+                    <span class="text-white text-3xl md:text-5xl">Management</span>
+                </h1>
+            <p class="text-text-muted text-lg font-medium">Manage discount codes and active campaigns for your fleet.</p>
         </div>
-        <div class="promocode-grid" id="promocodeGrid">
+        <button class="add-promocode flex items-center justify-center gap-2 bg-gold hover:bg-[#dcae1a] text-black font-bold py-3 px-6 rounded-lg transition-all duration-200 shadow-[0_0_15px_rgba(237,188,29,0.1)] group">
+            <span class="material-symbols-outlined font-bold group-hover:scale-110 transition-transform">add</span>
+            <span>Add New Promocode</span>
+        </button>
+    </div>
+    
+    <div class="bg-card-dark border border-border-dark rounded-xl p-4 mb-8 shadow-md">
+        <div class="flex flex-col md:flex-row gap-4">
+            <div class="relative flex-1">
+                <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-text-muted">search</span>
+                <input id="searchInput" class="w-full bg-[#0a0a0a] text-white border border-border-dark rounded-lg pl-12 pr-4 py-3 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold placeholder-zinc-600 transition-all" placeholder="Search by code name, description..." type="text"/>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-4">
+                <div class="relative min-w-[160px]">
+                    <select id="statusFilter" class="w-full appearance-none bg-[#0a0a0a] text-white border border-border-dark rounded-lg px-4 py-3 pr-10 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold cursor-pointer">
+                        <option value="All">All Statuses</option>
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                    </select>
+                    <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none">expand_more</span>
+                </div>
+                <div class="relative min-w-[160px]">
+                    <select id="sortFilter" class="w-full appearance-none bg-[#0a0a0a] text-white border border-border-dark rounded-lg px-4 py-3 pr-10 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold cursor-pointer">
+                        <option value="DateDesc">Sort by Date</option>
+                        <option value="DiscountDesc">Sort by Discount</option>
+                        <option value="UsageDesc">Sort by Usage</option>
+                    </select>
+                    <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none">sort</span>
+                </div>
+            </div>
         </div>
     </div>
-    <div id="promocodeModalPlaceholder"></div>
 
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
+    <div id="promocodeGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Dynamic content -->
+    </div>
+
+    <div class="mt-10 flex items-center justify-between border-t border-border-dark pt-6">
+        <p class="text-sm text-text-muted" id="resultsCount">Loading...</p>
+        <div class="flex items-center gap-2">
+            <button class="flex items-center justify-center size-9 rounded-lg border border-border-dark bg-card-dark text-text-muted hover:text-white hover:border-gray-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                <span class="material-symbols-outlined text-sm">chevron_left</span>
+            </button>
+            <button class="flex items-center justify-center size-9 rounded-lg bg-gold text-black font-bold">1</button>
+            <button class="flex items-center justify-center size-9 rounded-lg border border-border-dark bg-card-dark text-text-muted hover:text-white hover:border-gray-500">
+                <span class="material-symbols-outlined text-sm">chevron_right</span>
+            </button>
+        </div>
+    </div>
+</main>
+
+@section Scripts {
     <script>
-        async function loadPromocodes() {
-            const res = await fetch('/api/Promocode');
-            const data = await res.json();
-            const grid = document.getElementById('promocodeGrid');
-            grid.innerHTML = '';
-            data.forEach(p => {
-                const div = document.createElement('div');
-                div.className = `promocode-card ${p.isActive ? '' : 'inactive'}`;
-                div.dataset.id = p.promocodeId;
-                
-                const statusBadge = p.isActive 
-                    ? `<span class="status-badge status-active">Active</span>`
-                    : `<span class="status-badge status-inactive">Inactive</span>`;
+        let allPromocodes = [];
 
-                const valid = p.validUntil ? p.validUntil : 'No Expiry';
-                div.innerHTML = statusBadge +
-                    `<div class="promocode-name">${p.name ?? 'No Name'}</div>` +
-                    `<div class="promocode-discount">Discount: ${p.discountPercentage}%</div>` +
-                    `<div class="promocode-valid">Valid Until: ${valid}</div>` +
-                    `<div class="actions">` +
-                    `<a href="#" class="edit-promocode" data-id="${p.promocodeId}"><i class=\'fas fa-pencil-alt\'></i></a>` +
-                    `<a href="#" class="delete-promocode" data-id="${p.promocodeId}" title="${p.isActive ? 'Deactivate' : 'Already Inactive'}"><i class=\'fas fa-trash\'></i></a>` +
-                    `</div>`;
-                grid.appendChild(div);
-            });
+        async function loadPromocodes() {
+            try {
+                const res = await fetch('/api/Promocode');
+                if (!res.ok) throw new Error('Failed to fetch data');
+                allPromocodes = await res.json();
+                renderPromocodes();
+            } catch (err) {
+                console.error(err);
+                document.getElementById('promocodeGrid').innerHTML = '<p class="text-red-500">Failed to load promocodes.</p>';
+            }
         }
 
+        function renderPromocodes() {
+            const grid = document.getElementById('promocodeGrid');
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const status = document.getElementById('statusFilter').value;
+            const sort = document.getElementById('sortFilter').value;
+
+            // Filter
+            let filtered = allPromocodes.filter(p => {
+                const matchSearch = (p.name && p.name.toLowerCase().includes(search)) || 
+                                    (p.description && p.description.toLowerCase().includes(search));
+                
+                let matchStatus = true;
+                if (status === 'Active') matchStatus = p.isActive;
+                if (status === 'Inactive') matchStatus = !p.isActive;
+                
+                return matchSearch && matchStatus;
+            });
+
+            // Sort
+            filtered.sort((a, b) => {
+                if (sort === 'DiscountDesc') return b.discountPercentage - a.discountPercentage;
+                if (sort === 'UsageDesc') return (b.usageCount || 0) - (a.usageCount || 0);
+                if (sort === 'DateDesc' || true) return b.promocodeId - a.promocodeId; 
+                return 0;
+            });
+
+            // Update Counts
+            document.getElementById('resultsCount').innerHTML = `Showing <span class="text-white font-bold">${filtered.length}</span> results`;
+
+            grid.innerHTML = '';
+
+            filtered.forEach(p => {
+                let statusHtml = '';
+                let cardClass = 'bg-card-dark border border-border-dark rounded-xl p-6 hover:border-gold/50 transition-colors group relative overflow-hidden';
+                let titleClass = 'text-white text-2xl font-bold tracking-tight';
+
+                if (p.isActive) {
+                    statusHtml = `
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-950/40 text-green-400 border border-green-900 text-xs font-bold uppercase tracking-wider mb-3">
+                            <span class="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span>
+                            Active
+                        </span>`;
+                } else {
+                    statusHtml = `
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-900 text-gray-400 border border-zinc-700 text-xs font-bold uppercase tracking-wider mb-3">
+                            Inactive
+                        </span>`;
+                     cardClass += ' opacity-75 hover:opacity-100';
+                     titleClass = 'text-gray-400 text-2xl font-bold tracking-tight line-through decoration-gold/50 decoration-2';
+                }
+
+                const expiryText = p.validUntil ? `Expires ${p.validUntil}` : 'No Expiry';
+                const usage = p.usageCount !== undefined ? p.usageCount : 0;
+                const desc = p.description || 'No description available.';
+
+                const card = document.createElement('div');
+                card.className = cardClass;
+                card.innerHTML = `
+                    <div class="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-bl-full -mr-4 -mt-4 transition-all group-hover:bg-gold/5"></div>
+                    <div class="flex justify-between items-start mb-4 relative z-10">
+                        <div>
+                            ${statusHtml}
+                            <h3 class="${titleClass}">${p.name}</h3>
+                        </div>
+                        <div class="flex gap-1">
+                            <button class="edit-promocode p-2 text-text-muted hover:text-gold hover:bg-white/5 rounded-lg transition-colors" data-id="${p.promocodeId}" title="Edit">
+                                <span class="material-symbols-outlined text-[20px]">edit</span>
+                            </button>
+                            <button class="delete-promocode p-2 text-text-muted hover:text-red-400 hover:bg-white/5 rounded-lg transition-colors" data-id="${p.promocodeId}" title="Delete">
+                                <span class="material-symbols-outlined text-[20px]">delete</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="space-y-4 relative z-10">
+                        <div>
+                            <p class="text-gold text-3xl font-black mb-1">${p.discountPercentage}% OFF</p>
+                            <p class="text-text-muted text-sm leading-relaxed">${desc}</p>
+                        </div>
+                        <div class="flex items-center gap-3 pt-4 border-t border-border-dark">
+                            <div class="flex items-center gap-2 text-text-muted text-sm">
+                                <span class="material-symbols-outlined text-[18px]">calendar_month</span>
+                                <span>${expiryText}</span>
+                            </div>
+                            <div class="flex items-center gap-2 text-text-muted text-sm ml-auto">
+                                <span class="material-symbols-outlined text-[18px]">group</span>
+                                <span>Nb Used: ${usage}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+
+            // "Create New" Card
+            const createCard = document.createElement('button');
+            createCard.className = 'add-promocode group bg-[#0a0a0a] border-2 border-dashed border-border-dark hover:border-gold rounded-xl p-6 flex flex-col items-center justify-center gap-4 transition-all min-h-[260px] cursor-pointer';
+            createCard.innerHTML = `
+                <div class="size-16 rounded-full bg-[#151515] group-hover:bg-gold/20 flex items-center justify-center transition-colors">
+                    <span class="material-symbols-outlined text-4xl text-text-muted group-hover:text-gold transition-colors">add</span>
+                </div>
+                <div class="text-center">
+                    <h3 class="text-white text-lg font-bold group-hover:text-gold transition-colors">Create New Code</h3>
+                    <p class="text-text-muted text-sm mt-1">Set up a new discount campaign</p>
+                </div>
+            `;
+            grid.appendChild(createCard);
+            
+            attachEventListeners();
+        }
+
+        // Keep Modal Logic same as before
         async function loadModal(url) {
             const res = await fetch(url);
             const html = await res.text();
@@ -75,21 +278,29 @@
             modal.show();
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            loadPromocodes();
-            document.querySelector('.add-promocode').addEventListener('click', () => loadModal('/Promocode/Add'));
-            document.getElementById('promocodeGrid').addEventListener('click', (e) => {
-                const edit = e.target.closest('.edit-promocode');
-                const del = e.target.closest('.delete-promocode');
-                if (edit) {
-                    e.preventDefault();
-                    loadModal('/Promocode/Edit/' + edit.dataset.id);
-                } else if (del) {
-                    e.preventDefault();
-                    loadModal('/Promocode/Delete/' + del.dataset.id);
+        function attachEventListeners() {
+            document.querySelectorAll('.add-promocode').forEach(btn => {
+                btn.onclick = () => loadModal('/Promocode/Add');
+            });
+            document.querySelectorAll('.edit-promocode').forEach(btn => {
+                btn.onclick = (e) => {
+                    e.stopPropagation();
+                    loadModal('/Promocode/Edit/' + btn.dataset.id);
                 }
             });
+            document.querySelectorAll('.delete-promocode').forEach(btn => {
+                btn.onclick = (e) => {
+                    e.stopPropagation();
+                    loadModal('/Promocode/Delete/' + btn.dataset.id);
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+             loadPromocodes();
+             document.getElementById('searchInput').addEventListener('input', renderPromocodes);
+             document.getElementById('statusFilter').addEventListener('change', renderPromocodes);
+             document.getElementById('sortFilter').addEventListener('change', renderPromocodes);
         });
     </script>
-</body>
-</html>
+}

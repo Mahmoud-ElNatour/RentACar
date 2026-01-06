@@ -12,7 +12,7 @@ using RentACar.Infrastructure.Data.Repository.Base;
 
 namespace RentACar.Infrastructure.Data.Repository
 {
-    public class PromocodeRepository : Repository<Category>, IPromocodeRepository
+    public class PromocodeRepository : Repository<Promocode>, IPromocodeRepository
     {
         private RentACarDbContext _dbContext;
         public PromocodeRepository(RentACarDbContext dbContext) : base(dbContext)
@@ -21,18 +21,18 @@ namespace RentACar.Infrastructure.Data.Repository
         }
         public async Task<Promocode?> GetByNameAsync(string name)
         {
-            return await _dbContext.Promocodes.FirstOrDefaultAsync(c => c.Name == name);
+            return await _dbContext.Promocodes.Include(p => p.Bookings).FirstOrDefaultAsync(c => c.Name == name);
         }
         public async Task<List<Promocode>> GetActiveAsync()
         {
-            return await _dbContext.Promocodes.Where(p => p.IsActive).ToListAsync();
+            return await _dbContext.Promocodes.Include(p => p.Bookings).Where(p => p.IsActive).ToListAsync();
         }
 
         // Implementations for the methods required by IRepository<Promocode>
 
         public async Task<IReadOnlyList<Promocode>> GetAllAsync()
         {
-            return await _dbContext.Promocodes.ToListAsync();
+            return await _dbContext.Promocodes.Include(p => p.Bookings).ToListAsync();
         }
 
         public async Task<IReadOnlyList<Promocode>> GetAsync(Expression<Func<Promocode, bool>> predicate)
@@ -97,7 +97,7 @@ namespace RentACar.Infrastructure.Data.Repository
 
         public async Task<Promocode?> GetByIdAsync(int id)
         {
-            return await _dbContext.Promocodes.FindAsync(id);
+            return await _dbContext.Promocodes.Include(p => p.Bookings).FirstOrDefaultAsync(p => p.PromocodeId == id);
         }
 
         public async Task<Promocode> AddAsync(Promocode entity)
