@@ -1,20 +1,32 @@
 changing design all pages in control panel
 
-Reset pass and email api
--reset pass should be random and send it by email and before ask to enter admin pass (loggedin user pass)
+email:
+	- email services (send notifications, reset password, confirm email, send offers,...)
+	-2fa
+	- reset pass (pin email --> random generated pass sended to customer)
+	- create acc --> verify email
+	- booking status update 
+	- payment (invoice) to the customer
+	- car/category/promocode crude (email to all emploies to keep them updated in work)
+	- booking return notify employee
+	- notification to resubmit doc to verify.
+	- blocklist/unverify notify the customer
+
+
 
 Payments:
 - redesign the page and popups
 - fix apply promocode (design + backend)
-
 - when pressing logout, it should took the user to page logout to press are yu sure...
 
 Later on:
--request panel for canceling the booking from employee nso the admin can approve or deny
+-request panel for canceling the booking from employee nso the admin can approve or deny + - refunded panel -- if stripe shta8alet
+
 - theme panel
 - customer reviews page for customer for each booking , and table in control panel for employees to view
 - reports (logs, financials,...)
-- email services (send notifications, reset password, confirm email, send offers,...)
-- refunded panel -- if stripe shta8alet
 - - add search and sort for each column by pressing the header of column in all tables
+
+- HR Platfrom to manage employees
+- Driver platform (adding new role driver, assign bookings to drivers (3la talab as a service) , dashboard for the driver in location map and duration and dates,...)
 

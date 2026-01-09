@@ -329,7 +329,12 @@
                                     {
                                         <div class="flex items-center justify-between p-3 rounded-lg hover:bg-white/5 transition-colors group border-b border-white/5 last:border-0">
                                             <div class="flex items-center gap-3">
-                                                <div class="size-10 rounded-full bg-cover bg-center" style='background-image: url("@customer.ImageUrl")'></div>
+                                                <div class="size-10 rounded-full bg-cover bg-center cursor-pointer hover:ring-2 hover:ring-primary transition-all relative" 
+                                                     style='background-image: url("@customer.ImageUrl")'
+                                                     onclick="loadModal('/Customer/DetailsPartial/@customer.CustomerId')"
+                                                     onmouseenter="showPopover(this, @customer.CustomerId)"
+                                                     onmouseleave="hidePopover()">
+                                                </div>
                                                 <div>
                                                     <p class="text-white text-sm font-bold">@customer.Name</p>
                                                     <div class="flex items-center gap-1 text-xs text-gray-400">
@@ -416,6 +421,8 @@
     
     <!-- Modal Placeholder -->
     <div id="modalPlaceholder"></div>
+    <!-- Popover Container -->
+    <div id="popoverContainer" class="fixed z-[100] transition-opacity duration-200 opacity-0 hidden" onmouseenter="cancelHidePopover()" onmouseleave="hidePopover()"></div>
 
     <script>
         // Modal Loading Logic
@@ -498,6 +505,62 @@
                     }
                 }
             });
+        }
+
+        // Popover Logic
+        let popoverTimeout;
+        const popoverContainer = document.getElementById('popoverContainer');
+
+        async function showPopover(element, customerId) {
+            cancelHidePopover(); // clear any pending hide
+            
+            // 1. Position placeholder
+            const rect = element.getBoundingClientRect();
+            // Position: slightly to the right of the image, or below
+            // Let's try right aligned first, if not enough space (mobile), go below
+            let top = rect.top;
+            let left = rect.right + 10;
+            
+            // Bound checks slightly simple for now
+            if (left + 300 > window.innerWidth) { // 300 approx width
+                left = rect.left;
+                top = rect.bottom + 10;
+            }
+
+            popoverContainer.style.top = top + 'px';
+            popoverContainer.style.left = left + 'px';
+            
+            // 2. Fetch Content
+            // Check if we already have content for this ID to avoid flicker? 
+            // For now simple fetch is fine
+            try {
+                const res = await fetch('/Customer/SummaryPartial/' + customerId);
+                if (!res.ok) return;
+                const html = await res.text();
+                popoverContainer.innerHTML = html;
+                
+                // 3. Show
+                popoverContainer.classList.remove('hidden');
+                requestAnimationFrame(() => {
+                    popoverContainer.classList.remove('opacity-0');
+                });
+            } catch (e) {
+                console.error("Popover error", e);
+            }
+        }
+
+        function hidePopover() {
+            popoverTimeout = setTimeout(() => {
+                popoverContainer.classList.add('opacity-0');
+                setTimeout(() => {
+                    popoverContainer.classList.add('hidden');
+                    popoverContainer.innerHTML = '';
+                }, 200);
+            }, 300); // 300ms buffer to move mouse to popover
+        }
+
+        function cancelHidePopover() {
+            clearTimeout(popoverTimeout);
         }
     </script>
 </body>

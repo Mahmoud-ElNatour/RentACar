@@ -1,0 +1,52 @@
+@model RentACar.Application.DTOs.CustomerDTO
+
+<div class="modal fade" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Customer Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="flex flex-col items-center gap-4 mb-6">
+                     <div class="size-24 rounded-full bg-cover bg-center border-2 border-primary" style="background-image: url('https://ui-avatars.com/api/?name=@Model.Name&background=random&size=128')"></div>
+                     <div class="text-center">
+                         <h3 class="text-xl font-bold text-white">@Model.Name</h3>
+                         <p class="text-gray-400 text-sm">@Model.Email</p>
+                     </div>
+                </div>
+                
+                <div class="bg-surface-darker/50 rounded-lg p-4 space-y-3">
+                    <div class="flex justify-between border-b border-white/5 pb-2">
+                        <span class="text-gray-400 text-sm">Phone</span>
+                        <span class="text-white text-sm font-medium">@Model.PhoneNumber</span>
+                    </div>
+                    <div class="flex justify-between border-b border-white/5 pb-2">
+                         <span class="text-gray-400 text-sm">Address</span>
+                         <span class="text-white text-sm font-medium text-right max-w-[60%]">@Model.Address</span>
+                    </div>
+                    <div class="flex justify-between border-b border-white/5 pb-2">
+                         <span class="text-gray-400 text-sm">Status</span>
+                         @if(Model.IsVerified) {
+                             <span class="text-green-500 text-sm font-bold flex items-center gap-1"><span class="material-symbols-outlined text-sm">verified</span> Verified</span>
+                         } else {
+                             <span class="text-red-400 text-sm font-bold flex items-center gap-1"><span class="material-symbols-outlined text-sm">warning</span> Unverified</span>
+                         }
+                    </div>
+                    @if(!string.IsNullOrEmpty(Model.username)) {
+                         <div class="flex justify-between">
+                             <span class="text-gray-400 text-sm">Username</span>
+                             <span class="text-white text-sm font-medium">@Model.username</span>
+                        </div>
+                    }
+                </div>
+            </div>
+            <div class="modal-footer">
+                @if(!Model.IsVerified) {
+                    <a href="/Customer/Verify/@Model.UserId" class="btn btn-primary">Verify Customer</a>
+                }
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,30 @@
+@model RentACar.Application.DTOs.CustomerDTO
+
+<div class="w-72 bg-surface-dark border border-primary/20 rounded-xl shadow-xl shadow-black/50 p-4 flex flex-col gap-3 relative z-[60] backdrop-blur-md">
+    <div class="flex items-center gap-3">
+        <div class="size-12 rounded-full bg-cover bg-center border border-white/10" style="background-image: url('https://ui-avatars.com/api/?name=@Model.Name&background=random')"></div>
+        <div>
+             <h4 class="text-white font-bold text-sm">@Model.Name</h4>
+             <p class="text-xs text-gray-400">@Model.Email</p>
+        </div>
+    </div>
+    <div class="h-px bg-white/5 w-full"></div>
+    <div class="space-y-2">
+         <div class="flex justify-between text-xs">
+             <span class="text-gray-500">Phone</span>
+             <span class="text-gray-300">@Model.PhoneNumber</span>
+         </div>
+         <div class="flex justify-between text-xs">
+             <span class="text-gray-500">Status</span>
+             @if(Model.IsVerified) {
+                 <span class="text-green-500 font-medium">Verified</span>
+             } else {
+                 <span class="text-red-400 font-medium">Unverified</span>
+             }
+         </div>
+         <div class="flex justify-between text-xs">
+              <span class="text-gray-500">Address</span>
+              <span class="text-gray-300 truncate max-w-[120px]">@Model.Address</span>
+         </div>
+    </div>
+</div>

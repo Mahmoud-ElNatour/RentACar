@@ -70,6 +70,24 @@ namespace RentACar.Web.Controllers
             return PartialView("~/Views/ControlPanel/Customer/_CustomerDocumentsPartial.cshtml", customer);
         }
 
+        [HttpGet("~/Customer/DetailsPartial/{id}")]
+        [ApiExplorerSettings(IgnoreApi = true)]
+        public async Task<IActionResult> DetailsPartial(int id)
+        {
+            var customer = await _customerManager.GetCustomerById(id);
+            if (customer == null) return NotFound();
+            return PartialView("~/Views/ControlPanel/Customer/_CustomerDetailsPartial.cshtml", customer);
+        }
+
+        [HttpGet("~/Customer/SummaryPartial/{id}")]
+        [ApiExplorerSettings(IgnoreApi = true)]
+        public async Task<IActionResult> SummaryPartial(int id)
+        {
+            var customer = await _customerManager.GetCustomerById(id);
+            if (customer == null) return NotFound();
+            return PartialView("~/Views/ControlPanel/Customer/_CustomerSummaryPartial.cshtml", customer);
+        }
+
         [HttpGet]
         public async Task<ActionResult<IEnumerable<CustomerListDto>>> Get([FromQuery] string? search, [FromQuery] bool? verified, [FromQuery] bool? active)
         {
