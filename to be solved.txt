@@ -2,15 +2,15 @@ changing design all pages in control panel
 
 email:
 	- email services (send notifications, reset password, confirm email, send offers,...)
-	-2fa
+	- 2fa
 	- reset pass (pin email --> random generated pass sended to customer)
 	- create acc --> verify email
 	- booking status update 
 	- payment (invoice) to the customer
 	- car/category/promocode crude (email to all emploies to keep them updated in work)
 	- booking return notify employee
-	- notification to resubmit doc to verify.
-	- blocklist/unverify notify the customer
+	- Doc. status update +  notification to resubmit doc to verify.
+	- blocklist/unverify notify the customer + admin with reason
 
 
 
