@@ -41,6 +41,7 @@ namespace RentACar.Application.DTOs
         public int WaitingBookings { get; set; } // Pending Approvals
         public int ActiveBookingsSystemWide { get; set; }
         public List<int> MonthlyProcessedBookings { get; set; } = new();
+        public List<int> AvailableYears { get; set; } = new();
         
         public List<EmployeeDashboardBookingDto> RecentPendingBookings { get; set; } = new();
         public List<EmployeeDashboardCustomerDto> UnverifiedCustomersList { get; set; } = new();

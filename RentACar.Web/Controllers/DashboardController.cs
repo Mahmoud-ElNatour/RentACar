@@ -221,6 +221,13 @@ namespace RentACar.Web.Controllers
             var unverifiedCustomersCount = await _dbContext.Customers.CountAsync(c => !c.IsVerified);
             var waitingBookingsCount = await _dbContext.Bookings.CountAsync(b => b.BookingStatus == "Pending");
 
+            // Fetch Distinct Years
+            var availableYears = await _dbContext.Bookings
+                .Select(b => b.Startdate.Year)
+                .Distinct()
+                .OrderByDescending(y => y)
+                .ToListAsync();
+
             // Fetch Recent Pending Bookings
             var recentPending = await _dbContext.Bookings
                 .Include(b => b.Customer)
@@ -264,6 +271,7 @@ namespace RentACar.Web.Controllers
                 WaitingBookings = waitingBookingsCount,
                 ActiveBookingsSystemWide = activeBookingsSystemWide,
                 MonthlyProcessedBookings = months,
+                AvailableYears = availableYears,
                 RecentPendingBookings = recentPending,
                 UnverifiedCustomersList = unverifiedList
             };
@@ -424,4 +432,3 @@ namespace RentACar.Web.Controllers
         }
     }
 }
-
