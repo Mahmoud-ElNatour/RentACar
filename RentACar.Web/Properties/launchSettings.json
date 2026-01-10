@@ -15,9 +15,7 @@
       "launchBrowser": true,
       "applicationUrl": "http://localhost:5152",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development",
-        "MAILJET_API_KEY": "235c3114a758d2d458af470f6c595cf4",
-        "MAILJET_SECRET_KEY": "2a4753a6871ab716b334306b1bcc1635"
+        "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
     "https": {
@@ -26,18 +24,14 @@
       "launchBrowser": true,
       "applicationUrl": "https://localhost:7192;http://localhost:5152",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development",
-        "MAILJET_API_KEY": "235c3114a758d2d458af470f6c595cf4",
-        "MAILJET_SECRET_KEY": "2a4753a6871ab716b334306b1bcc1635"
+        "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
     "IIS Express": {
       "commandName": "IISExpress",
       "launchBrowser": true,
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development",
-        "MAILJET_API_KEY": "235c3114a758d2d458af470f6c595cf4",
-        "MAILJET_SECRET_KEY": "2a4753a6871ab716b334306b1bcc1635"
+        "ASPNETCORE_ENVIRONMENT": "Development"
       }
     }
   }

@@ -181,39 +181,20 @@ namespace RentACar.Web.Controllers
         [Authorize(Roles = "Employee")]
         public async Task<IActionResult> SendReminderToUnverified()
         {
-            var unverified = await _dbContext.Customers
-                .Where(c => !c.IsVerified)
-                .ToListAsync();
-
-            int count = 0;
-            foreach (var customer in unverified)
-            {
-                // Assuming customer entity has Email property or we need to find it via Identity.
-                // Since Customer entity relates to AspNetUsers, we might need to fetch email from User Manager or if it's stored in Customer.
-                // The previous code implies Customer table has basic info. Let's check Customer entity if needed. 
-                // Wait, in previous view_file of DashboardController, we see `customer.Name`.
-                // I'll assume for now we use a placeholder or available email.
-                // Actually, I should check Customer entity to be safe. But to save time I'll use the user's requirement "send email to their emails".
-                
-                // Fetch email from User table if not in Customer
-                // But for now I'll use a safe approach: look up the user by ID
-                var user = await _userManager.FindByIdAsync(customer.aspNetUserId);
-                if (user != null && !string.IsNullOrEmpty(user.Email))
-                {
-                    try
-                    {
-                        await _emailManager.SendReminderToUnverifiedAsync(user.Email, customer.Name);
-                        count++;
-                    }
-                    catch (Exception ex)
-                    {
-                        // Log error but continue
-                        Console.WriteLine($"Error sending email to {user.Email}: {ex.Message}");
-                    }
-                }
-            }
-
+            var count = await _emailManager.SendReminderToAllUnverifiedAsync();
             return Json(new { success = true, message = $"Sent reminders to {count} unverified customers." });
+        }
+
+        [HttpPost("~/Dashboard/SendReminderToCustomer")]
+        [Authorize(Roles = "Employee")]
+        public async Task<IActionResult> SendReminderToCustomer(int id)
+        {
+            var success = await _emailManager.SendReminderToCustomerAsync(id);
+            if (success)
+            {
+                return Json(new { success = true, message = "Reminder email sent successfully." });
+            }
+            return Json(new { success = false, message = "Failed to send reminder. Check logs or customer status." });
         }
 
         [HttpGet("~/Dashboard/Employee")]

@@ -18,8 +18,8 @@ namespace RentACar.Infrastructure.Data.Repository
 
         public async Task SendEmailAsync(string toEmail, string subject, string message)
         {
-            var apiKey = Environment.GetEnvironmentVariable("MAILJET_API_KEY");
-            var secretKey = Environment.GetEnvironmentVariable("MAILJET_SECRET_KEY");
+            var apiKey = Environment.GetEnvironmentVariable("MAILJET_API_KEY") ?? Environment.GetEnvironmentVariable("MAILJET_API_KEY", EnvironmentVariableTarget.User);
+            var secretKey = Environment.GetEnvironmentVariable("MAILJET_SECRET_KEY") ?? Environment.GetEnvironmentVariable("MAILJET_SECRET_KEY", EnvironmentVariableTarget.User);
 
             if (string.IsNullOrEmpty(apiKey) || string.IsNullOrEmpty(secretKey))
             {
