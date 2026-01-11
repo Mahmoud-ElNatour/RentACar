@@ -65,12 +65,16 @@ namespace RentACar.Application.Managers
         private async Task SendEmailInternalAsync(string email, string name)
         {
             var subject = "Action Required: Verify Your RentACar Account";
-            var message = $@"
-                <h3>Hello {name},</h3>
+            var bodyContent = $@"
+                <h2>Verify Account</h2>
+                <p>Hello {name},</p>
                 <p>We noticed you haven't verified your account properly (e.g., missing ID or documentation).</p>
                 <p>Please log in to your dashboard and complete your profile to start booking cars.</p>
-                <br>
+                <a href='http://rentacarmohammadmahmoud.shop/Dashboard/Customer' class='btn'>Go to Dashboard</a>
+                <br><br>
                 <p>Best Regards,<br>RentACar Team</p>";
+
+            var message = EmailTemplates.GetStandardTemplate(bodyContent, "Action Required");
 
             await _emailService.SendEmailAsync(email, subject, message);
         }
