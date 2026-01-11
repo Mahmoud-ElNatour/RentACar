@@ -172,9 +172,9 @@ namespace RentACar.Web.Areas.Identity.Pages.Account.Manage
                     {
                         CreditCardId = c.CreditCardId,
                         CardHolderName = c.CardHolderName,
-                        CardNumber = MaskCardNumber(c.CardNumber),
+                        CardNumber = c.CardNumber,
                         ExpiryDate = c.ExpiryDate,
-                        Cvv = "***"
+                        Cvv = c.Cvv
                     }).ToList();
                 }
             }
@@ -409,42 +409,48 @@ namespace RentACar.Web.Areas.Identity.Pages.Account.Manage
             return RedirectToPage();
         }
 
-        public async Task<IActionResult> OnPostUploadDocumentAsync()
+        [BindProperty]
+        public IFormFile UploadNationalIdFront { get; set; }
+        [BindProperty]
+        public IFormFile UploadNationalIdBack { get; set; }
+        [BindProperty]
+        public IFormFile UploadDrivingLicenseFront { get; set; }
+        [BindProperty]
+        public IFormFile UploadDrivingLicenseBack { get; set; }
+
+        public async Task<IActionResult> OnPostUploadDocumentsAsync()
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return NotFound();
 
-            if (UploadedDocument == null || UploadedDocument.Length == 0)
-            {
-                StatusMessage = "Error: No file uploaded.";
-                return RedirectToPage();
-            }
-
-            using var memoryStream = new System.IO.MemoryStream();
-            await UploadedDocument.CopyToAsync(memoryStream);
-            var fileBytes = memoryStream.ToArray();
-
-            // We need to update the Customer Entity directly
-            // Find Customer by AspNetUserId
             var customer = await _dbContext.Customers.FirstOrDefaultAsync(c => c.aspNetUserId == user.Id);
             if (customer == null) return NotFound();
 
-            switch (DocumentType)
+            bool anyUploaded = false;
+
+            if (UploadNationalIdFront != null) { customer.NationalIdfront = await GetBytes(UploadNationalIdFront); anyUploaded = true; }
+            if (UploadNationalIdBack != null) { customer.NationalIdback = await GetBytes(UploadNationalIdBack); anyUploaded = true; }
+            if (UploadDrivingLicenseFront != null) { customer.DrivingLicenseFront = await GetBytes(UploadDrivingLicenseFront); anyUploaded = true; }
+            if (UploadDrivingLicenseBack != null) { customer.DrivingLicenseBack = await GetBytes(UploadDrivingLicenseBack); anyUploaded = true; }
+
+            if (!anyUploaded)
             {
-                case "NationalIdFront": customer.NationalIdfront = fileBytes; break;
-                case "NationalIdBack": customer.NationalIdback = fileBytes; break;
-                case "DrivingLicenseFront": customer.DrivingLicenseFront = fileBytes; break;
-                case "DrivingLicenseBack": customer.DrivingLicenseBack = fileBytes; break;
-                default:
-                    StatusMessage = "Error: Invalid document type.";
-                    return RedirectToPage();
+                StatusMessage = "Error: No files selected.";
+                return RedirectToPage();
             }
 
             _dbContext.Customers.Update(customer);
             await _dbContext.SaveChangesAsync();
 
-            StatusMessage = "Document uploaded successfully";
+            StatusMessage = "Documents uploaded successfully";
             return RedirectToPage();
+        }
+
+        private async Task<byte[]> GetBytes(IFormFile file)
+        {
+            using var ms = new System.IO.MemoryStream();
+            await file.CopyToAsync(ms);
+            return ms.ToArray();
         }
     }
 }
