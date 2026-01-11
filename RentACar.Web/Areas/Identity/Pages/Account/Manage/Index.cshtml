@@ -271,9 +271,12 @@
                         new { Id = "password-change", Icon = "lock_reset", Label = "Password" },
                         new { Id = "mfa", Icon = "phonelink_lock", Label = "MFA" },
                         new { Id = "recovery-codes", Icon = "key", Label = "Recovery" },
-                        new { Id = "payment-methods", Icon = "credit_card", Label = "Billing" },
-                        new { Id = "identity-verification", Icon = "verified_user", Label = "Verification" }
-                    };
+                       };
+                }
+                @if (User.IsInRole("Customer"))
+                    {
+                        navItems.Add(new { Id = "payment-methods", Icon = "credit_card", Label = "Cards" });
+                        navItems.Add(new { Id = "identity-verification", Icon = "verified_user", Label = "Verification" });
                 }
 
                 @foreach (var item in navItems)
