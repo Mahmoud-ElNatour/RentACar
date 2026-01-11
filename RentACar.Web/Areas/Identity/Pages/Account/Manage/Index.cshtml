@@ -287,7 +287,7 @@
     <!-- Modern Horizontal Navigation (Page Level) -->
     <!-- Sticky top-0 because standard layout navbar is likely static/scrolls away -->
     <nav class="glass-nav sticky top-0 z-40 border-b border-white/5 shadow-lg">
-        <div class="max-w-7xl mx-auto px-4 lg:px-6">
+        <div class="max-w-7xl mx-auto px-3 lg:px-6">
             <div class="flex overflow-x-auto no-scrollbar lg:justify-center lg:gap-2">
                 <!-- Nav Items -->
                 @{
@@ -353,8 +353,8 @@
                                         <span class="material-symbols-outlined text-sm">lock</span>
                                     </div>
                                 </div>
-                                <p class="text-[10px] text-white/30 mt-2 flex items-center gap-1">
-                                    <span class="material-symbols-outlined text-[12px]">info</span>
+                                <p class="text-[15px] text-white/30 mt-2 flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-[22px]">info</span>
                                     Contact support if you want to edit your email.
                                 </p>
                             </div>
@@ -419,10 +419,17 @@
                                     <button type="submit" class="w-full bg-[#d4af35] hover:bg-[#b5952f] text-black font-bold py-3.5 rounded-xl transition-all shadow-[0_4px_20px_rgba(212,175,53,0.2)] mb-4">
                                         Verify & Continue
                                     </button>
-                                    <button type="submit" asp-page-handler="SendOtp" class="mt-4 w-full text-white/50 hover:text-[#d4af35] transition-colors text-sm font-medium hover:underline flex items-center justify-center gap-2">
-                                        <span class="material-symbols-outlined text-[16px]">refresh</span>
-                                        Didn't receive code? Resend
-                                    </button>
+                                   <button
+    type="submit"
+    asp-page-handler="SendOtp"
+    class="mt-4 w-full bg-transparent text-white/50 hover:text-[#d4af35]
+           transition-colors text-sm font-medium hover:underline
+           flex items-center justify-center gap-2 border-0 outline-none">
+    
+    <span class="material-symbols-outlined text-[16px]">refresh</span>
+    Didn't receive code? Resend
+</button>
+
                                 </form>
                             </div>
                         }
@@ -549,7 +556,7 @@
                                  </div>
                              </div>
                              <div class="flex justify-end gap-3">
-                                 <button type="button" id="btnCancelAddCard" class="px-6 py-2.5 text-white/50 hover:text-white transition-colors font-medium">Cancel</button>
+                                 <button type="button" id="btnCancelAddCard" class="bg-transparent px-6 py-2.5 text-white/50 hover:text-white transition-colors font-medium border-0 outline-none">Cancel</button>
                                  <button type="submit" class="bg-[#d4af35] hover:bg-[#b5952f] text-black font-bold py-2.5 px-6 rounded-lg transition-colors shadow-lg">Save Card</button>
                              </div>
                          </form>
@@ -677,7 +684,7 @@
              <div class="p-8">
                   <div class="flex justify-between items-center mb-6">
                       <h3 class="text-white font-bold text-lg">Card Preview</h3>
-                      <button id="btnCloseViewCard" class="size-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/50 hover:text-white transition-colors">
+                      <button id="btnCloseViewCard" class="size-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/50 hover:text-white transition-colors border-0 outline-none">
                           <span class="material-symbols-outlined text-lg">close</span>
                       </button>
                   </div>
