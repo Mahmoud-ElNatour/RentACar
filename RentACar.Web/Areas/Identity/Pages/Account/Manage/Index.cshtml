@@ -292,22 +292,26 @@
                 <div class="px-3 lg:px-6">
                     <div class="flex flex-nowrap overflow-x-auto no-scrollbar lg:overflow-visible lg:grid lg:grid-cols-6 lg:gap-0">
                         @{
-                            var navItems = new[] {
+                            var baseNavItems = new List<dynamic> {
                                 new { Id = "personal-details", Icon = "badge", Label = "Profile" },
                                 new { Id = "password-change", Icon = "lock_reset", Label = "Password" },
                                 new { Id = "mfa", Icon = "phonelink_lock", Label = "MFA" },
-                                new { Id = "recovery-codes", Icon = "key", Label = "Recovery" },
-                                new { Id = "payment-methods", Icon = "credit_card", Label = "Cards" },
-                                new { Id = "identity-verification", Icon = "verified_user", Label = "Verification" }
+                                new { Id = "recovery-codes", Icon = "key", Label = "Recovery" }
                             };
+
+                            if (User.IsInRole("Customer"))
+                            {
+                                baseNavItems.Add(new { Id = "payment-methods", Icon = "credit_card", Label = "Saved Cards" });
+                                baseNavItems.Add(new { Id = "identity-verification", Icon = "verified_user", Label = "Verification" });
+                            }
                         }
 
-                        @foreach (var item in navItems)
+                        @foreach (var item in baseNavItems)
                         {
-                             <a href="#@item.Id" class="nav-item group flex items-center justify-center gap-2 px-1 py-4 lg:py-4 lg:my-0 text-sm font-medium text-white/50 hover:text-white transition-all whitespace-nowrap select-none w-auto lg:w-full border-b-2 border-transparent hover:bg-white/5 lg:rounded-none">
+                             <a href="#@item.Id" class="nav-item group flex items-center justify-center gap-2 px-4 py-4 lg:py-4 lg:my-0 text-sm font-medium text-white/50 hover:text-white transition-all whitespace-nowrap select-none w-auto lg:w-full border-b-2 border-transparent hover:bg-white/5 lg:rounded-none flex-shrink-0">
                                 <span class="material-symbols-outlined text-[20px] group-hover:scale-110 transition-transform">@item.Icon</span>
                                 <span class="hidden xl:inline">@item.Label</span>
-                                <span class="xl:hidden">@item.Label.Substring(0, Math.Min(4, item.Label.Length))..</span>
+                                <span class="xl:hidden">@item.Label</span>
                             </a>
                         }
                     </div>
@@ -327,7 +331,7 @@
 
                     <div class="flex items-center justify-between mb-8 relative z-10">
                         <div>
-                            <h3 class="text-xl font-bold text-white">Personal Information</h3>
+                            <h3 class="text-xl font-bold uppercase tracking-wide"><span class="text-white">Personal</span> <span class="text-[#d4af35]">Information</span></h3>
                             <p class="text-white/40 text-sm">Update your public profile and contact details.</p>
                         </div>
                     </div>
@@ -392,7 +396,7 @@
                 <section class="glass-card rounded-2xl p-6 md:p-8">
                     <div class="flex items-start justify-between mb-8">
                         <div>
-                            <h3 class="text-xl font-bold text-white">Security & Password</h3>
+                            <h3 class="text-xl font-bold uppercase tracking-wide"><span class="text-white">Security</span> <span class="text-[#d4af35]">& Password</span></h3>
                             <p class="text-white/40 text-sm">Manage your password via secure OTP verification.</p>
                         </div>
                         <span class="material-symbols-outlined text-[#d4af35]/80 text-3xl">lock_reset</span>
@@ -500,7 +504,7 @@
 
                     <div class="flex items-center justify-between mb-4 relative z-10">
                         <div>
-                            <h3 class="text-xl font-bold text-white flex items-center gap-2">Two-Factor Authentication</h3>
+                            <h3 class="text-xl font-bold uppercase tracking-wide flex items-center gap-2"><span class="text-white">Two-Factor</span> <span class="text-[#d4af35]">Authentication</span></h3>
                             <p class="text-white/40 text-sm">Secure your account with 2FA.</p>
                         </div>
                         <span class="bg-[#d4af35]/10 text-[#d4af35] text-[10px] font-bold px-3 py-1.5 rounded-full border border-[#d4af35]/20 uppercase tracking-wide">Coming Soon</span>
@@ -518,7 +522,7 @@
 
                     <div class="flex items-center justify-between mb-4 relative z-10">
                         <div>
-                            <h3 class="text-xl font-bold text-white">Backup Codes</h3>
+                            <h3 class="text-xl font-bold uppercase tracking-wide"><span class="text-white">Backup</span> <span class="text-[#d4af35]">Codes</span></h3>
                             <p class="text-white/40 text-sm">Emergency access if you lose your device.</p>
                         </div>
                         <span class="bg-[#d4af35]/10 text-[#d4af35] text-[10px] font-bold px-3 py-1.5 rounded-full border border-[#d4af35]/20 uppercase tracking-wide">Coming Soon</span>
@@ -526,12 +530,14 @@
                 </section>
             </div>
 
+            @if (User.IsInRole("Customer"))
+            {
             <!-- Payment Methods -->
             <div class="settings-section" id="payment-methods">
                 <section class="glass-card rounded-2xl p-6 md:p-8">
                     <div class="flex items-center justify-between mb-6">
                         <div>
-                            <h3 class="text-xl font-bold text-white">Billing & Payments</h3>
+                            <h3 class="text-xl font-bold uppercase tracking-wide"><span class="text-white">Saved</span> <span class="text-[#d4af35]">Cards</span></h3>
                             <p class="text-white/40 text-sm">Manage your saved credit cards.</p>
                         </div>
                         <button id="btnAddCard" class="bg-white/5 hover:bg-white/10 text-white border border-white/10 font-bold py-2 px-4 rounded-lg transition-all flex items-center gap-2 text-sm">
@@ -626,13 +632,16 @@
                     </div>
                 </section>
             </div>
+            }
 
+            @if (User.IsInRole("Customer"))
+            {
             <!-- Identity Verification -->
             <div class="settings-section" id="identity-verification">
                 <section class="glass-card rounded-2xl p-6 md:p-8">
                     <div class="flex items-center justify-between mb-6">
                         <div>
-                            <h3 class="text-xl font-bold text-white">Identity Verification</h3>
+                            <h3 class="text-xl font-bold uppercase tracking-wide"><span class="text-white">Identity</span> <span class="text-[#d4af35]">Verification</span></h3>
                             <p class="text-white/40 text-sm">Upload your documents for vehicle rental approval.</p>
                         </div>
                         <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/30 border border-white/5">
@@ -673,11 +682,15 @@
                             @foreach (var doc in docs)
                             {
                                 var hasFile = !string.IsNullOrEmpty(doc.Src);
-                                <div class="relative aspect-[4/3] group cursor-pointer">
-                                    <input type="file" name="@doc.Name" id="@doc.Name"
-                                           class="absolute inset-0 w-full h-full opacity-0 z-20 cursor-pointer"
-                                           onchange="previewImage(this, 'preview-@doc.Name')"
-                                           accept="image/*" />
+                                <div class="relative aspect-[4/3] group cursor-pointer overflow-hidden rounded-xl border-2 border-dashed border-white/10 hover:border-[#d4af35] transition-all bg-black/20">
+                                    <input type="file" name="@doc.Name" class="absolute inset-0 opacity-0 z-20 cursor-pointer" accept="image/*" onchange="previewImage(this, '@doc.Name-preview')" />
+                                    
+                                     <!-- Hover Overlay -->
+                                    <div class="absolute inset-0 bg-[#d4af35]/10 z-10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all pointer-events-none">
+                                        <div class="bg-black/80 px-4 py-2 rounded-full border border-[#d4af35]">
+                                            <span class="text-[#d4af35] font-bold text-xs uppercase tracking-wider">Upload @doc.Title</span>
+                                        </div>
+                                    </div>
 
                                     <div class="absolute inset-0 rounded-lg bg-[#18181b] border border-white/10 overflow-hidden ring-1 ring-white/5 group-hover:border-[#d4af35]/50 transition-all">
                                         @if (hasFile)
@@ -724,6 +737,7 @@
                     </form>
                 </section>
             </div>
+            }
 
         </div>
     </main>
@@ -770,4 +784,4 @@
         </div>
     </div>
 
-</div>
+     </div>

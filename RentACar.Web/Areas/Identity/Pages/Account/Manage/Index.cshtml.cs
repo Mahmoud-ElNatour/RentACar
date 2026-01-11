@@ -101,8 +101,8 @@ namespace RentACar.Web.Areas.Identity.Pages.Account.Manage
         {
             [Required]
             [Display(Name = "Card Number")]
-            // ✅ We will store as digits only; UI may send spaces (we normalize before save)
-            [RegularExpression(@"^\d{16}$", ErrorMessage = "Card number must be exactly 16 digits.")]
+            // ✅ Allow spaces/dashes in UI validation; we strip them in OnPost
+            [RegularExpression(@"^[\d\s-]{16,22}$", ErrorMessage = "Card number must be 16 digits.")]
             public string CardNumber { get; set; }
 
             [Required]
@@ -335,12 +335,14 @@ namespace RentACar.Web.Areas.Identity.Pages.Account.Manage
                 return RedirectToPage();
             }
 
+            // ✅ Clear ModelState because other bound inputs (like Profile Input) are missing and causing validation errors
+            ModelState.Clear();
+
             // ✅ Normalize card number: remove spaces/dashes
             NewCreditCard.CardNumber = (NewCreditCard.CardNumber ?? "").Replace(" ", "").Replace("-", "");
 
             // Trigger DataAnnotations validation after normalization
-            TryValidateModel(NewCreditCard, nameof(NewCreditCard));
-            if (!ModelState.IsValid)
+            if (!TryValidateModel(NewCreditCard, nameof(NewCreditCard)))
             {
                 StatusMessage = "Error: Please fix the card form errors.";
                 return RedirectToPage();
