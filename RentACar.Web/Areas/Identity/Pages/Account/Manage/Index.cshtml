@@ -261,32 +261,60 @@
 
 <div class="font-settings text-white min-h-screen flex flex-col selection:bg-[#d4af35]/30 selection:text-white">
 
-    <!-- ✅ PAGE TABS NAV (Swapping Nav) -->
-    <nav class="glass-nav sticky top-0 z-40 border-b border-white/5 shadow-lg">
-        <div class="max-w-7xl mx-auto px-3 lg:px-6">
-            <div class="flex overflow-x-auto no-scrollbar lg:justify-center lg:gap-2">
-                @{
-                    var navItems = new[] {
-                        new { Id = "personal-details", Icon = "badge", Label = "Profile" },
-                        new { Id = "password-change", Icon = "lock_reset", Label = "Password" },
-                        new { Id = "mfa", Icon = "phonelink_lock", Label = "MFA" },
-                        new { Id = "recovery-codes", Icon = "key", Label = "Recovery" },
-                        new { Id = "payment-methods", Icon = "credit_card", Label = "Cards" },
-                        new { Id = "identity-verification", Icon = "verified_user", Label = "Verification" }
-                    };
-                }
 
-                @foreach (var item in navItems)
-                {
-                    <a href="#@item.Id" class="nav-item group flex items-center gap-2 px-5 py-4 lg:py-3 lg:my-2 lg:rounded-lg text-sm font-medium text-white/60 hover:text-white transition-all whitespace-nowrap select-none">
-                        <span class="material-symbols-outlined text-[20px] group-hover:scale-110 transition-transform">@item.Icon</span>
-                        <span>@item.Label</span>
-                    </a>
-                }
-            </div>
+
+    <!-- ✅ UNIFIED HEADER & NAV -->
+    <div class="relative w-full bg-[#101010] border-b border-white/5 overflow-hidden">
+        <!-- Background Gear Watermark -->
+        <div class="absolute -top-20 -right-10 text-[#d4af35]/5 pointer-events-none select-none">
+             <span class="material-symbols-outlined text-[250px]">settings</span>
         </div>
-    </nav>
 
+        <div class="max-w-7xl mx-auto relative z-10 flex flex-col">
+            <!-- Top Section: Title (Centered, No Breadcrumbs) -->
+            <div class="px-6 pt-6 pb-2 lg:pt-8 lg:pb-3 w-full flex flex-col items-center justify-center">
+                 <!-- Title -->
+                 <div class="flex items-end gap-3">
+                    <div class="relative flex flex-col items-center">
+                        <h1 class="text-3xl font-black text-white tracking-wide uppercase leading-none text-center">
+                            Account <span class="text-[#d4af35]">Settings</span>
+                        </h1>
+                        <!-- Gold Underline -->
+                        <div class="w-12 h-1 bg-[#d4af35] mt-2 rounded-sm"></div>
+                    </div>
+                    <!-- Icon -->
+                     <span class="material-symbols-outlined text-[#27272a] text-2xl mb-1.5 font-black">settings</span>
+                </div>
+            </div>
+
+            <!-- Bottom Section: Sticky Nav -->
+            <nav class="glass-nav sticky top-0 z-40 w-full border-t border-white/5 shadow-lg lg:!bg-[#101010]/30 lg:backdrop-blur-md">
+                <div class="px-3 lg:px-6">
+                    <div class="flex flex-nowrap overflow-x-auto no-scrollbar lg:overflow-visible lg:grid lg:grid-cols-6 lg:gap-0">
+                        @{
+                            var navItems = new[] {
+                                new { Id = "personal-details", Icon = "badge", Label = "Profile" },
+                                new { Id = "password-change", Icon = "lock_reset", Label = "Password" },
+                                new { Id = "mfa", Icon = "phonelink_lock", Label = "MFA" },
+                                new { Id = "recovery-codes", Icon = "key", Label = "Recovery" },
+                                new { Id = "payment-methods", Icon = "credit_card", Label = "Cards" },
+                                new { Id = "identity-verification", Icon = "verified_user", Label = "Verification" }
+                            };
+                        }
+
+                        @foreach (var item in navItems)
+                        {
+                             <a href="#@item.Id" class="nav-item group flex items-center justify-center gap-2 px-1 py-4 lg:py-4 lg:my-0 text-sm font-medium text-white/50 hover:text-white transition-all whitespace-nowrap select-none w-auto lg:w-full border-b-2 border-transparent hover:bg-white/5 lg:rounded-none">
+                                <span class="material-symbols-outlined text-[20px] group-hover:scale-110 transition-transform">@item.Icon</span>
+                                <span class="hidden xl:inline">@item.Label</span>
+                                <span class="xl:hidden">@item.Label.Substring(0, Math.Min(4, item.Label.Length))..</span>
+                            </a>
+                        }
+                    </div>
+                </div>
+            </nav>
+        </div>
+    </div>
     <!-- Main Content -->
     <main class="flex-1 w-full max-w-5xl mx-auto p-6 lg:p-10 pb-20">
 
@@ -308,25 +336,35 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div class="col-span-2 md:col-span-1">
                                 <label class="block text-xs font-bold text-white/40 uppercase tracking-wider mb-2">Display Name</label>
-                                <input asp-for="Input.Name" class="w-full bg-[#18181b] border-none rounded-xl px-4 py-3.5 text-white focus:ring-2 focus:ring-[#d4af35]/50 transition-all font-medium placeholder:text-white/10" placeholder="Your Name" />
+                                <div class="relative">
+                                    <input asp-for="Input.Name" class="w-full bg-[#18181b] border-none rounded-xl pl-11 pr-4 py-3.5 text-white focus:ring-2 focus:ring-[#d4af35]/50 transition-all font-medium placeholder:text-white/10" placeholder="Your Name" />
+                                    <span class="material-symbols-outlined absolute left-3.5 top-3.5 text-white/20">badge</span>
+                                </div>
                                 <span asp-validation-for="Input.Name" class="text-red-500 text-xs mt-1 block"></span>
                             </div>
 
                             <div class="col-span-2 md:col-span-1">
                                 <label class="block text-xs font-bold text-white/40 uppercase tracking-wider mb-2">Phone Number</label>
-                                <input asp-for="Input.PhoneNumber" class="w-full bg-[#18181b] border-none rounded-xl px-4 py-3.5 text-white focus:ring-2 focus:ring-[#d4af35]/50 transition-all font-medium placeholder:text-white/10" placeholder="+961..." />
+                                <div class="relative">
+                                    <input asp-for="Input.PhoneNumber" class="w-full bg-[#18181b] border-none rounded-xl pl-11 pr-4 py-3.5 text-white focus:ring-2 focus:ring-[#d4af35]/50 transition-all font-medium placeholder:text-white/10" placeholder="+961..." />
+                                    <span class="material-symbols-outlined absolute left-3.5 top-3.5 text-white/20">call</span>
+                                </div>
                                 <span asp-validation-for="Input.PhoneNumber" class="text-red-500 text-xs mt-1 block"></span>
                             </div>
 
                             <div class="col-span-2">
                                 <label class="block text-xs font-bold text-white/40 uppercase tracking-wider mb-2">Home Address</label>
-                                <input asp-for="Input.Address" class="w-full bg-[#18181b] border-none rounded-xl px-4 py-3.5 text-white focus:ring-2 focus:ring-[#d4af35]/50 transition-all font-medium placeholder:text-white/10" placeholder="Street, City, Country" />
+                                <div class="relative">
+                                    <input asp-for="Input.Address" class="w-full bg-[#18181b] border-none rounded-xl pl-11 pr-4 py-3.5 text-white focus:ring-2 focus:ring-[#d4af35]/50 transition-all font-medium placeholder:text-white/10" placeholder="Street, City, Country" />
+                                    <span class="material-symbols-outlined absolute left-3.5 top-3.5 text-white/20">home_pin</span>
+                                </div>
                             </div>
 
                             <div class="col-span-2">
                                 <label class="block text-xs font-bold text-white/40 uppercase tracking-wider mb-2">Email Address</label>
                                 <div class="relative group/email">
-                                    <input asp-for="Input.Email" class="w-full bg-[#18181b]/50 border border-white/5 rounded-xl px-4 py-3.5 text-white/50 cursor-not-allowed" readonly />
+                                    <input asp-for="Input.Email" class="w-full bg-[#18181b]/50 border border-white/5 rounded-xl pl-11 pr-4 py-3.5 text-white/50 cursor-not-allowed" readonly />
+                                    <span class="material-symbols-outlined absolute left-3.5 top-3.5 text-white/20">mail</span>
                                     <div class="absolute right-4 top-3.5 flex items-center gap-2 text-white/20 group-hover/email:text-[#d4af35]/50 transition-colors">
                                         <span class="text-xs font-bold">LOCKED</span>
                                         <span class="material-symbols-outlined text-sm">lock</span>
@@ -415,8 +453,8 @@
                         {
                             <div class="max-w-md mx-auto">
                                 <div class="text-center mb-6">
-                                    <div class="inline-flex bg-green-500/10 text-green-500 p-3 rounded-full mb-3">
-                                        <span class="material-symbols-outlined text-3xl">check</span>
+                                    <div class="inline-flex bg-gradient-to-br from-green-500/20 to-green-500/5 text-green-500 p-4 rounded-full mb-4 shadow-[0_0_20px_rgba(34,197,94,0.3)] animate-pulse">
+                                        <span class="material-symbols-outlined text-4xl">verified_user</span>
                                     </div>
                                     <h4 class="text-white font-bold text-lg">Identity Verified</h4>
                                     <p class="text-sm text-white/50">Create your new strong password.</p>
@@ -454,26 +492,36 @@
 
             <!-- MFA -->
             <div class="settings-section" id="mfa">
-                <section class="glass-card rounded-2xl p-6 md:p-8" style="opacity: 0.7;">
-                    <div class="flex items-center justify-between mb-4">
+                 <section class="glass-card rounded-2xl p-6 md:p-8 relative overflow-hidden">
+                    <!-- Background Watermark -->
+                    <div class="absolute -right-6 -bottom-6 text-white/5 pointer-events-none">
+                        <span class="material-symbols-outlined text-[150px]">phonelink_lock</span>
+                    </div>
+
+                    <div class="flex items-center justify-between mb-4 relative z-10">
                         <div>
-                            <h3 class="text-xl font-bold text-white">Two-Factor Authentication</h3>
+                            <h3 class="text-xl font-bold text-white flex items-center gap-2">Two-Factor Authentication</h3>
                             <p class="text-white/40 text-sm">Secure your account with 2FA.</p>
                         </div>
-                        <span class="bg-[#d4af35]/20 text-[#d4af35] text-[10px] font-bold px-2 py-1 rounded border border-[#d4af35]/20">COMING SOON</span>
+                        <span class="bg-[#d4af35]/10 text-[#d4af35] text-[10px] font-bold px-3 py-1.5 rounded-full border border-[#d4af35]/20 uppercase tracking-wide">Coming Soon</span>
                     </div>
                 </section>
             </div>
 
             <!-- Recovery Codes -->
             <div class="settings-section" id="recovery-codes">
-                <section class="glass-card rounded-2xl p-6 md:p-8" style="opacity: 0.7;">
-                    <div class="flex items-center justify-between mb-4">
+                <section class="glass-card rounded-2xl p-6 md:p-8 relative overflow-hidden">
+                     <!-- Background Watermark -->
+                    <div class="absolute -right-6 -bottom-6 text-white/5 pointer-events-none">
+                        <span class="material-symbols-outlined text-[150px]">key</span>
+                    </div>
+
+                    <div class="flex items-center justify-between mb-4 relative z-10">
                         <div>
                             <h3 class="text-xl font-bold text-white">Backup Codes</h3>
                             <p class="text-white/40 text-sm">Emergency access if you lose your device.</p>
                         </div>
-                        <span class="bg-[#d4af35]/20 text-[#d4af35] text-[10px] font-bold px-2 py-1 rounded border border-[#d4af35]/20">COMING SOON</span>
+                        <span class="bg-[#d4af35]/10 text-[#d4af35] text-[10px] font-bold px-3 py-1.5 rounded-full border border-[#d4af35]/20 uppercase tracking-wide">Coming Soon</span>
                     </div>
                 </section>
             </div>
@@ -553,13 +601,18 @@
                                         </div>
                                     </div>
 
-                                    <div class="relative z-10">
-                                        <p class="text-white/40 text-xs font-mono mb-1">•••• •••• ••••</p>
-                                        <p class="text-white font-bold text-lg font-mono tracking-widest">@card.CardNumber.Substring(Math.Max(0, card.CardNumber.Length - 4))</p>
-                                        <div class="flex justify-between mt-3 text-xs text-white/50">
-                                            <span>Expires @card.ExpiryDate.ToString("MM/yy")</span>
+                                        <div class="relative z-10">
+                                            <div class="flex justify-between items-center mb-2">
+                                                 <span class="material-symbols-outlined text-white/30 text-2xl">contactless</span>
+                                                 <span class="material-symbols-outlined text-[#d4af35] text-2xl">sim_card</span>
+                                            </div>
+                                            <p class="text-white/40 text-xs font-mono mb-1">•••• •••• ••••</p>
+                                            <p class="text-white font-bold text-lg font-mono tracking-widest">@card.CardNumber.Substring(Math.Max(0, card.CardNumber.Length - 4))</p>
+                                            <div class="flex justify-between mt-3 text-xs text-white/50">
+                                                <span>Expires @card.ExpiryDate.ToString("MM/yy")</span>
+                                                <span class="font-bold text-[#d4af35]">VISA</span>
+                                            </div>
                                         </div>
-                                    </div>
                                 </div>
                             }
                         }
@@ -584,9 +637,20 @@
                         </div>
                         <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/30 border border-white/5">
                             <span class="text-xs font-bold text-white/70">Status:</span>
-                            <span class="@(Model.IsVerified ? "text-green-500" : "text-orange-500") text-xs font-black uppercase">
-                                @(Model.IsVerified ? "Verified" : "Pending")
-                            </span>
+                            @if (Model.IsVerified)
+                            {
+                                <div class="flex items-center gap-1 text-green-500">
+                                    <span class="material-symbols-outlined text-[16px]">check_circle</span>
+                                    <span class="text-xs font-black uppercase">Verified</span>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="flex items-center gap-1 text-orange-500">
+                                     <span class="material-symbols-outlined text-[16px] animate-spin-slow">pending</span>
+                                    <span class="text-xs font-black uppercase">Pending</span>
+                                </div>
+                            }
                         </div>
                     </div>
 
