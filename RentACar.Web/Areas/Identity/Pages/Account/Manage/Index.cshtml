@@ -567,11 +567,11 @@
                         {
                             @foreach (var card in Model.CreditCards)
                             {
-                                <div class="p-5 rounded-xl bg-gradient-to-br from-white/5 to-transparent border border-white/5 hover:border-[#d4af35]/30 transition-all group relative overflow-hidden">
-                                    <div class="absolute inset-0 bg-[#d4af35]/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
-                                    <div class="absolute inset-0 border-2 border-[#d4af35]/50 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-[0_0_15px_rgba(212,175,53,0.3)]"></div>
+                                <div class="p-5 rounded-xl bg-gradient-to-br from-white/5 to-transparent border border-white/5 hover:border-[#d4af35] hover:from-[#d4af35]/20 hover:to-[#d4af35]/5 transition-all group relative overflow-hidden">
+                                    <div class="absolute inset-0 bg-[#d4af35]/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
+                                    <div class="absolute inset-0 border-2 border-[#d4af35] rounded-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-[0_0_20px_rgba(212,175,53,0.4)]"></div>
                                     <div class="flex justify-between items-start mb-4 relative z-10">
-                                        <div class="size-10 bg-[#d4af35] rounded-md flex items-center justify-center shadow-lg">
+                                        <div class="size-10 bg-[#d4af35] rounded-md flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
                                              <span class="material-symbols-outlined text-black">credit_card</span>
                                         </div>
                                         <div class="flex gap-2">
@@ -582,6 +582,11 @@
                                                     data-cvv="@card.Cvv">
                                                 VIEW
                                             </button>
+                                            <form method="post" asp-page-handler="DeleteCreditCard" asp-route-id="@card.CreditCardId" onsubmit="return confirm('Are you sure you want to delete this card?');">
+                                                <button type="submit" class="bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 px-3 py-1.5 rounded-md transition-colors flex items-center justify-center h-full">
+                                                    <span class="material-symbols-outlined text-lg">delete</span>
+                                                </button>
+                                            </form>
                                         </div>
                                     </div>
                                     <div class="relative z-10">
@@ -655,9 +660,15 @@
                                              </div>
                                          }
                                          <!-- Overlay on Hover -->
-                                         <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity pointer-events-none z-10">
-                                             <span class="material-symbols-outlined text-[#d4af35]">upload</span>
-                                         </div>
+                                         @if (!Model.IsVerified)
+                                         {
+                                             <div class="absolute inset-0 bg-[#d4af35]/20 border-2 border-[#d4af35] opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-all duration-300 pointer-events-none z-10 backdrop-blur-[2px]">
+                                                 <div class="bg-black/60 p-3 rounded-full mb-2 shadow-lg transform group-hover:scale-110 transition-transform">
+                                                     <span class="material-symbols-outlined text-[#d4af35] text-3xl">cloud_upload</span>
+                                                 </div>
+                                                 <span class="text-white font-bold text-sm uppercase tracking-wider drop-shadow-md bg-black/40 px-3 py-1 rounded-full">Press to Upload</span>
+                                             </div>
+                                         }
                                      </div>
                                  </div>
                              }

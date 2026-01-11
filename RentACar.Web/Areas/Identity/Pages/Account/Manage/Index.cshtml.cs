@@ -446,6 +446,45 @@ namespace RentACar.Web.Areas.Identity.Pages.Account.Manage
             return RedirectToPage();
         }
 
+        public async Task<IActionResult> OnPostDeleteCreditCardAsync(int id)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return NotFound();
+
+            var customer = await _dbContext.Customers
+                .Include(c => c.CustomerCreditCards)
+                .ThenInclude(cc => cc.CreditCard)
+                .FirstOrDefaultAsync(c => c.aspNetUserId == user.Id);
+
+            if (customer == null) return NotFound();
+
+            var creditCardLink = customer.CustomerCreditCards.FirstOrDefault(cc => cc.CreditCardId == id);
+            
+            if (creditCardLink != null)
+            {
+                // Remove the link
+                _dbContext.Set<CustomerCreditCard>().Remove(creditCardLink);
+                
+                // Optionally remove the card itself if it's orphan? 
+                // For now, removing the link is sufficient to hide it from the user.
+                // But generally in this app logic, cards are personal.
+                var card = creditCardLink.CreditCard;
+                if(card != null)
+                {
+                     _dbContext.CreditCards.Remove(card);
+                }
+
+                await _dbContext.SaveChangesAsync();
+                StatusMessage = "Credit card deleted successfully";
+            }
+            else
+            {
+                StatusMessage = "Error: Card not found.";
+            }
+
+            return RedirectToPage();
+        }
+
         private async Task<byte[]> GetBytes(IFormFile file)
         {
             using var ms = new System.IO.MemoryStream();
