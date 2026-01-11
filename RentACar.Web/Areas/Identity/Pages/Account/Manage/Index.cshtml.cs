@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 #nullable disable
 
@@ -11,6 +11,12 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using RentACar.Application.Managers;
 using RentACar.Application.DTOs;
+using Microsoft.Extensions.Caching.Memory;
+using RentACar.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
+using RentACar.Core.Entities;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace RentACar.Web.Areas.Identity.Pages.Account.Manage
 {
@@ -20,43 +26,64 @@ namespace RentACar.Web.Areas.Identity.Pages.Account.Manage
         private readonly SignInManager<IdentityUser> _signInManager;
         private readonly CustomerManager _customerManager;
         private readonly EmployeeManager _employeeManager;
+        private readonly EmailManager _emailManager;
+        private readonly IMemoryCache _memoryCache;
+        private readonly RentACarDbContext _dbContext;
 
         public IndexModel(
             UserManager<IdentityUser> userManager,
             SignInManager<IdentityUser> signInManager,
             CustomerManager customerManager,
-            EmployeeManager employeeManager)
+            EmployeeManager employeeManager,
+            EmailManager emailManager,
+            IMemoryCache memoryCache,
+            RentACarDbContext dbContext)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _customerManager = customerManager;
             _employeeManager = employeeManager;
+            _emailManager = emailManager;
+            _memoryCache = memoryCache;
+            _dbContext = dbContext;
         }
 
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
+        public record DocumentItem(string Title, string Src, string PlaceholderIcon, string DocType, bool IsVerified);
+
         public string Username { get; set; }
 
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
         [TempData]
         public string StatusMessage { get; set; }
 
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
         [BindProperty]
         public InputModel Input { get; set; }
 
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
+        public bool IsVerified { get; set; }
+        public List<CreditCardDto> CreditCards { get; set; } = new List<CreditCardDto>();
+        
+        // Documents (Base64 Strings)
+        public string DrivingLicenseFrontSrc { get; set; }
+        public string DrivingLicenseBackSrc { get; set; }
+        public string NationalIdFrontSrc { get; set; }
+        public string NationalIdBackSrc { get; set; }
+        public int CompletedDocsCount { get; set; }
+
+        // OTP Flow States
+        public bool IsOtpSent { get; set; }
+        public bool IsOtpVerified { get; set; }
+
+        [BindProperty]
+        public string OTP { get; set; }
+
+        [BindProperty]
+        [DataType(DataType.Password)]
+        public string NewPassword { get; set; }
+
+        [BindProperty]
+        [DataType(DataType.Password)]
+        [Compare("NewPassword", ErrorMessage = "The new password and confirmation password do not match.")]
+        public string ConfirmNewPassword { get; set; }
+
         public class InputModel
         {
             [Required]
@@ -75,18 +102,81 @@ namespace RentACar.Web.Areas.Identity.Pages.Account.Manage
             public string PhoneNumber { get; set; }
         }
 
+        [BindProperty]
+        public CreditCardInputModel NewCreditCard { get; set; }
+
+        public class CreditCardInputModel
+        {
+            [Required]
+            [Display(Name = "Card Number")]
+            [RegularExpression(@"^\d{16}$", ErrorMessage = "Invalid Card Number")]
+            public string CardNumber { get; set; }
+
+            [Required]
+            [Display(Name = "Card Holder Name")]
+            public string CardHolderName { get; set; }
+
+            [Required]
+            [Display(Name = "Expiry Date (MM/YY)")]
+            [RegularExpression(@"^(0[1-9]|1[0-2])\/\d{2}$", ErrorMessage = "Invalid Expiry Format (MM/YY)")]
+            public string ExpiryDate { get; set; }
+
+            [Required]
+            [Display(Name = "CVV")]
+            [RegularExpression(@"^\d{3,4}$", ErrorMessage = "Invalid CVV")]
+            public string Cvv { get; set; }
+        }
+
+        [BindProperty]
+        public IFormFile UploadedDocument { get; set; }
+
+        [BindProperty]
+        public string DocumentType { get; set; }
+
         private async Task LoadAsync(IdentityUser user)
         {
             var userName = await _userManager.GetUserNameAsync(user);
             var phoneNumber = await _userManager.GetPhoneNumberAsync(user);
             var email = await _userManager.GetEmailAsync(user);
 
-            CustomerDTO? customer = null;
-            EmployeeDto? employee = null;
+            CustomerDTO customer = null;
+            EmployeeDto employee = null;
 
             if (await _userManager.IsInRoleAsync(user, "Customer"))
             {
                 customer = await _customerManager.GetCustomerByUsername(userName);
+                if (customer != null)
+                {
+                    IsVerified = customer.IsVerified;
+                    
+                    // Docs
+                    DrivingLicenseFrontSrc = ToBase64(customer.DrivingLicenseFront);
+                    DrivingLicenseBackSrc = ToBase64(customer.DrivingLicenseBack);
+                    NationalIdFrontSrc = ToBase64(customer.NationalIdfront);
+                    NationalIdBackSrc = ToBase64(customer.NationalIdback);
+                    
+                    CompletedDocsCount = 0;
+                    if (customer.DrivingLicenseFront != null) CompletedDocsCount++;
+                    if (customer.DrivingLicenseBack != null) CompletedDocsCount++;
+                    if (customer.NationalIdfront != null) CompletedDocsCount++;
+                    if (customer.NationalIdback != null) CompletedDocsCount++;
+
+                    // Credit Cards
+                    var cards = await _dbContext.CustomerCreditCards
+                        .Where(c => c.UserId == customer.UserId)
+                        .Include(c => c.CreditCard)
+                        .Select(c => c.CreditCard)
+                        .ToListAsync();
+                    
+                    CreditCards = cards.Select(c => new CreditCardDto
+                    {
+                        CreditCardId = c.CreditCardId,
+                        CardHolderName = c.CardHolderName,
+                        CardNumber = MaskCardNumber(c.CardNumber),
+                        ExpiryDate = c.ExpiryDate,
+                        Cvv = "***"
+                    }).ToList();
+                }
             }
             else if (await _userManager.IsInRoleAsync(user, "Employee") || await _userManager.IsInRoleAsync(user, "Admin"))
             {
@@ -104,6 +194,18 @@ namespace RentACar.Web.Areas.Identity.Pages.Account.Manage
             };
         }
 
+        private string ToBase64(byte[] bytes)
+        {
+            if (bytes == null || bytes.Length == 0) return null;
+            return "data:image/jpeg;base64," + Convert.ToBase64String(bytes);
+        }
+
+        private string MaskCardNumber(string number)
+        {
+            if (string.IsNullOrEmpty(number) || number.Length < 4) return number;
+            return "•••• " + number.Substring(number.Length - 4);
+        }
+
         public async Task<IActionResult> OnGetAsync()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -112,6 +214,15 @@ namespace RentACar.Web.Areas.Identity.Pages.Account.Manage
                 return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
             }
 
+            // Restore state from TempData
+            if (TempData["IsOtpSent"] as bool? == true) IsOtpSent = true;
+            if (TempData["IsOtpVerified"] as bool? == true) IsOtpVerified = true;
+            
+            // Keep TempData for refresh
+            if (IsOtpSent) TempData.Keep("IsOtpSent");
+            if (IsOtpVerified) TempData.Keep("IsOtpVerified");
+            if (TempData["VerifiedOTP"] != null) TempData.Keep("VerifiedOTP");
+
             await LoadAsync(user);
             return Page();
         }
@@ -119,22 +230,7 @@ namespace RentACar.Web.Areas.Identity.Pages.Account.Manage
         public async Task<IActionResult> OnPostAsync()
         {
             var user = await _userManager.GetUserAsync(User);
-            if (user == null)
-            {
-                return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
-            }
-
-            CustomerDTO? customer = null;
-            EmployeeDto? employee = null;
-
-            if (await _userManager.IsInRoleAsync(user, "Customer"))
-            {
-                customer = await _customerManager.GetCustomerByUsername(user.UserName);
-            }
-            else if (await _userManager.IsInRoleAsync(user, "Employee") || await _userManager.IsInRoleAsync(user, "Admin"))
-            {
-                employee = await _employeeManager.GetEmployeeByUsername(user.UserName);
-            }
+            if (user == null) return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
 
             if (!ModelState.IsValid)
             {
@@ -142,44 +238,212 @@ namespace RentACar.Web.Areas.Identity.Pages.Account.Manage
                 return Page();
             }
 
-            if (Input.Email != user.Email)
+            CustomerDTO customer = null;
+            if (await _userManager.IsInRoleAsync(user, "Customer"))
             {
-                var setEmail = await _userManager.SetEmailAsync(user, Input.Email);
-                if (!setEmail.Succeeded)
-                {
-                    StatusMessage = "Unexpected error when trying to set email.";
-                    return RedirectToPage();
-                }
+                customer = await _customerManager.GetCustomerByUsername(user.UserName);
+            }
+
+            if (customer != null)
+            {
+                if (Input.Name != customer.Name) await _customerManager.UpdateCustomerName(customer.UserId, Input.Name);
+                if (Input.Address != customer.Address) await _customerManager.UpdateCustomerAddress(customer.UserId, Input.Address);
             }
 
             var phoneNumber = await _userManager.GetPhoneNumberAsync(user);
             if (Input.PhoneNumber != phoneNumber)
             {
-                var setPhoneResult = await _userManager.SetPhoneNumberAsync(user, Input.PhoneNumber);
-                if (!setPhoneResult.Succeeded)
-                {
-                    StatusMessage = "Unexpected error when trying to set phone number.";
-                    return RedirectToPage();
-                }
-            }
-
-            if (customer != null)
-            {
-                if (Input.Name != customer.Name)
-                    await _customerManager.UpdateCustomerName(customer.UserId, Input.Name);
-                if (Input.Address != customer.Address)
-                    await _customerManager.UpdateCustomerAddress(customer.UserId, Input.Address);
-            }
-            else if (employee != null)
-            {
-                if (Input.Name != employee.Name)
-                    await _employeeManager.UpdateEmployeeName(employee.EmployeeId.ToString(), Input.Name);
-                if (Input.Address != employee.Address)
-                    await _employeeManager.UpdateEmployeeAddress(employee.EmployeeId.ToString(), Input.Address);
+                await _userManager.SetPhoneNumberAsync(user, Input.PhoneNumber);
             }
 
             await _signInManager.RefreshSignInAsync(user);
-            StatusMessage = "Your profile has been updated";
+            StatusMessage = "Profile updated successfully";
+            return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostSendOtpAsync()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return NotFound();
+
+            var otp = new Random().Next(100000, 999999).ToString();
+            var cacheKey = $"OTP_{user.Id}";
+            
+            _memoryCache.Set(cacheKey, otp, TimeSpan.FromMinutes(5));
+
+            await _emailManager.SendOtpEmailAsync(user.Email, otp, user.UserName);
+
+            StatusMessage = "OTP sent to your email";
+            TempData["IsOtpSent"] = true;
+            return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostVerifyOtpAsync()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return NotFound();
+
+            var cacheKey = $"OTP_{user.Id}";
+            if (!_memoryCache.TryGetValue(cacheKey, out string storedOtp) || storedOtp != OTP)
+            {
+                StatusMessage = "Error: Invalid or expired OTP";
+                TempData["IsOtpSent"] = true; // Keep sent state
+                return RedirectToPage();
+            }
+
+            // OTP is correct
+            StatusMessage = "OTP Verified";
+            TempData["IsOtpSent"] = true;
+            TempData["IsOtpVerified"] = true;
+            TempData["VerifiedOTP"] = OTP; // Store for final reset
+            return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostResetPasswordWithOtpAsync()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return NotFound();
+
+            // Re-Verify OTP (either from hidden input or TempData)
+            // We use the one stored in TempData for security if available, or re-check input
+            var verifiedOtp = TempData["VerifiedOTP"] as string;
+            
+            // If OTP wasn't verified in the previous step, fail
+            if (string.IsNullOrEmpty(verifiedOtp) && string.IsNullOrEmpty(OTP))
+            {
+                 StatusMessage = "Error: Session expired or invalid OTP";
+                 return RedirectToPage();
+            }
+
+            // Ideally we check cache again
+            var cacheKey = $"OTP_{user.Id}";
+            if (!_memoryCache.TryGetValue(cacheKey, out string storedOtp) || storedOtp != (verifiedOtp ?? OTP))
+            {
+                StatusMessage = "Error: OTP expired";
+                return RedirectToPage();
+            }
+
+            if (string.IsNullOrEmpty(NewPassword))
+            {
+                StatusMessage = "Error: Password cannot be empty";
+                TempData["IsOtpSent"] = true;
+                TempData["IsOtpVerified"] = true;
+                TempData["VerifiedOTP"] = verifiedOtp;
+                return RedirectToPage();
+            }
+
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var result = await _userManager.ResetPasswordAsync(user, token, NewPassword);
+
+            if (result.Succeeded)
+            {
+                StatusMessage = "Password changed successfully";
+                _memoryCache.Remove(cacheKey);
+                // Clear TempData
+                TempData.Remove("IsOtpSent");
+                TempData.Remove("IsOtpVerified");
+                TempData.Remove("VerifiedOTP");
+                
+                await _signInManager.RefreshSignInAsync(user);
+            }
+            else
+            {
+                StatusMessage = "Error: " + string.Join(", ", result.Errors.Select(e => e.Description));
+                // Keep state to try again
+                TempData["IsOtpSent"] = true;
+                TempData["IsOtpVerified"] = true;
+                TempData["VerifiedOTP"] = verifiedOtp;
+            }
+
+            return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostAddCreditCardAsync()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return NotFound();
+
+            // Minimal validation for demo purpose
+            if (string.IsNullOrWhiteSpace(NewCreditCard.CardNumber) || 
+                string.IsNullOrWhiteSpace(NewCreditCard.ExpiryDate) ||
+                string.IsNullOrWhiteSpace(NewCreditCard.Cvv) ||
+                string.IsNullOrWhiteSpace(NewCreditCard.CardHolderName))
+            {
+               StatusMessage = "Error: All card details are required.";
+               return RedirectToPage();
+            }
+
+            if (!DateOnly.TryParseExact(NewCreditCard.ExpiryDate, "MM/yy", null, System.Globalization.DateTimeStyles.None, out var expiry))
+            {
+                 StatusMessage = "Error: Invalid Expiry Date format.";
+                 return RedirectToPage();
+            }
+
+            CustomerDTO customerDto = await _customerManager.GetCustomerByUsername(user.UserName); 
+            // Note: CustomerDTO doesn't help much here as we need Entity to save to DB context directly or use Manager.
+            // Since we inject DbContext, use it directly for simplicity or add method to Manager.
+            // But we need the Customer Entity ID. CustomerDto has UserId.
+            
+            if (customerDto == null) return RedirectToPage();
+            
+            var newCard = new CreditCard
+            {
+                CardNumber = NewCreditCard.CardNumber,
+                CardHolderName = NewCreditCard.CardHolderName,
+                ExpiryDate = expiry,
+                Cvv = NewCreditCard.Cvv
+            };
+
+            _dbContext.CreditCards.Add(newCard);
+            await _dbContext.SaveChangesAsync();
+
+            var link = new CustomerCreditCard
+            {
+                UserId = customerDto.UserId,
+                CreditCardId = newCard.CreditCardId
+            };
+            _dbContext.CustomerCreditCards.Add(link);
+            await _dbContext.SaveChangesAsync();
+
+            StatusMessage = "Credit Card added successfully";
+            return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostUploadDocumentAsync()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return NotFound();
+
+            if (UploadedDocument == null || UploadedDocument.Length == 0)
+            {
+                StatusMessage = "Error: No file uploaded.";
+                return RedirectToPage();
+            }
+
+            using var memoryStream = new System.IO.MemoryStream();
+            await UploadedDocument.CopyToAsync(memoryStream);
+            var fileBytes = memoryStream.ToArray();
+
+            // We need to update the Customer Entity directly
+            // Find Customer by AspNetUserId
+            var customer = await _dbContext.Customers.FirstOrDefaultAsync(c => c.aspNetUserId == user.Id);
+            if (customer == null) return NotFound();
+
+            switch (DocumentType)
+            {
+                case "NationalIdFront": customer.NationalIdfront = fileBytes; break;
+                case "NationalIdBack": customer.NationalIdback = fileBytes; break;
+                case "DrivingLicenseFront": customer.DrivingLicenseFront = fileBytes; break;
+                case "DrivingLicenseBack": customer.DrivingLicenseBack = fileBytes; break;
+                default:
+                    StatusMessage = "Error: Invalid document type.";
+                    return RedirectToPage();
+            }
+
+            _dbContext.Customers.Update(customer);
+            await _dbContext.SaveChangesAsync();
+
+            StatusMessage = "Document uploaded successfully";
             return RedirectToPage();
         }
     }

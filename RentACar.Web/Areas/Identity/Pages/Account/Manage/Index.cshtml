@@ -1,39 +1,570 @@
 @page
 @model IndexModel
 @{
-    ViewData["Title"] = "Profile";
-    ViewData["ActivePage"] = ManageNavPages.Index;
+    Layout = null;
+    ViewData["Title"] = "Customer Profile Dashboard";
+    var user = await UserManager.GetUserAsync(User);
+    var userName = user?.UserName ?? "Customer";
+    var userEmail = user?.Email ?? "customer@example.com";
 }
-<link rel="stylesheet" href="~/css/profile.css" />
+@inject Microsoft.AspNetCore.Identity.UserManager<Microsoft.AspNetCore.Identity.IdentityUser> UserManager
 
-<div class="d-flex justify-content-center">
-    <div class="profile-container ">
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Customer Profile - Rent A Car</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="~/css/site.css" rel="stylesheet" />
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#FFD700',
+                        'primary-hover': '#E5C100',
+                        'background-dark': '#0F0F0F',
+                        'card-dark': '#1A1A1A',
+                        'input-bg': '#262626',
+                        'border-dark': '#333333'
+                    },
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Outfit', sans-serif; background-color: #0F0F0F; color: #ffffff; }
+        .glass-effect { background: rgba(26, 26, 26, 0.8); backdrop-filter: blur(10px); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Fix for Notification Modal Ghost Text: Hide Bootstrap modal by default */
+        .modal { display: none; }
+    </style>
+</head>
+<body class="bg-background-dark min-h-screen flex flex-col">
+    <header class="sticky top-0 z-50 flex items-center justify-between whitespace-nowrap border-b border-solid border-b-border-dark bg-background-dark/95 backdrop-blur-sm px-6 py-4 lg:px-10">
+        <div class="flex items-center gap-4 text-white">
+            <div class="size-8 flex items-center justify-center bg-primary/10 rounded-lg text-primary border border-primary/20">
+                <span class="material-symbols-outlined">directions_car</span>
+            </div>
+            <h2 class="text-white text-xl font-bold leading-tight tracking-[-0.015em]">Rent A Car</h2>
+        </div>
+        <div class="flex items-center gap-6">
+            <button class="flex items-center justify-center rounded-lg size-10 text-white/50 hover:text-primary transition-colors">
+                <span class="material-symbols-outlined" style="font-size: 24px;">notifications</span>
+            </button>
+            <div class="flex items-center gap-3 pl-6 border-l border-border-dark">
+                <div class="text-right hidden sm:block">
+                    <p class="text-sm font-bold text-white">@Model.Input.Name</p>
+                    <p class="text-xs text-white/40">@userEmail</p>
+                </div>
+                <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border border-border-dark ring-2 ring-transparent hover:ring-primary/50 transition-all" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBI1yZUFDB4zdiX-B_-SGMlVLUez6QHeASUVdjkJyr3RDnrwOxXEEPjvHIOdvocg18S0WSKMD3KEFNGNpyr3uqJSSJjgpYVb7M2GAX5jsT3sFWbmToy9LzIkd9sVzqgk3cEXlZSca4kXsHV8F6CC0fvFhrZd2uqj8ofgGbwT5nQ-sbXYmP44YUtQGjtr78U6GP6aowFfhsYhRGlXKqouJnMjqamPWaZY4tQUrAOyn3DNHaftWVeJF5fDFgbMMrgilm4OEuhCCERDepK");'></div>
+            </div>
+        </div>
+    </header>
+    <main class="flex-1 w-full max-w-[1400px] mx-auto p-6 lg:p-10">
+        
+        <!-- Notifications Partial and Script -->
+        <partial name="_PopupNotifications" />
+        <script src="~/js/site.js"></script>
+        
+        @if (!string.IsNullOrEmpty(Model.StatusMessage))
+        {
+            var msgType = Model.StatusMessage.StartsWith("Error") ? "error" : "success";
+            var msgText = Model.StatusMessage.Replace("Error: ", "");
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    if (window.showPopup) {
+                        window.showPopup('@Html.Raw(msgText)', '@msgType');
+                    }
+                });
+            </script>
+        }
 
-        <h2 class="text-center mb-4 text-light">Profile</h2>
-        <partial name="_StatusMessage" for="StatusMessage" />
-        <form method="post">
-            <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
-            <div class="mb-3">
-                <input asp-for="Input.Name" class="form-control" placeholder="Full Name" />
-                <span asp-validation-for="Input.Name" class="text-danger"></span>
+        <div class="flex flex-col gap-6 mb-8">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div class="flex items-center gap-4">
+                    <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-16 ring-2 ring-border-dark shrink-0 shadow-2xl" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBI1yZUFDB4zdiX-B_-SGMlVLUez6QHeASUVdjkJyr3RDnrwOxXEEPjvHIOdvocg18S0WSKMD3KEFNGNpyr3uqJSSJjgpYVb7M2GAX5jsT3sFWbmToy9LzIkd9sVzqgk3cEXlZSca4kXsHV8F6CC0fvFhrZd2uqj8ofgGbwT5nQ-sbXYmP44YUtQGjtr78U6GP6aowFfhsYhRGlXKqouJnMjqamPWaZY4tQUrAOyn3DNHaftWVeJF5fDFgbMMrgilm4OEuhCCERDepK");'></div>
+                    <div class="flex flex-col gap-1">
+                        <h1 class="text-3xl font-bold text-white tracking-tight">@Model.Input.Name</h1>
+                        <div class="flex items-center gap-2">
+                             @if (Model.IsVerified)
+                            {
+                                <div class="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-green-500/30 bg-green-500/5">
+                                    <span class="material-symbols-outlined text-green-500" style="font-size: 14px;">verified</span>
+                                    <span class="text-green-500 text-[10px] font-bold tracking-wide uppercase">Verified</span>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-primary/30 bg-primary/5">
+                                    <span class="material-symbols-outlined text-primary" style="font-size: 14px;">gpp_maybe</span>
+                                    <span class="text-primary text-[10px] font-bold tracking-wide uppercase">Not Verified</span>
+                                </div>
+                            }
+                            <span class="text-white/30 text-xs">•</span>
+                            <span class="text-white/40 text-xs">Customer</span>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="mb-3">
-                <input asp-for="Input.Address" class="form-control" placeholder="Address" />
-                <span asp-validation-for="Input.Address" class="text-danger"></span>
-            </div>
-            <div class="mb-3">
-                <input asp-for="Input.Email" class="form-control" placeholder="Email" />
-                <span asp-validation-for="Input.Email" class="text-danger"></span>
-            </div>
-            <div class="mb-3">
-                <input asp-for="Input.PhoneNumber" class="form-control" placeholder="Phone Number" />
-                <span asp-validation-for="Input.PhoneNumber" class="text-danger"></span>
-            </div>
-            <button type="submit" class="btn btn-primary w-100">Save</button>
-        </form>
-    </div>
-</div>
+            <nav class="border-b border-border-dark w-full mt-4">
+                <ul class="flex space-x-8 overflow-x-auto no-scrollbar">
+                    <li>
+                        <button class="tab-button flex-shrink-0 pb-3 text-sm font-bold text-white/50 hover:text-white border-b-2 border-transparent transition-all duration-200 outline-none focus-visible:text-white" data-tab="personal-details">
+                            Personal Details
+                        </button>
+                    </li>
+                    <li>
+                        <button class="tab-button flex-shrink-0 pb-3 text-sm font-bold border-b-2 transition-all duration-200 outline-none focus-visible:text-white active-tab text-primary border-primary" data-tab="security">
+                            Security
+                        </button>
+                    </li>
+                    <li>
+                        <button class="tab-button flex-shrink-0 pb-3 text-sm font-bold text-white/50 hover:text-white border-b-2 border-transparent transition-all duration-200 outline-none focus-visible:text-white" data-tab="payment-methods">
+                            Payment Methods
+                        </button>
+                    </li>
+                    <li>
+                        <button class="tab-button flex-shrink-0 pb-3 text-sm font-bold text-white/50 hover:text-white border-b-2 border-transparent transition-all duration-200 outline-none focus-visible:text-white" data-tab="verification-documents">
+                            Verification Documents
+                        </button>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+        
+        <div class="tab-content">
+            <!-- Personal Details -->
+            <section class="tab-pane hidden" id="personal-details">
+                <div class="bg-card-dark rounded-xl border border-border-dark p-6 lg:p-8 shadow-xl relative overflow-hidden">
+                    <div class="flex items-center justify-between mb-8">
+                        <h3 class="text-xl font-bold text-white">Personal Information</h3>
+                    </div>
+                    <form method="post">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div>
+                                <label class="block text-xs font-bold text-white/40 uppercase tracking-wider mb-2">Full Name</label>
+                                <input asp-for="Input.Name" class="w-full bg-input-bg border border-border-dark rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all placeholder:text-white/20" />
+                                <span asp-validation-for="Input.Name" class="text-red-500 text-xs"></span>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-white/40 uppercase tracking-wider mb-2">Phone Number</label>
+                                <input asp-for="Input.PhoneNumber" class="w-full bg-input-bg border border-border-dark rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all placeholder:text-white/20" />
+                                <span asp-validation-for="Input.PhoneNumber" class="text-red-500 text-xs"></span>
+                            </div>
+                            <div class="col-span-2">
+                                <label class="block text-xs font-bold text-white/40 uppercase tracking-wider mb-2">Email Address</label>
+                                <div class="relative">
+                                    <input asp-for="Input.Email" class="w-full bg-input-bg border border-border-dark rounded-lg px-4 py-3 text-white/50 cursor-not-allowed" readonly />
+                                    <span class="material-symbols-outlined absolute right-4 top-3.5 text-white/20">lock</span>
+                                </div>
+                                <p class="text-xs text-white/30 mt-1">Contact support to edit your email address.</p>
+                            </div>
+                            <input type="hidden" asp-for="Input.Address" value="@Model.Input.Address" />
+                        </div>
+                        <div class="mt-8 pt-6 border-t border-border-dark flex justify-end">
+                            <button type="submit" class="bg-primary hover:bg-primary-hover text-background-dark font-bold py-3 px-8 rounded-lg transition-colors shadow-lg shadow-primary/10">
+                                Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </section>
 
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-}
+            <!-- Security Section -->
+            <section class="tab-pane active" id="security">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2 space-y-6">
+                        <div class="bg-card-dark rounded-xl border border-border-dark p-6 lg:p-8 shadow-xl">
+                            <div class="flex items-start justify-between mb-6">
+                                <div>
+                                    <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                                        <span class="material-symbols-outlined text-primary">lock_reset</span>
+                                        Reset Password
+                                    </h3>
+                                    <p class="text-sm text-white/50 mt-1">Ensure your account is using a long, random password to stay secure.</p>
+                                </div>
+                            </div>
+                            
+                            <!-- STATE 1: Send / Resend OTP -->
+                            @if (!Model.IsOtpVerified)
+                            {
+                                <div class="transition-all duration-300">
+                                    <div class="bg-input-bg rounded-lg border border-border-dark p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                                        <div class="flex items-center gap-3">
+                                            <div class="bg-primary/10 p-2 rounded-full text-primary">
+                                                <span class="material-symbols-outlined">phonelink_lock</span>
+                                            </div>
+                                            <div class="text-center sm:text-left">
+                                                <p class="text-white font-medium">Verify it's you</p>
+                                                <p class="text-xs text-white/40">We will send a code to your registered email</p>
+                                            </div>
+                                        </div>
+                                        <form method="post" asp-page-handler="SendOtp">
+                                            <button type="submit" class="bg-primary hover:bg-primary-hover text-background-dark font-bold py-2.5 px-6 rounded-lg transition-colors shadow-lg shadow-primary/5 whitespace-nowrap w-full sm:w-auto">
+                                                @(Model.IsOtpSent ? "Resend Verification OTP" : "Send Verification OTP")
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            }
+
+                            <!-- STATE 2: Verify OTP -->
+                             @if (Model.IsOtpSent && !Model.IsOtpVerified)
+                            {
+                                <div class="transition-all duration-300">
+                                    <div class="bg-input-bg rounded-lg border border-border-dark p-6 mb-6">
+                                         <p class="text-white font-medium mb-2">Enter Verification Code</p>
+                                         <p class="text-xs text-white/40 mb-4">A 6-digit code has been sent to @userEmail</p>
+                                         <form method="post" asp-page-handler="VerifyOtp">
+                                             <div class="flex gap-4">
+                                                 <input asp-for="OTP" class="w-full bg-background-dark border border-border-dark rounded-lg px-4 py-3 text-white text-center text-xl font-bold tracking-[0.5em] focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" placeholder="______" maxlength="6" />
+                                                 <button type="submit" class="bg-primary hover:bg-primary-hover text-background-dark font-bold py-2.5 px-6 rounded-lg transition-colors shadow-lg">
+                                                     Verify
+                                                 </button>
+                                             </div>
+                                         </form>
+                                    </div>
+                                </div>
+                            }
+
+                            <!-- STATE 3: Reset Password -->
+                             @if (Model.IsOtpVerified)
+                            {
+                                <div class="transition-all duration-300">
+                                    <div class="bg-green-500/10 border border-green-500/20 rounded-lg p-3 mb-6 flex items-center gap-2">
+                                        <span class="material-symbols-outlined text-green-500 text-sm">check_circle</span>
+                                        <span class="text-green-500 text-xs font-bold">OTP Verified Successfully</span>
+                                    </div>
+                                    <form method="post" asp-page-handler="ResetPasswordWithOtp">
+                                        <input type="hidden" asp-for="OTP" value="@Model.OTP" /> <!-- Pass Valid OTP -->
+                                        <div class="space-y-4">
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label class="block text-xs font-bold text-white/40 uppercase tracking-wider mb-2">New Password</label>
+                                                    <input asp-for="NewPassword" class="w-full bg-input-bg border border-border-dark rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all placeholder:text-white/20" placeholder="New password" type="password" />
+                                                    <span asp-validation-for="NewPassword" class="text-red-500 text-xs"></span>
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs font-bold text-white/40 uppercase tracking-wider mb-2">Confirm Password</label>
+                                                    <input asp-for="ConfirmNewPassword" class="w-full bg-input-bg border border-border-dark rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all placeholder:text-white/20" placeholder="Confirm new password" type="password" />
+                                                    <span asp-validation-for="ConfirmNewPassword" class="text-red-500 text-xs"></span>
+                                                </div>
+                                            </div>
+                                            <div class="pt-4 flex justify-end gap-3">
+                                                <button type="submit" class="bg-primary hover:bg-primary-hover text-background-dark font-bold py-2.5 px-6 rounded-lg transition-colors">Update Password</button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            }
+                        </div>
+
+                         <!-- 2FA Section (Visual Only for now) -->
+                        <div class="bg-card-dark rounded-xl border border-border-dark p-6 lg:p-8 shadow-xl">
+                            <div class="flex items-start justify-between mb-6">
+                                <div>
+                                    <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                                        <span class="material-symbols-outlined text-primary">security</span>
+                                        Two-Factor Authentication
+                                    </h3>
+                                    <p class="text-sm text-white/50 mt-1">Add an extra layer of security to your account.</p>
+                                </div>
+                                <div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
+                                    <input class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer border-border-dark transition-all duration-300" id="toggle-2fa" name="toggle" type="checkbox" />
+                                    <label class="toggle-label block overflow-hidden h-6 rounded-full bg-input-bg border border-border-dark cursor-pointer" for="toggle-2fa"></label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+             <!-- Payment Methods -->
+            <section class="tab-pane hidden" id="payment-methods">
+                <div class="bg-card-dark rounded-xl border border-border-dark p-6 lg:p-8 shadow-xl">
+                    <div class="flex items-center justify-between mb-8">
+                        <h3 class="text-xl font-bold text-white">Payment Methods</h3>
+                        <button id="btnAddCard" class="text-sm font-bold bg-white/5 hover:bg-white/10 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2 border border-white/10">
+                            <span class="material-symbols-outlined text-primary">add_card</span>
+                            Add New Card
+                        </button>
+                    </div>
+
+                    <!-- Add Card Modal (Hidden) -->
+                    <div id="addCardModal" class="hidden mb-6 bg-input-bg rounded-xl border border-border-dark p-6">
+                         <h4 class="text-lg font-bold text-white mb-4">Add New Card</h4>
+                         <form method="post" asp-page-handler="AddCreditCard">
+                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                 <div class="col-span-2">
+                                     <label class="block text-xs text-white/40 font-bold uppercase mb-1">Card Number</label>
+                                     <input asp-for="NewCreditCard.CardNumber" class="w-full bg-background-dark border border-border-dark rounded-lg px-4 py-3 text-white focus:border-primary focus:ring-1 focus:ring-primary" placeholder="0000 0000 0000 0000" maxlength="16" />
+                                 </div>
+                                 <div class="col-span-2">
+                                     <label class="block text-xs text-white/40 font-bold uppercase mb-1">Card Holder Name</label>
+                                     <input asp-for="NewCreditCard.CardHolderName" class="w-full bg-background-dark border border-border-dark rounded-lg px-4 py-3 text-white focus:border-primary focus:ring-1 focus:ring-primary" />
+                                 </div>
+                                 <div>
+                                     <label class="block text-xs text-white/40 font-bold uppercase mb-1">Expiry (MM/YY)</label>
+                                     <input asp-for="NewCreditCard.ExpiryDate" class="w-full bg-background-dark border border-border-dark rounded-lg px-4 py-3 text-white focus:border-primary focus:ring-1 focus:ring-primary" placeholder="MM/YY" maxlength="5" />
+                                 </div>
+                                 <div>
+                                     <label class="block text-xs text-white/40 font-bold uppercase mb-1">CVV</label>
+                                     <input asp-for="NewCreditCard.Cvv" class="w-full bg-background-dark border border-border-dark rounded-lg px-4 py-3 text-white focus:border-primary focus:ring-1 focus:ring-primary" placeholder="123" maxlength="4" />
+                                 </div>
+                             </div>
+                             <div class="flex justify-end gap-3">
+                                 <button type="button" id="btnCancelAddCard" class="px-4 py-2 text-white/50 hover:text-white transition-colors">Cancel</button>
+                                 <button type="submit" class="bg-primary hover:bg-primary-hover text-background-dark font-bold py-2 px-6 rounded-lg transition-colors">Save Card</button>
+                             </div>
+                         </form>
+                    </div>
+                    <div class="flex flex-col gap-4">
+                         @if (Model.CreditCards != null && Model.CreditCards.Any())
+                        {
+                            @foreach (var card in Model.CreditCards)
+                            {
+                                 <div class="bg-input-bg border border-border-dark rounded-lg p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 group hover:border-primary/30 transition-colors">
+                                    <div class="flex items-center gap-4">
+                                        <div class="bg-white/5 p-3 rounded-full text-white/50">
+                                            <span class="material-symbols-outlined">credit_card</span>
+                                        </div>
+                                        <div>
+                                            <p class="font-bold text-white tracking-widest">•••• •••• •••• @card.CardNumber.Substring(Math.Max(0, card.CardNumber.Length - 4))</p>
+                                            <p class="text-xs text-white/40 mt-1">Expires @card.ExpiryDate.ToString("MM/yy")</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <button class="btn-view-card text-xs font-bold bg-white/5 hover:bg-white/10 text-white px-3 py-1.5 rounded transition-colors" 
+                                                data-number="@card.CardNumber" 
+                                                data-holder="@card.CardHolderName"
+                                                data-expiry="@card.ExpiryDate.ToString("MM/yy")"
+                                                data-cvv="@card.Cvv">
+                                            View Details
+                                        </button>
+                                        <button class="text-xs font-bold bg-red-500/10 hover:bg-red-500/20 text-red-500 px-3 py-1.5 rounded transition-colors" disabled>Delete</button>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="text-center py-8 text-white/30">
+                                <span class="material-symbols-outlined text-4xl mb-2">credit_card_off</span>
+                                <p>No payment methods added yet.</p>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- View Card Details Modal (Dynamic) -->
+                     <div id="viewCardModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+                        <div class="bg-card-dark w-full max-w-md rounded-2xl border border-border-dark shadow-2xl overflow-hidden relative transform transition-all scale-100">
+                             <!-- Header -->
+                             <div class="bg-gradient-to-r from-primary/10 to-transparent p-6 border-b border-white/5 flex items-center justify-between">
+                                  <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                                     <span class="material-symbols-outlined text-primary">credit_card</span>
+                                     Card Details
+                                  </h3>
+                                  <button id="btnCloseViewCard" class="text-white/50 hover:text-white transition-colors">
+                                      <span class="material-symbols-outlined">close</span>
+                                  </button>
+                             </div>
+                             <!-- Body -->
+                             <div class="p-6 space-y-6">
+                                  <!-- Card Visual -->
+                                  <div class="relative w-full aspect-[1.586/1] rounded-xl overflow-hidden shadow-lg group perspective-1000">
+                                      <!-- Background -->
+                                      <div class="absolute inset-0 bg-gradient-to-br from-[#2a2a2a] to-black p-6 flex flex-col justify-between border border-white/10">
+                                            <div class="flex justify-between items-start">
+                                                <div class="opacity-50">
+                                                    <span class="material-symbols-outlined text-3xl">contactless</span>
+                                                </div>
+                                                <div class="italic font-serif text-primary text-lg font-bold">RENT A CAR</div>
+                                            </div>
+                                            <div class="space-y-4">
+                                                <div class="text-white font-mono text-xl tracking-widest drop-shadow-md" id="viewCardNumber">0000 0000 0000 0000</div>
+                                                <div class="flex justify-between items-end">
+                                                    <div>
+                                                        <div class="text-[10px] uppercase text-white/40 mb-0.5">Card Holder</div>
+                                                        <div class="text-white font-medium tracking-wide uppercase text-sm" id="viewCardHolder">NAME SURNAME</div>
+                                                    </div>
+                                                    <div class="text-right">
+                                                        <div class="text-[10px] uppercase text-white/40 mb-0.5">Expires</div>
+                                                        <div class="text-white font-medium tracking-wide text-sm" id="viewCardExpiry">MM/YY</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                      </div>
+                                  </div>
+                                  
+                                  <!-- Additional Info -->
+                                   <div class="bg-input-bg rounded-lg p-4 border border-border-dark flex justify-between items-center">
+                                       <span class="text-sm text-white/50">CVV / Security Code</span>
+                                       <span class="text-white font-mono font-bold tracking-widest" id="viewCardCvv">•••</span>
+                                   </div>
+                             </div>
+                        </div>
+                     </div>
+            </section>
+
+             <!-- Verification Documents -->
+            <section class="tab-pane hidden" id="verification-documents">
+                <div class="bg-card-dark rounded-xl border border-border-dark p-6 lg:p-8 shadow-xl">
+                    <div class="flex items-center justify-between mb-2">
+                        <div>
+                            <h3 class="text-xl font-bold text-white">Identity Verification</h3>
+                            <p class="text-sm text-white/50 mt-1">Required for vehicle pickup</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-2xl font-bold text-primary">@(Model.CompletedDocsCount * 25)%</span>
+                            <p class="text-[10px] text-white/30 uppercase tracking-widest font-bold">Complete</p>
+                        </div>
+                    </div>
+                    <div class="w-full bg-background-dark h-2 rounded-full overflow-hidden mb-8 border border-border-dark">
+                        <div class="bg-primary h-full rounded-full shadow-[0_0_10px_rgba(212,175,53,0.5)]" style="width: @(Model.CompletedDocsCount * 25)%"></div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                         @{
+                              // Using Partial View _DocumentItem for rendering to ensure Tag Helpers work (Fixes 400 Error)
+                              var idFront = new RentACar.Web.Areas.Identity.Pages.Account.Manage.IndexModel.DocumentItem("ID Front", Model.NationalIdFrontSrc, "badge", "NationalIdFront", Model.IsVerified);
+                              var idBack = new RentACar.Web.Areas.Identity.Pages.Account.Manage.IndexModel.DocumentItem("ID Back", Model.NationalIdBackSrc, "badge", "NationalIdBack", Model.IsVerified);
+                              var licFront = new RentACar.Web.Areas.Identity.Pages.Account.Manage.IndexModel.DocumentItem("License Front", Model.DrivingLicenseFrontSrc, "directions_car", "DrivingLicenseFront", Model.IsVerified);
+                              var licBack = new RentACar.Web.Areas.Identity.Pages.Account.Manage.IndexModel.DocumentItem("License Back", Model.DrivingLicenseBackSrc, "directions_car", "DrivingLicenseBack", Model.IsVerified);
+                          }
+
+                          <partial name="_DocumentItem" model="idFront" />
+                          <partial name="_DocumentItem" model="idBack" />
+                          <partial name="_DocumentItem" model="licFront" />
+                          <partial name="_DocumentItem" model="licBack" />
+                    </div>
+                    @if(!Model.IsVerified) {
+                         <div class="pt-4 border-t border-border-dark flex justify-end">
+                            <button class="bg-primary hover:bg-primary-hover text-background-dark font-bold py-3 px-6 rounded-lg transition-colors flex items-center gap-2 shadow-lg shadow-primary/10">
+                                <span class="material-symbols-outlined" style="font-size: 18px;">check_circle</span>
+                                Submit for Verification
+                            </button>
+                        </div>
+                    } else {
+                        <div class="pt-4 border-t border-border-dark flex justify-end">
+                            <p class="text-green-500 font-bold flex items-center gap-2">
+                                <span class="material-symbols-outlined">verified</span>
+                                Account Verified
+                            </p>
+                        </div>
+                    }
+                </div>
+            </section>
+        </div>
+    </main>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Tab switching logic
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabPanes = document.querySelectorAll('.tab-pane');
+            const activateTab = (tabId) => {
+                tabButtons.forEach(button => {
+                    if (button.dataset.tab === tabId) {
+                        button.classList.add('active-tab', 'text-primary', 'border-primary');
+                        button.classList.remove('text-white/50', 'border-transparent');
+                    } else {
+                        button.classList.remove('active-tab', 'text-primary', 'border-primary');
+                        button.classList.add('text-white/50', 'border-transparent');
+                    }
+                });
+                tabPanes.forEach(pane => {
+                    if (pane.id === tabId) {
+                        pane.classList.remove('hidden');
+                    } else {
+                        pane.classList.add('hidden');
+                    }
+                });
+            };
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    activateTab(button.dataset.tab);
+                });
+            });
+            
+            // Check if we are in an OTP flow to keep Security tab open
+            @if (Model.IsOtpSent || Model.IsOtpVerified) {
+                <text>activateTab('security');</text>
+            } else {
+                 // Check if Add Card was posted (error or success)
+                @if (ViewContext.HttpContext.Request.Method == "POST" && ViewContext.HttpContext.Request.Form.ContainsKey("NewCreditCard.CardNumber")) {
+                     <text>activateTab('payment-methods');</text>
+                } else if (ViewContext.HttpContext.Request.Method == "POST" && ViewContext.HttpContext.Request.Form.ContainsKey("UploadedDocument")) {
+                     <text>activateTab('verification-documents');</text>
+                } else {
+                     <text>activateTab('security');</text>
+                }
+            }
+
+            // Add Card Modal Toggle
+            const btnAddCard = document.getElementById('btnAddCard');
+            const btnCancelAddCard = document.getElementById('btnCancelAddCard');
+            const addCardModal = document.getElementById('addCardModal');
+
+            if (btnAddCard && addCardModal) {
+                btnAddCard.addEventListener('click', () => {
+                   addCardModal.classList.remove('hidden');
+                });
+            }
+            if (btnCancelAddCard && addCardModal) {
+                btnCancelAddCard.addEventListener('click', () => {
+                   addCardModal.classList.add('hidden');
+                });
+            }
+
+            // View Card Details Logic
+            const viewCardModal = document.getElementById('viewCardModal');
+            const btnCloseViewCard = document.getElementById('btnCloseViewCard');
+            const viewBtns = document.querySelectorAll('.btn-view-card');
+            
+            // Fields in modal
+            const elNumber = document.getElementById('viewCardNumber');
+            const elHolder = document.getElementById('viewCardHolder');
+            const elExpiry = document.getElementById('viewCardExpiry');
+            const elCvv = document.getElementById('viewCardCvv');
+
+            if (viewCardModal && viewBtns) {
+                viewBtns.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        // Populate
+                        elNumber.innerText = btn.dataset.number.match(/.{1,4}/g).join(' '); // Format as groups of 4
+                        elHolder.innerText = btn.dataset.holder;
+                        elExpiry.innerText = btn.dataset.expiry;
+                        elCvv.innerText = btn.dataset.cvv;
+                        
+                        // Show
+                        viewCardModal.classList.remove('hidden');
+                    });
+                });
+
+                btnCloseViewCard.addEventListener('click', () => {
+                    viewCardModal.classList.add('hidden');
+                });
+                
+                // Close on background click
+                viewCardModal.addEventListener('click', (e) => {
+                    if (e.target === viewCardModal) {
+                         viewCardModal.classList.add('hidden');
+                    }
+                });
+            }
+        });
+    </script>
+    @section Scripts {
+        <partial name="_ValidationScriptsPartial" />
+    }
+</body>
+</html>

@@ -1,0 +1,50 @@
+@model RentACar.Web.Areas.Identity.Pages.Account.Manage.IndexModel.DocumentItem
+
+@{
+    string content = "";
+    if (Model.Src != null) {
+        content = $@"
+        <div class='relative w-full h-full'>
+            <img class='w-full h-full object-cover opacity-60 group-hover:opacity-40 transition-opacity' src='{Model.Src}' />
+            <div class='absolute top-3 right-3 bg-green-500/10 text-green-500 rounded-full p-1 border border-green-500/20'>
+                <span class='material-symbols-outlined' style='font-size: 16px;'>check</span>
+            </div>
+            <div class='absolute bottom-0 left-0 w-full p-3 bg-gradient-to-t from-black to-transparent'>
+                <p class='text-[10px] font-bold text-white uppercase tracking-wider'>{Model.Title}</p>
+            </div>
+        </div>";
+    } else {
+        content = $@"
+        <div class='relative w-full h-full flex flex-col items-center justify-center gap-3'>
+            <div class='bg-white/5 p-3 rounded-full group-hover:bg-primary/20 transition-colors group-hover:text-primary text-white/20'>
+                <span class='material-symbols-outlined text-3xl'>{Model.PlaceholderIcon}</span>
+            </div>
+            <p class='text-xs text-white/30 font-bold group-hover:text-white transition-colors'>{Model.Title}</p>
+            <div class='absolute top-3 right-3'>
+                <span class='material-symbols-outlined text-red-500/50' style='font-size: 18px;'>priority_high</span>
+            </div>
+        </div>";
+    }
+}
+
+@if (!Model.IsVerified)
+{
+    // Important: Use asp-page-handler to ensure Antiforgery Token is generated
+    <form method="post" enctype="multipart/form-data" asp-page-handler="UploadDocument" class="group relative aspect-[4/3] rounded-lg bg-background-dark border border-dashed border-border-dark overflow-hidden ring-1 ring-white/5 hover:border-primary/50 transition-colors cursor-pointer">
+        <input type="hidden" name="DocumentType" value="@Model.DocType" />
+        <input type="file" name="UploadedDocument" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" onchange="this.form.submit()" />
+        @Html.Raw(content)
+        <div class="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none">
+            <div class="flex items-center gap-2 text-primary font-bold text-sm">
+                <span class="material-symbols-outlined">upload</span>
+                <span>Click to Upload</span>
+            </div>
+        </div>
+    </form>
+}
+else
+{
+    <div class="group relative aspect-[4/3] rounded-lg bg-background-dark border border-border-dark overflow-hidden ring-1 ring-white/5">
+        @Html.Raw(content)
+    </div>
+}

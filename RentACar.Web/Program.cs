@@ -53,6 +53,7 @@ builder.Services.AddRazorPages();
 builder.Services.AddControllersWithViews();
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddMemoryCache();
 
 // ✅ Register repositories
 builder.Services.AddScoped<IBookingRepository, BookingRepository>();

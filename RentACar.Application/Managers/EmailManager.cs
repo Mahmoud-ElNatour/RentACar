@@ -78,5 +78,34 @@ namespace RentACar.Application.Managers
 
             await _emailService.SendEmailAsync(email, subject, message);
         }
+
+        public async Task<bool> SendOtpEmailAsync(string email, string otp, string name)
+        {
+            var bodyContent = $@"
+                <h2>Security Verification</h2>
+                <p>Hello {name},</p>
+                <p>You requested to change your password or security settings.</p>
+                <p>Please use the following One-Time Password (OTP) to complete the verification:</p>
+                <div style='text-align:center; padding: 20px;'>
+                    <span style='font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #d4af37;'>{otp}</span>
+                </div>
+                <p>This code is valid for 5 minutes. Do not share this code with anyone.</p>
+                <br>
+                <p>If you did not request this code, please ignore this email.</p>";
+
+            var message = EmailTemplates.GetStandardTemplate(bodyContent, "Verification Code");
+            
+            try
+            {
+                await _emailService.SendEmailAsync(email, "Your Verification Code", message);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                // Log exception
+                Console.WriteLine($"Error sending OTP: {ex.Message}");
+                return false;
+            }
+        }
     }
 }
