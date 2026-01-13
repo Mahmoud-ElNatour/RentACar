@@ -1,71 +1,37 @@
 ﻿@page
 @model RegisterConfirmationModel
 @{
+    Layout = "/Views/Shared/_Layout.cshtml";
     ViewData["Title"] = "Confirm your email";
-    Layout = null;
+    ViewData["BodyClass"] = "bg-background-dark";
 }
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - CarRental</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/login-style.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
-</head>
-<body>
-    @await Html.PartialAsync("_PopupNotifications")
-    <div class="container1">
-        <div class="login-container">
-            <div class="logo-text">
-                <i class="fas fa-car-side"></i>
-                <div>CarRental</div>
+<div class="flex items-center justify-center min-h-[calc(100vh-300px)] py-16 px-4">
+    <div class="w-full max-w-md space-y-8 bg-[#171717] p-10 rounded-2xl shadow-xl border border-white/5 text-center">
+        <div class="flex justify-center">
+            <div class="h-20 w-20 rounded-full bg-gold/10 flex items-center justify-center border border-gold/20">
+                <span class="material-symbols-outlined text-gold text-5xl">mail</span>
             </div>
+        </div>
+        
+        <div class="space-y-4">
+             <h1 class="text-3xl font-bold text-white">Check Your Inbox</h1>
+             <p class="text-gray-400 text-lg">
+                We've sent a confirmation link to <br/>
+                <span class="text-white font-medium">@Model.Email</span>
+            </p>
+             <p class="text-sm text-gray-500">
+                Please check your email to confirm your account.
+             </p>
+        </div>
 
-            <h2>Confirm Your Email</h2>
-
-            @if (Model.DisplayConfirmAccountLink)
-            {
-                <div class="text-center">
-                    <p style="color:white; font-weight: 500; text-align: center;">
-                        This app does not currently have a real email sender configured.<br />
-                        See <a href="https://aka.ms/aspaccountconf" target="_blank" style="color: var(--accent-gold); text-decoration: underline;">these docs</a> to configure a real email sender.
-                    </p>
-
-                    <p>
-                        <a class="traverse" href="@Model.EmailConfirmationUrl">Click here to confirm your account</a>
-                    </p>
-                </div>
-            }
-            else
-            {
-                <div class="text-center">
-                    <p>
-                        We've sent a confirmation link to <strong>@Model.Email</strong>.<br />
-                        Please check your inbox to confirm your account.
-                    </p>
-                    <p>
-                        <i class="fas fa-envelope fa-3x" style="color: var(--accent-gold);"></i>
-                    </p>
-                </div>
-            }
-
-            <hr />
-
-            <div class="signup-prompt text-center">
-                <span>Already confirmed?</span>
-                <a class="traverse" asp-page="./Login">Log In</a>
+        <div class="mt-8 border-t border-white/5 pt-6">
+             <div class="text-center">
+                <p class="text-gray-400 text-sm mb-4">Already confirmed?</p>
+                <a asp-page="./Login" class="inline-flex w-full items-center justify-center px-6 py-3.5 border border-transparent text-base font-bold rounded-lg text-black bg-gold hover:bg-gold-hover transition-all duration-300 shadow-lg">
+                    Back to Login
+                </a>
             </div>
         </div>
     </div>
-
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    <partial name="_ValidationScriptsPartial" />
-</body>
-</html>
+</div>

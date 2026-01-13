@@ -135,21 +135,29 @@ namespace RentACar.Web.Areas.Identity.Pages.Account
                      var bl = await _blacklistManager.GetBlacklistByUserIdAsync(user.Id);
                     if (bl != null)
                     {
-                        ModelState.AddModelError(string.Empty, "You are blacklisted.");
+                        TempData["LoginError"] = "You are blacklisted.";
                         return Page();
                     }
 
                     var customer = await _customerRepository.GetByIdAsync(user.Id);
                     if (customer != null && !customer.Isactive)
                     {
-                        ModelState.AddModelError(string.Empty, "Your account is inactive.");
+                        TempData["LoginError"] = "Your account is inactive.";
                         return Page();
                     }
 
                     var employee = await _employeeRepository.GetByIdAsync(user.Id);
                     if (employee != null && !employee.IsActive)
                     {
-                        ModelState.AddModelError(string.Empty, "Your account is inactive.");
+                        TempData["LoginError"] = "Your account is inactive.";
+                        return Page();
+                    }
+
+                    // Strict Check: Enforce Email Confirmation Manually
+                    if (!await _userManager.IsEmailConfirmedAsync(user))
+                    {
+                        TempData["LoginError"] = "You must confirm your email before logging in. Please check your inbox.";
+                        await _auditLogManager.LogAsync("Login", "User", user.Id, $"User {Input.Email} attempted login without confirmed email.", "Failed", Input.Email, "User");
                         return Page();
                     }
                 }
@@ -177,12 +185,15 @@ namespace RentACar.Web.Areas.Identity.Pages.Account
                      await _auditLogManager.LogAsync("Login", "User", user?.Id ?? "Unknown", $"User {Input.Email} account locked out.", "Failed", Input.Email, "User");
                     return RedirectToPage("./Lockout");
                 }
-                else
+                if (result.IsNotAllowed)
                 {
-                    ModelState.AddModelError(string.Empty, "Invalid login attempt.");
-                     await _auditLogManager.LogAsync("Login", "User", "Unknown", $"Invalid login attempt for {Input.Email}.", "Failed", Input.Email, "Anonymous");
-                    return Page();
+                   TempData["LoginError"] = "Login not allowed. Please check your account status.";
+                   return Page();
                 }
+                
+                TempData["LoginError"] = "Invalid login attempt.";
+                await _auditLogManager.LogAsync("Login", "User", "Unknown", $"Invalid login attempt for {Input.Email}.", "Failed", Input.Email, "Anonymous");
+                return Page();
             }
 
             // If we got this far, something failed, redisplay form

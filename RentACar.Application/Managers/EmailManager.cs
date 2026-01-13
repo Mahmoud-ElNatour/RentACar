@@ -116,7 +116,6 @@ namespace RentACar.Application.Managers
                 <p>Hello {name},</p>
                 <p>We received a request to reset your password.</p>
                 <p>Please click the button below to reset your password:</p>
-                <p>Please click the button below to reset your password:</p>
                 <a href='{callbackUrl}' class='btn' style='display: inline-block; padding: 12px 24px; background-color: #d4af37; color: #000000; text-decoration: none; border-radius: 4px; font-weight: bold; margin-top: 20px;'>Reset Password</a>
                 <br><br>
                 <p>If you did not request a password reset, you can safely ignore this email.</p>";
@@ -131,6 +130,31 @@ namespace RentACar.Application.Managers
             catch (Exception ex)
             {
                 Console.WriteLine($"Error sending Forgot Password email: {ex.Message}");
+                return false;
+            }
+        }
+
+        public async Task<bool> SendConfirmationEmailAsync(string email, string callbackUrl, string name = "User")
+        {
+            var bodyContent = $@"
+                <h2>Confirm Your Email</h2>
+                <p>Hello {name},</p>
+                <p>Thank you for registering with RentACar.</p>
+                <p>Please confirm your account by clicking the button below:</p>
+                <a href='{callbackUrl}' class='btn' style='display: inline-block; padding: 12px 24px; background-color: #d4af37; color: #000000; text-decoration: none; border-radius: 4px; font-weight: bold; margin-top: 20px;'>Confirm Account</a>
+                <br><br>
+                <p>If you did not create an account, no further action is required.</p>";
+
+            var message = EmailTemplates.GetStandardTemplate(bodyContent, "Confirm Your Email");
+
+            try
+            {
+                await _emailService.SendEmailAsync(email, "Confirm Your Email", message);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error sending Confirmation email: {ex.Message}");
                 return false;
             }
         }

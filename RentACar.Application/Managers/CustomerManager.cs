@@ -84,13 +84,7 @@ namespace RentACar.Application.Managers
                 await _roleManager.CreateAsync(new IdentityRole("Customer"));
             }
 
-            // ✅ Re-fetch user and set email confirmed
-            var createdUser = await _userManager.FindByEmailAsync(createDto.Email);
-            if (createdUser != null)
-            {
-                createdUser.EmailConfirmed = true;
-                await _userManager.UpdateAsync(createdUser);
-            }
+
 
 
             // Assign the user to "Customer" role

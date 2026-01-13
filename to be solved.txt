@@ -3,8 +3,9 @@ changing design all pages in control panel
 email:
 	- email services (send notifications, reset password, confirm email, send offers,...)
 	- 2fa
-	- reset pass (pin email --> random generated pass sended to customer)
-	- create acc --> verify email
+Done	- reset pass from settings (pin email --> send otp email --> reset pass)
+Done	- Forgot pass(check if email reg --> send email to reset)
+Done	- create acc --> verify email
 	- booking status update 
 	- payment (invoice) to the customer
 	- car/category/promocode crude (email to all emploies to keep them updated in work)

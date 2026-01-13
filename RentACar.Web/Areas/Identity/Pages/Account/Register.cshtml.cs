@@ -7,6 +7,9 @@ using RentACar.Application.DTOs;
 using Microsoft.AspNetCore.Http;
 using System.IO;
 using System.Threading.Tasks;
+using System.Text;
+using System.Text.Encodings.Web;
+using Microsoft.AspNetCore.WebUtilities;
 
 namespace RentACar.Web.Areas.Identity.Pages.Account
 {
@@ -14,11 +17,19 @@ namespace RentACar.Web.Areas.Identity.Pages.Account
     {
         private readonly CustomerManager _customerManager;
         private readonly SignInManager<IdentityUser> _signInManager;
+        private readonly UserManager<IdentityUser> _userManager;
+        private readonly EmailManager _emailManager;
 
-        public RegisterModel(CustomerManager customerManager, SignInManager<IdentityUser> signInManager)
+        public RegisterModel(
+            CustomerManager customerManager, 
+            SignInManager<IdentityUser> signInManager,
+            UserManager<IdentityUser> userManager,
+            EmailManager emailManager)
         {
             _customerManager = customerManager;
             _signInManager = signInManager;
+            _userManager = userManager;
+            _emailManager = emailManager;
         }
 
         [BindProperty]
@@ -96,8 +107,18 @@ namespace RentACar.Web.Areas.Identity.Pages.Account
             var user = await _customerManager.GetIdentityUserByEmail(Input.Email);
             if (user != null)
             {
-                return RedirectToPage("RegisterConfirmation", new { email = Input.Email });
+                var userId = await _userManager.GetUserIdAsync(user);
+                var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+                var callbackUrl = Url.Page(
+                    "/Account/ConfirmEmail",
+                    pageHandler: null,
+                    values: new { area = "Identity", userId = userId, code = code, returnUrl = Url.Content("~/") },
+                    protocol: Request.Scheme);
 
+                await _emailManager.SendConfirmationEmailAsync(Input.Email, HtmlEncoder.Default.Encode(callbackUrl), Input.FullName);
+
+                return RedirectToPage("RegisterConfirmation", new { email = Input.Email, returnUrl = Url.Content("~/") });
             }
 
             ModelState.AddModelError(string.Empty, "User created but could not sign in.");
