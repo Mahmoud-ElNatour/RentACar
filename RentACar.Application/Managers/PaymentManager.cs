@@ -67,20 +67,27 @@ namespace RentACar.Application.Managers
                     .OrderByDescending(p => p.PaymentDate)
                     .ThenByDescending(p => p.PaymentId)
                     .First();
-                _logger.LogInformation("Payment already exists for booking {BookingId}. Returning existing payment {PaymentId}.",
-                    paymentDto.BookingId, latestPayment.PaymentId);
-                var existingDto = _mapper.Map<PaymentDto>(latestPayment);
-                var methodId = await ResolvePaymentMethodIdAsync(latestPayment.PaymentMethod);
-                if (methodId.HasValue)
+
+                // ✅ If already paid, don't redirect
+                if (string.Equals(latestPayment.Status, "done", StringComparison.OrdinalIgnoreCase))
                 {
-                    existingDto.PaymentMethodId = methodId.Value;
+                    var paidDto = _mapper.Map<PaymentDto>(latestPayment);
+
+                    var methodId = await ResolvePaymentMethodIdAsync(latestPayment.PaymentMethod);
+                    if (methodId.HasValue) paidDto.PaymentMethodId = methodId.Value;
+
+                    return new MakePaymentResultDto
+                    {
+                        Payment = paidDto,
+                        RequiresRedirect = false,
+                        RedirectUrl = null
+                    };
                 }
-                return new MakePaymentResultDto
-                {
-                    Payment = existingDto,
-                    RequiresRedirect = false
-                };
+
+                // ✅ If NOT paid yet (unpaid/pending), continue to create Stripe session (redirect)
+                // so DO NOT return here
             }
+
 
             var paymentMethod = await _paymentMethodRepository.GetByIdAsync(paymentDto.PaymentMethodId);
             if (paymentMethod == null)

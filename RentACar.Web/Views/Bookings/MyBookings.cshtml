@@ -29,7 +29,8 @@
         <div class="modal-content bg-dark text-light">
             <div class="modal-header border-secondary">
                 <h5 class="modal-title" id="payModalLabel">Pay for Booking</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <div class="mb-3">
@@ -56,14 +57,14 @@
         let paymentMethods = [];
         let payModal;
 
-        async function loadPaymentMethods(){
+        async function loadPaymentMethods() {
             const res = await fetch('/api/PaymentMethod/active');
-            if(!res.ok){
-                return;
-            }
+            if (!res.ok) return;
+
             paymentMethods = await res.json();
             const select = document.getElementById('paymentMethodSelect');
-            select.innerHTML='';
+            select.innerHTML = '';
+
             paymentMethods.forEach(method => {
                 const option = document.createElement('option');
                 option.value = method.id;
@@ -72,31 +73,53 @@
             });
         }
 
-        async function loadBookings(){
+        async function loadBookings() {
             const res = await fetch('/api/Bookings');
             const data = await res.json();
             const tbody = document.getElementById('bookingRows');
-            tbody.innerHTML='';
-            data.forEach(b=>{
-                const paymentStatus = b.paymentStatus ?? 'unpaid';
-                const statusLabel = paymentStatus === 'done'
-                    ? 'Paid'
-                    : paymentStatus === 'pending'
-                        ? 'Pending'
-                        : 'Unpaid';
+            tbody.innerHTML = '';
+
+            data.forEach(b => {
+                const paymentStatus = (b.paymentStatus ?? 'unpaid')
+                    .toString()
+                    .trim()
+                    .toLowerCase();
+
+                const statusLabel =
+                    paymentStatus === 'done' || paymentStatus === 'paid'
+                        ? 'Paid'
+                        : paymentStatus === 'pending'
+                            ? 'Pending'
+                            : 'Unpaid';
+
                 const payDisabled = paymentStatus === 'pending';
-                const showPayButton = paymentStatus !== 'done';
-                const tr=document.createElement('tr');
-                tr.innerHTML=`<td>${b.bookingId}</td>`+
-                              `<td>${b.carName ?? ''} (${b.plateNumber ?? ''})</td>`+
-                              `<td>${statusLabel}</td>`+
-                              `<td>${b.startdate}</td>`+
-                              `<td>${b.enddate}</td>`+
-                              `<td>${b.totalPrice}</td>`+
-                              `<td>
-                                    ${showPayButton ? `<button class='btn btn-primary btn-sm me-2 pay-btn' data-booking-id='${b.bookingId}' data-amount='${b.totalPrice}' ${payDisabled ? 'disabled' : ''}>Pay</button>` : ''}
-                                    <a class='btn btn-secondary btn-sm' href='/Bookings/Ticket/${b.bookingId}' target='_blank'>Ticket</a>
-                                </td>`;
+                const showPayButton = paymentStatus !== 'done' && paymentStatus !== 'paid';
+
+                const tr = document.createElement('tr');
+                tr.innerHTML =
+                    `<td>${b.bookingId}</td>` +
+                    `<td>${b.carName ?? ''} (${b.plateNumber ?? ''})</td>` +
+                    `<td>${b.paymentId ?? ''}</td>` +
+                    `<td>${statusLabel}</td>` +
+                    `<td>${b.startdate}</td>` +
+                    `<td>${b.enddate}</td>` +
+                    `<td>${Number(b.totalPrice ?? 0).toFixed(2)}</td>` +
+                    `<td>
+                                ${showPayButton ? `
+                                    <button class="btn btn-primary btn-sm me-2 pay-btn"
+                                            data-booking-id="${b.bookingId}"
+                                            data-amount="${Number(b.totalPrice ?? 0)}"
+                                            ${payDisabled ? 'disabled' : ''}>
+                                        Pay
+                                    </button>
+                                ` : ''}
+                                <a class="btn btn-secondary btn-sm"
+                                   href="/Bookings/Ticket/${b.bookingId}"
+                                   target="_blank">
+                                    Ticket
+                                </a>
+                            </td>`;
+
                 tbody.appendChild(tr);
             });
 
@@ -104,18 +127,21 @@
                 button.addEventListener('click', () => {
                     selectedBookingId = Number(button.dataset.bookingId);
                     selectedAmount = Number(button.dataset.amount);
-                    document.getElementById('paymentAmount').textContent = selectedAmount.toFixed(2);
+
+                    document.getElementById('paymentAmount').textContent =
+                        selectedAmount.toFixed(2);
+
                     document.getElementById('paymentError').classList.add('d-none');
                     payModal.show();
                 });
             });
         }
 
-        async function submitPayment(){
-            const paymentMethodId = Number(document.getElementById('paymentMethodSelect').value);
-            if(!selectedBookingId || !paymentMethodId){
-                return;
-            }
+        async function submitPayment() {
+            const paymentMethodId =
+                Number(document.getElementById('paymentMethodSelect').value);
+
+            if (!selectedBookingId || !paymentMethodId) return;
 
             const res = await fetch('/api/Bookings/Pay', {
                 method: 'POST',
@@ -127,7 +153,7 @@
                 })
             });
 
-            if(!res.ok){
+            if (!res.ok) {
                 const errorEl = document.getElementById('paymentError');
                 errorEl.textContent = 'Unable to process payment. Please try again.';
                 errorEl.classList.remove('d-none');
@@ -135,7 +161,8 @@
             }
 
             const result = await res.json();
-            if(result.requiresRedirect && result.redirectUrl){
+
+            if (result.requiresRedirect && result.redirectUrl) {
                 window.location.href = result.redirectUrl;
                 return;
             }
@@ -144,11 +171,12 @@
             await loadBookings();
         }
 
-        document.addEventListener('DOMContentLoaded', loadBookings);
         document.addEventListener('DOMContentLoaded', async () => {
             payModal = new bootstrap.Modal(document.getElementById('payModal'));
             await loadPaymentMethods();
-            document.getElementById('confirmPayBtn').addEventListener('click', submitPayment);
+            await loadBookings();
+            document.getElementById('confirmPayBtn')
+                .addEventListener('click', submitPayment);
         });
     </script>
 }
