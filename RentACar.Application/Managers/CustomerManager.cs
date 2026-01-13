@@ -386,7 +386,8 @@ namespace RentACar.Application.Managers
             CreateMap<Customer, CustomerListDto>()
                 .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.User.Email))
                 .ForMember(dest => dest.username, opt => opt.MapFrom(src => src.User.UserName))
-                .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.User.PhoneNumber));
+                .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.User.PhoneNumber))
+                .ForMember(dest => dest.IsEmailConfirmed, opt => opt.MapFrom(src => src.User.EmailConfirmed));
         }
     }
 

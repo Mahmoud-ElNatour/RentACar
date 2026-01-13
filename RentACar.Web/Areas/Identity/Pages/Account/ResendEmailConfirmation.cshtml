@@ -19,8 +19,6 @@
         </div>
 
         <form method="post" class="space-y-6">
-            <div asp-validation-summary="ModelOnly" class="text-red-500 text-sm text-center bg-red-500/10 p-2 rounded border border-red-500/20" role="alert"></div>
-            
             <div class="space-y-2">
                 <label asp-for="Input.Email" class="block text-sm font-medium text-gray-300">Email Address</label>
                 <input asp-for="Input.Email" class="block w-full bg-[#1a1a1a] border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-gold focus:border-gold transition-all" autocomplete="username" aria-required="true" placeholder="name@example.com" />
@@ -36,4 +34,12 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    @if (TempData["ResendSuccess"] != null)
+    {
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                showPopup('@Html.Raw(TempData["ResendSuccess"])', 'success');
+            });
+        </script>
+    }
 }

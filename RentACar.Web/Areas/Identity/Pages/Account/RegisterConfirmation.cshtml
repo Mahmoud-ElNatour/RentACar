@@ -20,14 +20,13 @@
                 We've sent a confirmation link to <br/>
                 <span class="text-white font-medium">@Model.Email</span>
             </p>
-             <p class="text-sm text-gray-500">
-                Please check your email to confirm your account.
+             <p class="text-sm text-gray-400 mt-4">
+                 Did not receive the email? <a asp-page="./ResendEmailConfirmation" asp-route-email="@Model.Email" class="text-gold hover:text-gold-hover hover:underline font-semibold">Resend it</a>
              </p>
         </div>
 
         <div class="mt-8 border-t border-white/5 pt-6">
              <div class="text-center">
-                <p class="text-gray-400 text-sm mb-4">Already confirmed?</p>
                 <a asp-page="./Login" class="inline-flex w-full items-center justify-center px-6 py-3.5 border border-transparent text-base font-bold rounded-lg text-black bg-gold hover:bg-gold-hover transition-all duration-300 shadow-lg">
                     Back to Login
                 </a>

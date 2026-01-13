@@ -63,7 +63,8 @@
                         <th>Name</th>
                         <th>Email</th>
                         <th>Phone</th>
-                        <th>Verified</th>
+                        <th>Doc-Verified</th>
+                        <th>Email-Verified</th>
                         <th>Active</th>
                         <th>Address</th>
                         <th>Actions</th>
@@ -91,12 +92,14 @@
                     <td>${c.email}</td>
                     <td>${c.phoneNumber ?? ''}</td>
                     <td class="text-center">${c.isVerified ? '<i class="fas fa-check text-success"></i>' : '<i class="fas fa-times text-danger"></i>'}</td>
+                    <td class="text-center">${c.isEmailConfirmed ? '<i class="fas fa-check text-success"></i>' : '<i class="fas fa-times text-danger"></i>'}</td>
                     <td class="text-center">${c.isactive ? '<i class="fas fa-check text-success"></i>' : '<i class="fas fa-times text-danger"></i>'}</td>
                     <td>${c.address ?? ''}</td>
                     <td>
                         <a href="#" class="text-warning me-2 edit-customer" data-id="${c.userId}"><i class="fas fa-pencil-alt"></i></a>
                         <a href="#" class="text-danger delete-customer" data-id="${c.userId}"><i class="fas fa-trash"></i></a>
                         <a href="#" class="text-info reset-pass" data-id="${c.userId}" title="Reset Password"><i class="fas fa-key"></i></a>
+                        <a href="#" class="text-white ms-2 resend-email" data-id="${c.userId}" title="Resend Confirmation Email"><i class="fas fa-envelope"></i></a>
                         <a href="#" class="text-success ms-2 view-docs" data-id="${c.userId}" title="Documents"><i class="fas fa-file-image"></i></a>
                     </td>`;
                 tbody.appendChild(row);
@@ -164,6 +167,22 @@
                 } else if (docs) {
                     e.preventDefault();
                     loadModal('/Customer/Documents/' + docs.dataset.id);
+                } else if (e.target.closest('.resend-email')) {
+                    e.preventDefault();
+                    const btn = e.target.closest('.resend-email');
+                    showPopupConfirm('Resend confirmation email to this customer?', {
+                        type: 'info',
+                        confirmLabel: 'Send',
+                        cancelLabel: 'Cancel'
+                    }).then(async confirmed => {
+                        if(!confirmed) return;
+                        const response = await fetch('/api/Customer/' + btn.dataset.id + '/resend-confirmation', { method: 'POST' });
+                         if (response.ok) {
+                            showPopup('Confirmation email sent.', 'success');
+                        } else {
+                            showPopup('Failed to send email.', 'error');
+                        }
+                    });
                 }
             });
             document.getElementById('tableSearch').addEventListener('keyup', function () {

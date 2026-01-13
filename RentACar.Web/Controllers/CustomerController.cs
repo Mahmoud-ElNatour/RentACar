@@ -9,7 +9,12 @@ using Microsoft.AspNetCore.Http;
 using RentACar.Application.DTOs;
 using RentACar.Application.Managers;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
+using System.Text.Encodings.Web;
+using Microsoft.AspNetCore.WebUtilities;
+using System.Text;
 
 namespace RentACar.Web.Controllers
 {
@@ -21,12 +26,21 @@ namespace RentACar.Web.Controllers
         private readonly CustomerManager _customerManager;
         private readonly IMapper _mapper;
         private readonly ILogger<CustomerController> _logger;
+        private readonly UserManager<IdentityUser> _userManager;
+        private readonly EmailManager _emailManager;
 
-        public CustomerController(CustomerManager customerManager, IMapper mapper, ILogger<CustomerController> logger)
+        public CustomerController(
+            CustomerManager customerManager, 
+            IMapper mapper, 
+            ILogger<CustomerController> logger,
+            UserManager<IdentityUser> userManager,
+            EmailManager emailManager)
         {
             _customerManager = customerManager;
             _mapper = mapper;
             _logger = logger;
+            _userManager = userManager;
+            _emailManager = emailManager;
         }
 
         [HttpGet("~/Customer")]
@@ -232,6 +246,33 @@ namespace RentACar.Web.Controllers
                 return RedirectToAction("Index", "Dashboard");
             }
             return Redirect(returnUrl);
+        }
+
+        [HttpPost("{id}/resend-confirmation")]
+        public async Task<IActionResult> ResendConfirmation(int id)
+        {
+            var customer = await _customerManager.GetCustomerById(id);
+            if (customer == null) return NotFound("Customer not found");
+
+            var user = await _userManager.FindByIdAsync(customer.aspNetUserId);
+            if (user == null) return NotFound("Associated user account not found");
+
+            var userId = await _userManager.GetUserIdAsync(user);
+            var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+            
+            // Construct the callback URL manually since we are in API controller context
+            // and Url.Page helper usually generates relative URLs unless protocol is specified.
+            // We'll point to the Identity Area's ConfirmEmail page.
+            var callbackUrl = Url.Page(
+                "/Account/ConfirmEmail",
+                pageHandler: null,
+                values: new { area = "Identity", userId = userId, code = code },
+                protocol: Request.Scheme);
+
+            await _emailManager.SendConfirmationEmailAsync(user.Email, callbackUrl, customer.Name);
+
+            return Ok(new { message = "Confirmation email sent successfully." });
         }
     }
 }

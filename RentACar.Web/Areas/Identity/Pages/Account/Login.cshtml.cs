@@ -156,9 +156,8 @@ namespace RentACar.Web.Areas.Identity.Pages.Account
                     // Strict Check: Enforce Email Confirmation Manually
                     if (!await _userManager.IsEmailConfirmedAsync(user))
                     {
-                        TempData["LoginError"] = "You must confirm your email before logging in. Please check your inbox.";
                         await _auditLogManager.LogAsync("Login", "User", user.Id, $"User {Input.Email} attempted login without confirmed email.", "Failed", Input.Email, "User");
-                        return Page();
+                        return RedirectToPage("RegisterConfirmation", new { email = Input.Email, returnUrl = returnUrl });
                     }
                 }
 

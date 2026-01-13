@@ -20,38 +20,30 @@ namespace RentACar.Web.Areas.Identity.Pages.Account
     public class ResendEmailConfirmationModel : PageModel
     {
         private readonly UserManager<IdentityUser> _userManager;
-        private readonly IEmailSender _emailSender;
+        private readonly RentACar.Application.Managers.EmailManager _emailManager;
 
-        public ResendEmailConfirmationModel(UserManager<IdentityUser> userManager, IEmailSender emailSender)
+        public ResendEmailConfirmationModel(UserManager<IdentityUser> userManager, RentACar.Application.Managers.EmailManager emailManager)
         {
             _userManager = userManager;
-            _emailSender = emailSender;
+            _emailManager = emailManager;
         }
 
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
         [BindProperty]
         public InputModel Input { get; set; }
 
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
         public class InputModel
         {
-            /// <summary>
-            ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-            ///     directly from your code. This API may change or be removed in future releases.
-            /// </summary>
             [Required]
             [EmailAddress]
             public string Email { get; set; }
         }
 
-        public void OnGet()
+        public void OnGet(string email = null)
         {
+            if (email != null)
+            {
+                Input = new InputModel { Email = email };
+            }
         }
 
         public async Task<IActionResult> OnPostAsync()
@@ -64,8 +56,8 @@ namespace RentACar.Web.Areas.Identity.Pages.Account
             var user = await _userManager.FindByEmailAsync(Input.Email);
             if (user == null)
             {
-                ModelState.AddModelError(string.Empty, "Verification email sent. Please check your email.");
-                return Page();
+                TempData["ResendSuccess"] = "Verification email sent. Please check your email.";
+                return RedirectToPage();
             }
 
             var userId = await _userManager.GetUserIdAsync(user);
@@ -76,13 +68,12 @@ namespace RentACar.Web.Areas.Identity.Pages.Account
                 pageHandler: null,
                 values: new { userId = userId, code = code },
                 protocol: Request.Scheme);
-            await _emailSender.SendEmailAsync(
-                Input.Email,
-                "Confirm your email",
-                $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+            
+            await _emailManager.SendConfirmationEmailAsync(Input.Email, callbackUrl);
 
             ModelState.AddModelError(string.Empty, "Verification email sent. Please check your email.");
-            return Page();
+            TempData["ResendSuccess"] = "Verification email sent. Please check your email.";
+            return RedirectToPage();
         }
     }
 }
