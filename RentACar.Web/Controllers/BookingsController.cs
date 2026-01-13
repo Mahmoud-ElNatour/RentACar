@@ -111,8 +111,11 @@ namespace RentACar.Web.Controllers
 
             var car = await _carManager.GetCarByIdAsync(booking.CarId);
             PaymentDto? payment = null;
-            if (booking.PaymentId.HasValue)
-                payment = await _paymentManager.GetPaymentByIdAsync(booking.PaymentId.Value);
+            var payments = await _paymentManager.GetPaymentsByBookingIdAsync(booking.BookingId);
+            payment = payments
+                .OrderByDescending(p => p.PaymentDate)
+                .ThenByDescending(p => p.PaymentId)
+                .FirstOrDefault();
 
             var bytes = GenerateTicketPdf(booking, car, payment);
             return File(bytes, "application/pdf", $"booking_{id}.pdf");

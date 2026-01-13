@@ -175,8 +175,7 @@ namespace RentACar.Application.Managers
                 BookingStatus = "Pending",
                 Subtotal = subtotal,
                 IsBookedByEmployee = isBookedByEmployee,
-                EmployeebookerId = isBookedByEmployee ? employeeBookerIntId : null,
-                PaymentId = 0
+                EmployeebookerId = isBookedByEmployee ? employeeBookerIntId : null
             };
 
             // Save booking first to generate BookingId
@@ -196,10 +195,6 @@ namespace RentACar.Application.Managers
             };
 
             var addedPayment = await _paymentRepository.AddAsync(payment);
-
-            // Link payment back to booking
-            addedBooking.PaymentId = addedPayment.PaymentId;
-            await _bookingRepository.UpdateAsync(addedBooking);
 
             _logger.LogInformation("✅ Booking created with ID: {BookingId}", addedBooking.BookingId);
             
