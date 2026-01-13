@@ -95,14 +95,14 @@ namespace RentACar.Web.Controllers
         [AllowAnonymous]
         public IActionResult Success()
         {
-            return RedirectToAction("Index", "Home");
+            return View("~/Views/Stripe/Success.cshtml");
         }
 
         [HttpGet("Cancel")]
         [AllowAnonymous]
         public IActionResult Cancel()
         {
-            return RedirectToAction("Index", "Home");
+            return View("~/Views/Stripe/Cancel.cshtml");
         }
     }
 }

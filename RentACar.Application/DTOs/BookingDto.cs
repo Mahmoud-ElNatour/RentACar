@@ -33,10 +33,6 @@ namespace RentACar.Application.DTOs
         [StringLength(50)]
         public string BookingStatus { get; set; } = "pending";
 
-        [Required]
-        public int? PaymentId { get; set; }
-
-
         [Range(0.01, double.MaxValue, ErrorMessage = "Subtotal must be greater than 0.")]
         public decimal? Subtotal { get; set; }
     }

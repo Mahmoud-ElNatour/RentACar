@@ -60,6 +60,35 @@ namespace RentACar.Application.Managers
             if (booking == null || booking.CustomerId != customerUserId)
                 return null;
 
+            var existingPayments = await _paymentRepository.GetPaymentsByBookingIdAsync(paymentDto.BookingId);
+            if (existingPayments.Any())
+            {
+                var latestPayment = existingPayments
+                    .OrderByDescending(p => p.PaymentDate)
+                    .ThenByDescending(p => p.PaymentId)
+                    .First();
+
+                // ✅ If already paid, don't redirect
+                if (string.Equals(latestPayment.Status, "done", StringComparison.OrdinalIgnoreCase))
+                {
+                    var paidDto = _mapper.Map<PaymentDto>(latestPayment);
+
+                    var methodId = await ResolvePaymentMethodIdAsync(latestPayment.PaymentMethod);
+                    if (methodId.HasValue) paidDto.PaymentMethodId = methodId.Value;
+
+                    return new MakePaymentResultDto
+                    {
+                        Payment = paidDto,
+                        RequiresRedirect = false,
+                        RedirectUrl = null
+                    };
+                }
+
+                // ✅ If NOT paid yet (unpaid/pending), continue to create Stripe session (redirect)
+                // so DO NOT return here
+            }
+
+
             var paymentMethod = await _paymentMethodRepository.GetByIdAsync(paymentDto.PaymentMethodId);
             if (paymentMethod == null)
                 return null;
@@ -202,6 +231,12 @@ namespace RentACar.Application.Managers
             {
                 _logger.LogWarning("Stripe webhook received for missing payment {PaymentId}", paymentId);
                 return false;
+            }
+
+            if (string.Equals(payment.Status, "done", StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.LogInformation("Stripe webhook received for already completed payment {PaymentId}", paymentId);
+                return true;
             }
 
             payment.Status = "done";
