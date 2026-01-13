@@ -108,7 +108,7 @@ namespace RentACar.Web.Controllers
             if (booking == null) return NotFound();
 
             var editDto = _mapper.Map<BookingEditDto>(booking);
-            editDto.BookingStatus = "Accepted"; // Setting status to Accepted
+            editDto.BookingStatus = "Booked"; // Setting status to Booked
             
             await _bookingManager.UpdateBookingAsync(editDto);
 
@@ -267,7 +267,7 @@ namespace RentACar.Web.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<BookingDto>> Create([FromBody] MakeBookingRequestDto dto)
+        public async Task<ActionResult<BookingCreationResultDto>> Create([FromBody] MakeBookingRequestDto dto)
         {
             if (!User.Identity?.IsAuthenticated ?? true)
                 return Unauthorized();
@@ -292,7 +292,7 @@ namespace RentACar.Web.Controllers
                     return BadRequest("Booking could not be created. Please check availability, customer status, or payment info.");
                 }
 
-                return CreatedAtAction(nameof(Get), new { id = created.BookingId }, created);
+                return CreatedAtAction(nameof(Get), new { id = created.Booking.BookingId }, created);
             }
             catch (Exception ex)
             {

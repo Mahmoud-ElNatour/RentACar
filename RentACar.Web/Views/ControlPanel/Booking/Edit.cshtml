@@ -43,12 +43,10 @@
             <div class="mb-3">
                 <label class="form-label">Booking Status</label>
                 <select asp-for="BookingStatus" class="form-select">
-                    <option value="pending" selected="@(Model.BookingStatus == "pending")">Pending</option>
-                    <option value="accepted" selected="@(Model.BookingStatus == "accepted")">Accepted</option>
-                    <option value="booked" selected="@(Model.BookingStatus == "booked")">Booked</option>
-                    <option value="returned" selected="@(Model.BookingStatus == "returned")">Returned</option>
-                    <option value="rejected" selected="@(Model.BookingStatus == "rejected")">Rejected</option>
-                    <option value="cancelled" selected="@(Model.BookingStatus == "cancelled")">Cancelled</option>
+                    <option value="Pending" selected="@(Model.BookingStatus == "Pending")">Pending</option>
+                    <option value="Booked" selected="@(Model.BookingStatus == "Booked")">Booked</option>
+                    <option value="Returned" selected="@(Model.BookingStatus == "Returned")">Returned</option>
+                    <option value="Rejected" selected="@(Model.BookingStatus == "Rejected")">Rejected</option>
                 </select>
 
             </div>

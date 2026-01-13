@@ -86,14 +86,14 @@
                     .toLowerCase();
 
                 const statusLabel =
-                    paymentStatus === 'done' || paymentStatus === 'paid'
+                    paymentStatus === 'paid'
                         ? 'Paid'
-                        : paymentStatus === 'pending'
-                            ? 'Pending'
+                        : paymentStatus === 'cancelled'
+                            ? 'Cancelled'
                             : 'Unpaid';
 
-                const payDisabled = paymentStatus === 'pending';
-                const showPayButton = paymentStatus !== 'done' && paymentStatus !== 'paid';
+                const payDisabled = paymentStatus === 'unpaid';
+                const showPayButton = paymentStatus !== 'paid';
 
                 const tr = document.createElement('tr');
                 tr.innerHTML =

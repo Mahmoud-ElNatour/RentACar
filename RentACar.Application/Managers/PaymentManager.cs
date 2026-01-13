@@ -69,7 +69,7 @@ namespace RentACar.Application.Managers
                     .First();
 
                 // ✅ If already paid, don't redirect
-                if (string.Equals(latestPayment.Status, "done", StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(latestPayment.Status, "paid", StringComparison.OrdinalIgnoreCase))
                 {
                     var paidDto = _mapper.Map<PaymentDto>(latestPayment);
 
@@ -84,7 +84,7 @@ namespace RentACar.Application.Managers
                     };
                 }
 
-                // ✅ If NOT paid yet (unpaid/pending), continue to create Stripe session (redirect)
+                // ✅ If NOT paid yet (unpaid), continue to create Stripe session (redirect)
                 // so DO NOT return here
             }
 
@@ -101,7 +101,7 @@ namespace RentACar.Application.Managers
                     Amount = paymentDto.Amount,
                     PaymentDate = DateOnly.FromDateTime(DateTime.UtcNow),
                     PaymentMethod = paymentMethod.PaymentMethodName,
-                    Status = "pending",
+                    Status = "Unpaid",
                     PaymentProvider = "Stripe"
                 };
 
@@ -135,7 +135,7 @@ namespace RentACar.Application.Managers
                     Amount = paymentDto.Amount,
                     PaymentDate = DateOnly.FromDateTime(DateTime.UtcNow),
                     PaymentMethod = paymentMethod.PaymentMethodName,
-                    Status = "done"
+                    Status = "Paid"
                 };
                 await _paymentRepository.AddAsync(payment);
                 await _auditLogManager.LogAsync("Create", "Payment", payment.PaymentId.ToString(), $"Customer payment of {payment.Amount:C} via {payment.PaymentMethod}");
@@ -176,7 +176,7 @@ namespace RentACar.Application.Managers
                     PaymentDate = DateOnly.FromDateTime(DateTime.UtcNow),
                     CreditcardId = paymentDto.CreditcardId,
                     PaymentMethod = paymentMethod.PaymentMethodName,
-                    Status = "done"
+                    Status = "Paid"
                 };
 
                 await _paymentRepository.AddAsync(payment);
@@ -209,7 +209,7 @@ namespace RentACar.Application.Managers
                     Amount = paymentDto.Amount,
                     PaymentDate = DateOnly.FromDateTime(DateTime.UtcNow),
                     PaymentMethod = paymentMethod.PaymentMethodName,
-                    Status = "done"
+                    Status = "Paid"
                 };
 
                 await _paymentRepository.AddAsync(payment);
@@ -233,13 +233,13 @@ namespace RentACar.Application.Managers
                 return false;
             }
 
-            if (string.Equals(payment.Status, "done", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(payment.Status, "paid", StringComparison.OrdinalIgnoreCase))
             {
                 _logger.LogInformation("Stripe webhook received for already completed payment {PaymentId}", paymentId);
                 return true;
             }
 
-            payment.Status = "done";
+            payment.Status = "Paid";
             payment.PaymentProvider = "Stripe";
             if (!string.IsNullOrWhiteSpace(paymentIntentId))
             {
@@ -252,6 +252,11 @@ namespace RentACar.Application.Managers
             }
 
             await _paymentRepository.UpdateAsync(payment);
+            var booking = await _bookingRepository.GetByIdAsync(payment.BookingId);
+            if (booking != null)
+            {
+                await UpdateBookingStatusForPaymentAsync(booking, payment.Status);
+            }
             return true;
         }
 
@@ -360,7 +365,7 @@ namespace RentACar.Application.Managers
                 PaymentDate = dto.PaymentDate,
                 CreditcardId = dto.CreditcardId,
                 PaymentMethod = paymentMethod.PaymentMethodName,
-                Status = dto.Status,
+                Status = NormalizePaymentStatus(dto.Status),
                 PaymentProvider = dto.PaymentProvider,
                 PaymentProviderSessionId = dto.PaymentProviderSessionId,
                 PaymentProviderPaymentIntentId = dto.PaymentProviderPaymentIntentId
@@ -434,7 +439,7 @@ namespace RentACar.Application.Managers
             existing.PaymentDate = dto.PaymentDate;
             existing.CreditcardId = dto.CreditcardId;
             existing.PaymentMethod = paymentMethod.PaymentMethodName;
-            existing.Status = dto.Status;
+            existing.Status = NormalizePaymentStatus(dto.Status);
             existing.PaymentProvider = dto.PaymentProvider;
             existing.PaymentProviderSessionId = dto.PaymentProviderSessionId;
             existing.PaymentProviderPaymentIntentId = dto.PaymentProviderPaymentIntentId;
@@ -533,18 +538,88 @@ namespace RentACar.Application.Managers
                 return;
             }
 
-            if (paymentStatus.Equals("rejected", StringComparison.OrdinalIgnoreCase) ||
-                paymentStatus.Equals("cancelled", StringComparison.OrdinalIgnoreCase))
+            if (paymentStatus.Equals("cancelled", StringComparison.OrdinalIgnoreCase) ||
+                paymentStatus.Equals("unpaid", StringComparison.OrdinalIgnoreCase))
             {
-                var targetStatus = paymentStatus.Equals("cancelled", StringComparison.OrdinalIgnoreCase)
-                    ? "cancelled"
-                    : "rejected";
+                return;
+            }
+
+            if (paymentStatus.Equals("paid", StringComparison.OrdinalIgnoreCase))
+            {
+                const string targetStatus = "Booked";
                 if (!string.Equals(booking.BookingStatus, targetStatus, StringComparison.OrdinalIgnoreCase))
                 {
                     booking.BookingStatus = targetStatus;
                     await _bookingRepository.UpdateAsync(booking);
                 }
             }
+        }
+
+        public async Task<bool> MarkPaymentCancelledAsync(int paymentId)
+        {
+            var payment = await _paymentRepository.GetByIdAsync(paymentId);
+            if (payment == null)
+            {
+                _logger.LogWarning("Stripe cancel received for missing payment {PaymentId}", paymentId);
+                return false;
+            }
+
+            if (string.Equals(payment.Status, "cancelled", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            payment.Status = "Cancelled";
+            await _paymentRepository.UpdateAsync(payment);
+            return true;
+        }
+
+        public async Task<StripeCheckoutSessionDto> CreateCheckoutSessionForPaymentAsync(Payment payment)
+        {
+            var session = await CreateStripeCheckoutSessionAsync(payment);
+
+            if (!string.IsNullOrWhiteSpace(session.SessionId))
+            {
+                payment.PaymentProviderSessionId = session.SessionId;
+            }
+
+            if (!string.IsNullOrWhiteSpace(session.PaymentIntentId))
+            {
+                payment.PaymentProviderPaymentIntentId = session.PaymentIntentId;
+            }
+
+            if (!string.IsNullOrWhiteSpace(session.SessionId) || !string.IsNullOrWhiteSpace(session.PaymentIntentId))
+            {
+                payment.PaymentProvider = "Stripe";
+                await _paymentRepository.UpdateAsync(payment);
+            }
+
+            return session;
+        }
+
+        private static string? NormalizePaymentStatus(string? status)
+        {
+            if (string.IsNullOrWhiteSpace(status))
+            {
+                return status;
+            }
+
+            if (status.Equals("done", StringComparison.OrdinalIgnoreCase))
+            {
+                return "Paid";
+            }
+
+            if (status.Equals("pending", StringComparison.OrdinalIgnoreCase))
+            {
+                return "Unpaid";
+            }
+
+            if (status.Equals("rejected", StringComparison.OrdinalIgnoreCase))
+            {
+                return "Cancelled";
+            }
+
+            return status;
         }
 
         private async Task<StripeCheckoutSessionDto> CreateStripeCheckoutSessionAsync(Payment payment)
