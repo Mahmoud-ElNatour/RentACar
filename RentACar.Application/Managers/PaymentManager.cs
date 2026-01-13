@@ -60,6 +60,28 @@ namespace RentACar.Application.Managers
             if (booking == null || booking.CustomerId != customerUserId)
                 return null;
 
+            var existingPayments = await _paymentRepository.GetPaymentsByBookingIdAsync(paymentDto.BookingId);
+            if (existingPayments.Any())
+            {
+                var latestPayment = existingPayments
+                    .OrderByDescending(p => p.PaymentDate)
+                    .ThenByDescending(p => p.PaymentId)
+                    .First();
+                _logger.LogInformation("Payment already exists for booking {BookingId}. Returning existing payment {PaymentId}.",
+                    paymentDto.BookingId, latestPayment.PaymentId);
+                var existingDto = _mapper.Map<PaymentDto>(latestPayment);
+                var methodId = await ResolvePaymentMethodIdAsync(latestPayment.PaymentMethod);
+                if (methodId.HasValue)
+                {
+                    existingDto.PaymentMethodId = methodId.Value;
+                }
+                return new MakePaymentResultDto
+                {
+                    Payment = existingDto,
+                    RequiresRedirect = false
+                };
+            }
+
             var paymentMethod = await _paymentMethodRepository.GetByIdAsync(paymentDto.PaymentMethodId);
             if (paymentMethod == null)
                 return null;
@@ -202,6 +224,12 @@ namespace RentACar.Application.Managers
             {
                 _logger.LogWarning("Stripe webhook received for missing payment {PaymentId}", paymentId);
                 return false;
+            }
+
+            if (string.Equals(payment.Status, "done", StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.LogInformation("Stripe webhook received for already completed payment {PaymentId}", paymentId);
+                return true;
             }
 
             payment.Status = "done";

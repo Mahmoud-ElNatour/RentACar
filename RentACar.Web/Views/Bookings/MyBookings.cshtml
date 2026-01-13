@@ -12,7 +12,7 @@
                     <tr>
                         <th>Booking ID</th>
                         <th>Car</th>
-                        <th>Payment</th>
+                        <th>Payment Status</th>
                         <th>Start</th>
                         <th>End</th>
                         <th>Price</th>
@@ -24,25 +24,131 @@
         </div>
     </div>
 </div>
+<div class="modal fade" id="payModal" tabindex="-1" aria-labelledby="payModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark text-light">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title" id="payModalLabel">Pay for Booking</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Total Amount</label>
+                    <div id="paymentAmount" class="fw-bold"></div>
+                </div>
+                <div class="mb-3">
+                    <label for="paymentMethodSelect" class="form-label">Payment Method</label>
+                    <select id="paymentMethodSelect" class="form-select"></select>
+                </div>
+                <div id="paymentError" class="text-danger small d-none"></div>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirmPayBtn">Pay Now</button>
+            </div>
+        </div>
+    </div>
+</div>
 @section Scripts{
     <script>
+        let selectedBookingId = null;
+        let selectedAmount = null;
+        let paymentMethods = [];
+        let payModal;
+
+        async function loadPaymentMethods(){
+            const res = await fetch('/api/PaymentMethod/active');
+            if(!res.ok){
+                return;
+            }
+            paymentMethods = await res.json();
+            const select = document.getElementById('paymentMethodSelect');
+            select.innerHTML='';
+            paymentMethods.forEach(method => {
+                const option = document.createElement('option');
+                option.value = method.id;
+                option.textContent = method.paymentMethodName;
+                select.appendChild(option);
+            });
+        }
+
         async function loadBookings(){
             const res = await fetch('/api/Bookings');
             const data = await res.json();
             const tbody = document.getElementById('bookingRows');
             tbody.innerHTML='';
             data.forEach(b=>{
+                const paymentStatus = b.paymentStatus ?? 'unpaid';
+                const statusLabel = paymentStatus === 'done'
+                    ? 'Paid'
+                    : paymentStatus === 'pending'
+                        ? 'Pending'
+                        : 'Unpaid';
+                const payDisabled = paymentStatus === 'pending';
+                const showPayButton = paymentStatus !== 'done';
                 const tr=document.createElement('tr');
                 tr.innerHTML=`<td>${b.bookingId}</td>`+
                               `<td>${b.carName ?? ''} (${b.plateNumber ?? ''})</td>`+
-                              `<td>${b.paymentId ?? ''}</td>`+
+                              `<td>${statusLabel}</td>`+
                               `<td>${b.startdate}</td>`+
                               `<td>${b.enddate}</td>`+
                               `<td>${b.totalPrice}</td>`+
-                              `<td><a class='btn btn-primary btn-sm' href='/Bookings/Ticket/${b.bookingId}' target='_blank'>Ticket</a></td>`;
+                              `<td>
+                                    ${showPayButton ? `<button class='btn btn-primary btn-sm me-2 pay-btn' data-booking-id='${b.bookingId}' data-amount='${b.totalPrice}' ${payDisabled ? 'disabled' : ''}>Pay</button>` : ''}
+                                    <a class='btn btn-secondary btn-sm' href='/Bookings/Ticket/${b.bookingId}' target='_blank'>Ticket</a>
+                                </td>`;
                 tbody.appendChild(tr);
             });
+
+            document.querySelectorAll('.pay-btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    selectedBookingId = Number(button.dataset.bookingId);
+                    selectedAmount = Number(button.dataset.amount);
+                    document.getElementById('paymentAmount').textContent = selectedAmount.toFixed(2);
+                    document.getElementById('paymentError').classList.add('d-none');
+                    payModal.show();
+                });
+            });
         }
+
+        async function submitPayment(){
+            const paymentMethodId = Number(document.getElementById('paymentMethodSelect').value);
+            if(!selectedBookingId || !paymentMethodId){
+                return;
+            }
+
+            const res = await fetch('/api/Bookings/Pay', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    bookingId: selectedBookingId,
+                    amount: selectedAmount,
+                    paymentMethodId: paymentMethodId
+                })
+            });
+
+            if(!res.ok){
+                const errorEl = document.getElementById('paymentError');
+                errorEl.textContent = 'Unable to process payment. Please try again.';
+                errorEl.classList.remove('d-none');
+                return;
+            }
+
+            const result = await res.json();
+            if(result.requiresRedirect && result.redirectUrl){
+                window.location.href = result.redirectUrl;
+                return;
+            }
+
+            payModal.hide();
+            await loadBookings();
+        }
+
         document.addEventListener('DOMContentLoaded', loadBookings);
+        document.addEventListener('DOMContentLoaded', async () => {
+            payModal = new bootstrap.Modal(document.getElementById('payModal'));
+            await loadPaymentMethods();
+            document.getElementById('confirmPayBtn').addEventListener('click', submitPayment);
+        });
     </script>
 }

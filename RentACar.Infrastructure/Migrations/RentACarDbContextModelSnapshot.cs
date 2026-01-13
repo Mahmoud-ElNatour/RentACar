@@ -355,10 +355,6 @@ namespace RentACar.Infrastructure.Migrations
                         .HasDefaultValue(false)
                         .HasColumnName("isBookedByEmployee");
 
-                    b.Property<int?>("PaymentId")
-                        .HasColumnType("int")
-                        .HasColumnName("paymentID");
-
                     b.Property<int?>("PromocodeId")
                         .HasColumnType("int")
                         .HasColumnName("promocodeID");
@@ -855,6 +851,8 @@ namespace RentACar.Infrastructure.Migrations
 
                     b.Navigation("Employeebooker");
 
+                    b.Navigation("Payment");
+
                     b.Navigation("Promocode");
                 });
 
@@ -912,9 +910,10 @@ namespace RentACar.Infrastructure.Migrations
             modelBuilder.Entity("RentACar.Core.Entities.Payment", b =>
                 {
                     b.HasOne("RentACar.Core.Entities.Booking", "Booking")
-                        .WithOne()
+                        .WithOne("Payment")
                         .HasForeignKey("RentACar.Core.Entities.Payment", "BookingId")
                         .IsRequired()
+                        .OnDelete(DeleteBehavior.Cascade)
                         .HasConstraintName("FK_Payments_Bookings");
 
                     b.Navigation("Booking");

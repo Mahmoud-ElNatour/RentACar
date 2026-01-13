@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using RentACar.Web.Models;
 using System.Security.Claims;
+using System.Linq;
 
 namespace RentACar.Web.Controllers
 {
@@ -129,9 +130,11 @@ namespace RentACar.Web.Controllers
             var employee = booking.EmployeebookerId.HasValue
                 ? await _employeeManager.GetEmployeeById(booking.EmployeebookerId.Value)
                 : null;
-            var payment = booking.PaymentId.HasValue
-                ? await _paymentManager.GetPaymentByIdAsync(booking.PaymentId.Value)
-                : null;
+            var payments = await _paymentManager.GetPaymentsByBookingIdAsync(booking.BookingId);
+            var payment = payments
+                .OrderByDescending(p => p.PaymentDate)
+                .ThenByDescending(p => p.PaymentId)
+                .FirstOrDefault();
             var promo = booking.PromocodeId.HasValue
                 ? await _promocodeManager.GetPromocodeByIdAsync(booking.PromocodeId.Value)
                 : null;
@@ -155,7 +158,7 @@ namespace RentACar.Web.Controllers
                 CarColor = car?.Color,
                 CarModelYear = car?.ModelYear,
                 CarPricePerDay = car?.PricePerDay,
-                PaymentId = booking.PaymentId,
+                PaymentId = payment?.PaymentId,
                 PaymentAmount = payment?.Amount,
                 PromocodeName = promo?.Name,
                 PromocodeDiscount = promo?.DiscountPercentage
@@ -178,9 +181,11 @@ namespace RentACar.Web.Controllers
                 var employee = b.EmployeebookerId.HasValue
                     ? await _employeeManager.GetEmployeeById(b.EmployeebookerId.Value)
                     : null;
-                var payment = b.PaymentId.HasValue
-                    ? await _paymentManager.GetPaymentByIdAsync(b.PaymentId.Value)
-                    : null;
+                var payments = await _paymentManager.GetPaymentsByBookingIdAsync(b.BookingId);
+                var payment = payments
+                    .OrderByDescending(p => p.PaymentDate)
+                    .ThenByDescending(p => p.PaymentId)
+                    .FirstOrDefault();
                 var promo = b.PromocodeId.HasValue
                     ? await _promocodeManager.GetPromocodeByIdAsync(b.PromocodeId.Value)
                     : null;
@@ -201,7 +206,7 @@ namespace RentACar.Web.Controllers
                     carPricePerDay = car?.PricePerDay,
                     employeebookerId = b.EmployeebookerId,
                     employeeName = employee?.Name,
-                    paymentId = b.PaymentId,
+                    paymentId = payment?.PaymentId,
                     paymentAmount = payment?.Amount,
                     subtotal = b.Subtotal,
                     totalPrice = b.TotalPrice,
@@ -345,8 +350,11 @@ namespace RentACar.Web.Controllers
             var car = await _carManager.GetCarByIdAsync(booking.CarId);
             var customer = await _customerManager.GetCustomerById(booking.CustomerId);
             PaymentDto? payment = null;
-            if (booking.PaymentId.HasValue)
-                payment = await _paymentManager.GetPaymentByIdAsync(booking.PaymentId.Value);
+            var payments = await _paymentManager.GetPaymentsByBookingIdAsync(booking.BookingId);
+            payment = payments
+                .OrderByDescending(p => p.PaymentDate)
+                .ThenByDescending(p => p.PaymentId)
+                .FirstOrDefault();
             PromocodeDto? promo = null;
             if (booking.PromocodeId.HasValue)
                 promo = await _promocodeManager.GetPromocodeByIdAsync(booking.PromocodeId.Value);
