@@ -261,7 +261,10 @@ namespace RentACar.Application.Managers
                 PaymentDate = dto.PaymentDate,
                 CreditcardId = dto.CreditcardId,
                 PaymentMethod = paymentMethod.PaymentMethodName,
-                Status = dto.Status
+                Status = dto.Status,
+                PaymentProvider = dto.PaymentProvider,
+                PaymentProviderSessionId = dto.PaymentProviderSessionId,
+                PaymentProviderPaymentIntentId = dto.PaymentProviderPaymentIntentId
             };
 
             var created = await _paymentRepository.AddAsync(payment);
@@ -333,6 +336,9 @@ namespace RentACar.Application.Managers
             existing.CreditcardId = dto.CreditcardId;
             existing.PaymentMethod = paymentMethod.PaymentMethodName;
             existing.Status = dto.Status;
+            existing.PaymentProvider = dto.PaymentProvider;
+            existing.PaymentProviderSessionId = dto.PaymentProviderSessionId;
+            existing.PaymentProviderPaymentIntentId = dto.PaymentProviderPaymentIntentId;
 
             await _paymentRepository.UpdateAsync(existing);
             if (bookingForStatus == null)
@@ -388,6 +394,9 @@ namespace RentACar.Application.Managers
                 CreditcardId = payment.CreditcardId,
                 PaymentMethodName = payment.PaymentMethod,
                 Status = payment.Status,
+                PaymentProvider = payment.PaymentProvider,
+                PaymentProviderSessionId = payment.PaymentProviderSessionId,
+                PaymentProviderPaymentIntentId = payment.PaymentProviderPaymentIntentId,
                 CustomerName = payment.Booking?.Customer?.Name,
                 CustomerUsername = payment.Booking?.Customer?.User?.UserName,
                 BookingStatus = payment.Booking?.BookingStatus,
