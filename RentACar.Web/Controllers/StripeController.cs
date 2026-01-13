@@ -100,8 +100,13 @@ namespace RentACar.Web.Controllers
 
         [HttpGet("Cancel")]
         [AllowAnonymous]
-        public IActionResult Cancel()
+        public async Task<IActionResult> Cancel(int? paymentId = null)
         {
+            if (paymentId.HasValue)
+            {
+                await _paymentManager.MarkPaymentCancelledAsync(paymentId.Value);
+            }
+
             return View("~/Views/Stripe/Cancel.cshtml");
         }
     }

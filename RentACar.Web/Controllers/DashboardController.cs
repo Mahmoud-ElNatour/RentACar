@@ -242,7 +242,7 @@ namespace RentACar.Web.Controllers
                     CustomerImage = $"https://ui-avatars.com/api/?name={(b.Customer != null ? b.Customer.Name : "User")}&background=random", // Placeholder
                     CarModel = b.Car != null ? b.Car.ModelName : "Unknown Car",
                     DateRange = $"{b.Startdate:MMM dd} - {b.Enddate:MMM dd}",
-                    Status = "Pending Review",
+                    Status = "Pending",
                     StatusColorClass = "bg-yellow-500/10 text-yellow-500"
                 })
                 .ToListAsync();
@@ -333,8 +333,9 @@ namespace RentACar.Web.Controllers
                         DateRange = $"{b.Startdate:MMM dd} - {b.Enddate:MMM dd}",
                         TotalPrice = b.TotalPrice,
                         Status = b.BookingStatus,
-                        StatusColorClass = b.BookingStatus == "Accepted" ? "text-green-500 bg-green-500/10" :
+                        StatusColorClass = b.BookingStatus == "Booked" ? "text-green-500 bg-green-500/10" :
                                            b.BookingStatus == "Pending" ? "text-yellow-500 bg-yellow-500/10" :
+                                           b.BookingStatus == "Returned" ? "text-blue-500 bg-blue-500/10" :
                                            "text-red-500 bg-red-500/10"
                     };
                 })

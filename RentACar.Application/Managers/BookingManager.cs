@@ -55,7 +55,7 @@ namespace RentACar.Application.Managers
             _auditLogManager = auditLogManager;
         }
 
-        public async Task<BookingDto?> MakeBookingAsync(MakeBookingRequestDto requestDto, string loggedInUserId)
+        public async Task<BookingCreationResultDto?> MakeBookingAsync(MakeBookingRequestDto requestDto, string loggedInUserId)
         {
             _logger.LogInformation("=== MakeBookingAsync START ===");
             _logger.LogInformation("LoggedInUserId: {UserId}", loggedInUserId);
@@ -181,14 +181,17 @@ namespace RentACar.Application.Managers
             // Save booking first to generate BookingId
             var addedBooking = await _bookingRepository.AddAsync(booking);
 
+            var payableAmount = CalculatePayableAmount(totalPrice, paymentMethod.PaymentMethodName);
+
             // 🔹 Create payment linked to the newly created booking
             var payment = new Payment
             {
                 BookingId = addedBooking.BookingId,
-                Amount = totalPrice,
+                Amount = payableAmount,
                 PaymentDate = DateOnly.FromDateTime(DateTime.UtcNow),
                 PaymentMethod = paymentMethod.PaymentMethodName,
-                Status = "done",
+                Status = "Unpaid",
+                PaymentProvider = "Stripe",
                 CreditcardId = paymentMethod.PaymentMethodName.Equals("creditcard", StringComparison.OrdinalIgnoreCase)
                     ? requestDto.CreditcardId
                     : null
@@ -200,7 +203,18 @@ namespace RentACar.Application.Managers
             
             await _auditLogManager.LogAsync("Create", "Booking", addedBooking.BookingId.ToString(), $"Created new booking for Car {addedBooking.CarId}");
             
-            return _mapper.Map<BookingDto>(addedBooking);
+            var session = await _paymentManager.CreateCheckoutSessionForPaymentAsync(addedPayment);
+            if (string.IsNullOrWhiteSpace(session.CheckoutUrl))
+            {
+                _logger.LogWarning("Stripe checkout session missing URL for booking {BookingId}", addedBooking.BookingId);
+            }
+
+            return new BookingCreationResultDto
+            {
+                Booking = _mapper.Map<BookingDto>(addedBooking),
+                RedirectUrl = session.CheckoutUrl,
+                PaymentId = addedPayment.PaymentId
+            };
         }
 
 
@@ -216,8 +230,23 @@ namespace RentACar.Application.Managers
                 return true;
             }
 
-            return !status.Equals("cancelled", StringComparison.OrdinalIgnoreCase)
+            return !status.Equals("returned", StringComparison.OrdinalIgnoreCase)
                 && !status.Equals("rejected", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static decimal CalculatePayableAmount(decimal totalPrice, string? paymentMethodName)
+        {
+            if (string.IsNullOrWhiteSpace(paymentMethodName))
+            {
+                return totalPrice;
+            }
+
+            if (paymentMethodName.Equals("cash", StringComparison.OrdinalIgnoreCase))
+            {
+                return Math.Round(totalPrice * 0.30m, 2, MidpointRounding.AwayFromZero);
+            }
+
+            return totalPrice;
         }
 
 
