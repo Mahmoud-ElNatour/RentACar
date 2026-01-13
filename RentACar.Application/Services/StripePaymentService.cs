@@ -30,42 +30,37 @@ namespace RentACar.Application.Services
             _webhookSecret = Environment.GetEnvironmentVariable(StripeWebhookSecretEnv);
         }
 
-        public async Task<StripePayoutSessionDto> CreatePayoutSessionAsync(
-            StripePayoutSessionRequestDto request,
+        public async Task<StripeCheckoutSessionDto> CreateCheckoutSessionAsync(
+            StripeCheckoutSessionRequestDto request,
             CancellationToken cancellationToken = default)
         {
             var secretKey = RequireSecretKey();
             var amountInCents = ConvertToStripeAmount(request.Amount, request.Currency);
 
-            using var message = new HttpRequestMessage(HttpMethod.Post, "v1/payouts");
+            using var message = new HttpRequestMessage(HttpMethod.Post, "v1/checkout/sessions");
             message.Headers.Authorization = new AuthenticationHeaderValue(
                 "Bearer",
                 secretKey);
 
-            if (!string.IsNullOrWhiteSpace(request.ConnectedAccountId))
-            {
-                message.Headers.Add("Stripe-Account", request.ConnectedAccountId);
-            }
-
             var fields = new Dictionary<string, string>
             {
-                ["amount"] = amountInCents.ToString(CultureInfo.InvariantCulture),
-                ["currency"] = request.Currency.ToLowerInvariant()
+                ["mode"] = "payment",
+                ["success_url"] = request.SuccessUrl,
+                ["cancel_url"] = request.CancelUrl,
+                ["line_items[0][quantity]"] = "1",
+                ["line_items[0][price_data][currency]"] = request.Currency.ToLowerInvariant(),
+                ["line_items[0][price_data][unit_amount]"] = amountInCents.ToString(CultureInfo.InvariantCulture),
+                ["line_items[0][price_data][product_data][name]"] = string.IsNullOrWhiteSpace(request.Description)
+                    ? "Rent a Car Payment"
+                    : request.Description
             };
 
-            if (!string.IsNullOrWhiteSpace(request.Description))
+            if (request.Metadata != null)
             {
-                fields["description"] = request.Description;
-            }
-
-            if (request.PaymentId.HasValue)
-            {
-                fields["metadata[paymentId]"] = request.PaymentId.Value.ToString(CultureInfo.InvariantCulture);
-            }
-
-            if (request.BookingId.HasValue)
-            {
-                fields["metadata[bookingId]"] = request.BookingId.Value.ToString(CultureInfo.InvariantCulture);
+                foreach (var kv in request.Metadata)
+                {
+                    fields[$"metadata[{kv.Key}]"] = kv.Value;
+                }
             }
 
             message.Content = new FormUrlEncodedContent(fields);
@@ -76,12 +71,12 @@ namespace RentACar.Application.Services
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogWarning(
-                    "Stripe payout session creation failed with status {StatusCode}: {Response}",
+                    "Stripe checkout session creation failed with status {StatusCode}: {Response}",
                     response.StatusCode,
                     responseContent);
             }
 
-            return ParsePayoutSession(responseContent, request);
+            return ParseCheckoutSession(responseContent);
         }
 
         public StripeWebhookVerificationResultDto VerifyWebhookSignature(
@@ -179,55 +174,29 @@ namespace RentACar.Application.Services
             return (long)Math.Round(amount * 100m, 0, MidpointRounding.AwayFromZero);
         }
 
-        private static StripePayoutSessionDto ParsePayoutSession(string response, StripePayoutSessionRequestDto request)
+        private static StripeCheckoutSessionDto ParseCheckoutSession(string response)
         {
-            if (string.IsNullOrWhiteSpace(response))
-            {
-                return new StripePayoutSessionDto
-                {
-                    SessionId = string.Empty,
-                    Status = "unknown",
-                    Amount = request.Amount,
-                    Currency = request.Currency,
-                    ConnectedAccountId = request.ConnectedAccountId,
-                    CreatedAt = DateTime.UtcNow,
-                    RawResponse = response
-                };
-            }
-
             try
             {
                 using var document = JsonDocument.Parse(response);
                 var root = document.RootElement;
 
-                var createdUnix = root.TryGetProperty("created", out var createdElement) &&
-                                  createdElement.TryGetInt64(out var createdValue)
-                    ? DateTimeOffset.FromUnixTimeSeconds(createdValue).UtcDateTime
-                    : DateTime.UtcNow;
-
-                return new StripePayoutSessionDto
+                return new StripeCheckoutSessionDto
                 {
                     SessionId = root.TryGetProperty("id", out var idElement) ? idElement.GetString() ?? string.Empty : string.Empty,
-                    Status = root.TryGetProperty("status", out var statusElement) ? statusElement.GetString() ?? string.Empty : string.Empty,
-                    Amount = request.Amount,
-                    Currency = request.Currency,
-                    ConnectedAccountId = request.ConnectedAccountId,
-                    CreatedAt = createdUnix,
+                    CheckoutUrl = root.TryGetProperty("url", out var urlElement) ? urlElement.GetString() ?? string.Empty : string.Empty,
+                    Status = root.TryGetProperty("status", out var statusElement)
+                        ? statusElement.GetString() ?? string.Empty
+                        : string.Empty,
+                    PaymentIntentId = root.TryGetProperty("payment_intent", out var intentElement)
+                        ? intentElement.GetString()
+                        : null,
                     RawResponse = response
                 };
             }
             catch (JsonException)
             {
-                return new StripePayoutSessionDto
-                {
-                    SessionId = string.Empty,
-                    Status = "unknown",
-                    Amount = request.Amount,
-                    Currency = request.Currency,
-                    ConnectedAccountId = request.ConnectedAccountId,
-                    CreatedAt = DateTime.UtcNow,
-                    RawResponse = response
-                };
+                return new StripeCheckoutSessionDto { RawResponse = response };
             }
         }
 

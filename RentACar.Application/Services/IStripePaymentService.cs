@@ -6,8 +6,8 @@ namespace RentACar.Application.Services
 {
     public interface IStripePaymentService
     {
-        Task<StripePayoutSessionDto> CreatePayoutSessionAsync(
-            StripePayoutSessionRequestDto request,
+        Task<StripeCheckoutSessionDto> CreateCheckoutSessionAsync(
+            StripeCheckoutSessionRequestDto request,
             CancellationToken cancellationToken = default);
 
         StripeWebhookVerificationResultDto VerifyWebhookSignature(

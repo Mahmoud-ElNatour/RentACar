@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using RentACar.Web.Models;
+using System.Security.Claims;
 
 namespace RentACar.Web.Controllers
 {
@@ -214,6 +215,40 @@ namespace RentACar.Web.Controllers
             }
 
             return Ok(result);
+        }
+
+        [HttpPost("Pay")]
+        public async Task<IActionResult> Pay([FromBody] MakePaymentRequestDto dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Unauthorized();
+            }
+
+            var customer = await _customerManager.GetCustomerByAspNetUserId(userId);
+            if (customer == null)
+            {
+                return Unauthorized();
+            }
+
+            var result = await _paymentManager.MakePaymentByCustomerAsync(dto, customer.UserId);
+            if (result == null)
+            {
+                return BadRequest("Unable to process payment request.");
+            }
+
+            if (result.RequiresRedirect && !string.IsNullOrWhiteSpace(result.RedirectUrl))
+            {
+                return Redirect(result.RedirectUrl);
+            }
+
+            return Ok(result.Payment);
         }
 
         [HttpGet("{id}")]

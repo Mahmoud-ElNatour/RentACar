@@ -1,42 +1,45 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace RentACar.Application.DTOs
 {
-    public class StripePayoutSessionRequestDto
+    public class StripeCheckoutSessionRequestDto
     {
-        public int? PaymentId { get; set; }
-
-        public int? BookingId { get; set; }
+        [Required]
+        public int PaymentId { get; set; }
 
         [Required]
-        [Range(0.01, double.MaxValue, ErrorMessage = "Amount must be greater than 0.")]
+        public int BookingId { get; set; }
+
+        [Required]
+        [Range(0.01, double.MaxValue)]
         public decimal Amount { get; set; }
 
         [Required]
         [StringLength(3, MinimumLength = 3)]
         public string Currency { get; set; } = "usd";
 
-        [StringLength(100)]
-        public string? ConnectedAccountId { get; set; }
+        [Required]
+        public string SuccessUrl { get; set; } = null!;
 
-        [StringLength(200)]
+        [Required]
+        public string CancelUrl { get; set; } = null!;
+
         public string? Description { get; set; }
+
+        public Dictionary<string, string>? Metadata { get; set; }
     }
 
-    public class StripePayoutSessionDto
+    public class StripeCheckoutSessionDto
     {
         public string SessionId { get; set; } = string.Empty;
 
+        public string CheckoutUrl { get; set; } = string.Empty;
+
         public string Status { get; set; } = string.Empty;
 
-        public decimal Amount { get; set; }
-
-        public string Currency { get; set; } = string.Empty;
-
-        public string? ConnectedAccountId { get; set; }
-
-        public DateTime CreatedAt { get; set; }
+        public string? PaymentIntentId { get; set; }
 
         public string? RawResponse { get; set; }
     }

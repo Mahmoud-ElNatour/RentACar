@@ -7,9 +7,11 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RentACar.Application.DTOs;
+using RentACar.Application.Services;
 using RentACar.Core.Entities;
 using RentACar.Core.Repositories;
 using AspNetUserEntity = RentACar.Core.Entities.AspNetUser;
+using Microsoft.AspNetCore.Http;
 
 namespace RentACar.Application.Managers
 {
@@ -20,6 +22,8 @@ namespace RentACar.Application.Managers
         private readonly ICreditCardRepository _creditCardRepository;
         private readonly IPaymentMethodRepository _paymentMethodRepository;
         private readonly UserManager<IdentityUser> _userManager;
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IStripePaymentService _stripePaymentService;
         private readonly IMapper _mapper;
         private readonly ILogger<PaymentManager> _logger;
         private readonly AuditLogManager _auditLogManager;
@@ -30,6 +34,8 @@ namespace RentACar.Application.Managers
             ICreditCardRepository creditCardRepository,
             IPaymentMethodRepository paymentMethodRepository,
             UserManager<IdentityUser> userManager,
+            IHttpContextAccessor httpContextAccessor,
+            IStripePaymentService stripePaymentService,
             IMapper mapper,
             ILogger<PaymentManager> logger,
             AuditLogManager auditLogManager)
@@ -39,43 +45,58 @@ namespace RentACar.Application.Managers
             _creditCardRepository = creditCardRepository;
             _paymentMethodRepository = paymentMethodRepository;
             _userManager = userManager;
+            _httpContextAccessor = httpContextAccessor;
+            _stripePaymentService = stripePaymentService;
             _mapper = mapper;
             _logger = logger;
             _auditLogManager = auditLogManager;
         }
 
-        public async Task<bool> MakePaymentByCustomerAsync(MakePaymentRequestDto paymentDto, int customerUserId)
+        public async Task<MakePaymentResultDto?> MakePaymentByCustomerAsync(MakePaymentRequestDto paymentDto, int customerUserId)
         {
             _logger.LogInformation("Customer {Id} making payment for booking {Booking}", customerUserId, paymentDto.BookingId);
 
             var booking = await _bookingRepository.GetByIdAsync(paymentDto.BookingId);
             if (booking == null || booking.CustomerId != customerUserId)
-                return false;
+                return null;
 
             var paymentMethod = await _paymentMethodRepository.GetByIdAsync(paymentDto.PaymentMethodId);
             if (paymentMethod == null)
-                return false;
+                return null;
+
             if (paymentMethod.PaymentMethodName.Equals("creditcard", StringComparison.OrdinalIgnoreCase))
             {
-                if (!paymentDto.CreditcardId.HasValue)
-                    return false;
-
-                var creditCard = await _creditCardRepository.GetByIdAsync(paymentDto.CreditcardId.Value);
-                if (creditCard == null)
-                    return false;
-
                 var payment = new Payment
                 {
                     BookingId = paymentDto.BookingId,
                     Amount = paymentDto.Amount,
                     PaymentDate = DateOnly.FromDateTime(DateTime.UtcNow),
-                    CreditcardId = paymentDto.CreditcardId,
                     PaymentMethod = paymentMethod.PaymentMethodName,
-                    Status = "done"
+                    Status = "pending",
+                    PaymentProvider = "Stripe"
                 };
 
-                await _paymentRepository.AddAsync(payment);
-                return true;
+                var created = await _paymentRepository.AddAsync(payment);
+                var session = await CreateStripeCheckoutSessionAsync(created);
+
+                if (string.IsNullOrWhiteSpace(session.CheckoutUrl))
+                {
+                    _logger.LogWarning("Stripe checkout session missing URL for payment {PaymentId}", created.PaymentId);
+                    return null;
+                }
+
+                created.PaymentProviderSessionId = session.SessionId;
+                created.PaymentProviderPaymentIntentId = session.PaymentIntentId;
+                await _paymentRepository.UpdateAsync(created);
+
+                var result = _mapper.Map<PaymentDto>(created);
+                result.PaymentMethodId = paymentMethod.Id;
+                return new MakePaymentResultDto
+                {
+                    Payment = result,
+                    RequiresRedirect = true,
+                    RedirectUrl = session.CheckoutUrl
+                };
             }
             else
             {
@@ -89,29 +110,35 @@ namespace RentACar.Application.Managers
                 };
                 await _paymentRepository.AddAsync(payment);
                 await _auditLogManager.LogAsync("Create", "Payment", payment.PaymentId.ToString(), $"Customer payment of {payment.Amount:C} via {payment.PaymentMethod}");
-                return true;
+                var dto = _mapper.Map<PaymentDto>(payment);
+                dto.PaymentMethodId = paymentMethod.Id;
+                return new MakePaymentResultDto
+                {
+                    Payment = dto,
+                    RequiresRedirect = false
+                };
 
             }
         }
 
-        public async Task<bool> MakePaymentByEmployeeAsync(MakePaymentRequestDto paymentDto, string employeeUserId)
+        public async Task<MakePaymentResultDto?> MakePaymentByEmployeeAsync(MakePaymentRequestDto paymentDto, string employeeUserId)
         {
             _logger.LogInformation("Employee {Id} recording payment for booking {Booking}", employeeUserId, paymentDto.BookingId);
             var user = await _userManager.FindByIdAsync(employeeUserId);
             if (user == null || !await _userManager.IsInRoleAsync(user, "Employee"))
-                return false;
+                return null;
             var paymentMethod = await _paymentMethodRepository.GetByIdAsync(paymentDto.PaymentMethodId);
             if (paymentMethod == null)
-                return false;
+                return null;
 
             if (paymentMethod.PaymentMethodName.Equals("creditcard", StringComparison.OrdinalIgnoreCase))
             {
                 if (!paymentDto.CreditcardId.HasValue)
-                    return false;
+                    return null;
 
                 var creditCard = await _creditCardRepository.GetByIdAsync(paymentDto.CreditcardId.Value);
                 if (creditCard == null)
-                    return false;
+                    return null;
 
                 var payment = new Payment
                 {
@@ -127,19 +154,25 @@ namespace RentACar.Application.Managers
 
                 await _auditLogManager.LogAsync("Create", "Payment", payment.PaymentId.ToString(), $"Employee recorded payment of {payment.Amount:C}");
 
-                return true;
+                var dto = _mapper.Map<PaymentDto>(payment);
+                dto.PaymentMethodId = paymentMethod.Id;
+                return new MakePaymentResultDto
+                {
+                    Payment = dto,
+                    RequiresRedirect = false
+                };
             }
             else
             {
                 if (user == null || !await _userManager.IsInRoleAsync(user, "Employee"))
-                    return false;
+                    return null;
 
                 var booking = await _bookingRepository.GetByIdAsync(paymentDto.BookingId);
                 if (booking == null)
-                    return false;
+                    return null;
 
                 if (paymentMethod == null || !paymentMethod.PaymentMethodName.Equals("cash", StringComparison.OrdinalIgnoreCase))
-                    return false;
+                    return null;
 
                 var payment = new Payment
                 {
@@ -152,8 +185,39 @@ namespace RentACar.Application.Managers
 
                 await _paymentRepository.AddAsync(payment);
                 await _auditLogManager.LogAsync("Create", "Payment", payment.PaymentId.ToString(), $"Employee recorded cash payment: {payment.Amount:C}");
-                return true;
+                var dto = _mapper.Map<PaymentDto>(payment);
+                dto.PaymentMethodId = paymentMethod.Id;
+                return new MakePaymentResultDto
+                {
+                    Payment = dto,
+                    RequiresRedirect = false
+                };
             }
+        }
+
+        public async Task<bool> MarkPaymentPaidAsync(int paymentId, string? paymentIntentId, string? sessionId)
+        {
+            var payment = await _paymentRepository.GetByIdAsync(paymentId);
+            if (payment == null)
+            {
+                _logger.LogWarning("Stripe webhook received for missing payment {PaymentId}", paymentId);
+                return false;
+            }
+
+            payment.Status = "done";
+            payment.PaymentProvider = "Stripe";
+            if (!string.IsNullOrWhiteSpace(paymentIntentId))
+            {
+                payment.PaymentProviderPaymentIntentId = paymentIntentId;
+            }
+
+            if (!string.IsNullOrWhiteSpace(sessionId))
+            {
+                payment.PaymentProviderSessionId = sessionId;
+            }
+
+            await _paymentRepository.UpdateAsync(payment);
+            return true;
         }
 
         public async Task<List<PaymentDto>> GetPaymentsByBookingIdAsync(int bookingId)
@@ -446,6 +510,36 @@ namespace RentACar.Application.Managers
                     await _bookingRepository.UpdateAsync(booking);
                 }
             }
+        }
+
+        private async Task<StripeCheckoutSessionDto> CreateStripeCheckoutSessionAsync(Payment payment)
+        {
+            var httpContext = _httpContextAccessor.HttpContext;
+            if (httpContext == null)
+            {
+                throw new InvalidOperationException("HTTP context is required to build Stripe return URLs.");
+            }
+
+            var domain = $"{httpContext.Request.Scheme}://{httpContext.Request.Host}";
+            var metadata = new Dictionary<string, string>
+            {
+                ["paymentId"] = payment.PaymentId.ToString(),
+                ["bookingId"] = payment.BookingId.ToString()
+            };
+
+            var request = new StripeCheckoutSessionRequestDto
+            {
+                PaymentId = payment.PaymentId,
+                BookingId = payment.BookingId,
+                Amount = payment.Amount,
+                Currency = "usd",
+                SuccessUrl = $"{domain}/Stripe/Success?session_id={{CHECKOUT_SESSION_ID}}",
+                CancelUrl = $"{domain}/Stripe/Cancel?paymentId={payment.PaymentId}",
+                Description = $"Booking #{payment.BookingId}",
+                Metadata = metadata
+            };
+
+            return await _stripePaymentService.CreateCheckoutSessionAsync(request);
         }
 
       
