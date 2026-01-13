@@ -33,6 +33,21 @@ public partial class Payment
     [Unicode(false)]
     public string? Status { get; set; }
 
+    [Column("paymentProvider")]
+    [StringLength(30)]
+    [Unicode(false)]
+    public string? PaymentProvider { get; set; }
+
+    [Column("paymentProviderSessionId")]
+    [StringLength(100)]
+    [Unicode(false)]
+    public string? PaymentProviderSessionId { get; set; }
+
+    [Column("paymentProviderPaymentIntentId")]
+    [StringLength(100)]
+    [Unicode(false)]
+    public string? PaymentProviderPaymentIntentId { get; set; }
+
     [ForeignKey("BookingId")]
     public virtual Booking Booking { get; set; } = null!;
 

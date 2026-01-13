@@ -20,6 +20,12 @@ namespace RentACar.Application.DTOs
 
         public string? Status { get; set; }
 
+        public string? PaymentProvider { get; set; }
+
+        public string? PaymentProviderSessionId { get; set; }
+
+        public string? PaymentProviderPaymentIntentId { get; set; }
+
         public string? CustomerName { get; set; }
 
         public string? CustomerUsername { get; set; }

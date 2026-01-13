@@ -25,6 +25,15 @@ namespace RentACar.Application.DTOs
 
         [StringLength(50)]
         public string? Status { get; set; }
+
+        [StringLength(30)]
+        public string? PaymentProvider { get; set; }
+
+        [StringLength(100)]
+        public string? PaymentProviderSessionId { get; set; }
+
+        [StringLength(100)]
+        public string? PaymentProviderPaymentIntentId { get; set; }
     }
 
     public class MakePaymentRequestDto

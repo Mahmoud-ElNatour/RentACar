@@ -133,6 +133,13 @@ namespace RentACar.Application.Managers
             return _mapper.Map<CustomerDTO>(customer);
         }
 
+        public async Task<CustomerDTO?> GetCustomerByAspNetUserId(string aspNetUserId)
+        {
+            _logger.LogInformation("Fetching customer by aspNetUserId {UserId}", aspNetUserId);
+            var customer = await _customerRepository.GetByIdAsync(aspNetUserId);
+            return _mapper.Map<CustomerDTO>(customer);
+        }
+
         public async Task<List<CustomerDTO>> GetAllCustomers()
         {
             var customers = await _customerRepository.GetAllAsync();
