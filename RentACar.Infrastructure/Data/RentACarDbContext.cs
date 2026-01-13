@@ -126,9 +126,10 @@ public partial class RentACarDbContext : DbContext
         modelBuilder.Entity<Payment>(entity =>
         {
             entity.HasOne(d => d.Booking)
-                .WithOne() // No navigation in Booking
+                .WithOne(b => b.Payment)
                 .HasForeignKey<Payment>(p => p.BookingId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("FK_Payments_Bookings");
         });
 

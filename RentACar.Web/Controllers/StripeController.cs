@@ -95,14 +95,19 @@ namespace RentACar.Web.Controllers
         [AllowAnonymous]
         public IActionResult Success()
         {
-            return RedirectToAction("Index", "Home");
+            return View("~/Views/Stripe/Success.cshtml");
         }
 
         [HttpGet("Cancel")]
         [AllowAnonymous]
-        public IActionResult Cancel()
+        public async Task<IActionResult> Cancel(int? paymentId = null)
         {
-            return RedirectToAction("Index", "Home");
+            if (paymentId.HasValue)
+            {
+                await _paymentManager.MarkPaymentCancelledAsync(paymentId.Value);
+            }
+
+            return View("~/Views/Stripe/Cancel.cshtml");
         }
     }
 }

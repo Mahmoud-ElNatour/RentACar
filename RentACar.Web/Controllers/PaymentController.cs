@@ -136,11 +136,11 @@ namespace RentACar.Web.Controllers
             var activePromos = allPromos.Where(p => p.IsActive).ToList();
 
             ViewBag.PaymentId = id;
-            var model = new PromocodeDto(); // Using PromocodeDto as model for key selection, or just ViewBag
-            // Better to pass a ViewModel, but for speed I'll use ViewBag for the list and an empty DTO or similar.
-            // Actually, the partial probably expects a specific model?
-            // User said: "_applypromocode, contains form which have dropdown list contains all the names of the active promocodes ... and submit button"
-            
+            var model = new PromocodeDto(); // Using PromocodeDto as model for key selection, or just Vie
+                                            // Better to pass a ViewModel, but for speed I'll use ViewBag for the list and an empty DTO or similar.
+                                            // Actually, the partial probably expects a specific model?
+                                            // User said: "_applypromocode, contains form which have dropdown list contains all the names of the active promocodes ... and submit button"
+
             ViewBag.ActivePromocodes = activePromos;
             return PartialView("~/Views/ControlPanel/Payment/_ApplyPromocode.cshtml");
         }
@@ -148,41 +148,16 @@ namespace RentACar.Web.Controllers
         [HttpPost("ApplyPromocode/{id}")]
         public async Task<IActionResult> ApplyPromocode(int id, [FromForm] int promocodeId)
         {
-            // Logic to apply promocode. 
-            // Since there is no existing method in PaymentManager exposed here, I will implement a basic logic or placeholder.
-            // Requirement says: "add apply promocode in action".
-            // Implementation Plan: "Placeholder for apply promo code logic." 
-            // But verify: "if you have specific backend logic ... please validte". 
-            // I'll try to do something meaningful if possible, otherwise just success.
-            // Payment usually has a BookingId. Promo applies to Booking?
-            // Payment table has 'Promo Code' column.
-            
-            // I'll assume for now we just want the UI flow.
-             try
+
+
+            try
             {
-                 // Fetch payment to verify existence
+
+                // Fetch payment to verify existencece
                 var payment = await _paymentManager.GetPaymentDetailsByIdAsync(id);
                 if (payment == null) return NotFound();
 
                 var promo = await _promocodeManager.GetPromocodeByIdAsync(promocodeId);
-                if (promo == null) return BadRequest("Invalid Promocode");
-
-                // Here we would typically update the Booking or Payment with the Promo.
-                // Since I don't have a direct 'ApplyPromoToPayment' method in the Manager shown,
-                // and modifying Manager/Repo is out of scope unless necessary,
-                // I will assume this step is enough for the UI task or I'd need to add logic to Manager.
-                // BUT, to make the 'save' real, I should probably update the payment if it holds the promo ref.
-                // Checking PaymentDto:
-                // `public string? PromocodeName { get; set; }`
-                // `public decimal? PromocodeDiscountPercentage { get; set; }`
-                // These are likely derived from Booking or stored on Payment.
-                
-                // For now, I'll return Ok to simulate success so the UI updates.
-                // If the user wants real logic, they'd likely provide the manager method.
-                // I will add a TODO comment.
-                
-                // _logger.LogInformation("Applying promo {PromoId} to payment {PaymentId}", promocodeId, id);
-                
                 return Ok(new { message = "Promocode applied successfully (Simulation)" });
             }
             catch (Exception ex)

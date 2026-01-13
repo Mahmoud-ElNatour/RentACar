@@ -38,9 +38,6 @@ public partial class Booking
     [StringLength(50)]
     public string? BookingStatus { get; set; }
 
-    [Column("paymentID")]
-    public int? PaymentId { get; set; } // keep the column for reference (nullable)
-
     [Column("subtotal", TypeName = "decimal(18, 2)")]
     public decimal? Subtotal { get; set; }
 
@@ -60,5 +57,5 @@ public partial class Booking
     [InverseProperty("Bookings")]
     public virtual Promocode? Promocode { get; set; }
 
-    // ❌ Removed Payment navigation to prevent circular FK
+    public virtual Payment? Payment { get; set; }
 }

@@ -31,11 +31,7 @@ namespace RentACar.Application.DTOs
         public decimal TotalPrice { get; set; }
 
         [StringLength(50)]
-        public string BookingStatus { get; set; } = "pending";
-
-        [Required]
-        public int? PaymentId { get; set; }
-
+        public string BookingStatus { get; set; } = "Pending";
 
         [Range(0.01, double.MaxValue, ErrorMessage = "Subtotal must be greater than 0.")]
         public decimal? Subtotal { get; set; }
@@ -77,6 +73,13 @@ namespace RentACar.Application.DTOs
         public DateOnly Startdate { get; set; }
         public DateOnly Enddate { get; set; }
         public decimal TotalPrice { get; set; } // still validated
-        public string BookingStatus { get; set; } = "pending";
+        public string BookingStatus { get; set; } = "Pending";
+    }
+
+    public class BookingCreationResultDto
+    {
+        public BookingDto Booking { get; set; } = new();
+        public string? RedirectUrl { get; set; }
+        public int? PaymentId { get; set; }
     }
 }

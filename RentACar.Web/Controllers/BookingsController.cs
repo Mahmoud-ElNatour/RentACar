@@ -5,6 +5,7 @@ using RentACar.Application.DTOs;
 using RentACar.Application.Managers;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
+using System.Linq;
 
 namespace RentACar.Web.Controllers
 {
@@ -59,17 +60,43 @@ namespace RentACar.Web.Controllers
             foreach (var b in bookings)
             {
                 var car = await _carManager.GetCarByIdAsync(b.CarId);
+                var payments = await _paymentManager.GetPaymentsByBookingIdAsync(b.BookingId);
+                var latestPayment = payments
+                    .OrderByDescending(p => p.PaymentDate)
+                    .ThenByDescending(p => p.PaymentId)
+                    .FirstOrDefault();
                 result.Add(new
                 {
                     bookingId = b.BookingId,
                     carName = car?.ModelName,
                     plateNumber = car?.PlateNumber,
-                    paymentId = b.PaymentId,
+                    paymentId = latestPayment?.PaymentId,
+                    paymentStatus = latestPayment?.Status,
                     startdate = b.Startdate.ToString("yyyy-MM-dd"),
                     enddate = b.Enddate.ToString("yyyy-MM-dd"),
                     totalPrice = b.TotalPrice
                 });
             }
+            return Ok(result);
+        }
+
+        [HttpPost("Pay")]
+        public async Task<IActionResult> Pay([FromBody] MakePaymentRequestDto request)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var customerId = await GetCurrentCustomerId();
+            if (customerId == null) return Unauthorized();
+
+            var result = await _paymentManager.MakePaymentByCustomerAsync(request, customerId.Value);
+            if (result == null)
+            {
+                return BadRequest("Unable to process payment.");
+            }
+
             return Ok(result);
         }
 
@@ -84,8 +111,11 @@ namespace RentACar.Web.Controllers
 
             var car = await _carManager.GetCarByIdAsync(booking.CarId);
             PaymentDto? payment = null;
-            if (booking.PaymentId.HasValue)
-                payment = await _paymentManager.GetPaymentByIdAsync(booking.PaymentId.Value);
+            var payments = await _paymentManager.GetPaymentsByBookingIdAsync(booking.BookingId);
+            payment = payments
+                .OrderByDescending(p => p.PaymentDate)
+                .ThenByDescending(p => p.PaymentId)
+                .FirstOrDefault();
 
             var bytes = GenerateTicketPdf(booking, car, payment);
             return File(bytes, "application/pdf", $"booking_{id}.pdf");

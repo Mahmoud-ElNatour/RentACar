@@ -117,10 +117,15 @@
                     body: JSON.stringify(data)
                 });
 
-                const redirectUrl = '@(isCustomer ? "/Bookings/MyBookings" : "/Booking")';
                 if (resp.ok) {
+                    const result = await resp.json();
+                    if (result.redirectUrl) {
+                        window.location.href = result.redirectUrl;
+                        return;
+                    }
                     showPopup('Booking created successfully.', 'success');
-                    setTimeout(() => { window.location.href = redirectUrl; }, 1000);
+                    const fallbackUrl = '@(isCustomer ? "/Bookings/MyBookings" : "/Booking")';
+                    setTimeout(() => { window.location.href = fallbackUrl; }, 1000);
                 } else {
                     const errorText = await resp.text();
                     showPopup(`Error creating booking:\n${errorText}`, 'error');
