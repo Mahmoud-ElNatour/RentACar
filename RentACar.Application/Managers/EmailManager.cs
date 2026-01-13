@@ -70,7 +70,8 @@ namespace RentACar.Application.Managers
                 <p>Hello {name},</p>
                 <p>We noticed you haven't verified your account properly (e.g., missing ID or documentation).</p>
                 <p>Please log in to your dashboard and complete your profile to start booking cars.</p>
-                <a href='http://rentacarmohammadmahmoud.shop/Dashboard/Customer' class='btn'>Go to Dashboard</a>
+                <p>Please log in to your dashboard and complete your profile to start booking cars.</p>
+                <a href='http://rentacarmohammadmahmoud.shop/Dashboard/Customer' class='btn' style='display: inline-block; padding: 12px 24px; background-color: #d4af37; color: #000000; text-decoration: none; border-radius: 4px; font-weight: bold; margin-top: 20px;'>Go to Dashboard</a>
                 <br><br>
                 <p>Best Regards,<br>RentACar Team</p>";
 
@@ -79,7 +80,7 @@ namespace RentACar.Application.Managers
             await _emailService.SendEmailAsync(email, subject, message);
         }
 
-        public async Task<bool> SendOtpEmailAsync(string email, string otp, string name)
+    public async Task<bool> SendOtpEmailAsync(string email, string otp, string name)
         {
             var bodyContent = $@"
                 <h2>Security Verification</h2>
@@ -104,6 +105,32 @@ namespace RentACar.Application.Managers
             {
                 // Log exception
                 Console.WriteLine($"Error sending OTP: {ex.Message}");
+                return false;
+            }
+        }
+
+        public async Task<bool> SendForgotPasswordEmailAsync(string email, string callbackUrl, string name = "User")
+        {
+            var bodyContent = $@"
+                <h2>Reset Your Password</h2>
+                <p>Hello {name},</p>
+                <p>We received a request to reset your password.</p>
+                <p>Please click the button below to reset your password:</p>
+                <p>Please click the button below to reset your password:</p>
+                <a href='{callbackUrl}' class='btn' style='display: inline-block; padding: 12px 24px; background-color: #d4af37; color: #000000; text-decoration: none; border-radius: 4px; font-weight: bold; margin-top: 20px;'>Reset Password</a>
+                <br><br>
+                <p>If you did not request a password reset, you can safely ignore this email.</p>";
+
+            var message = EmailTemplates.GetStandardTemplate(bodyContent, "Reset Password");
+
+            try
+            {
+                await _emailService.SendEmailAsync(email, "Reset Password", message);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error sending Forgot Password email: {ex.Message}");
                 return false;
             }
         }

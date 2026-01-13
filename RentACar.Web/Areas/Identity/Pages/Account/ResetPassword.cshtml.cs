@@ -66,12 +66,18 @@ namespace RentACar.Web.Areas.Identity.Pages.Account
             ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
             ///     directly from your code. This API may change or be removed in future releases.
             /// </summary>
+            /// <summary>
+            ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
+            ///     directly from your code. This API may change or be removed in future releases.
+            /// </summary>
             [Required]
             public string Code { get; set; }
 
         }
 
-        public IActionResult OnGet(string code = null)
+        public bool IsTokenValid { get; set; } = false;
+
+        public async Task<IActionResult> OnGet(string code = null, string email = null)
         {
             if (code == null)
             {
@@ -81,8 +87,26 @@ namespace RentACar.Web.Areas.Identity.Pages.Account
             {
                 Input = new InputModel
                 {
-                    Code = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(code))
+                    Code = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(code)),
+                    Email = email
                 };
+
+                // New Logic: Validate Token immediately
+                if (!string.IsNullOrEmpty(email))
+                {
+                    var user = await _userManager.FindByEmailAsync(email);
+                    if (user != null)
+                    {
+                        var isValid = await _userManager.VerifyUserTokenAsync(
+                            user, 
+                            _userManager.Options.Tokens.PasswordResetTokenProvider, 
+                            "ResetPassword", 
+                            Input.Code);
+                        
+                        IsTokenValid = isValid;
+                    }
+                }
+
                 return Page();
             }
         }

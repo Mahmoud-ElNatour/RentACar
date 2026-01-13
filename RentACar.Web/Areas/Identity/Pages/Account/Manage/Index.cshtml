@@ -299,16 +299,20 @@
                                 new { Id = "recovery-codes", Icon = "key", Label = "Recovery" }
                             };
 
-                            if (User.IsInRole("Customer"))
+                            bool isCustomer = User.IsInRole("Customer");
+                            if (isCustomer)
                             {
                                 baseNavItems.Add(new { Id = "payment-methods", Icon = "credit_card", Label = "Saved Cards" });
                                 baseNavItems.Add(new { Id = "identity-verification", Icon = "verified_user", Label = "Verification" });
                             }
                         }
 
-                        @foreach (var item in baseNavItems)
+                        @for (int i = 0; i < baseNavItems.Count; i++)
                         {
-                             <a href="#@item.Id" class="nav-item group flex items-center justify-center gap-2 px-4 py-4 lg:py-4 lg:my-0 text-sm font-medium text-white/50 hover:text-white transition-all whitespace-nowrap select-none w-auto lg:w-full border-b-2 border-transparent hover:bg-white/5 lg:rounded-none flex-shrink-0">
+                            var item = baseNavItems[i];
+                            var gridClass = (!isCustomer && i == 0) ? "lg:col-start-2" : "";
+                            
+                             <a href="#@item.Id" class="nav-item @gridClass group flex items-center justify-center gap-2 px-4 py-4 lg:py-4 lg:my-0 text-sm font-medium text-white/50 hover:text-white transition-all whitespace-nowrap select-none w-auto lg:w-full border-b-2 border-transparent hover:bg-white/5 lg:rounded-none flex-shrink-0">
                                 <span class="material-symbols-outlined text-[20px] group-hover:scale-110 transition-transform">@item.Icon</span>
                                 <span class="hidden xl:inline">@item.Label</span>
                                 <span class="xl:hidden">@item.Label</span>

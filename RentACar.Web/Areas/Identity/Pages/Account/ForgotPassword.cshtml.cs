@@ -13,18 +13,19 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
+using RentACar.Application.Managers;
 
 namespace RentACar.Web.Areas.Identity.Pages.Account
 {
     public class ForgotPasswordModel : PageModel
     {
         private readonly UserManager<IdentityUser> _userManager;
-        private readonly IEmailSender _emailSender;
+        private readonly EmailManager _emailManager;
 
-        public ForgotPasswordModel(UserManager<IdentityUser> userManager, IEmailSender emailSender)
+        public ForgotPasswordModel(UserManager<IdentityUser> userManager, EmailManager emailManager)
         {
             _userManager = userManager;
-            _emailSender = emailSender;
+            _emailManager = emailManager;
         }
 
         /// <summary>
@@ -56,8 +57,9 @@ namespace RentACar.Web.Areas.Identity.Pages.Account
                 var user = await _userManager.FindByEmailAsync(Input.Email);
                 if (user == null || !(await _userManager.IsEmailConfirmedAsync(user)))
                 {
-                    // Don't reveal that the user does not exist or is not confirmed
-                    return RedirectToPage("./ForgotPasswordConfirmation");
+                    // Requested change: Explicitly show error if user not found
+                    ModelState.AddModelError(string.Empty, "We could not find an account with that email address, or the email is not confirmed.");
+                    return Page();
                 }
 
                 // For more information on how to enable account confirmation and password reset please
@@ -67,13 +69,13 @@ namespace RentACar.Web.Areas.Identity.Pages.Account
                 var callbackUrl = Url.Page(
                     "/Account/ResetPassword",
                     pageHandler: null,
-                    values: new { area = "Identity", code },
+                    values: new { area = "Identity", code, email = Input.Email },
                     protocol: Request.Scheme);
 
-                await _emailSender.SendEmailAsync(
+                await _emailManager.SendForgotPasswordEmailAsync(
                     Input.Email,
-                    "Reset Password",
-                    $"Please reset your password by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+                    HtmlEncoder.Default.Encode(callbackUrl),
+                    user.UserName);
 
                 return RedirectToPage("./ForgotPasswordConfirmation");
             }
