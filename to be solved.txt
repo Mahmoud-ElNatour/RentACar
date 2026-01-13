@@ -1,8 +1,10 @@
-changing design all pages in control panel
+changing design all pages in control panel --> done(promocode, categories, )
+
+Done -stripe payments
 
 email:
 	- email services (send notifications, reset password, confirm email, send offers,...)
-	- 2fa
+Done	- 2fa (otp, google uthenticator, recovey codes)
 Done	- reset pass from settings (pin email --> send otp email --> reset pass)
 Done	- Forgot pass(check if email reg --> send email to reset)
 Done	- create acc --> verify email
@@ -14,13 +16,16 @@ Done	- create acc --> verify email
 	- blocklist/unverify notify the customer + admin with reason
 
 
+promocode:
+- add attr maxNbUsedByACustomer, isForNewCustomers 
 
-Payments:
-- redesign the page and popups
+Payments :
 - fix apply promocode (design + backend)
+- stripe payment should contain for each payment the card owner name and last 4 digits
+
 - when pressing logout, it should took the user to page logout to press are yu sure...
 
-Later on:
+Also:
 -request panel for canceling the booking from employee nso the admin can approve or deny + - refunded panel -- if stripe shta8alet
 
 - theme panel

@@ -79,6 +79,16 @@ namespace RentACar.Web.Areas.Identity.Pages.Account.Manage
         [Compare("NewPassword", ErrorMessage = "The new password and confirmation password do not match.")]
         public string ConfirmNewPassword { get; set; }
 
+        // --- MFA State ---
+        public bool IsMfaUnlocked { get; set; }
+        public bool HasAuthenticator { get; set; }
+        public bool Is2faEnabled { get; set; }
+        public bool IsEmail2faEnabled { get; set; }
+        public int RecoveryCodesLeft { get; set; }
+
+        [BindProperty]
+        public string MfaOtp { get; set; }
+
         public class InputModel
         {
             [Required]
@@ -179,6 +189,16 @@ namespace RentACar.Web.Areas.Identity.Pages.Account.Manage
                 Email = email,
                 PhoneNumber = phoneNumber
             };
+
+            // --- Load MFA Status ---
+            HasAuthenticator = await _userManager.GetAuthenticatorKeyAsync(user) != null;
+            Is2faEnabled = await _userManager.GetTwoFactorEnabledAsync(user);
+            IsEmail2faEnabled = Is2faEnabled && !HasAuthenticator; // Simple logic: if 2FA is on but no auth app, it must be email (or we default to it)
+            RecoveryCodesLeft = await _userManager.CountRecoveryCodesAsync(user);
+
+            // Check if we just unlocked MFA in this session
+            if (TempData["IsMfaUnlocked"] as bool? == true) IsMfaUnlocked = true;
+            if (IsMfaUnlocked) TempData.Keep("IsMfaUnlocked");
         }
 
         private string ToBase64(byte[] bytes)
@@ -198,6 +218,7 @@ namespace RentACar.Web.Areas.Identity.Pages.Account.Manage
             if (IsOtpSent) TempData.Keep("IsOtpSent");
             if (IsOtpVerified) TempData.Keep("IsOtpVerified");
             if (TempData["VerifiedOTP"] != null) TempData.Keep("VerifiedOTP");
+            if (TempData["RecoveryCodes"] != null) TempData.Keep("RecoveryCodes");
 
             await LoadAsync(user);
             return Page();
@@ -447,6 +468,120 @@ namespace RentACar.Web.Areas.Identity.Pages.Account.Manage
             using var ms = new System.IO.MemoryStream();
             await file.CopyToAsync(ms);
             return ms.ToArray();
+        }
+
+        // --- MFA Handlers ---
+
+        public async Task<IActionResult> OnPostSendMfaOtpAsync()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return NotFound();
+
+            var otp = new Random().Next(100000, 999999).ToString();
+            var cacheKey = $"MFA_OTP_{user.Id}";
+
+            _memoryCache.Set(cacheKey, otp, TimeSpan.FromMinutes(5));
+            await _emailManager.SendOtpEmailAsync(user.Email, otp, user.UserName);
+
+            StatusMessage = "Verification code sent to email.";
+            TempData["IsMfaOtpSent"] = true; // Flag to show OTP input
+            return RedirectToPage(); // Helper logic in frontend will open this tab
+        }
+
+        public async Task<IActionResult> OnPostVerifyMfaOtpAsync()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return NotFound();
+
+            var cacheKey = $"MFA_OTP_{user.Id}";
+            if (!_memoryCache.TryGetValue(cacheKey, out string storedOtp) || storedOtp != MfaOtp)
+            {
+                StatusMessage = "Error: Invalid or expired code.";
+                TempData["IsMfaOtpSent"] = true;
+                return RedirectToPage();
+            }
+
+            // Success -> Unlock MFA settings
+            StatusMessage = "Identity Verified. You can now manage 2FA.";
+            TempData["IsMfaUnlocked"] = true;
+            _memoryCache.Remove(cacheKey);
+            return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostDisable2faAsync()
+        {
+            // Requires MFA Unlock
+            if (TempData["IsMfaUnlocked"] as bool? != true) return RedirectToPage();
+            TempData.Keep("IsMfaUnlocked");
+
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return NotFound();
+
+            var result = await _userManager.SetTwoFactorEnabledAsync(user, false);
+            if (!result.Succeeded)
+            {
+                StatusMessage = "Error: Failed to disable 2FA.";
+                return RedirectToPage();
+            }
+
+            // Also reset authenticator key to be clean? No, kept in case they re-enable.
+            StatusMessage = "Two-factor authentication has been disabled.";
+            return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostEnableEmail2faAsync()
+        {
+            // Requires MFA Unlock
+            if (TempData["IsMfaUnlocked"] as bool? != true) return RedirectToPage();
+            TempData.Keep("IsMfaUnlocked");
+
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return NotFound();
+
+            // Enabling "Email 2FA" just means enabling 2FA contentiously.
+            // Since we have DefaultTokenProviders, Email is utilized as a fallback or primary if no Authenticator.
+            // The goal is: SetTwoFactorEnabledAsync(user, true).
+            
+            var result = await _userManager.SetTwoFactorEnabledAsync(user, true);
+             if (!result.Succeeded)
+            {
+                StatusMessage = "Error: Failed to enable 2FA.";
+                return RedirectToPage();
+            }
+
+            StatusMessage = "Email Two-Factor Authentication enabled.";
+            return RedirectToPage();
+        }
+        public async Task<IActionResult> OnPostGenerateRecoveryCodesAsync()
+        {
+            // Requires MFA Unlock or just be verified?
+            // Since this grants permanent access, it should require strict 2FA check or "IsMfaUnlocked" state.
+            if (TempData["IsMfaUnlocked"] as bool? != true) return RedirectToPage();
+            TempData.Keep("IsMfaUnlocked");
+
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return NotFound();
+
+            var isTwoFactorEnabled = await _userManager.GetTwoFactorEnabledAsync(user);
+            if (!isTwoFactorEnabled)
+            {
+                StatusMessage = "Error: You must enable 2FA before generating recovery codes.";
+                return RedirectToPage();
+            }
+
+            var recoveryCodes = await _userManager.GenerateNewTwoFactorRecoveryCodesAsync(user, 10);
+            
+            // We want to show these codes to the user.
+            // We can flash them to TempData or Redirect to a "ShowRecoveryCodes" page.
+            // Given the user wants it in the settings, we should probably set a property or TempData to render them in the view.
+            TempData["RecoveryCodes"] = recoveryCodes.ToArray();
+            
+            // Send codes via email as requested
+            await _emailManager.SendRecoveryCodesEmailAsync(user.Email, recoveryCodes, user.UserName);
+            
+            StatusMessage = "New recovery codes generated and sent to your email.";
+            
+            return RedirectToPage();
         }
     }
 }

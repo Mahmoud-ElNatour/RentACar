@@ -55,7 +55,9 @@
 
             // Decide initial state
             let initialTab = 'personal-details';
-            @if (Model.IsOtpSent || Model.IsOtpVerified) {
+            @if (TempData["IsMfaUnlocked"] as bool? == true || TempData["IsMfaOtpSent"] as bool? == true) {
+                <text>initialTab = 'mfa';</text>
+            } else if (Model.IsOtpSent || Model.IsOtpVerified) {
                 <text>initialTab = 'password-change';</text>
             } else {
                 @if (ViewContext.HttpContext.Request.Method == "POST" && ViewContext.HttpContext.Request.Form.ContainsKey("NewCreditCard.CardNumber")) {
@@ -73,32 +75,37 @@
             showSection(initialTab);
             setActiveLink(initialTab);
 
-            // --- OTP Inputs Logic ---
-            const otpInputs = document.querySelectorAll('.otp-digit');
-            const hiddenOtpInput = document.getElementById('hiddenOtpInput');
+            // --- OTP Inputs Logic (Password & MFA) ---
+            function setupOtpInputs(inputClass, hiddenInputId) {
+                const otpInputs = document.querySelectorAll(inputClass);
+                const hiddenOtpInput = document.getElementById(hiddenInputId);
 
-            if (otpInputs.length > 0 && hiddenOtpInput) {
-                otpInputs.forEach((input, index) => {
-                    input.addEventListener('input', () => {
-                        if (input.value.length === 1 && index < otpInputs.length - 1) {
-                            otpInputs[index + 1].focus();
-                        }
-                        updateHiddenOtp();
+                if (otpInputs.length > 0 && hiddenOtpInput) {
+                    otpInputs.forEach((input, index) => {
+                        input.addEventListener('input', () => {
+                            if (input.value.length === 1 && index < otpInputs.length - 1) {
+                                otpInputs[index + 1].focus();
+                            }
+                            updateHiddenOtp();
+                        });
+
+                        input.addEventListener('keydown', (e) => {
+                            if (e.key === 'Backspace' && input.value.length === 0 && index > 0) {
+                                otpInputs[index - 1].focus();
+                            }
+                        });
                     });
 
-                    input.addEventListener('keydown', (e) => {
-                        if (e.key === 'Backspace' && input.value.length === 0 && index > 0) {
-                            otpInputs[index - 1].focus();
-                        }
-                    });
-                });
-
-                function updateHiddenOtp() {
-                    let code = '';
-                    otpInputs.forEach(input => code += input.value);
-                    hiddenOtpInput.value = code;
+                    function updateHiddenOtp() {
+                        let code = '';
+                        otpInputs.forEach(input => code += input.value);
+                        hiddenOtpInput.value = code;
+                    }
                 }
             }
+
+            setupOtpInputs('.otp-digit', 'hiddenOtpInput');
+            setupOtpInputs('.mfa-otp-digit', 'hiddenMfaOtpInput');
 
             // --- Add Card Modal ---
             const btnAddCard = document.getElementById('btnAddCard');
@@ -506,20 +513,143 @@
                         <span class="material-symbols-outlined text-[150px]">phonelink_lock</span>
                     </div>
 
-                    <div class="flex items-center justify-between mb-4 relative z-10">
+                    <div class="flex items-center justify-between mb-8 relative z-10">
                         <div>
                             <h3 class="text-xl font-bold uppercase tracking-wide flex items-center gap-2"><span class="text-white">Two-Factor</span> <span class="text-[#d4af35]">Authentication</span></h3>
-                            <p class="text-white/40 text-sm">Secure your account with 2FA.</p>
+                            <p class="text-white/40 text-sm">Secure your account with Email or Authenticator App.</p>
                         </div>
-                        <span class="bg-[#d4af35]/10 text-[#d4af35] text-[10px] font-bold px-3 py-1.5 rounded-full border border-[#d4af35]/20 uppercase tracking-wide">Coming Soon</span>
+                        
+                        @if (Model.Is2faEnabled)
+                        {
+                            <div class="flex items-center gap-1.5 px-3 py-1 bg-green-500/10 text-green-500 rounded-full border border-green-500/20">
+                                <span class="material-symbols-outlined text-lg">shield</span>
+                                <span class="text-xs font-bold uppercase">Enabled</span>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="flex items-center gap-1.5 px-3 py-1 bg-red-500/10 text-red-500 rounded-full border border-red-500/20">
+                                <span class="material-symbols-outlined text-lg">no_encryption</span>
+                                <span class="text-xs font-bold uppercase">Disabled</span>
+                            </div>
+                        }
                     </div>
+
+                    @if (!Model.IsMfaUnlocked)
+                    {
+                        @if (TempData["IsMfaOtpSent"] as bool? == true)
+                        {
+                            <!-- OTP Verification Step -->
+                            <div class="bg-black/20 rounded-xl p-6 border border-white/5 relative z-10 max-w-md mx-auto text-center">
+                                <h4 class="text-white font-bold text-lg mb-2">Verify it's you</h4>
+                                <p class="text-sm text-white/50 mb-6">Enter the code sent to your email to manage 2FA settings.</p>
+
+                                <form method="post" asp-page-handler="VerifyMfaOtp">
+                                    <input type="hidden" asp-for="MfaOtp" id="hiddenMfaOtpInput" />
+                                    <div class="flex justify-center gap-2 mb-6">
+                                        @for (int i = 0; i < 6; i++)
+                                        {
+                                            <input type="text" maxlength="1" class="mfa-otp-digit size-12 bg-[#18181b] border-none rounded-lg text-center text-2xl font-bold text-white focus:ring-2 focus:ring-[#d4af35] transition-all caret-[#d4af35]" autocomplete="off" />
+                                        }
+                                    </div>
+                                    <button type="submit" class="w-full bg-[#d4af35] hover:bg-[#b5952f] text-black font-bold py-3 rounded-xl transition-all shadow-lg">Verify Code</button>
+                                </form>
+                            </div>
+                        }
+                        else
+                        {
+                            <!-- Locked State -->
+                            <div class="bg-black/20 rounded-xl p-8 border border-white/5 relative z-10 text-center">
+                                <span class="material-symbols-outlined text-white/20 text-5xl mb-4">lock</span>
+                                <h4 class="text-white font-bold text-lg mb-2">Settings Locked</h4>
+                                <p class="text-white/40 text-sm max-w-sm mx-auto mb-6">To prevent unauthorized changes, you need to verify your identity before enabling or disabling 2FA.</p>
+                                
+                                <form method="post" asp-page-handler="SendMfaOtp">
+                                    <button type="submit" class="inline-flex items-center gap-2 bg-white/5 hover:bg-white/10 text-white border border-white/10 font-bold py-3 px-6 rounded-xl transition-all">
+                                        <span class="material-symbols-outlined">key</span>
+                                        Verify Identity
+                                    </button>
+                                </form>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <!-- Unlocked Management UI -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
+                            
+                            <!-- Email 2FA Option -->
+                            <div class="bg-[#18181b] rounded-xl p-5 border border-white/5 hover:border-[#d4af35]/30 transition-all flex flex-col justify-between h-full">
+                                <div>
+                                    <div class="flex items-center gap-3 mb-3">
+                                        <div class="bg-[#d4af35]/10 p-2 rounded-lg text-[#d4af35]">
+                                            <span class="material-symbols-outlined text-2xl">mail</span>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-white font-bold text-base">Email OTP</h4>
+                                            <p class="text-xs text-white/40">Receive login codes via email.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-4 pt-4 border-t border-white/5">
+                                    @if (Model.Is2faEnabled && !Model.HasAuthenticator)
+                                    {
+                                        <form method="post" asp-page-handler="Disable2fa">
+                                            <button type="submit" class="w-full bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 py-2.5 rounded-lg text-sm font-bold transition-all">Turn Off</button>
+                                        </form>
+                                    }
+                                    else if (!Model.Is2faEnabled)
+                                    {
+                                         <form method="post" asp-page-handler="EnableEmail2fa">
+                                            <button type="submit" class="w-full bg-white/5 hover:bg-white/10 text-white border border-white/10 py-2.5 rounded-lg text-sm font-bold transition-all">Enable Email 2FA</button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <div class="text-center text-xs text-white/30 py-2">Managed via Authenticator</div>
+                                    }
+                                </div>
+                            </div>
+
+                            <!-- Authenticator App Option -->
+                            <div class="bg-[#18181b] rounded-xl p-5 border border-white/5 hover:border-[#d4af35]/30 transition-all flex flex-col justify-between h-full">
+                                <div>
+                                    <div class="flex items-center gap-3 mb-3">
+                                        <div class="bg-[#d4af35]/10 p-2 rounded-lg text-[#d4af35]">
+                                            <span class="material-symbols-outlined text-2xl">smartphone</span>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-white font-bold text-base">Authenticator App</h4>
+                                            <p class="text-xs text-white/40">Use Google/Microsoft Authenticator.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-4 pt-4 border-t border-white/5">
+                                    @if (Model.HasAuthenticator)
+                                    {
+                                        <div class="grid grid-cols-2 gap-3">
+                                             <a asp-page="./EnableAuthenticator" class="text-center bg-white/5 hover:bg-white/10 text-white border border-white/10 py-2.5 rounded-lg text-sm font-bold transition-all">Setup / Reset</a>
+                                             
+                                             <form method="post" asp-page-handler="Disable2fa">
+                                                <button type="submit" class="w-full bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 py-2.5 rounded-lg text-sm font-bold transition-all">Disable 2FA</button>
+                                             </form>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <a asp-page="./EnableAuthenticator" class="block w-full text-center bg-[#d4af35] hover:bg-[#b5952f] text-black font-bold py-2.5 rounded-lg text-sm transition-all shadow-lg">Setup App</a>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
                 </section>
             </div>
 
             <!-- Recovery Codes -->
             <div class="settings-section" id="recovery-codes">
                 <section class="glass-card rounded-2xl p-6 md:p-8 relative overflow-hidden">
-                     <!-- Background Watermark -->
+                    <!-- Background Watermark -->
                     <div class="absolute -right-6 -bottom-6 text-white/5 pointer-events-none">
                         <span class="material-symbols-outlined text-[150px]">key</span>
                     </div>
@@ -529,8 +659,133 @@
                             <h3 class="text-xl font-bold uppercase tracking-wide"><span class="text-white">Backup</span> <span class="text-[#d4af35]">Codes</span></h3>
                             <p class="text-white/40 text-sm">Emergency access if you lose your device.</p>
                         </div>
-                        <span class="bg-[#d4af35]/10 text-[#d4af35] text-[10px] font-bold px-3 py-1.5 rounded-full border border-[#d4af35]/20 uppercase tracking-wide">Coming Soon</span>
                     </div>
+                    
+                    @if (Model.IsMfaUnlocked)
+                    {
+                         var newCodes = TempData["RecoveryCodes"] as string[];
+                         if (newCodes != null && newCodes.Length > 0)
+                         {
+                             <div class="bg-[#18181b] border border-[#d4af35]/30 p-6 rounded-xl mb-6 relative z-10 shadow-lg">
+                                 <div class="flex items-center justify-between mb-4">
+                                     <div class="flex items-center gap-3">
+                                         <div class="bg-[#d4af35]/10 p-2 rounded-lg text-[#d4af35]">
+                                             <span class="material-symbols-outlined">key</span>
+                                         </div>
+                                         <div>
+                                             <h4 class="text-white font-bold text-lg">New Recovery Codes</h4>
+                                             <p class="text-white/40 text-xs">Save these codes securely. They won't be shown again.</p>
+                                         </div>
+                                     </div>
+                                     <button onclick="printCodes()" class="text-white/50 hover:text-white transition-colors flex items-center gap-2 text-sm bg-white/5 px-3 py-1.5 rounded-lg hover:bg-white/10">
+                                         <span class="material-symbols-outlined text-[16px]">print</span> Print
+                                     </button>
+                                 </div>
+                                 
+                                 <div id="new-recovery-codes-container" class="grid grid-cols-2 md:grid-cols-4 gap-3 font-mono text-base bg-black/40 p-6 rounded-xl border border-white/5 text-center">
+                                     @foreach (var code in newCodes)
+                                     {
+                                         <div class="bg-white/5 rounded-lg py-2 px-1 text-[#d4af35] tracking-wider select-all hover:bg-white/10 transition-colors code-item">@code</div>
+                                     }
+                                 </div>
+                                 
+                                 <div class="mt-4 flex items-center gap-2 text-xs text-yellow-500/70 bg-yellow-500/5 p-3 rounded-lg border border-yellow-500/10">
+                                     <span class="material-symbols-outlined text-[16px]">warning</span>
+                                     <span>Generating these codes invalidates all previous recovery codes.</span>
+                                 </div>
+                             </div>
+                             <script>
+                                function printCodes() {
+                                    // Remove existing print iframe if any
+                                    var existingFrame = document.getElementById('print-frame');
+                                    if (existingFrame) {
+                                        document.body.removeChild(existingFrame);
+                                    }
+
+                                    var iframe = document.createElement('iframe');
+                                    iframe.id = 'print-frame';
+                                    iframe.style.display = 'none';
+                                    document.body.appendChild(iframe);
+
+                                    const codes = document.querySelectorAll('#new-recovery-codes-container .code-item');
+                                    let codesHtml = '<div style="display:grid; grid-template-columns: 1fr 1fr; gap: 15px; font-family: monospace; font-size: 18px; color: #000;">';
+                                    codes.forEach(c => codesHtml += '<div style="padding: 15px; border: 1px solid #333; text-align: center; border-radius: 4px;">' + c.innerText + '</div>');
+                                    codesHtml += '</div>';
+
+                                    var doc = iframe.contentWindow.document;
+                                    doc.open();
+                                    doc.write('<html><head><title>RentACar - Recovery Codes</title>');
+                                    doc.write('<style>');
+                                    doc.write('body { font-family: "Segoe UI", sans-serif; padding: 40px; text-align: center; color: #000; }');
+                                    doc.write('h1 { margin-bottom: 10px; font-size: 24px; font-weight: bold; text-transform: uppercase; }');
+                                    doc.write('p { margin-bottom: 30px; font-size: 14px; color: #666; }');
+                                    doc.write('@@media print { @@page { margin: 1cm; } }');
+                                    doc.write('</style>');
+                                    doc.write('</head><body>');
+                                    doc.write('<h1>Recovery Codes</h1>');
+                                    doc.write('<p>Keep these codes in a safe place. You will not be able to view them again.</p>');
+                                    doc.write(codesHtml);
+                                    doc.write('<div style="margin-top: 30px; font-size: 12px; color: #999;">Generated on ' + new Date().toLocaleDateString() + '</div>');
+                                    doc.write('<\/body><\/html>');
+                                    doc.close();
+
+                                    // Wait for content to load then print
+                                    setTimeout(function() {
+                                        iframe.contentWindow.focus();
+                                        iframe.contentWindow.print();
+                                    }, 500);
+                                }
+                             </script>
+                         }
+                    
+                        <div class="relative z-10">
+                            <!-- Action Area -->
+                            <div class="bg-[#18181b] rounded-xl p-6 border border-white/5 hover:border-[#d4af35]/30 transition-all flex items-center justify-between group">
+                                <div>
+                                    <h4 class="text-white font-bold text-base mb-1 group-hover:text-[#d4af35] transition-colors">Generate New Codes</h4>
+                                    <p class="text-xs text-white/40 max-w-sm">
+                                        If you simply want to get a new set of codes or lost your old ones.
+                                    </p>
+                                </div>
+                                <form method="post" asp-page-handler="GenerateRecoveryCodes" onsubmit="return confirm('Generating new codes will invalidate your old ones. Continue?');">
+                                    <button type="submit" class="bg-white/5 hover:bg-[#d4af35] text-white hover:text-black border border-white/10 hover:border-[#d4af35] py-2.5 px-6 rounded-xl text-sm font-bold transition-all shadow-lg flex items-center gap-2 group-hover:shadow-[#d4af35]/20">
+                                        <span class="material-symbols-outlined">refresh</span>
+                                        Regenerate
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <!-- Locked State -->
+                         <div class="relative z-10 flex flex-col items-center justify-center py-8 text-center bg-black/20 rounded-xl border border-white/5 backdrop-blur-sm">
+                            <div class="bg-white/5 p-4 rounded-full mb-4">
+                                <span class="material-symbols-outlined text-4xl text-white/30">lock</span>
+                            </div>
+                            <h4 class="text-white font-bold text-lg mb-2">Recovery Settings Locked</h4>
+                            <p class="text-white/40 text-sm max-w-sm mb-6">
+                                For your security, you must verify your identity to view or generate recovery codes.
+                            </p>
+                            
+                            @if (TempData["IsMfaOtpSent"] as bool? == true)
+                            {
+                                <form method="post" asp-page-handler="VerifyMfaOtp" class="w-full max-w-xs">
+                                    <input type="text" asp-for="MfaOtp" placeholder="Enter Email Code" class="w-full bg-black/50 border border-white/10 rounded-lg px-4 py-3 text-center text-white placeholder-white/30 focus:border-[#d4af35] focus:ring-1 focus:ring-[#d4af35] transition-all mb-3 tracking-widest font-mono text-lg" maxlength="6" />
+                                    <button type="submit" class="w-full bg-[#d4af35] hover:bg-[#b5952f] text-black font-bold py-3 rounded-lg transition-all shadow-lg">Verify & Unlock</button>
+                                </form>
+                            }
+                            else
+                            {
+                                <form method="post" asp-page-handler="SendMfaOtp">
+                                    <button type="submit" class="bg-[#d4af35] hover:bg-[#b5952f] text-black font-bold py-3 px-8 rounded-lg transition-all shadow-lg flex items-center gap-2">
+                                        <span class="material-symbols-outlined">mail</span>
+                                        Verify Identity
+                                    </button>
+                                </form>
+                            }
+                        </div>
+                    }
                 </section>
             </div>
 

@@ -158,5 +158,34 @@ namespace RentACar.Application.Managers
                 return false;
             }
         }
+        public async Task<bool> SendRecoveryCodesEmailAsync(string email, IEnumerable<string> codes, string name = "User")
+        {
+            var codesList = string.Join("</div><div style='padding:10px; border:1px solid #444; margin:5px; display:inline-block; font-family:monospace; color:#d4af37; background:#222; border-radius:4px;'>", codes);
+            codesList = $"<div style='text-align:center; padding: 20px;'><div style='padding:10px; border:1px solid #444; margin:5px; display:inline-block; font-family:monospace; color:#d4af37; background:#222; border-radius:4px;'>{codesList}</div></div>";
+
+            var bodyContent = $@"
+                <h2>New Recovery Codes</h2>
+                <p>Hello {name},</p>
+                <p>You have generated a new set of recovery codes for your RentACar account.</p>
+                <p><strong>These codes are the only way to access your account if you lose your 2FA device.</strong></p>
+                <p>Keep them safe and secure.</p>
+                {codesList}
+                <p><strong>Note:</strong> Generating these codes has invalidated any previous codes you may have saved.</p>
+                <br>
+                <p>If you did not perform this action, please secure your account immediately.</p>";
+
+            var message = EmailTemplates.GetStandardTemplate(bodyContent, "Recovery Codes");
+
+            try
+            {
+                await _emailService.SendEmailAsync(email, "New Recovery Codes", message);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error sending Recovery Codes email: {ex.Message}");
+                return false;
+            }
+        }
     }
 }

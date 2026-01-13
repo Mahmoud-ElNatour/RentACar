@@ -134,11 +134,13 @@ namespace RentACar.Web.Areas.Identity.Pages.Account.Manage
             {
                 var recoveryCodes = await _userManager.GenerateNewTwoFactorRecoveryCodesAsync(user, 10);
                 RecoveryCodes = recoveryCodes.ToArray();
-                return RedirectToPage("./ShowRecoveryCodes");
+                return RedirectToPage("./ShowRecoveryCodes"); // We might want to show this inside Index too, but for now this is fine.
             }
             else
             {
-                return RedirectToPage("./TwoFactorAuthentication");
+                // REDIRECT BACK TO SETTINGS
+                TempData["IsMfaUnlocked"] = true; // Keep unlocked
+                return RedirectToPage("./Index");
             }
         }
 
@@ -180,7 +182,7 @@ namespace RentACar.Web.Areas.Identity.Pages.Account.Manage
             return string.Format(
                 CultureInfo.InvariantCulture,
                 AuthenticatorUriFormat,
-                _urlEncoder.Encode("Microsoft.AspNetCore.Identity.UI"),
+                _urlEncoder.Encode("RentACar"),
                 _urlEncoder.Encode(email),
                 unformattedKey);
         }

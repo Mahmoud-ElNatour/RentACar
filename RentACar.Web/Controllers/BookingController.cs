@@ -392,8 +392,8 @@ namespace RentACar.Web.Controllers
                         col.Item().PaddingVertical(20).Text("I, the renter, accept responsibility for the rental vehicle.");
                         col.Item().Row(row =>
                         {
-                            row.RelativeColumn().Text("Customer Signature: ___________________");
-                            row.RelativeColumn().AlignRight().Text("Company Signature: ___________________");
+                            row.RelativeItem().Text("Customer Signature: ___________________");
+                            row.RelativeItem().AlignRight().Text("Company Signature: ___________________");
                         });
                     });
                 });

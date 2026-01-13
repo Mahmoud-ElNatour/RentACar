@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
+using RentACar.Application.Managers;
 
 namespace RentACar.Web.Areas.Identity.Pages.Account
 {
@@ -19,15 +20,18 @@ namespace RentACar.Web.Areas.Identity.Pages.Account
         private readonly SignInManager<IdentityUser> _signInManager;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly ILogger<LoginWith2faModel> _logger;
+        private readonly EmailManager _emailManager;
 
         public LoginWith2faModel(
             SignInManager<IdentityUser> signInManager,
             UserManager<IdentityUser> userManager,
-            ILogger<LoginWith2faModel> logger)
+            ILogger<LoginWith2faModel> logger,
+            EmailManager emailManager)
         {
             _signInManager = signInManager;
             _userManager = userManager;
             _logger = logger;
+            _emailManager = emailManager;
         }
 
         /// <summary>
@@ -73,11 +77,14 @@ namespace RentACar.Web.Areas.Identity.Pages.Account
             public bool RememberMachine { get; set; }
         }
 
-        public async Task<IActionResult> OnGetAsync(bool rememberMe, string returnUrl = null)
-        {
-            // Ensure the user has gone through the username & password screen first
-            var user = await _signInManager.GetTwoFactorAuthenticationUserAsync();
 
+
+        public string MfaProvider { get; set; }
+        public bool ShowMethodSwitcher { get; set; }
+
+        public async Task<IActionResult> OnGetAsync(bool rememberMe, string returnUrl = null, string mfaProvider = null)
+        {
+            var user = await _signInManager.GetTwoFactorAuthenticationUserAsync();
             if (user == null)
             {
                 throw new InvalidOperationException($"Unable to load two-factor authentication user.");
@@ -86,10 +93,39 @@ namespace RentACar.Web.Areas.Identity.Pages.Account
             ReturnUrl = returnUrl;
             RememberMe = rememberMe;
 
+            var providers = await _userManager.GetValidTwoFactorProvidersAsync(user);
+            ShowMethodSwitcher = providers.Count > 1;
+
+            // Determine provider: Requested -> Authenticator (if available) -> Email (fallback)
+            if (!string.IsNullOrEmpty(mfaProvider) && providers.Contains(mfaProvider))
+            {
+                MfaProvider = mfaProvider;
+            }
+            else if (providers.Contains("Authenticator")) 
+            {
+                MfaProvider = "Authenticator";
+            }
+            else if (providers.Contains("Email"))
+            {
+                MfaProvider = "Email";
+            }
+            else 
+            {
+                MfaProvider = providers.FirstOrDefault();
+            }
+
+            // If Email, send generic code
+            if (MfaProvider == "Email")
+            {
+                var code = await _userManager.GenerateTwoFactorTokenAsync(user, "Email");
+                await _emailManager.SendOtpEmailAsync(user.Email, code, user.UserName ?? "User");
+                // Note: We don't cache this OTP manually because Identity's `GenerateTwoFactorTokenAsync` handles the token generation/validation lifecycle for 2FA login.
+            }
+
             return Page();
         }
 
-        public async Task<IActionResult> OnPostAsync(bool rememberMe, string returnUrl = null)
+        public async Task<IActionResult> OnPostAsync(bool rememberMe, string returnUrl = null, string mfaProvider = null)
         {
             if (!ModelState.IsValid)
             {
@@ -97,16 +133,31 @@ namespace RentACar.Web.Areas.Identity.Pages.Account
             }
 
             returnUrl = returnUrl ?? Url.Content("~/");
-
             var user = await _signInManager.GetTwoFactorAuthenticationUserAsync();
-            if (user == null)
-            {
-                throw new InvalidOperationException($"Unable to load two-factor authentication user.");
-            }
+            if (user == null) throw new InvalidOperationException($"Unable to load two-factor authentication user.");
 
+            // Normalize code
             var authenticatorCode = Input.TwoFactorCode.Replace(" ", string.Empty).Replace("-", string.Empty);
+            
+            // Re-determine provider to ensure we verify against the correct one
+            // We trust the hidden input or query param, but server side re-verification of "Valid" providers is handled by `TwoFactorSignInAsync` internally? No, we must pass the provider name.
+            // But `TwoFactorAuthenticatorSignInAsync` is ONLY for TOTP. `TwoFactorSignInAsync` creates the cookie.
+            // Actually `TwoFactorSignInAsync` takes `provider, code, rememberMe, rememberMachine`. This works for BOTH Email and Authenticator if we pass "Authenticator" as provider name.
 
-            var result = await _signInManager.TwoFactorAuthenticatorSignInAsync(authenticatorCode, rememberMe, Input.RememberMachine);
+            // Ensure provider is set
+            if (string.IsNullOrEmpty(mfaProvider))
+            {
+                // Fallback logic identical to OnGet to guess what the user likely used
+                var providers = await _userManager.GetValidTwoFactorProvidersAsync(user);
+                if (providers.Contains("Authenticator")) mfaProvider = "Authenticator";
+                else if (providers.Contains("Email")) mfaProvider = "Email";
+                else mfaProvider = providers.FirstOrDefault();
+            }
+            
+            MfaProvider = mfaProvider; // For redisplay if failed
+
+            // Execute Sign In
+            var result = await _signInManager.TwoFactorSignInAsync(mfaProvider, authenticatorCode, rememberMe, Input.RememberMachine);
 
             var userId = await _userManager.GetUserIdAsync(user);
 
@@ -123,7 +174,7 @@ namespace RentACar.Web.Areas.Identity.Pages.Account
             else
             {
                 _logger.LogWarning("Invalid authenticator code entered for user with ID '{UserId}'.", user.Id);
-                ModelState.AddModelError(string.Empty, "Invalid authenticator code.");
+                ModelState.AddModelError(string.Empty, "Invalid code.");
                 return Page();
             }
         }
