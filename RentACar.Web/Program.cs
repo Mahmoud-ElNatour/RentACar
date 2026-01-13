@@ -33,7 +33,7 @@ builder.Host.UseSerilog();
 
 // ✅ Add services to the container
 var connectionString = fromConfig ?? fromEnv;
-if(string.IsNullOrWhiteSpace(connectionString))
+if (string.IsNullOrWhiteSpace(connectionString))
 {
     throw new InvalidOperationException("Connection string 'DefaultConnection' not found in config or environment.");
 }
@@ -68,7 +68,7 @@ builder.Services.AddScoped<IPromocodeRepository, PromocodeRepository>();
 builder.Services.AddScoped<IPaymentMethodRepository, PaymentMethodRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddHttpClient<IEmailService, MailjetEmailService>();
-builder.Services.AddHttpClient<IStripePaymentService, StripePaymentService>(client =>
+builder.Services.AddHttpClient<RentACar.Application.Services.IStripePaymentService, RentACar.Application.Services.StripePaymentService>(client =>
 {
     client.BaseAddress = new Uri("https://api.stripe.com/");
 });

@@ -23,7 +23,7 @@ namespace RentACar.Application.Managers
         private readonly IPaymentMethodRepository _paymentMethodRepository;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly IStripePaymentService _stripePaymentService;
+        private readonly Services.IStripePaymentService _stripePaymentService;
         private readonly IMapper _mapper;
         private readonly ILogger<PaymentManager> _logger;
         private readonly AuditLogManager _auditLogManager;
@@ -35,7 +35,7 @@ namespace RentACar.Application.Managers
             IPaymentMethodRepository paymentMethodRepository,
             UserManager<IdentityUser> userManager,
             IHttpContextAccessor httpContextAccessor,
-            IStripePaymentService stripePaymentService,
+            Services.IStripePaymentService stripePaymentService,
             IMapper mapper,
             ILogger<PaymentManager> logger,
             AuditLogManager auditLogManager)
@@ -542,7 +542,7 @@ namespace RentACar.Application.Managers
             return await _stripePaymentService.CreateCheckoutSessionAsync(request);
         }
 
-      
+
 
     }
 
