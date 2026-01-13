@@ -9,6 +9,7 @@ using RentACar.Infrastructure.Repositories;
 using AutoMapper;
 using RentACar.Infrastructure.Data.Repositories;
 using RentACar.Application.Managers;
+using RentACar.Application.Services;
 using Serilog;
 using QuestPDF.Infrastructure;
 
@@ -67,6 +68,10 @@ builder.Services.AddScoped<IPromocodeRepository, PromocodeRepository>();
 builder.Services.AddScoped<IPaymentMethodRepository, PaymentMethodRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddHttpClient<IEmailService, MailjetEmailService>();
+builder.Services.AddHttpClient<IStripePaymentService, StripePaymentService>(client =>
+{
+    client.BaseAddress = new Uri("https://api.stripe.com/");
+});
 
 // ✅ Register managers
 builder.Services.AddScoped<CustomerManager>();
