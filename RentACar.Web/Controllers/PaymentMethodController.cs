@@ -75,6 +75,7 @@ namespace RentACar.Web.Controllers
         }
 
         [HttpGet("active")]
+        [AllowAnonymous] // or Admin,Employee,Customer
         public async Task<ActionResult<IEnumerable<PaymentMethodDto>>> GetActive()
         {
             var methods = await _paymentMethodManager.GetAllActivePaymentMethodsAsync();
@@ -164,5 +165,6 @@ namespace RentACar.Web.Controllers
                     "An unexpected error occurred while deleting the payment method. Please try again later.");
             }
         }
+
     }
 }
