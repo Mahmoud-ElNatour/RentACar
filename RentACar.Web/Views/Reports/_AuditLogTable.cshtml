@@ -17,155 +17,344 @@
                 </tr>
             </thead>
             <tbody class="text-sm divide-y divide-white/5">
-                @if (Model.Logs.Any())
-                {
-                    @foreach (var log in Model.Logs)
+                    @if (Model.Logs.Any())
                     {
-                        <tr class="group hover:bg-white/[0.02] transition-colors">
-                            <td class="py-4 px-6 whitespace-nowrap text-white/50 font-mono text-xs">@(((Model.Page - 1) * Model.PageSize) + Model.Logs.IndexOf(log) + 1)</td>
-                            <td class="py-4 px-6 whitespace-nowrap text-white/70 font-mono text-xs">@log.Timestamp.ToString("MMM dd, HH:mm")</td>
-                            <td class="py-4 px-6 whitespace-nowrap">
-                                <div class="flex items-center gap-3">
-                                    <div class="h-8 w-8 rounded-full bg-gold/20 flex items-center justify-center text-gold font-bold text-xs">
-                                        @log.ActorName.Substring(0, 1).ToUpper()
+                        @foreach (var log in Model.Logs)
+                        {
+                            var displayId = log.EntityId;
+                            bool isUser = log.Entity == "User" || log.Entity == "ApplicationUser";
+                            // Check Entity name or TargetType if available/implemented. 
+                            // Assuming TargetType is reliable if present, otherwise fallback to Entity.
+                            bool isCustomer = log.Entity == "Customer" || (log.GetType().GetProperty("TargetType")?.GetValue(log, null) as string == "Customer");
+                            bool isEmployee = log.Entity == "Employee" || (log.GetType().GetProperty("TargetType")?.GetValue(log, null) as string == "Employee");
+
+                            if (isCustomer)
+                            {
+                                displayId = $"cs-{log.EntityId}";
+                            }
+                            else if (isEmployee)
+                            {
+                                displayId = $"Emp-{log.EntityId}";
+                            }
+                            else if (isUser)
+                            {
+                                // User requested to hide aspnetuserid
+                                displayId = "-"; 
+                            }
+
+                            <tr class="group hover:bg-white/[0.02] transition-colors">
+                                <td class="py-4 px-6 whitespace-nowrap text-white/50 font-mono text-xs">@(((Model.Page - 1) * Model.PageSize) + Model.Logs.IndexOf(log) + 1)</td>
+                                <td class="py-4 px-6 whitespace-nowrap text-white/70 font-mono text-xs">@log.Timestamp.ToString("MMM dd, HH:mm")</td>
+                                <td class="py-4 px-6 whitespace-nowrap">
+                                    <div class="flex items-center gap-3">
+                                        <div class="h-8 w-8 rounded-full bg-gold/20 flex items-center justify-center text-gold font-bold text-xs">
+                                            @log.ActorName.Substring(0, 1).ToUpper()
+                                        </div>
+                                        <div class="flex flex-col">
+                                            <span class="text-white font-medium">@log.ActorName</span>
+                                            <span class="text-white/40 text-xs">@log.ActorRole</span>
+                                        </div>
                                     </div>
-                                    <div class="flex flex-col">
-                                        <span class="text-white font-medium">@log.ActorName</span>
-                                        <span class="text-white/40 text-xs">@log.ActorRole</span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="py-4 px-6 whitespace-nowrap">
-                                @{
-                                    var actionColor = "";
-                                    var actionBg = "";
-                                    
-                                    switch (log.Action?.ToUpper())
-                                    {
-                                        case "CREATE":
-                                            actionColor = "text-blue-400";
-                                            actionBg = "bg-blue-500/10 border-blue-500/20";
-                                            break;
-                                        case "UPDATE":
-                                            actionColor = "text-emerald-500";
-                                            actionBg = "bg-emerald-500/10 border-emerald-500/20";
-                                            break;
-                                        case "DELETE":
-                                            actionColor = "text-red-400";
-                                            actionBg = "bg-red-500/10 border-red-500/20";
-                                            break;
-                                        default:
-                                            actionColor = "text-white/70";
-                                            actionBg = "bg-white/5 border-white/10";
-                                            break;
+                                </td>
+                                <td class="py-4 px-6 whitespace-nowrap">
+                                    @{
+                                        var actionColor = "";
+                                        var actionBg = "";
+                                        
+                                        switch (log.Action?.ToUpper())
+                                        {
+                                            case "CREATE":
+                                            case "ADDED":
+                                                actionColor = "text-blue-400";
+                                                actionBg = "bg-blue-500/10";
+                                                break;
+                                            case "UPDATE":
+                                             actionColor = "text-emerald-500";
+                                                actionBg = "bg-emerald-500/10 border-emerald-500/20";
+                                                break;
+                                            case "MODIFIED":
+                                                actionColor = "text-gray-300";
+                                                actionBg = "bg-gray-500/10 border-gray-500/20";
+                                                break;
+                                            case "DELETE":
+                                            case "DELETED":
+                                                actionColor = "text-red-400";
+                                                actionBg = "bg-red-500/10 border-red-500/20";
+                                                break;
+                                            default:
+                                                actionColor = "text-white/70";
+                                                actionBg = "bg-white/5 border-white/10";
+                                                break;
+                                        }
                                     }
-                                }
-                                <span class="inline-flex items-center rounded-full @actionBg px-2.5 py-0.5 text-xs font-medium @actionColor border">
-                                    @log.Action?.ToUpper()
-                                </span>
-                            </td>
-                            <td class="py-4 px-6 whitespace-nowrap">
-                                <div class="flex flex-col">
-                                    <span class="text-white">@log.Entity</span>
-                                    <span class="text-gold hover:underline text-xs">#@log.EntityId</span>
-                                </div>
-                            </td>
-                            <td class="py-4 px-6 max-w-xs truncate text-white/80" title="@log.Summary">
-                                @log.Summary
-                            </td>
-                            <td class="py-4 px-6 whitespace-nowrap text-white/50 font-mono text-xs">@log.IpAddress</td>
-                            <td class="py-4 px-6 whitespace-nowrap text-white/50 text-xs hidden 2xl:table-cell">@log.Device</td>
-                            <td class="py-4 px-6 whitespace-nowrap text-right">
-                                @if (log.Status == "Success")
-                                {
-                                    <span class="inline-flex items-center gap-1.5 rounded text-xs font-medium text-emerald-400">
-                                        <span class="h-1.5 w-1.5 rounded-full bg-emerald-400"></span> Success
+                                    <span class="inline-flex items-center rounded-full @actionBg px-2.5 py-0.5 text-xs font-medium @actionColor border-none">
+                                        @log.Action?.ToUpper()
                                     </span>
-                                }
-                                else
-                                {
-                                    <span class="inline-flex items-center gap-1.5 rounded text-xs font-medium text-red-400">
-                                        <span class="h-1.5 w-1.5 rounded-full bg-red-400"></span> Failed
-                                    </span>
-                                }
+                                </td>
+                                <td class="py-4 px-6 whitespace-nowrap">
+                                    <div class="flex flex-col">
+                                        <span class="text-white">@log.Entity</span>
+                                        <span class="text-gold hover:underline text-xs" title="@log.EntityId">#@displayId</span>
+                                    </div>
+                                </td>
+                                <td class="py-4 px-6 max-w-xs truncate text-white/80">
+                                    @{
+                                        bool isModified = log.Action != null && (log.Action.Contains("Update", StringComparison.OrdinalIgnoreCase) || log.Action.Contains("Modified", StringComparison.OrdinalIgnoreCase) || log.Action.Contains("Change", StringComparison.OrdinalIgnoreCase));
+                                    }
+
+                                    @if (isModified)
+                                    {
+                                       <button type="button"
+        class="view-details-btn 
+               bg-transparent 
+               border-0 
+               p-0 
+               text-gold 
+               underline 
+               underline-offset-2 
+               hover:text-gold/80 
+               transition-colors 
+               focus:outline-none"
+        title="Click to view changes"
+        data-details='@log.DetailsJson'
+        data-old='@log.OldValuesJson'
+        data-new='@log.NewValuesJson'
+        data-id="@log.Id"
+        data-action="@log.Action"
+        data-entity="@log.Entity"
+        data-outcome="@log.Outcome"
+        data-targetid="@log.TargetId">
+    @log.Summary
+    <span class="inline-block ml-1 text-gold/70 align-middle">
+        <span class="material-symbols-outlined text-[14px]">visibility</span>
+    </span>
+</button>
+
+                                    }
+                                    else
+                                    {
+                                        <span title="@log.Summary">@log.Summary</span>
+                                    }
+                                </td>
+                                <td class="py-4 px-6 whitespace-nowrap text-white/50 font-mono text-xs">@log.IpAddress</td>
+                                <td class="py-4 px-6 whitespace-nowrap text-white/50 text-xs hidden 2xl:table-cell">@log.Device</td>
+                                <td class="py-4 px-6 whitespace-nowrap text-right">
+                                    @if (log.Status == "Success")
+                                    {
+                                        <span class="inline-flex items-center gap-1.5 rounded text-xs font-medium text-emerald-400">
+                                            <span class="h-1.5 w-1.5 rounded-full bg-emerald-400"></span> Success
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="inline-flex items-center gap-1.5 rounded text-xs font-medium text-red-400">
+                                            <span class="h-1.5 w-1.5 rounded-full bg-red-400"></span> Failed
+                                        </span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="9" class="py-8 text-center text-white/50">
+                                No logs found matching your criteria.
                             </td>
                         </tr>
                     }
-                }
-                else
-                {
-                    <tr>
-                        <td colspan="9" class="py-8 text-center text-white/50">
-                            No logs found matching your criteria.
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
+                </tbody>
+            </table>
+        </div>
 
-    <!-- Pagination -->
-    <div class="flex items-center justify-between border-t border-gold/10 px-6 py-4 bg-surface-dark-lighter">
-         <div class="flex flex-1 items-center justify-between">
-            <div>
-                <p class="text-sm text-white/60">
-                    Showing
-                    <span class="font-medium text-white">@((Model.Page - 1) * Model.PageSize + 1)</span>
-                    to
-                    <span class="font-medium text-white">@(Math.Min(Model.Page * Model.PageSize, Model.TotalCount))</span>
-                    of
-                    <span class="font-medium text-white">@Model.TotalCount</span>
-                    results
-                </p>
+        <!-- Pagination -->
+        <div class="flex items-center justify-between border-t border-gold/10 px-6 py-4 bg-surface-dark-lighter">
+             <div class="flex flex-1 items-center justify-between">
+                <div>
+                    <p class="text-sm text-white/60">
+                        Showing
+                        <span class="font-medium text-white">@((Model.Page - 1) * Model.PageSize + 1)</span>
+                        to
+                        <span class="font-medium text-white">@(Math.Min(Model.Page * Model.PageSize, Model.TotalCount))</span>
+                        of
+                        <span class="font-medium text-white">@Model.TotalCount</span>
+                        results
+                    </p>
+                </div>
+                <div>
+                    <nav aria-label="Pagination" class="isolate inline-flex -space-x-px rounded-md shadow-sm">
+                        @{
+                            // Pagination Logic for blocks of 5
+                            int blockSize = 5;
+                            int currentBlock = (int)Math.Ceiling((double)Model.Page / blockSize);
+                            int startPage = (currentBlock - 1) * blockSize + 1;
+                            int endPage = Math.Min(startPage + blockSize - 1, Model.TotalPages);
+                            
+                            bool hasPrevBlock = startPage > 1;
+                            bool hasNextBlock = endPage < Model.TotalPages;
+                        }
+
+                        @if (hasPrevBlock || Model.HasPreviousPage)
+                        {
+                            <a asp-action="AuditLog" 
+                               asp-route-page="@(Model.Page - 1)" 
+                               asp-route-search="@Model.SearchTerm"
+                               asp-route-actionType="@Model.ActionType"
+                               asp-route-entity="@Model.EntityName"
+                               asp-route-status="@Model.Status"
+                               class="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-white/10 hover:bg-white/5 focus:z-20 focus:outline-offset-0 bg-surface-dark">
+                                <span class="sr-only">Previous</span>
+                                <span class="material-symbols-outlined text-sm">chevron_left</span>
+                            </a>
+                        }
+                        
+                        @if (startPage > 1)
+                        {
+                             <span class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-500 ring-1 ring-inset ring-white/10 bg-surface-dark">...</span>
+                        }
+                        
+                        @for (int i = startPage; i <= endPage; i++)
+                        {
+                            if (i == Model.Page)
+                            {
+                                <a href="#" aria-current="page" class="relative z-10 inline-flex items-center bg-gold px-4 py-2 text-sm font-semibold text-background-dark focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold">@i</a>
+                            }
+                            else
+                            {
+                                 <a asp-action="AuditLog" 
+                                    asp-route-page="@i" 
+                                    asp-route-search="@Model.SearchTerm"
+                                    asp-route-actionType="@Model.ActionType"
+                                    asp-route-entity="@Model.EntityName"
+                                    asp-route-status="@Model.Status"
+                                    class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-white ring-1 ring-inset ring-white/10 hover:bg-white/5 focus:z-20 focus:outline-offset-0 bg-surface-dark">@i</a>
+                            }
+                        }
+                        
+                        @if (endPage < Model.TotalPages)
+                        {
+                            <span class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-500 ring-1 ring-inset ring-white/10 bg-surface-dark">...</span>
+                        }
+
+                        @if (hasNextBlock || Model.HasNextPage)
+                        {
+                            <a asp-action="AuditLog" 
+                               asp-route-page="@(Model.Page + 1)" 
+                               asp-route-search="@Model.SearchTerm"
+                               asp-route-actionType="@Model.ActionType"
+                               asp-route-entity="@Model.EntityName"
+                               asp-route-status="@Model.Status"
+                               class="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-white/10 hover:bg-white/5 focus:z-20 focus:outline-offset-0 bg-surface-dark">
+                                <span class="sr-only">Next</span>
+                                <span class="material-symbols-outlined text-sm">chevron_right</span>
+                            </a>
+                        }
+                    </nav>
+                </div>
             </div>
-            <div>
-                <nav aria-label="Pagination" class="isolate inline-flex -space-x-px rounded-md shadow-sm">
-                    @if (Model.HasPreviousPage)
-                    {
-                        <a asp-action="AuditLog" 
-                           asp-route-page="@(Model.Page - 1)" 
-                           asp-route-search="@Model.SearchTerm"
-                           asp-route-actionType="@Model.ActionType"
-                           asp-route-entity="@Model.EntityName"
-                           asp-route-status="@Model.Status"
-                           class="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-white/10 hover:bg-white/5 focus:z-20 focus:outline-offset-0 bg-surface-dark">
-                            <span class="sr-only">Previous</span>
-                            <span class="material-symbols-outlined text-sm">chevron_left</span>
-                        </a>
-                    }
-                    
-                    @for (int i = 1; i <= Model.TotalPages; i++)
-                    {
-                        if (i == Model.Page)
-                        {
-                            <a href="#" aria-current="page" class="relative z-10 inline-flex items-center bg-gold px-4 py-2 text-sm font-semibold text-background-dark focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold">@i</a>
-                        }
-                        else
-                        {
-                             <a asp-action="AuditLog" 
-                                asp-route-page="@i" 
-                                asp-route-search="@Model.SearchTerm"
-                                asp-route-actionType="@Model.ActionType"
-                                asp-route-entity="@Model.EntityName"
-                                asp-route-status="@Model.Status"
-                                class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-white ring-1 ring-inset ring-white/10 hover:bg-white/5 focus:z-20 focus:outline-offset-0 bg-surface-dark">@i</a>
-                        }
-                    }
+    </div>
+</div>
 
-                    @if (Model.HasNextPage)
-                    {
-                        <a asp-action="AuditLog" 
-                           asp-route-page="@(Model.Page + 1)" 
-                           asp-route-search="@Model.SearchTerm"
-                           asp-route-actionType="@Model.ActionType"
-                           asp-route-entity="@Model.EntityName"
-                           asp-route-status="@Model.Status"
-                           class="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-white/10 hover:bg-white/5 focus:z-20 focus:outline-offset-0 bg-surface-dark">
-                            <span class="sr-only">Next</span>
-                            <span class="material-symbols-outlined text-sm">chevron_right</span>
-                        </a>
-                    }
-                </nav>
+<!-- Details Modal -->
+<div id="audit-details-modal" class="fixed inset-0 z-[100] hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <!-- Backdrop -->
+    <div class="fixed inset-0 bg-black/80 backdrop-blur-md transition-opacity" onclick="closeAuditModal()"></div>
+
+    <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+        <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+            <!-- Modal Panel -->
+            <div class="relative transform overflow-hidden rounded-2xl bg-[#0a0a0a] text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-3xl">
+                
+                <!-- Header -->
+                <div class="bg-gradient-to-r from-[#0a0a0a] via-[#111] to-[#0a0a0a] px-3 py-2 flex justify-between items-center border-b border-white/5">
+                    <div>
+                        <h3 class="text-xl font-bold text-white tracking-tight" id="modal-title">Log Details</h3>
+                        <p class="mt-1 text-sm text-gold/60 font-mono">ID: <span id="modal-log-id"></span></p>
+                    </div>
+                    <button type="button"
+        onclick="closeAuditModal()"
+        style="
+            all: unset !important;
+            cursor: pointer !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 36px !important;
+            height: 36px !important;
+            border-radius: 9999px !important;
+            color: white !important;
+            ;
+        "
+        
+        aria-label="Close modal">
+    <span class="material-symbols-outlined"
+          style="
+              font-size: 20px !important;
+              line-height: 1 !important;
+          ">
+        close
+    </span>
+</button>
+
+                </div>
+
+                <!-- Body -->
+                <div class="px-6 py-6 space-y-6 max-h-[75vh] overflow-y-auto custom-scrollbar bg-[#0a0a0a]">
+                    
+                    <!-- Basic Info Grid -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="bg-white/[0.02] p-4 rounded-xl">
+                            <span class="text-[10px] text-white/40 uppercase tracking-widest block mb-2">Action</span>
+                            <span id="modal-action" class="text-gold font-bold text-sm"></span>
+                        </div>
+                        <div class="bg-white/[0.02] p-4 rounded-xl">
+                            <span class="text-[10px] text-white/40 uppercase tracking-widest block mb-2">Entity</span>
+                            <span id="modal-entity" class="text-white font-medium text-sm"></span>
+                        </div>
+                        <div class="bg-white/[0.02] p-4 rounded-xl">
+                             <span class="text-[10px] text-white/40 uppercase tracking-widest block mb-2">Target ID</span>
+                             <span id="modal-target-id" class="text-white/70 font-mono text-xs"></span>
+                        </div>
+                         <div class="bg-white/[0.02] p-4 rounded-xl">
+                             <span class="text-[10px] text-white/40 uppercase tracking-widest block mb-2">Outcome</span>
+                             <span id="modal-outcome" class="text-white font-medium text-sm"></span>
+                        </div>
+                    </div>
+
+                    <!-- Diff View -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Old Values -->
+                        <div id="modal-old-values-section" class="hidden">
+                            <h4 class="text-sm font-bold text-red-500 mb-3 flex items-center gap-2 uppercase tracking-wide">
+                                <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span> Previous State
+                            </h4>
+                            <div class="relative group">
+                                <div class="absolute -inset-0.5 bg-gradient-to-b from-red-500/20 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition duration-500 blur"></div>
+                                <pre id="modal-old-values-json" class="relative bg-red-500/[0.03] p-5 rounded-xl text-xs font-mono text-red-200/90 overflow-x-auto custom-scrollbar border-l-2 border-red-500/20"></pre>
+                            </div>
+                        </div>
+
+                        <!-- New Values -->
+                        <div id="modal-new-values-section" class="hidden">
+                            <h4 class="text-sm font-bold text-emerald-500 mb-3 flex items-center gap-2 uppercase tracking-wide">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> New State
+                            </h4>
+                            <div class="relative group">
+                                <div class="absolute -inset-0.5 bg-gradient-to-b from-emerald-500/20 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition duration-500 blur"></div>
+                                <pre id="modal-new-values-json" class="relative bg-emerald-500/[0.03] p-5 rounded-xl text-xs font-mono text-emerald-200/90 overflow-x-auto custom-scrollbar border-l-2 border-emerald-500/20"></pre>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Details (Full JSON) -->
+                     <div id="modal-details-section" class="hidden mt-6">
+                        <h4 class="text-sm font-bold text-gold mb-3 flex items-center gap-2 uppercase tracking-wide">
+                             <span class="w-1.5 h-1.5 rounded-full bg-gold"></span> Additional Details
+                        </h4>
+                        <pre id="modal-details-json" class="bg-white/[0.02] p-5 rounded-xl text-xs font-mono text-white/60 overflow-x-auto custom-scrollbar"></pre>
+                    </div>
+
+                </div>
             </div>
         </div>
     </div>

@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
+using RentACar.Application.Managers;
 
 namespace RentACar.Web.Areas.Identity.Pages.Account.Manage
 {
@@ -17,12 +18,16 @@ namespace RentACar.Web.Areas.Identity.Pages.Account.Manage
         private readonly UserManager<IdentityUser> _userManager;
         private readonly ILogger<GenerateRecoveryCodesModel> _logger;
 
+        private readonly AuditLogManager _auditLogManager;
+
         public GenerateRecoveryCodesModel(
             UserManager<IdentityUser> userManager,
-            ILogger<GenerateRecoveryCodesModel> logger)
+            ILogger<GenerateRecoveryCodesModel> logger,
+            AuditLogManager auditLogManager)
         {
             _userManager = userManager;
             _logger = logger;
+            _auditLogManager = auditLogManager;
         }
 
         /// <summary>
@@ -75,6 +80,16 @@ namespace RentACar.Web.Areas.Identity.Pages.Account.Manage
             RecoveryCodes = recoveryCodes.ToArray();
 
             _logger.LogInformation("User with ID '{UserId}' has generated new 2FA recovery codes.", userId);
+            
+            await _auditLogManager.LogEventAsync(
+                action: "Auth.GenerateRecoveryCodes",
+                entity: "User",
+                entityId: userId,
+                summary: "User regenerated 2FA recovery codes",
+                status: "Success",
+                targetType: "SecuritySettings",
+                targetId: userId
+            );
             StatusMessage = "You have generated new recovery codes.";
             return RedirectToPage("./ShowRecoveryCodes");
         }

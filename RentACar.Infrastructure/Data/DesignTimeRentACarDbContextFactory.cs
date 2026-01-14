@@ -43,7 +43,7 @@ namespace RentACar.Infrastructure.Data
 
             builder.UseSqlServer(connectionString); // Or your specific provider
 
-            return new RentACarDbContext(builder.Options);
+            return new RentACarDbContext(builder.Options, null!);
         }
     }
 }

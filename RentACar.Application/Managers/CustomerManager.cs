@@ -109,7 +109,7 @@ namespace RentACar.Application.Managers
 
             _logger.LogInformation("Customer created with id {Id}", customer.UserId);
 
-            await _auditLogManager.LogAsync("Create", "Customer", customer.UserId.ToString(), $"Registered new customer: {customer.Name} ({createDto.Email})");
+            await _auditLogManager.LogEventAsync("Customer.Registered", "Customer", customer.UserId.ToString(), $"Registered new customer: {customer.Name} ({createDto.Email})", null, "Success");
             
             return _mapper.Map<CustomerDTO>(customer);
         }
@@ -171,7 +171,7 @@ namespace RentACar.Application.Managers
             {
                 customer.IsVerified = isVerified;
                 await _customerRepository.UpdateAsync(customer);
-                await _auditLogManager.LogAsync("Update", "Customer", customerId.ToString(), $"Updated verification status to: {isVerified}");
+                await _auditLogManager.LogEventAsync("Customer.VerificationUpdated", "Customer", customerId.ToString(), $"Updated verification status to: {isVerified}", null, "Success");
             }
         }
 
@@ -273,7 +273,7 @@ namespace RentACar.Application.Managers
 
             await _customerRepository.DeleteAsync(id);
             await _userManager.DeleteAsync(user);
-            await _auditLogManager.LogAsync("Delete", "Customer", id.ToString(), $"Deleted customer account: {customerEntity.Name}");
+            await _auditLogManager.LogEventAsync("Customer.Deleted", "Customer", id.ToString(), $"Deleted customer account: {customerEntity.Name}", null, "Success");
         }
 
 
@@ -311,7 +311,7 @@ namespace RentACar.Application.Managers
                 customer.Isactive = dto.Isactive;
 
                 await _customerRepository.UpdateAsync(customer);
-                await _auditLogManager.LogAsync("Update", "Customer", dto.UserId.ToString(), $"Updated profile details for: {customer.Name}");
+                await _auditLogManager.LogEventAsync("Customer.ProfileUpdated", "Customer", dto.UserId.ToString(), $"Updated profile details for: {customer.Name}", null, "Success");
             }
         }
 

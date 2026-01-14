@@ -201,7 +201,7 @@ namespace RentACar.Application.Managers
 
             _logger.LogInformation("✅ Booking created with ID: {BookingId}", addedBooking.BookingId);
             
-            await _auditLogManager.LogAsync("Create", "Booking", addedBooking.BookingId.ToString(), $"Created new booking for Car {addedBooking.CarId}");
+            await _auditLogManager.LogEventAsync("Booking.Created", "Booking", addedBooking.BookingId.ToString(), $"Created new booking for Car {addedBooking.CarId}", null, "Success");
             
             var session = await _paymentManager.CreateCheckoutSessionForPaymentAsync(addedPayment);
             if (string.IsNullOrWhiteSpace(session.CheckoutUrl))
@@ -278,7 +278,7 @@ namespace RentACar.Application.Managers
 
             _mapper.Map(bookingDto, booking);
             await _bookingRepository.UpdateAsync(booking);
-            await _auditLogManager.LogAsync("Update", "Booking", bookingDto.BookingId.ToString(), $"Updated booking details. Status: {booking.BookingStatus}");
+            await _auditLogManager.LogEventAsync("Booking.StatusChanged", "Booking", bookingDto.BookingId.ToString(), $"Updated booking details. Status: {booking.BookingStatus}", null, "Success");
 
             return _mapper.Map<BookingEditDto>(booking);
         }
@@ -325,7 +325,7 @@ namespace RentACar.Application.Managers
 
             // ✅ Then delete the booking
             await _bookingRepository.DeleteAsync(booking);
-            await _auditLogManager.LogAsync("Delete", "Booking", requestDto.BookingId.ToString(), "Deleted booking and related payments");
+            await _auditLogManager.LogEventAsync("Booking.Cancelled", "Booking", requestDto.BookingId.ToString(), "Deleted booking and related payments", null, "Success");
 
             return true;
         }

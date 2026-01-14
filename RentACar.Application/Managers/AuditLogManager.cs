@@ -27,48 +27,59 @@ namespace RentACar.Application.Managers
 
         public async Task LogAsync(string action, string entity, string entityId, string summary, string status = "Success", string? explicitActorName = null, string? explicitActorRole = null)
         {
+            await LogEventAsync(action, entity, entityId, summary, null, status, null, explicitActorName, explicitActorRole);
+        }
+
+        public async Task LogEventAsync(
+            string action,
+            string entity,
+            string entityId,
+            string summary,
+            Dictionary<string, object>? details = null,
+            string status = "Success",
+            string? failureReason = null,
+            string? explicitActorName = null,
+            string? explicitActorRole = null,
+            string? correlationId = null,
+            string? outcome = null,
+            string? targetType = null,
+            string? targetId = null)
+        {
             try
             {
                 var user = _httpContextAccessor.HttpContext?.User;
                 string actorName = explicitActorName ?? user?.Identity?.Name ?? "System";
                 string actorRole = explicitActorRole ?? "Unknown";
-                // improved IP detection logic to handle proxies and load balancers
+                
                 string ipAddress = "Unknown";
                 
                 if (_httpContextAccessor.HttpContext?.Request?.Headers != null)
                 {
                     var headers = _httpContextAccessor.HttpContext.Request.Headers;
 
-                    // 1. Cloudflare Support
                     if (headers.ContainsKey("CF-Connecting-IP"))
                     {
                         ipAddress = headers["CF-Connecting-IP"].ToString();
                     }
-                    // 2. Standard X-Forwarded-For (can be a comma-separated list)
                     else if (headers.ContainsKey("X-Forwarded-For"))
                     {
                         var forwardedFor = headers["X-Forwarded-For"].ToString();
                         if (!string.IsNullOrWhiteSpace(forwardedFor))
                         {
-                            // The first IP in the list is the original client IP
                             ipAddress = forwardedFor.Split(',')[0].Trim();
                         }
                     }
-                    // 3. Nginx / Standard Proxy "Real IP" header
                     else if (headers.ContainsKey("X-Real-IP"))
                     {
                         ipAddress = headers["X-Real-IP"].ToString();
                     }
                 }
                 
-                // 4. Fallback to the direct connection IP if headers didn't yield a result
                 if (string.IsNullOrWhiteSpace(ipAddress) || ipAddress == "Unknown")
                 {
-                     // Ensure RemoteIpAddress is not null before checking AddressFamily or converting
                      var remoteIp = _httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress;
                      if (remoteIp != null)
                      {
-                         // If it's an IPv6-mapped IPv4, map it back to IPv4 for readability
                          if (remoteIp.IsIPv4MappedToIPv6)
                          {
                              remoteIp = remoteIp.MapToIPv4();
@@ -80,7 +91,6 @@ namespace RentACar.Application.Managers
 
                 if (user != null && explicitActorRole == null)
                 {
-                    // Basic role check - takes the first role found
                     var roles = user.FindAll(ClaimTypes.Role);
                     if (roles.Any())
                     {
@@ -99,16 +109,26 @@ namespace RentACar.Application.Managers
                     Summary = summary,
                     IpAddress = ipAddress,
                     Device = ParseDevice(userAgent),
-                    Status = status
+                    Status = status,
+                    FailureReason = failureReason,
+                    CorrelationId = correlationId,
+                    UserAgent = userAgent,
+                    Outcome = outcome ?? status, // Default Outcome to Status if not provided
+                    TargetType = targetType ?? entity, // Default TargetType to Entity
+                    TargetId = targetId ?? entityId // Default TargetId to EntityId
                 };
+
+                if (details != null && details.Count > 0)
+                {
+                    log.DetailsJson = System.Text.Json.JsonSerializer.Serialize(details);
+                }
 
                 _dbContext.AuditLogs.Add(log);
                 await _dbContext.SaveChangesAsync();
             }
             catch
             {
-                // Fail silently to not disrupt the main flow
-                // In a real production app, we might log this to a file logger
+                // Fail silently
             }
         }
 

@@ -138,7 +138,7 @@ namespace RentACar.Application.Managers
                     Status = "Paid"
                 };
                 await _paymentRepository.AddAsync(payment);
-                await _auditLogManager.LogAsync("Create", "Payment", payment.PaymentId.ToString(), $"Customer payment of {payment.Amount:C} via {payment.PaymentMethod}");
+                await _auditLogManager.LogEventAsync("Payment.Created", "Payment", payment.PaymentId.ToString(), $"Customer payment of {payment.Amount:C} via {payment.PaymentMethod}", null, "Success");
                 var dto = _mapper.Map<PaymentDto>(payment);
                 dto.PaymentMethodId = paymentMethod.Id;
                 return new MakePaymentResultDto
@@ -181,7 +181,7 @@ namespace RentACar.Application.Managers
 
                 await _paymentRepository.AddAsync(payment);
 
-                await _auditLogManager.LogAsync("Create", "Payment", payment.PaymentId.ToString(), $"Employee recorded payment of {payment.Amount:C}");
+                await _auditLogManager.LogEventAsync("Payment.Created", "Payment", payment.PaymentId.ToString(), $"Employee recorded payment of {payment.Amount:C}", null, "Success");
 
                 var dto = _mapper.Map<PaymentDto>(payment);
                 dto.PaymentMethodId = paymentMethod.Id;
@@ -213,7 +213,7 @@ namespace RentACar.Application.Managers
                 };
 
                 await _paymentRepository.AddAsync(payment);
-                await _auditLogManager.LogAsync("Create", "Payment", payment.PaymentId.ToString(), $"Employee recorded cash payment: {payment.Amount:C}");
+                await _auditLogManager.LogEventAsync("Payment.Created", "Payment", payment.PaymentId.ToString(), $"Employee recorded cash payment: {payment.Amount:C}", null, "Success");
                 var dto = _mapper.Map<PaymentDto>(payment);
                 dto.PaymentMethodId = paymentMethod.Id;
                 return new MakePaymentResultDto

@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
+using RentACar.Application.Managers;
 
 namespace RentACar.Web.Areas.Identity.Pages.Account.Manage
 {
@@ -17,14 +18,18 @@ namespace RentACar.Web.Areas.Identity.Pages.Account.Manage
         private readonly SignInManager<IdentityUser> _signInManager;
         private readonly ILogger<ResetAuthenticatorModel> _logger;
 
+        private readonly AuditLogManager _auditLogManager;
+
         public ResetAuthenticatorModel(
             UserManager<IdentityUser> userManager,
             SignInManager<IdentityUser> signInManager,
-            ILogger<ResetAuthenticatorModel> logger)
+            ILogger<ResetAuthenticatorModel> logger,
+            AuditLogManager auditLogManager)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _logger = logger;
+            _auditLogManager = auditLogManager;
         }
 
         /// <summary>
@@ -57,6 +62,16 @@ namespace RentACar.Web.Areas.Identity.Pages.Account.Manage
             await _userManager.ResetAuthenticatorKeyAsync(user);
             var userId = await _userManager.GetUserIdAsync(user);
             _logger.LogInformation("User with ID '{UserId}' has reset their authentication app key.", user.Id);
+
+            await _auditLogManager.LogEventAsync(
+                action: "Auth.ResetAuthenticator",
+                entity: "User",
+                entityId: userId,
+                summary: "User reset their Authenticator App key",
+                status: "Success",
+                targetType: "SecuritySettings",
+                targetId: userId
+            );
 
             await _signInManager.RefreshSignInAsync(user);
             StatusMessage = "Your authenticator app key has been reset, you will need to configure your authenticator app using the new key.";

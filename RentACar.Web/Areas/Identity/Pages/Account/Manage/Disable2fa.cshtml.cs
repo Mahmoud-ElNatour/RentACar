@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
+using RentACar.Application.Managers;
 
 namespace RentACar.Web.Areas.Identity.Pages.Account.Manage
 {
@@ -16,12 +17,16 @@ namespace RentACar.Web.Areas.Identity.Pages.Account.Manage
         private readonly UserManager<IdentityUser> _userManager;
         private readonly ILogger<Disable2faModel> _logger;
 
+        private readonly AuditLogManager _auditLogManager;
+
         public Disable2faModel(
             UserManager<IdentityUser> userManager,
-            ILogger<Disable2faModel> logger)
+            ILogger<Disable2faModel> logger,
+            AuditLogManager auditLogManager)
         {
             _userManager = userManager;
             _logger = logger;
+            _auditLogManager = auditLogManager;
         }
 
         /// <summary>
@@ -62,6 +67,16 @@ namespace RentACar.Web.Areas.Identity.Pages.Account.Manage
             }
 
             _logger.LogInformation("User with ID '{UserId}' has disabled 2fa.", _userManager.GetUserId(User));
+
+            await _auditLogManager.LogEventAsync(
+                action: "Auth.Disable2FA",
+                entity: "User",
+                entityId: _userManager.GetUserId(User),
+                summary: "User disabled 2FA",
+                status: "Success",
+                targetType: "SecuritySettings",
+                targetId: _userManager.GetUserId(User)
+            );
             StatusMessage = "2fa has been disabled. You can reenable 2fa when you setup an authenticator app";
             return RedirectToPage("./TwoFactorAuthentication");
         }

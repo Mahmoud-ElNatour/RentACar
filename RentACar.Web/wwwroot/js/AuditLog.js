@@ -73,4 +73,64 @@ $(document).ready(function () {
             }
         });
     }
+
+    // Modal Interaction
+    $(document).on('click', '.view-details-btn', function () {
+        var btn = $(this);
+        var id = btn.data('id');
+        var action = btn.data('action');
+        var entity = btn.data('entity');
+        var targetId = btn.data('targetid');
+        var outcome = btn.data('outcome');
+
+        // Populate Basic Info
+        $('#modal-log-id').text(id);
+        $('#modal-action').text(action);
+        $('#modal-entity').text(entity);
+        $('#modal-target-id').text(targetId || '-');
+        $('#modal-outcome').text(outcome || '-');
+
+        // Helper to safe parse and format
+        function setJson(elementId, containerId, rawData) {
+            var el = $(elementId);
+            var container = $(containerId);
+
+            if (!rawData || rawData === 'null' || rawData === 'undefined') {
+                container.addClass('hidden');
+                el.text('');
+                return;
+            }
+
+            try {
+                var obj = (typeof rawData === 'string') ? JSON.parse(rawData) : rawData;
+                // Check for empty object or empty array
+                if (!obj || (Array.isArray(obj) && obj.length === 0) || (typeof obj === 'object' && Object.keys(obj).length === 0)) {
+                    container.addClass('hidden');
+                    return;
+                }
+                var formatted = JSON.stringify(obj, null, 2);
+                el.text(formatted);
+                container.removeClass('hidden');
+            } catch (e) {
+                // If simple string or parse error, show as is
+                if (rawData && rawData.toString().trim() !== "") {
+                    el.text(rawData);
+                    container.removeClass('hidden');
+                } else {
+                    container.addClass('hidden');
+                }
+            }
+        }
+
+        setJson('#modal-details-json', '#modal-details-section', btn.data('details'));
+        setJson('#modal-old-values-json', '#modal-old-values-section', btn.data('old'));
+        setJson('#modal-new-values-json', '#modal-new-values-section', btn.data('new'));
+
+        $('#audit-details-modal').removeClass('hidden');
+    });
+
 });
+
+window.closeAuditModal = function () {
+    $('#audit-details-modal').addClass('hidden');
+};

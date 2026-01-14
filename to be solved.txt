@@ -11,7 +11,6 @@ Done	- create acc --> verify email
 	- booking status update 
 	- payment (invoice) to the customer
 	- car/category/promocode crude (email to all emploies to keep them updated in work)
-	- booking return notify employee
 	- Doc. status update +  notification to resubmit doc to verify.
 	- blocklist/unverify notify the customer + admin with reason
 

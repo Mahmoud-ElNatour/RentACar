@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
+using RentACar.Application.Managers;
 
 namespace RentACar.Web.Areas.Identity.Pages.Account.Manage
 {
@@ -20,6 +21,7 @@ namespace RentACar.Web.Areas.Identity.Pages.Account.Manage
     {
         private readonly UserManager<IdentityUser> _userManager;
         private readonly ILogger<EnableAuthenticatorModel> _logger;
+        private readonly AuditLogManager _auditLogManager;
         private readonly UrlEncoder _urlEncoder;
 
         private const string AuthenticatorUriFormat = "otpauth://totp/{0}:{1}?secret={2}&issuer={0}&digits=6";
@@ -27,11 +29,13 @@ namespace RentACar.Web.Areas.Identity.Pages.Account.Manage
         public EnableAuthenticatorModel(
             UserManager<IdentityUser> userManager,
             ILogger<EnableAuthenticatorModel> logger,
-            UrlEncoder urlEncoder)
+            UrlEncoder urlEncoder,
+            AuditLogManager auditLogManager)
         {
             _userManager = userManager;
             _logger = logger;
             _urlEncoder = urlEncoder;
+            _auditLogManager = auditLogManager;
         }
 
         /// <summary>
@@ -127,6 +131,16 @@ namespace RentACar.Web.Areas.Identity.Pages.Account.Manage
             await _userManager.SetTwoFactorEnabledAsync(user, true);
             var userId = await _userManager.GetUserIdAsync(user);
             _logger.LogInformation("User with ID '{UserId}' has enabled 2FA with an authenticator app.", userId);
+
+            await _auditLogManager.LogEventAsync(
+                action: "Auth.Enable2FA",
+                entity: "User",
+                entityId: userId,
+                summary: "User enabled 2FA with Authenticator App",
+                status: "Success",
+                targetType: "SecuritySettings",
+                targetId: userId
+            );
 
             StatusMessage = "Your authenticator app has been verified.";
 
