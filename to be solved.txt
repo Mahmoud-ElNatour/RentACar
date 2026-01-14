@@ -14,7 +14,8 @@ Done	- create acc --> verify email
 	- Doc. status update +  notification to resubmit doc to verify.
 	- blocklist/unverify notify the customer + admin with reason
 
-
+ 
+ 
 promocode:
 - add attr maxNbUsedByACustomer, isForNewCustomers 
 
