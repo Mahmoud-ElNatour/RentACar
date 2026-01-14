@@ -51,13 +51,13 @@
             <div class="mt-4 text-center">
                 @if (Model.MfaProvider == "Authenticator")
                 {
-                    <a asp-page="./LoginWith2fa" asp-route-mfaProvider="Email" asp-route-returnUrl="@Model.ReturnUrl" asp-route-rememberMe="@Model.RememberMe" class="text-sm text-gold hover:text-white transition-colors underline decoration-gold/50 underline-offset-4">
+                    <a asp-page="./LoginWith2fa" asp-route-mfaProvider="Email" asp-route-returnUrl="@Model.ReturnUrl" asp-route-rememberMe="@Model.RememberMe" class="text-sm !text-gold hover:text-white transition-colors underline decoration-gold/50 underline-offset-4">
                         Try another way: Send Email Code
                     </a>
                 }
                 else
                 {
-                    <a asp-page="./LoginWith2fa" asp-route-mfaProvider="Authenticator" asp-route-returnUrl="@Model.ReturnUrl" asp-route-rememberMe="@Model.RememberMe" class="text-sm text-gold hover:text-white transition-colors underline decoration-gold/50 underline-offset-4">
+                    <a asp-page="./LoginWith2fa" asp-route-mfaProvider="Authenticator" asp-route-returnUrl="@Model.ReturnUrl" asp-route-rememberMe="@Model.RememberMe" class="text-sm !text-gold hover:text-white transition-colors underline decoration-gold/50 underline-offset-4">
                         Try another way: Use Authenticator App
                     </a>
                 }
@@ -67,7 +67,7 @@
         <div class="mt-6 text-center">
             <p class="text-sm text-gray-400">
                 Don't have access to your device?
-                <a asp-page="./LoginWithRecoveryCode" asp-route-returnUrl="@Model.ReturnUrl" class="text-gold hover:text-white transition-colors font-semibold ml-1 underline decoration-gold decoration-1 underline-offset-4">Log in with a recovery code</a>.
+                <a asp-page="./LoginWithRecoveryCode" asp-route-returnUrl="@Model.ReturnUrl" class="!text-gold hover:text-white transition-colors font-semibold ml-1 underline decoration-gold decoration-1 underline-offset-4">Log in with a recovery code</a>.
             </p>
         </div>
     </div>

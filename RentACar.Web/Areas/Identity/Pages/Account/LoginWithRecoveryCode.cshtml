@@ -10,8 +10,8 @@
     <div class="w-full max-w-md space-y-8 bg-[#171717] p-10 rounded-2xl shadow-xl border border-white/5">
         <div class="text-center">
             <div class="flex justify-center mb-6">
-                <div class="h-20 w-20 rounded-full bg-purple-500/10 flex items-center justify-center border border-purple-500/20">
-                    <span class="material-symbols-outlined text-purple-400 text-5xl">key</span>
+                <div class="h-20 w-20 rounded-full bg-gold/10 flex items-center justify-center border border-gold/20">
+                    <span class="material-symbols-outlined text-gold text-5xl">key</span>
                 </div>
             </div>
             <h1 class="text-3xl font-bold text-white mb-2">@ViewData["Title"]</h1>
@@ -23,11 +23,11 @@
             
             <div class="space-y-2">
                 <label asp-for="Input.RecoveryCode" class="block text-sm font-medium text-gray-300">Recovery Code</label>
-                <input asp-for="Input.RecoveryCode" class="block w-full bg-[#1a1a1a] border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-purple-400 focus:border-purple-400 transition-all font-mono" autocomplete="off" placeholder="Enter recovery code" />
+                <input asp-for="Input.RecoveryCode" class="block w-full bg-[#1a1a1a] border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-gold focus:border-gold transition-all font-mono" autocomplete="off" placeholder="Enter recovery code" />
                 <span asp-validation-for="Input.RecoveryCode" class="text-red-400 text-xs"></span>
             </div>
 
-            <button type="submit" class="w-full inline-flex items-center justify-center px-6 py-3.5 border border-transparent text-base font-bold rounded-lg text-black bg-purple-400 hover:bg-purple-500 transition-all duration-300 shadow-lg">
+            <button type="submit" class="w-full inline-flex items-center justify-center px-6 py-3.5 border border-transparent text-base font-bold rounded-lg text-black bg-gold hover:bg-gold-hover transition-all duration-300 shadow-lg">
                 Log In
             </button>
         </form>
