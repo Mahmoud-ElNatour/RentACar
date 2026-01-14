@@ -18,10 +18,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup .NET 8
+      - name: Check dotnet visible to runner
+        shell: pwsh
+        run: |
+          where dotnet
+          dotnet --info
+
+      - name: Setup .NET 8 (no admin)
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "8.0.x"
+        env:
+          DOTNET_INSTALL_DIR: ${{ runner.temp }}\dotnet
+
+      - name: Add dotnet to PATH
+        shell: pwsh
+        run: echo "${{ runner.temp }}\dotnet" >> $env:GITHUB_PATH
 
       - name: Restore
         run: dotnet restore
@@ -36,23 +48,17 @@ jobs:
         shell: powershell
         run: |
           Import-Module WebAdministration
-
           $sitePath = "${{ env.SITE_PATH }}"
           $publishPath = "${{ env.PUBLISH_PATH }}"
           $appPool = "${{ env.APP_POOL }}"
-
           try { Stop-WebAppPool -Name $appPool } catch { }
           Start-Sleep -Seconds 2
-
           "offline" | Out-File (Join-Path $sitePath "app_offline.htm") -Encoding ASCII
-
           robocopy $publishPath $sitePath /MIR /R:2 /W:2 /NFL /NDL /NP
           $rc = $LASTEXITCODE
           if ($rc -ge 8) { throw "Robocopy failed with exit code $rc" }
           $global:LASTEXITCODE = 0
-
           Remove-Item (Join-Path $sitePath "app_offline.htm") -ErrorAction SilentlyContinue
-
           $maxTries = 10
           for ($i = 1; $i -le $maxTries; $i++) {
             try {
