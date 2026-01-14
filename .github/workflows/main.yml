@@ -18,25 +18,49 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup .NET 8
+      # Optional diagnostics (helps confirm what the runner user can see)
+      - name: Check dotnet visible to runner
+        shell: powershell
+        run: |
+          where.exe dotnet
+          dotnet --info
+
+      # Install .NET to a writable folder (avoids C:\Program Files\dotnet permission issue)
+      - name: Setup .NET 8 (no admin)
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "8.0.x"
+        env:
+          DOTNET_INSTALL_DIR: ${{ runner.temp }}\dotnet
+
+      # Ensure the installed dotnet is on PATH for next steps (PowerShell 5.1 compatible)
+      - name: Add dotnet to PATH
+        shell: powershell
+        run: |
+          Add-Content -Path $env:GITHUB_PATH -Value "${{ runner.temp }}\dotnet"
 
       - name: Restore
+        shell: powershell
         run: dotnet restore
 
       - name: Build
+        shell: powershell
         run: dotnet build -c Release --no-restore
 
+      # Ensure publish folder exists (prevents publish failures on fresh machines / cleaned folders)
+      - name: Ensure publish folder exists
+        shell: powershell
+        run: |
+          New-Item -ItemType Directory -Force -Path "${{ env.PUBLISH_PATH }}" | Out-Null
+
       - name: Publish (Web)
+        shell: powershell
         run: dotnet publish .\RentACar.Web\RentACar.Web.csproj -c Release -o "${{ env.PUBLISH_PATH }}" --no-build
 
       - name: Deploy to IIS
         shell: powershell
         run: |
           Import-Module WebAdministration
-
           $sitePath = "${{ env.SITE_PATH }}"
           $publishPath = "${{ env.PUBLISH_PATH }}"
           $appPool = "${{ env.APP_POOL }}"
@@ -44,7 +68,8 @@ jobs:
           try { Stop-WebAppPool -Name $appPool } catch { }
           Start-Sleep -Seconds 2
 
-          "offline" | Out-File (Join-Path $sitePath "app_offline.htm") -Encoding ASCII
+          # Put the site offline during file copy (prevents locked DLL issues)
+          "offline" | Out-File (Join-Path $sitePath "app_offline.htm") -Encoding ASCII -Force
 
           robocopy $publishPath $sitePath /MIR /R:2 /W:2 /NFL /NDL /NP
           $rc = $LASTEXITCODE
