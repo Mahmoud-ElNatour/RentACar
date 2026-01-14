@@ -47,6 +47,12 @@ jobs:
         shell: powershell
         run: dotnet build -c Release --no-restore
 
+      # Ensure publish folder exists (prevents publish failures on fresh machines / cleaned folders)
+      - name: Ensure publish folder exists
+        shell: powershell
+        run: |
+          New-Item -ItemType Directory -Force -Path "${{ env.PUBLISH_PATH }}" | Out-Null
+
       - name: Publish (Web)
         shell: powershell
         run: dotnet publish .\RentACar.Web\RentACar.Web.csproj -c Release -o "${{ env.PUBLISH_PATH }}" --no-build
@@ -62,7 +68,8 @@ jobs:
           try { Stop-WebAppPool -Name $appPool } catch { }
           Start-Sleep -Seconds 2
 
-          "offline" | Out-File (Join-Path $sitePath "app_offline.htm") -Encoding ASCII
+          # Put the site offline during file copy (prevents locked DLL issues)
+          "offline" | Out-File (Join-Path $sitePath "app_offline.htm") -Encoding ASCII -Force
 
           robocopy $publishPath $sitePath /MIR /R:2 /W:2 /NFL /NDL /NP
           $rc = $LASTEXITCODE
