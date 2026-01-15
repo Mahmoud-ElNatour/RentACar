@@ -132,7 +132,7 @@ namespace RentACar.Application.Managers
             }
         }
 
-        public async Task<(List<AuditLog> Logs, int TotalCount)> GetLogsAsync(string? searchTerm, string? actionType, string? entityName, string? status, DateTime? startDate, DateTime? endDate, int page, int pageSize)
+        public async Task<(List<AuditLogDto> Logs, int TotalCount)> GetLogsAsync(string? searchTerm, string? actionType, string? entityName, string? status, DateTime? startDate, DateTime? endDate, int page, int pageSize)
         {
             var query = _dbContext.AuditLogs.AsQueryable();
 
@@ -177,6 +177,27 @@ namespace RentACar.Application.Managers
             var logs = await query.OrderByDescending(l => l.Timestamp)
                                   .Skip((page - 1) * pageSize)
                                   .Take(pageSize)
+                                  .Select(l => new AuditLogDto
+                                  {
+                                      Id = l.Id,
+                                      Timestamp = l.Timestamp,
+                                      ActorName = l.ActorName,
+                                      ActorRole = l.ActorRole,
+                                      Action = l.Action,
+                                      Entity = l.Entity,
+                                      EntityId = l.EntityId,
+                                      Summary = l.Summary,
+                                      IpAddress = l.IpAddress,
+                                      Device = l.Device,
+                                      Status = l.Status,
+                                      TargetType = l.TargetType,
+                                      TargetId = l.TargetId,
+                                      Outcome = l.Outcome,
+                                      DetailsJson = l.DetailsJson,
+                                      OldValuesJson = l.OldValuesJson,
+                                      NewValuesJson = l.NewValuesJson,
+                                      FailureReason = l.FailureReason
+                                  })
                                   .ToListAsync();
 
             return (logs, totalCount);

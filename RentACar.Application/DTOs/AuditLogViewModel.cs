@@ -6,7 +6,7 @@ namespace RentACar.Application.DTOs
 {
     public class AuditLogViewModel
     {
-        public List<AuditLog> Logs { get; set; } = new();
+        public List<AuditLogDto> Logs { get; set; } = new();
         
         // Filter properties
         public string? SearchTerm { get; set; }

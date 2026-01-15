@@ -23,29 +23,17 @@ namespace RentACar.Web.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> AuditLog(string? search, string? actionType, string? entity, string? status, DateTime? startDate, DateTime? endDate, int page = 1)
+        public IActionResult AuditLog(string? search, string? actionType, string? entity, string? status, DateTime? startDate, DateTime? endDate)
         {
-            int pageSize = 10;
-            var (logs, totalCount) = await _auditLogManager.GetLogsAsync(search, actionType, entity, status, startDate, endDate, page, pageSize);
-
             var model = new AuditLogViewModel
             {
-                Logs = logs,
                 SearchTerm = search,
                 ActionType = actionType,
                 EntityName = entity,
                 Status = status,
                 StartDate = startDate,
-                EndDate = endDate,
-                Page = page,
-                PageSize = pageSize,
-                TotalCount = totalCount
+                EndDate = endDate
             };
-
-            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-            {
-                return PartialView("_AuditLogTable", model);
-            }
 
             return View(model);
         }
