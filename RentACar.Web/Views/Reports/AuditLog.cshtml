@@ -108,6 +108,111 @@
 
         </div>
     </div>
+<!-- Details Modal -->
+<div id="audit-details-modal" class="fixed inset-0 z-[100] hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <!-- Backdrop -->
+    <div class="fixed inset-0 bg-black/80 backdrop-blur-md transition-opacity" onclick="closeAuditModal()"></div>
+
+    <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+        <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+            <!-- Modal Panel -->
+            <div class="relative transform overflow-hidden rounded-2xl bg-[#0a0a0a] text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-3xl">
+                
+                <!-- Header -->
+                <div class="bg-gradient-to-r from-[#0a0a0a] via-[#111] to-[#0a0a0a] px-3 py-2 flex justify-between items-center border-b border-white/5">
+                    <div>
+                        <h3 class="text-xl font-bold text-white tracking-tight" id="modal-title">Log Details</h3>
+                        <p class="mt-1 text-sm text-gold/60 font-mono">ID: <span id="modal-log-id"></span></p>
+                    </div>
+                    <button type="button"
+        onclick="closeAuditModal()"
+        style="
+            all: unset !important;
+            cursor: pointer !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 36px !important;
+            height: 36px !important;
+            border-radius: 9999px !important;
+            color: white !important;
+            ;
+        "
+        
+        aria-label="Close modal">
+    <span class="material-symbols-outlined"
+          style="
+              font-size: 20px !important;
+              line-height: 1 !important;
+          ">
+        close
+    </span>
+</button>
+
+                </div>
+
+                <!-- Body -->
+                <div class="px-6 py-6 space-y-6 max-h-[75vh] overflow-y-auto custom-scrollbar bg-[#0a0a0a]">
+                    
+                    <!-- Basic Info Grid -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="bg-white/[0.02] p-4 rounded-xl">
+                            <span class="text-[10px] text-white/40 uppercase tracking-widest block mb-2">Action</span>
+                            <span id="modal-action" class="text-gold font-bold text-sm"></span>
+                        </div>
+                        <div class="bg-white/[0.02] p-4 rounded-xl">
+                            <span class="text-[10px] text-white/40 uppercase tracking-widest block mb-2">Entity</span>
+                            <span id="modal-entity" class="text-white font-medium text-sm"></span>
+                        </div>
+                        <div class="bg-white/[0.02] p-4 rounded-xl">
+                             <span class="text-[10px] text-white/40 uppercase tracking-widest block mb-2">Target ID</span>
+                             <span id="modal-target-id" class="text-white/70 font-mono text-xs"></span>
+                        </div>
+                         <div class="bg-white/[0.02] p-4 rounded-xl">
+                             <span class="text-[10px] text-white/40 uppercase tracking-widest block mb-2">Outcome</span>
+                             <span id="modal-outcome" class="text-white font-medium text-sm"></span>
+                        </div>
+                    </div>
+
+                    <!-- Diff View -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Old Values -->
+                        <div id="modal-old-values-section" class="hidden">
+                            <h4 class="text-sm font-bold text-red-500 mb-3 flex items-center gap-2 uppercase tracking-wide">
+                                <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span> Previous State
+                            </h4>
+                            <div class="relative group">
+                                <div class="absolute -inset-0.5 bg-gradient-to-b from-red-500/20 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition duration-500 blur"></div>
+                                <pre id="modal-old-values-json" class="relative bg-red-500/[0.03] p-5 rounded-xl text-xs font-mono text-red-200/90 overflow-x-auto custom-scrollbar border-l-2 border-red-500/20"></pre>
+                            </div>
+                        </div>
+
+                        <!-- New Values -->
+                        <div id="modal-new-values-section" class="hidden">
+                            <h4 class="text-sm font-bold text-emerald-500 mb-3 flex items-center gap-2 uppercase tracking-wide">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> New State
+                            </h4>
+                            <div class="relative group">
+                                <div class="absolute -inset-0.5 bg-gradient-to-b from-emerald-500/20 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition duration-500 blur"></div>
+                                <pre id="modal-new-values-json" class="relative bg-emerald-500/[0.03] p-5 rounded-xl text-xs font-mono text-emerald-200/90 overflow-x-auto custom-scrollbar border-l-2 border-emerald-500/20"></pre>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Details (Full JSON) -->
+                     <div id="modal-details-section" class="hidden mt-6">
+                        <h4 class="text-sm font-bold text-gold mb-3 flex items-center gap-2 uppercase tracking-wide">
+                             <span class="w-1.5 h-1.5 rounded-full bg-gold"></span> Additional Details
+                        </h4>
+                        <pre id="modal-details-json" class="bg-white/[0.02] p-5 rounded-xl text-xs font-mono text-white/60 overflow-x-auto custom-scrollbar"></pre>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 </div>
 
 @section Scripts {
