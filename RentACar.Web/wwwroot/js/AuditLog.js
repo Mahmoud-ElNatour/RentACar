@@ -361,12 +361,77 @@ $(document).ready(function () {
             }
         }
 
-        setJson('#modal-details-json', '#modal-details-section', btn.attr('data-details')); // Use attr to get raw string
-        setJson('#modal-old-values-json', '#modal-old-values-section', btn.attr('data-old'));
-        setJson('#modal-new-values-json', '#modal-new-values-section', btn.attr('data-new'));
+        // Populate Comparison Table
+        renderComparisonTable(btn.attr('data-old'), btn.attr('data-new'));
+        setJson('#modal-details-json', '#modal-details-section', btn.attr('data-details'));
 
         $('#audit-details-modal').removeClass('hidden');
     });
+
+    function renderComparisonTable(oldJsonStr, newJsonStr) {
+        var tbody = $('#modal-changes-tbody');
+        var section = $('#modal-changes-section');
+        tbody.empty();
+
+        var oldObj = {};
+        var newObj = {};
+        var hasChanges = false;
+
+        try {
+            if (oldJsonStr) oldObj = JSON.parse(oldJsonStr);
+            if (newJsonStr) newObj = JSON.parse(newJsonStr);
+        } catch (e) {
+            console.error("Error parsing changes JSON", e);
+        }
+
+        // Get all unique keys
+        var allKeys = new Set([...Object.keys(oldObj || {}), ...Object.keys(newObj || {})]);
+
+        if (allKeys.size === 0) {
+            section.addClass('hidden');
+            return;
+        }
+
+        section.removeClass('hidden');
+
+        var sortedKeys = Array.from(allKeys).sort();
+
+        sortedKeys.forEach(key => {
+            var oldVal = oldObj && oldObj.hasOwnProperty(key) ? oldObj[key] : null;
+            var newVal = newObj && newObj.hasOwnProperty(key) ? newObj[key] : null;
+
+            // Normalize for comparison
+            var oldValStr = oldVal === null || oldVal === undefined ? '' : String(oldVal);
+            var newValStr = newVal === null || newVal === undefined ? '' : String(newVal);
+
+            var isChanged = oldValStr.trim() !== newValStr.trim();
+            if (isChanged) hasChanges = true;
+
+            // Styling variables
+            var rowClass = isChanged ? "bg-white/[0.04]" : "";
+            var oldClass = isChanged ? "text-red-400 font-medium" : "text-white/40";
+            var newClass = isChanged ? "text-emerald-400 font-bold" : "text-white/40";
+            var propClass = "text-white/70 font-mono text-xs";
+
+            // Icon logic for visual flair similar to user request
+            var oldIcon = isChanged ? '' : ''; // Could add delete icon if needed
+            var newIcon = isChanged ? '' : ''; // Could add edit icon if needed
+
+            // Formatting values (handle nulls gracefully)
+            var displayOld = oldVal === null || oldVal === undefined ? '<span class="text-white/20 italic">null</span>' : escapeHtml(String(oldVal));
+            var displayNew = newVal === null || newVal === undefined ? '<span class="text-white/20 italic">null</span>' : escapeHtml(String(newVal));
+
+            var rowHtml = `
+                <tr class="${rowClass} hover:bg-white/[0.06] transition-colors">
+                    <td class="py-3 px-4 ${propClass}">${escapeHtml(key)}</td>
+                    <td class="py-3 px-4 text-sm ${oldClass}">${displayOld}</td>
+                    <td class="py-3 px-4 text-sm ${newClass}">${displayNew}</td>
+                </tr>
+            `;
+
+            tbody.append(rowHtml);
+        });
+    }
 
     // Close Modal Logic
     window.closeAuditModal = function () {

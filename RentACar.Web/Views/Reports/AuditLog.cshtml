@@ -13,7 +13,7 @@
 <!-- Page Header -->
 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 p-4 mb-4">
     <div class="flex flex-col gap-2">
-        <h1 class="text-white text-3xl md:text-4xl font-extrabold leading-tight tracking-tight">Audit Log Report</h1>
+        <h1 class="text-white text-3xl md:text-4xl font-extrabold leading-tight tracking-tight"><span class="text-gold text-3xl">Audit Logs </span> Report</h1>
         <p class="text-white/60 text-base font-normal">Track system changes, user activities, and administrative actions.</p>
     </div>
     <!-- Export Button -->
@@ -174,30 +174,38 @@
                         </div>
                     </div>
 
-                    <!-- Diff View -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- Old Values -->
-                        <div id="modal-old-values-section" class="hidden">
-                            <h4 class="text-sm font-bold text-red-500 mb-3 flex items-center gap-2 uppercase tracking-wide">
-                                <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span> Previous State
+                        <!-- Changes Comparison -->
+                        <div id="modal-changes-section" class="hidden col-span-1 md:col-span-2">
+                             <h4 class="text-sm font-bold text-white mb-3 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-gold text-[20px]">compare_arrows</span>
+                                Changes
                             </h4>
-                            <div class="relative group">
-                                <div class="absolute -inset-0.5 bg-gradient-to-b from-red-500/20 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition duration-500 blur"></div>
-                                <pre id="modal-old-values-json" class="relative bg-red-500/[0.03] p-5 rounded-xl text-xs font-mono text-red-200/90 overflow-x-auto custom-scrollbar border-l-2 border-red-500/20"></pre>
+                            
+                            <div class="rounded-xl bg-surface-dark overflow-hidden shadow-lg ">
+                                <div class="overflow-x-auto custom-scrollbar">
+                                    <table class="w-full text-left border-collapse border-gold text-sm">
+                                        <thead>
+                                            <tr class="bg-surface-dark-lighter border-b border-white/5">
+                                                <th class="py-3 px-4 font-bold text-white w-1/3">Attribute</th>
+                                                <th class="py-3 px-4 font-bold text-red-400 w-1/3">
+                                                    <div class="flex items-center gap-1">
+                                                        <span class="material-symbols-outlined text-[16px]">remove_circle</span> Old Value
+                                                    </div>
+                                                </th>
+                                                <th class="py-3 px-4 font-bold text-emerald-400 w-1/3">
+                                                    <div class="flex items-center gap-1">
+                                                        <span class="material-symbols-outlined text-[16px]">add_circle</span> New Value
+                                                    </div>
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="modal-changes-tbody" class="divide-y divide-white/5 bg-surface-dark">
+                                            <!-- Rows populated by JS -->
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
-
-                        <!-- New Values -->
-                        <div id="modal-new-values-section" class="hidden">
-                            <h4 class="text-sm font-bold text-emerald-500 mb-3 flex items-center gap-2 uppercase tracking-wide">
-                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> New State
-                            </h4>
-                            <div class="relative group">
-                                <div class="absolute -inset-0.5 bg-gradient-to-b from-emerald-500/20 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition duration-500 blur"></div>
-                                <pre id="modal-new-values-json" class="relative bg-emerald-500/[0.03] p-5 rounded-xl text-xs font-mono text-emerald-200/90 overflow-x-auto custom-scrollbar border-l-2 border-emerald-500/20"></pre>
-                            </div>
-                        </div>
-                    </div>
                     
                     <!-- Details (Full JSON) -->
                      <div id="modal-details-section" class="hidden mt-6">
