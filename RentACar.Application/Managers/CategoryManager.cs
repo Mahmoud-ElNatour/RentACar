@@ -102,7 +102,16 @@ namespace RentACar.Application.Managers
         {
             _logger.LogInformation("Updating category {Id}", categoryDto.CategoryId);
             var user = await _userManager.FindByIdAsync(userId);
-            if (user == null || !await _userManager.IsInRoleAsync(user, "Admin"))
+            if (user == null)
+            {
+                _logger.LogWarning("User {UserId} not found", userId);
+                return null;
+            }
+
+            var isAdmin = await _userManager.IsInRoleAsync(user, "Admin");
+            var isEmployee = await _userManager.IsInRoleAsync(user, "Employee");
+
+            if (!isAdmin && !isEmployee)
             {
                 _logger.LogWarning("User {UserId} not authorized to update categories", userId);
                 return null;
@@ -113,6 +122,13 @@ namespace RentACar.Application.Managers
             {
                 _logger.LogWarning("Category {Id} not found", categoryDto.CategoryId);
                 return null;
+            }
+
+            // Enforce: Only Admin can change IsActive
+            // If not admin, we force the DTO's IsActive to match the existing entity's state before mapping
+            if (!isAdmin)
+            {
+                categoryDto.IsActive = existingCategory.IsActive;
             }
 
             var categoryWithNameExists = await _categoryRepository.GetByNameAsync(categoryDto.Name);

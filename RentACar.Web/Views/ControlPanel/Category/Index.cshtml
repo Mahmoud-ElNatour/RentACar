@@ -19,6 +19,13 @@
                     "background-dark": "#0a0a0a", // Almost black
                     "surface-dark": "#171717", // Dark neutral gray for cards
                     "surface-accent": "#262626", // Lighter neutral gray for borders/inputs
+                    // Footer & Brand Colors (Inherited from Layout)
+                    "gold": "#f2b90d",
+                    "gold-light": "#fce186", 
+                    "gold-hover": "#d9a60c",
+                    "footer-bg": "#0a0a0a",
+                    "footer-surface": "#171717",
+                    "footer-border": "#f2b90d33",
                 },
                 fontFamily: {
                     "display": ["Manrope", "sans-serif"]
@@ -95,6 +102,7 @@
 @section Scripts {
     <script>
         let allCategories = [];
+        const isAdmin = @User.IsInRole("Admin").ToString().ToLower();
 
         async function loadCategories() {
             try {
@@ -162,19 +170,23 @@
                         </div>
                         <div class="mt-auto pt-5 border-t border-surface-accent flex items-center justify-between">
                             <div class="flex items-center gap-2">
+                                ${isAdmin ? `
                                 <label class="relative inline-flex items-center cursor-pointer group/toggle">
                                     <input type="checkbox" class="sr-only peer toggle-active" data-id="${c.categoryId}" ${c.isActive ? 'checked' : ''}/>
                                     <div class="w-10 h-6 bg-surface-accent peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                                     <span class="ms-2 text-xs font-medium text-[#a3a3a3] group-hover/toggle:text-white transition-colors">${c.isActive ? 'Visible' : 'Hidden'}</span>
                                 </label>
+                                ` : ''}
                             </div>
                             <div class="flex gap-2">
-                                <button class="edit-category size-9 flex items-center justify-center rounded-lg bg-surface-accent text-[#a3a3a3] hover:bg-primary hover:text-background-dark transition-all" data-id="${c.categoryId}" title="Edit">
+                                <button class="edit-category  border-none size-9 flex items-center justify-center rounded-lg bg-surface-accent text-[#a3a3a3] hover:bg-primary hover:text-background-dark transition-all" data-id="${c.categoryId}" title="Edit">
                                     <span class="material-symbols-outlined text-[20px]">edit</span>
                                 </button>
-                                <button class="delete-category size-9 flex items-center justify-center rounded-lg bg-surface-accent text-[#a3a3a3] hover:bg-red-500 hover:text-white transition-all" data-id="${c.categoryId}" title="Delete">
+                                ${isAdmin ? `
+                                <button class="delete-category border-none size-9 flex items-center justify-center rounded-lg bg-surface-accent text-[#a3a3a3] hover:bg-red-500 hover:text-white transition-all" data-id="${c.categoryId}" title="Delete">
                                     <span class="material-symbols-outlined text-[20px]">delete</span>
                                 </button>
+                                ` : ''}
                             </div>
                         </div>
                     </div>
