@@ -1,0 +1,175 @@
+@{
+    ViewData["Title"] = "Email Services Hub";
+    Layout = "_Layout";
+    ViewData["BodyClass"] = "dark bg-background-dark";
+}
+
+<style>
+    .gold-glow-hover:hover {
+        box-shadow: 0 0 20px rgba(242, 185, 13, 0.2);
+        border-color: #f2b90d !important;
+    }
+    .stat-card {
+        background: linear-gradient(145deg, #121214 0%, #080809 100%);
+    }
+    /* Ensure the hub background matches the dark theme */
+    .email-hub-bg {
+        background-color: #050505;
+    }
+</style>
+
+<div class="email-hub-bg font-display text-zinc-100 min-h-screen">
+    <div class="layout-container flex h-full grow flex-col">
+        <!-- Breadcrumbs Section -->
+        <div class="w-full border-b border-white/5 bg-black/40 backdrop-blur-md sticky top-0 z-20">
+            <div class="max-w-[1200px] mx-auto px-6 py-6">
+                <div class="flex flex-col items-center justify-center">
+                    <div class="flex items-center gap-3 mb-2">
+                        <span class="material-symbols-outlined text-[#f2b90d] text-2xl">mail</span>
+                        <h1 class="text-xl font-bold tracking-[0.25em] uppercase text-zinc-100">Email Services Hub</h1>
+                    </div>
+                    <div class="h-0.5 w-20 bg-gradient-to-r from-transparent via-[#f2b90d] to-transparent opacity-60"></div>
+                </div>
+            </div>
+        </div>
+
+        <main class="max-w-[1200px] mx-auto px-6 py-10 w-full flex flex-col gap-12">
+            <!-- Quick Stats Section -->
+            <section>
+                <div class="flex items-center gap-2 mb-6">
+                    <div class="h-px w-8 bg-[#f2b90d]"></div>
+                    <h2 class="text-sm font-bold uppercase tracking-widest text-zinc-500">Live Performance Metrics</h2>
+                </div>
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+                    <div class="stat-card p-4 md:p-6 rounded-xl border border-white/5 flex flex-col gap-2">
+                        <p class="text-zinc-500 text-xs font-bold uppercase tracking-wider">Sent Today</p>
+                        <div class="flex items-baseline gap-2">
+                            <span class="text-3xl font-extrabold text-white">1,240</span>
+                            <span class="text-emerald-500 text-xs font-medium">↑ 12%</span>
+                        </div>
+                    </div>
+                    <div class="stat-card p-4 md:p-6 rounded-xl border border-white/5 flex flex-col gap-2">
+                        <p class="text-zinc-500 text-xs font-bold uppercase tracking-wider">Delivery Rate</p>
+                        <div class="flex items-baseline gap-2">
+                            <span class="text-3xl font-extrabold text-white">98.5%</span>
+                            <span class="text-[#f2b90d] text-xs font-medium">Optimal</span>
+                        </div>
+                    </div>
+                    <div class="stat-card p-4 md:p-6 rounded-xl border border-white/5 flex flex-col gap-2">
+                        <p class="text-zinc-500 text-xs font-bold uppercase tracking-wider">Active Reminders</p>
+                        <div class="flex items-center gap-2 mt-1">
+                            <span class="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                            <span class="text-xl font-bold text-white leading-none">Running</span>
+                        </div>
+                    </div>
+                    <div class="stat-card p-4 md:p-6 rounded-xl border border-white/5 flex flex-col gap-2">
+                        <p class="text-zinc-500 text-xs font-bold uppercase tracking-wider">Pending Errors</p>
+                        <div class="flex items-baseline gap-2">
+                            <span class="text-3xl font-extrabold text-white">12</span>
+                            <span class="text-zinc-500 text-xs font-medium">Last 24h</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Navigation Grid -->
+            <section>
+                <div class="flex items-center gap-2 mb-6">
+                    <div class="h-px w-8 bg-[#f2b90d]"></div>
+                    <h2 class="text-sm font-bold uppercase tracking-widest text-zinc-500">Core Modules</h2>
+                </div>
+                <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
+                    <!-- Send Email -->
+                    <div class="group bg-[#121214] border border-white/5 p-5 md:p-8 rounded-xl flex flex-col h-full transition-all duration-300 gold-glow-hover relative overflow-hidden">
+                        <div class="absolute -right-4 -top-4 text-[#f2b90d]/5 group-hover:text-[#f2b90d]/10 transition-colors">
+                            <span class="material-symbols-outlined text-[120px] select-none">send</span>
+                        </div>
+                        <div class="bg-[#f2b90d]/10 w-14 h-14 rounded-lg flex items-center justify-center mb-6 border border-[#f2b90d]/20">
+                            <span class="material-symbols-outlined text-[#f2b90d] text-3xl">send</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-2">Send Email</h3>
+                        <p class="text-zinc-400 text-sm leading-relaxed mb-8">Compose and dispatch individual or bulk messages to your car rental clients instantly.</p>
+                        <button class="mt-auto inline-flex items-center justify-center gap-2 bg-[#d4af37] text-black font-bold py-3 px-6 rounded-lg text-sm hover:bg-[#e6c347] transition-all uppercase tracking-wider">
+                            View Module <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                        </button>
+                    </div>
+
+                    <!-- Distribution Lists -->
+                    <div class="group bg-[#121214] border border-white/5 p-5 md:p-8 rounded-xl flex flex-col h-full transition-all duration-300 gold-glow-hover relative overflow-hidden">
+                        <div class="absolute -right-4 -top-4 text-[#f2b90d]/5 group-hover:text-[#f2b90d]/10 transition-colors">
+                            <span class="material-symbols-outlined text-[120px] select-none">group</span>
+                        </div>
+                        <div class="bg-[#f2b90d]/10 w-14 h-14 rounded-lg flex items-center justify-center mb-6 border border-[#f2b90d]/20">
+                            <span class="material-symbols-outlined text-[#f2b90d] text-3xl">group</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-2">Distribution Lists</h3>
+                        <p class="text-zinc-400 text-sm leading-relaxed mb-8">Manage recipient groups, segment users by loyalty level, and organize mailing lists.</p>
+                        <button class="mt-auto inline-flex items-center justify-center gap-2 bg-[#d4af37] text-black font-bold py-3 px-6 rounded-lg text-sm hover:bg-[#e6c347] transition-all uppercase tracking-wider">
+                            View Module <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                        </button>
+                    </div>
+
+                    <!-- Notifications Management -->
+                    <div class="group bg-[#121214] border border-white/5 p-5 md:p-8 rounded-xl flex flex-col h-full transition-all duration-300 gold-glow-hover relative overflow-hidden">
+                        <div class="absolute -right-4 -top-4 text-[#f2b90d]/5 group-hover:text-[#f2b90d]/10 transition-colors">
+                            <span class="material-symbols-outlined text-[120px] select-none">notifications_active</span>
+                        </div>
+                        <div class="bg-[#f2b90d]/10 w-14 h-14 rounded-lg flex items-center justify-center mb-6 border border-[#f2b90d]/20">
+                            <span class="material-symbols-outlined text-[#f2b90d] text-3xl">notifications_active</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-2">Notifications</h3>
+                        <p class="text-zinc-400 text-sm leading-relaxed mb-8">Configure automated booking alerts, system triggers, and vehicle return reminders.</p>
+                        <button class="mt-auto inline-flex items-center justify-center gap-2 bg-[#d4af37] text-black font-bold py-3 px-6 rounded-lg text-sm hover:bg-[#e6c347] transition-all uppercase tracking-wider">
+                            View Module <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                        </button>
+                    </div>
+
+                    <!-- Templates -->
+                    <div class="group bg-[#121214] border border-white/5 p-5 md:p-8 rounded-xl flex flex-col h-full transition-all duration-300 gold-glow-hover relative overflow-hidden">
+                        <div class="absolute -right-4 -top-4 text-[#f2b90d]/5 group-hover:text-[#f2b90d]/10 transition-colors">
+                            <span class="material-symbols-outlined text-[120px] select-none">dashboard_customize</span>
+                        </div>
+                        <div class="bg-[#f2b90d]/10 w-14 h-14 rounded-lg flex items-center justify-center mb-6 border border-[#f2b90d]/20">
+                            <span class="material-symbols-outlined text-[#f2b90d] text-3xl">dashboard_customize</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-2">Templates</h3>
+                        <p class="text-zinc-400 text-sm leading-relaxed mb-8">Design and edit professional, standardized email layouts for agreements and receipts.</p>
+                        <button class="mt-auto inline-flex items-center justify-center gap-2 bg-[#d4af37] text-black font-bold py-3 px-6 rounded-lg text-sm hover:bg-[#e6c347] transition-all uppercase tracking-wider">
+                            View Module <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                        </button>
+                    </div>
+
+                    <!-- Logs / Outbox -->
+                    <div class="group bg-[#121214] border border-white/5 p-5 md:p-8 rounded-xl flex flex-col h-full transition-all duration-300 gold-glow-hover relative overflow-hidden">
+                        <div class="absolute -right-4 -top-4 text-[#f2b90d]/5 group-hover:text-[#f2b90d]/10 transition-colors">
+                            <span class="material-symbols-outlined text-[120px] select-none">history</span>
+                        </div>
+                        <div class="bg-[#f2b90d]/10 w-14 h-14 rounded-lg flex items-center justify-center mb-6 border border-[#f2b90d]/20">
+                            <span class="material-symbols-outlined text-[#f2b90d] text-3xl">history</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-2">Logs / Outbox</h3>
+                        <p class="text-zinc-400 text-sm leading-relaxed mb-8">Track real-time delivery status, view the outgoing queue, and monitor sent items.</p>
+                        <button class="mt-auto inline-flex items-center justify-center gap-2 bg-[#d4af37] text-black font-bold py-3 px-6 rounded-lg text-sm hover:bg-[#e6c347] transition-all uppercase tracking-wider">
+                            View Module <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                        </button>
+                    </div>
+
+                    <!-- Notification Log -->
+                    <div class="group bg-[#121214] border border-white/5 p-5 md:p-8 rounded-xl flex flex-col h-full transition-all duration-300 gold-glow-hover relative overflow-hidden">
+                        <div class="absolute -right-4 -top-4 text-[#f2b90d]/5 group-hover:text-[#f2b90d]/10 transition-colors">
+                            <span class="material-symbols-outlined text-[120px] select-none">receipt_long</span>
+                        </div>
+                        <div class="bg-[#f2b90d]/10 w-14 h-14 rounded-lg flex items-center justify-center mb-6 border border-[#f2b90d]/20">
+                            <span class="material-symbols-outlined text-[#f2b90d] text-3xl">receipt_long</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-2">Notification Log</h3>
+                        <p class="text-zinc-400 text-sm leading-relaxed mb-8">Comprehensive audit trail of all automated notifications and system-to-user alerts.</p>
+                        <button class="mt-auto inline-flex items-center justify-center gap-2 bg-[#d4af37] text-black font-bold py-3 px-6 rounded-lg text-sm hover:bg-[#e6c347] transition-all uppercase tracking-wider">
+                            View Module <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+</div>
