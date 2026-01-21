@@ -100,6 +100,9 @@ builder.Services.AddScoped<AuditLogManager>();
 //     options.HttpsPort = 7192;
 // });
 
+// ✅ Register Hosted Services
+builder.Services.AddHostedService<RentACar.Web.Services.NotificationBackgroundService>();
+
 var app = builder.Build();
 
 // ✅ Configure the HTTP request pipeline

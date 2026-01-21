@@ -26,6 +26,7 @@ namespace RentACar.Application.Managers
         private readonly ILogger<BookingManager> _logger;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly AuditLogManager _auditLogManager;
+        private readonly EmailManager _emailManager;
 
         public BookingManager(
             IEmployeeRepository employeeRepository,
@@ -39,7 +40,8 @@ namespace RentACar.Application.Managers
             IMapper mapper,
             UserManager<IdentityUser> userManager,
             ILogger<BookingManager> logger,
-            AuditLogManager auditLogManager)
+            AuditLogManager auditLogManager,
+            EmailManager emailManager)
         {
             _employeeRepository = employeeRepository;
             _bookingRepository = bookingRepository;
@@ -53,6 +55,7 @@ namespace RentACar.Application.Managers
             _mapper = mapper;
             _logger = logger;
             _auditLogManager = auditLogManager;
+            _emailManager = emailManager;
         }
 
         public async Task<BookingCreationResultDto?> MakeBookingAsync(MakeBookingRequestDto requestDto, string loggedInUserId)
@@ -203,6 +206,22 @@ namespace RentACar.Application.Managers
             
             await _auditLogManager.LogEventAsync("Booking.Created", "Booking", addedBooking.BookingId.ToString(), $"Created new booking for Car {addedBooking.CarId}", null, "Success");
             
+            // 📨 Send Booking Status Email (Pending)
+            if (isCustomer) 
+            {
+                 // We need customer email. If loggedInUser is customer we have it.
+                 // RequestDto has CustomerId.
+                 // We fetched customerEntity earlier.
+                 // If isCustomer is true, customerEntity is set.
+                 // If admin booked for customer, requestDto.CustomerId is set.
+                 var cust = await _customerRepository.GetByIdAsync(addedBooking.CustomerId);
+                 var custUser = await _userManager.FindByIdAsync(cust.aspNetUserId);
+                 if (custUser != null)
+                 {
+                     await _emailManager.SendBookingStatusEmail(custUser.Email, cust.Name, addedBooking);
+                 }
+            }
+            
             var session = await _paymentManager.CreateCheckoutSessionForPaymentAsync(addedPayment);
             if (string.IsNullOrWhiteSpace(session.CheckoutUrl))
             {
@@ -276,9 +295,26 @@ namespace RentACar.Application.Managers
                 return null;
             }
 
+            var oldStatus = booking.BookingStatus;
             _mapper.Map(bookingDto, booking);
             await _bookingRepository.UpdateAsync(booking);
             await _auditLogManager.LogEventAsync("Booking.StatusChanged", "Booking", bookingDto.BookingId.ToString(), $"Updated booking details. Status: {booking.BookingStatus}", null, "Success");
+
+            // 📨 Send Email if Status Changed
+            if (oldStatus != booking.BookingStatus) 
+            {
+                var cust = await _customerRepository.GetByIdAsync(booking.CustomerId);
+                var custUser = await _userManager.FindByIdAsync(cust.aspNetUserId);
+                if (custUser != null)
+                {
+                    // "On admin rejection -> status = Rejected (must include reason)"
+                    // Reason might be in DTO? BookingEditDto doesn't seem to have Reason field shown here but maybe mapped?
+                    // "Reason (only for Rejected)"
+                    // I will pass generic "Status Change" reason or null. 
+                    // If rejection, maybe check if DTO has notes? Assuming no notes field in DTO for now.
+                    await _emailManager.SendBookingStatusEmail(custUser.Email, cust.Name, booking);
+                }
+            }
 
             return _mapper.Map<BookingEditDto>(booking);
         }

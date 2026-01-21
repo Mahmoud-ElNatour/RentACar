@@ -21,6 +21,7 @@ namespace RentACar.Application.Managers
         private readonly ILogger<CustomerManager> _logger;
         private readonly IBookingRepository _bookingRepository;
         private readonly AuditLogManager _auditLogManager;
+        private readonly EmailManager _emailManager;
 
         public CustomerManager(
             UserManager<IdentityUser> userManager,
@@ -29,7 +30,8 @@ namespace RentACar.Application.Managers
             IBookingRepository bookingRepository,
             IMapper mapper,
             ILogger<CustomerManager> logger,
-            AuditLogManager auditLogManager)
+            AuditLogManager auditLogManager,
+            EmailManager emailManager)
         {
             _userManager = userManager;
             _roleManager = roleManager;
@@ -38,6 +40,7 @@ namespace RentACar.Application.Managers
             _logger = logger;
             _bookingRepository = bookingRepository;
             _auditLogManager = auditLogManager;
+            _emailManager = emailManager;
         }
         public async Task<CustomerDTO?> CreateCustomer(CustomerCreateDTO createDto)
         {
@@ -166,12 +169,26 @@ namespace RentACar.Application.Managers
 
         public async Task UpdateVerificationStatus(int customerId, bool isVerified)
         {
+             await UpdateVerificationStatus(customerId, isVerified, null);
+        }
+
+        public async Task UpdateVerificationStatus(int customerId, bool isVerified, string? reason)
+        {
             var customer = await _customerRepository.GetByIdAsync(customerId);
             if (customer != null)
             {
                 customer.IsVerified = isVerified;
                 await _customerRepository.UpdateAsync(customer);
                 await _auditLogManager.LogEventAsync("Customer.VerificationUpdated", "Customer", customerId.ToString(), $"Updated verification status to: {isVerified}", null, "Success");
+                
+                // 📨 Send Document Verification Email
+                var user = await _userManager.FindByIdAsync(customer.aspNetUserId);
+                if (user != null && !string.IsNullOrEmpty(user.Email)) {
+                     var status = isVerified ? "Verified" : "Rejected/Unverified";
+                     // If triggered by admin (assuming this method is called by admin action), 
+                     // reason should be provided for rejection.
+                     await _emailManager.SendDocumentVerificationEmail(user.Email, customer.Name, "Account/Documents", status, reason ?? "Administrative Decision", isVerified ? "You can now book cars." : "Please update your documents.");
+                }
             }
         }
 

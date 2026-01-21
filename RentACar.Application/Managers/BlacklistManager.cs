@@ -26,8 +26,10 @@ namespace RentACar.Application.Managers
         private readonly IEmployeeRepository _employeeRepository;
         private readonly ILogger<BlacklistManager> _logger;
         private readonly AuditLogManager _auditLogManager;
+        private readonly EmailManager _emailManager;
+        private readonly EmployeeManager _employeeManager;
 
-        public BlacklistManager(IBlacklistRepository blacklistRepository, UserManager<IdentityUser> userManager, IMapper mapper, ICustomerRepository customerRepository, IEmployeeRepository employeeRepository, ILogger<BlacklistManager> logger, AuditLogManager auditLogManager)
+        public BlacklistManager(IBlacklistRepository blacklistRepository, UserManager<IdentityUser> userManager, IMapper mapper, ICustomerRepository customerRepository, IEmployeeRepository employeeRepository, ILogger<BlacklistManager> logger, AuditLogManager auditLogManager, EmailManager emailManager, EmployeeManager employeeManager)
         {
             _blacklistRepository = blacklistRepository;
             _userManager = userManager;
@@ -36,6 +38,8 @@ namespace RentACar.Application.Managers
             _employeeRepository = employeeRepository;
             _logger = logger;
             _auditLogManager = auditLogManager;
+            _emailManager = emailManager;
+            _employeeManager = employeeManager;
         }
 
         public async Task<OperationResult<BlacklistDto>> AddToBlacklistAsync(AddToBlacklistRequestDto requestDto, EmployeeDto loggedInEmployeeDto)
@@ -131,6 +135,20 @@ namespace RentACar.Application.Managers
                     await _employeeRepository.UpdateAsync(employeeEntity);
                 }
             }
+            
+            // 📨 Send Account Status Email (Blocked)
+            if (userToBlacklist.Email != null) {
+                var name = isTargetCustomer ? (await _customerRepository.GetByIdAsync(userToBlacklist.Id))?.Name : (await _employeeRepository.GetByIdAsync(userToBlacklist.Id))?.Name;
+                await _emailManager.SendAccountStatusEmail(userToBlacklist.Email, name ?? userToBlacklist.UserName, "Blocked", reason);
+            }
+            // 📨 Send Admin Notification
+            if (isTargetCustomer) {
+                 var customer = await _customerRepository.GetByIdAsync(userToBlacklist.Id);
+                 if (customer != null) {
+                      var adminEmails = await _employeeManager.GetAdminEmailsAsync();
+                      await _emailManager.SendAdminAccountStatusNotification(adminEmails, customer, "Blocked", reason, loggedInEmployee.Name);
+                 }
+            }
 
             return OperationResult<BlacklistDto>.SuccessResult(_mapper.Map<BlacklistDto>(addedEntity), "Done");
         }
@@ -207,6 +225,24 @@ namespace RentACar.Application.Managers
                     // Could not retrieve logged-in employee's User information
                     return OperationResult<bool>.Failure("Cannot verify employee");
                 }
+            }
+            
+            // 📨 Send Account Status Email (Restored)
+            if (userToRemove.Email != null) {
+                 // Fetch name again or use username
+                 string? name = userToRemove.UserName;
+                 if (targetIsCustomer) name = (await _customerRepository.GetByIdAsync(userToRemove.Id))?.Name;
+                 else if (targetIsEmployee) name = (await _employeeRepository.GetByIdAsync(userToRemove.Id))?.Name;
+                 
+                 await _emailManager.SendAccountStatusEmail(userToRemove.Email, name, "Restored", "Removed from blacklist");
+            }
+            // 📨 Send Admin Notification
+            if (targetIsCustomer) {
+                 var customer = await _customerRepository.GetByIdAsync(userToRemove.Id);
+                 if (customer != null) {
+                      var adminEmails = await _employeeManager.GetAdminEmailsAsync();
+                      await _emailManager.SendAdminAccountStatusNotification(adminEmails, customer, "Restored", "Removed from blacklist", "Admin");
+                 }
             }
 
             return OperationResult<bool>.SuccessResult(true, "Done");

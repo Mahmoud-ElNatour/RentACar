@@ -332,6 +332,41 @@ namespace RentACar.Application.Managers
             return result;
         }
 
+
+        public async Task<List<string>> GetActiveEmployeeEmailsAsync()
+        {
+            var employees = await _employeeRepository.GetAllAsync();
+            var activeEmployees = employees.Where(e => e.IsActive).ToList();
+            var emails = new List<string>();
+
+            foreach (var emp in activeEmployees)
+            {
+                var user = await _userManager.FindByIdAsync(emp.aspNetUserId);
+                if (user != null && !string.IsNullOrEmpty(user.Email))
+                {
+                    emails.Add(user.Email);
+                }
+            }
+            return emails;
+        }
+
+        public async Task<List<string>> GetAdminEmailsAsync()
+        {
+            var employees = await _employeeRepository.GetAllAsync();
+            var emails = new List<string>();
+
+            foreach (var emp in employees)
+            {
+                if (!emp.IsActive) continue;
+                
+                var user = await _userManager.FindByIdAsync(emp.aspNetUserId);
+                if (user != null && await _userManager.IsInRoleAsync(user, "Admin") && !string.IsNullOrEmpty(user.Email))
+                {
+                    emails.Add(user.Email);
+                }
+            }
+            return emails;
+        }
     }
     public class EmployeeProfile : Profile
     {

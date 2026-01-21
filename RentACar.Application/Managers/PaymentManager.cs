@@ -27,6 +27,7 @@ namespace RentACar.Application.Managers
         private readonly IMapper _mapper;
         private readonly ILogger<PaymentManager> _logger;
         private readonly AuditLogManager _auditLogManager;
+        private readonly EmailManager _emailManager;
 
         public PaymentManager(
             IPaymentRepository paymentRepository,
@@ -38,7 +39,8 @@ namespace RentACar.Application.Managers
             Services.IStripePaymentService stripePaymentService,
             IMapper mapper,
             ILogger<PaymentManager> logger,
-            AuditLogManager auditLogManager)
+            AuditLogManager auditLogManager,
+            EmailManager emailManager)
         {
             _paymentRepository = paymentRepository;
             _bookingRepository = bookingRepository;
@@ -50,6 +52,7 @@ namespace RentACar.Application.Managers
             _mapper = mapper;
             _logger = logger;
             _auditLogManager = auditLogManager;
+            _emailManager = emailManager;
         }
 
         public async Task<MakePaymentResultDto?> MakePaymentByCustomerAsync(MakePaymentRequestDto paymentDto, int customerUserId)
@@ -139,6 +142,35 @@ namespace RentACar.Application.Managers
                 };
                 await _paymentRepository.AddAsync(payment);
                 await _auditLogManager.LogEventAsync("Payment.Created", "Payment", payment.PaymentId.ToString(), $"Customer payment of {payment.Amount:C} via {payment.PaymentMethod}", null, "Success");
+                
+                // 📨 Send Payment Success Email (Cash/Direct)
+                booking = await _bookingRepository.GetByIdAsync(paymentDto.BookingId);
+                var customer = await _userManager.FindByIdAsync(booking?.Customer?.aspNetUserId);
+                 // Need to reload booking with customer includes usually, but let's try to get customer from repository or user manager
+                // Use existing data or fetch
+                if (booking != null) {
+                     // We need customer details.
+                     // The booking object from _bookingRepository.GetByIdAsync usually includes basic or we can get it.
+                     // If relations are not included, we might need to fetch customer.
+                     // In MakePaymentByCustomerAsync, we passed customerUserId (int).
+                     // We can get email from user manager if we have userId string? 
+                     // customerUserId is int.
+                     // We can find IdentityUser via CustomerRepository?
+                     // Let's assume we can fetch it.
+                     // Or just use Logged In User? MakePaymentByCustomerAsync is called by customer.
+                     // But let's be safe.
+                     // payment.BookingId is available.
+                }
+                // Simpler: assume we can get Customer email.
+                // Re-fetch booking with includes or fetch Customer separately.
+                // Assuming lazy loading or repository includes.
+                // Let's rely on booking logic or fetching.
+                
+                var custUser = await _userManager.FindByIdAsync((await _bookingRepository.GetByIdAsync(paymentDto.BookingId)).Customer.aspNetUserId);
+                if (custUser != null) {
+                     await _emailManager.SendPaymentSuccessEmail(custUser.Email, (await _bookingRepository.GetByIdAsync(paymentDto.BookingId)).Customer.Name, payment, await _bookingRepository.GetByIdAsync(paymentDto.BookingId));
+                }
+
                 var dto = _mapper.Map<PaymentDto>(payment);
                 dto.PaymentMethodId = paymentMethod.Id;
                 return new MakePaymentResultDto
@@ -182,6 +214,17 @@ namespace RentACar.Application.Managers
                 await _paymentRepository.AddAsync(payment);
 
                 await _auditLogManager.LogEventAsync("Payment.Created", "Payment", payment.PaymentId.ToString(), $"Employee recorded payment of {payment.Amount:C}", null, "Success");
+
+                // 📨 Send Payment Success Email (Employee Recorded)
+                var booking = await _bookingRepository.GetByIdAsync(paymentDto.BookingId);
+                if (booking != null) {
+                    var cust = booking.Customer; // Assuming Include or Lazy loading. Repository often returns includes.
+                    if (cust != null) {
+                        var custUser = await _userManager.FindByIdAsync(cust.aspNetUserId);
+                        if (custUser != null)
+                             await _emailManager.SendPaymentSuccessEmail(custUser.Email, cust.Name, payment, booking);
+                    }
+                }
 
                 var dto = _mapper.Map<PaymentDto>(payment);
                 dto.PaymentMethodId = paymentMethod.Id;
@@ -256,6 +299,14 @@ namespace RentACar.Application.Managers
             if (booking != null)
             {
                 await UpdateBookingStatusForPaymentAsync(booking, payment.Status);
+                
+                // 📨 Send Payment Success Email (Stripe Webhook)
+                var cust = booking.Customer;
+                if (cust != null) {
+                     var custUser = await _userManager.FindByIdAsync(cust.aspNetUserId);
+                     if (custUser != null)
+                          await _emailManager.SendPaymentSuccessEmail(custUser.Email, cust.Name, payment, booking);
+                }
             }
             return true;
         }
@@ -571,6 +622,15 @@ namespace RentACar.Application.Managers
 
             payment.Status = "Cancelled";
             await _paymentRepository.UpdateAsync(payment);
+            
+            // 📨 Send Payment Cancelled Email
+            var booking = await _bookingRepository.GetByIdAsync(payment.BookingId);
+            if (booking != null && booking.Customer != null) {
+                 var custUser = await _userManager.FindByIdAsync(booking.Customer.aspNetUserId);
+                 if (custUser != null)
+                    await _emailManager.SendPaymentCancelledEmail(custUser.Email, booking.Customer.Name, payment.Amount);
+            }
+            
             return true;
         }
 

@@ -16,14 +16,18 @@ namespace RentACar.Application.Managers
         private readonly UserManager<IdentityUser> _userManager; // Inject UserManager for role checking
         private readonly ILogger<CarManager> _logger;
         private readonly AuditLogManager _auditLogManager;
+        private readonly EmailManager _emailManager;
+        private readonly EmployeeManager _employeeManager;
 
-        public CarManager(ICarRepository carRepository, IMapper mapper, UserManager<IdentityUser> userManager, ILogger<CarManager> logger, AuditLogManager auditLogManager)
+        public CarManager(ICarRepository carRepository, IMapper mapper, UserManager<IdentityUser> userManager, ILogger<CarManager> logger, AuditLogManager auditLogManager, EmailManager emailManager, EmployeeManager employeeManager)
         {
             _carRepository = carRepository;
             _mapper = mapper;
             _userManager = userManager;
             _logger = logger;
             _auditLogManager = auditLogManager;
+            _emailManager = emailManager;
+            _employeeManager = employeeManager;
         }
 
         public async Task<CarDto?> AddCarAsync(CarDto carDto, string userId)
@@ -110,6 +114,13 @@ namespace RentACar.Application.Managers
             _logger.LogInformation("Updating availability for car {Id} to {Avail}", carId, isAvailable);
             await _carRepository.UpdateCarAvailabilityAsync(carId, isAvailable);
             await _auditLogManager.LogAsync("Update", "Car", carId.ToString(), $"Updated availability to: {isAvailable}");
+            
+            // 📨 Send Car Update Email
+            var car = await _carRepository.GetByIdAsync(carId);
+            if (car != null) {
+                var emails = await _employeeManager.GetActiveEmployeeEmailsAsync();
+                await _emailManager.SendCarUpdateEmail(emails, car, "Update", "IsAvailable", (!isAvailable).ToString(), isAvailable.ToString(), "System/Admin");
+            }
         }
 
         public async Task UpdateCarAsync(CarDto carDto)
@@ -118,9 +129,21 @@ namespace RentACar.Application.Managers
             if (existingCar != null)
             {
                 _logger.LogInformation("Updating car {Id}", carDto.CarId);
+                
+                var oldPrice = existingCar.PricePerDay;
+                var oldModel = existingCar.ModelName;
+                
                 _mapper.Map(carDto, existingCar);
                 await _carRepository.UpdateAsync(existingCar);
                 await _auditLogManager.LogAsync("Update", "Car", carDto.CarId.ToString(), $"Updated car details: {carDto.ModelName} - {carDto.PlateNumber}");
+
+                // 📨 Send Car Update Email (Price Change)
+                if (oldPrice != existingCar.PricePerDay) {
+                     var emails = await _employeeManager.GetActiveEmployeeEmailsAsync();
+                     await _emailManager.SendCarUpdateEmail(emails, existingCar, "Update", "PricePerDay", oldPrice?.ToString() ?? "N/A", existingCar.PricePerDay?.ToString() ?? "N/A", "System/Admin");
+                }
+                // (Note: The spec asked for 'Car updates', triggering on Price/Availability/Delete. Is it only Price? "Car price changed")
+                // Yes, "Car price changed", "Car availability changed", "Car deleted/archived".
             }
             else
             {
@@ -132,6 +155,13 @@ namespace RentACar.Application.Managers
         public async Task DeleteCarAsync(int id)
         {
             _logger.LogInformation("Deleting car {Id}", id);
+            // 📨 Send Car Update Email (Delete)
+            var car = await _carRepository.GetByIdAsync(id);
+            if (car != null) {
+                var emails = await _employeeManager.GetActiveEmployeeEmailsAsync();
+                await _emailManager.SendCarUpdateEmail(emails, car, "Delete", "Status", "Active", "Deleted", "System/Admin");
+            }
+
             await _carRepository.DeleteAsync(id);
             await _auditLogManager.LogAsync("Delete", "Car", id.ToString(), "Deleted car from fleet");
         }
