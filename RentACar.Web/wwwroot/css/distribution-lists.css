@@ -1,0 +1,81 @@
+/* Font Imports */
+@import url('https://fonts.googleapis.com/css2?family=Epilogue:wght@400;500;700;900&family=Noto+Sans:wght@400;500;700&display=swap');
+
+/* HARD OVERRIDES for Distribution List Page Branding */
+
+/* Fonts */
+.dist-page,
+.dist-page body,
+.dist-page h1,
+.dist-page h2,
+.dist-page h3,
+.dist-page h4,
+.dist-page button,
+.dist-page input,
+.dist-page .font-display,
+body.dist-body-override {
+    font-family: 'Epilogue', sans-serif !important;
+}
+
+/* Colors - Overriding Tailwind Utilities with User's Specific Hex Codes */
+
+/* Backgrounds */
+.dist-page.bg-background-light,
+.dist-page .bg-background-light {
+    background-color: #f4f4eb !important;
+}
+
+.dist-page.bg-background-dark,
+.dist-page .bg-background-dark,
+body.dist-body-override {
+    background-color: #13151b !important;
+    /* User's specific dark background */
+}
+
+/* Card Backgrounds */
+.dist-page .bg-card-dark,
+.dist-page.bg-card-dark {
+    background-color: #1c1f26 !important;
+}
+
+/* Borders */
+.dist-page .border-border-dark {
+    border-color: #2d323d !important;
+}
+
+/* Primary Color */
+.dist-page .text-primary {
+    color: #daad52 !important;
+}
+
+.dist-page .bg-primary {
+    background-color: #daad52 !important;
+}
+
+.dist-page .border-primary {
+    border-color: #daad52 !important;
+}
+
+.dist-page .focus\:ring-primary:focus {
+    --tw-ring-color: #daad52 !important;
+    box-shadow: 0 0 0 2px #daad52 !important;
+    /* Fallback */
+}
+
+.dist-page .focus\:border-primary:focus {
+    border-color: #daad52 !important;
+}
+
+/* Text Colors */
+.dist-page .text-white {
+    color: #ffffff !important;
+}
+
+/* Ensure Slate Scale Matches if needed, or leave system default */
+/* But force specifically named colors if they differ */
+
+/* Specific fix for "Still white background" issue 
+   We apply this class to the top wrapper or body injection */
+.bg-user-dark {
+    background-color: #13151b !important;
+}

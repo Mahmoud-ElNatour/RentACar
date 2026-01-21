@@ -93,6 +93,8 @@ builder.Services.AddScoped<BookingManager>();
 builder.Services.AddScoped<PaymentManager>();
 builder.Services.AddScoped<EmailManager>();
 builder.Services.AddScoped<AuditLogManager>();
+builder.Services.AddScoped<DistributionListManager>();
+builder.Services.AddScoped<RecipientResolverService>();
 
 // // ✅ HTTPS redirection
 // builder.Services.AddHttpsRedirection(options =>
