@@ -39,6 +39,14 @@ public partial class RentACarDbContext : DbContext
     public virtual DbSet<PaymentMethod> PaymentMethods { get; set; }
     public virtual DbSet<Promocode> Promocodes { get; set; }
     public virtual DbSet<AuditLog> AuditLogs { get; set; }
+    public virtual DbSet<DistributionList> DistributionLists { get; set; }
+    public virtual DbSet<DistributionListMember> DistributionListMembers { get; set; }
+    public virtual DbSet<DistributionListRule> DistributionListRules { get; set; }
+    public virtual DbSet<EmailDraft> EmailDrafts { get; set; }
+    public virtual DbSet<EmailTemplate> EmailTemplates { get; set; }
+    public virtual DbSet<NotificationSettings> NotificationSettings { get; set; }
+    public virtual DbSet<EmailLog> EmailLogs { get; set; }
+    public virtual DbSet<NotificationLog> NotificationLogs { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -139,6 +147,22 @@ public partial class RentACarDbContext : DbContext
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("FK_Payments_Bookings");
+        });
+
+
+        modelBuilder.Entity<DistributionList>(entity =>
+        {
+            entity.HasIndex(e => e.Name).IsUnique();
+        });
+
+        modelBuilder.Entity<DistributionListMember>(entity =>
+        {
+            entity.HasIndex(e => new { e.DistributionListId, e.Email }).IsUnique();
+        });
+
+        modelBuilder.Entity<EmailTemplate>(entity =>
+        {
+            entity.HasIndex(e => e.TemplateKey).IsUnique();
         });
 
         OnModelCreatingPartial(modelBuilder);
