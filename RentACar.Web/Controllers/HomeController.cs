@@ -33,7 +33,7 @@ namespace RentACar.Web.Controllers
         {
             string userRole = string.Empty;
 
-            if (User.Identity.IsAuthenticated)
+            if (User.Identity?.IsAuthenticated == true)
             {
                 var user = await _userManager.GetUserAsync(User);
                 if (user != null)

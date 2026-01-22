@@ -73,6 +73,7 @@ builder.Services.AddScoped<IBlacklistRepository, BlacklistRepository>();
 builder.Services.AddScoped<IPromocodeRepository, PromocodeRepository>();
 builder.Services.AddScoped<IPaymentMethodRepository, PaymentMethodRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+builder.Services.AddScoped<IEmailTemplateRepository, EmailTemplateRepository>();
 builder.Services.AddHttpClient<IEmailService, MailjetEmailService>();
 builder.Services.AddHttpClient<RentACar.Application.Services.IStripePaymentService, RentACar.Application.Services.StripePaymentService>(client =>
 {
@@ -93,6 +94,7 @@ builder.Services.AddScoped<BookingManager>();
 builder.Services.AddScoped<PaymentManager>();
 builder.Services.AddScoped<EmailManager>();
 builder.Services.AddScoped<AuditLogManager>();
+builder.Services.AddScoped<EmailTemplateManager>();
 builder.Services.AddScoped<DistributionListManager>();
 builder.Services.AddScoped<RecipientResolverService>();
 

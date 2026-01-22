@@ -279,7 +279,7 @@ namespace RentACar.Web.Controllers
                 return BadRequest(ModelState);
             }
 
-            var userId = _userManager.GetUserId(User);
+            var userId = _userManager.GetUserId(User) ?? string.Empty;
             _logger.LogInformation("Creating booking by user {UserId} with data: {@Dto}", userId, dto);
 
             try

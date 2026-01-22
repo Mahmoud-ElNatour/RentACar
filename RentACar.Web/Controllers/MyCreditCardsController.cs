@@ -42,7 +42,7 @@ namespace RentACar.Web.Controllers
                 return null;
             }
 
-            var customer = await _customerManager.GetCustomerByUsername(user.UserName);
+            var customer = await _customerManager.GetCustomerByUsername(user.UserName ?? string.Empty);
             if (customer == null)
             {
                 _logger.LogWarning("GetCurrentCustomerId: No customer found for user {Username}", user.UserName);

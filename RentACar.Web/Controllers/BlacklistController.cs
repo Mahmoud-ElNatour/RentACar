@@ -136,8 +136,8 @@ namespace RentACar.Web.Controllers
                 Salary = empEntity.Salary,
                 Address = empEntity.Address,
                 IsActive = empEntity.IsActive,
-                Email = empEntity.User.Email,
-                username = empEntity.User.UserName,
+                Email = empEntity.User.Email ?? string.Empty,
+                username = empEntity.User.UserName ?? string.Empty,
                 PhoneNumber = empEntity.User.PhoneNumber,
                 aspNetUserId = empEntity.aspNetUserId
             };

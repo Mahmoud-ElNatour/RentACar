@@ -58,7 +58,7 @@ namespace RentACar.Web.Controllers
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            var userId = _userManager.GetUserId(User);
+            var userId = _userManager.GetUserId(User) ?? string.Empty;
             var listId = await _manager.CreateListAsync(dto, userId);
             
             await _auditLogManager.LogAsync("Create Distribution List", "DistributionList", listId.ToString(), $"Created list '{dto.Name}'");
@@ -72,7 +72,7 @@ namespace RentACar.Web.Controllers
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
             
-            var userId = _userManager.GetUserId(User);
+            var userId = _userManager.GetUserId(User) ?? string.Empty;
             await _manager.UpdateListAsync(dto, userId);
 
             await _auditLogManager.LogAsync("Update Distribution List", "DistributionList", dto.Id.ToString(), $"Updated list '{dto.Name}'");
@@ -84,7 +84,7 @@ namespace RentACar.Web.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteList(int id)
         {
-            var userId = _userManager.GetUserId(User);
+            var userId = _userManager.GetUserId(User) ?? string.Empty;
             await _manager.DeleteListAsync(id);
             
             await _auditLogManager.LogAsync("Delete Distribution List", "DistributionList", id.ToString(), $"Deleted distribution list");
@@ -97,7 +97,7 @@ namespace RentACar.Web.Controllers
         {
             if (!User.IsInRole("Admin")) return Forbid();
 
-            var userId = _userManager.GetUserId(User);
+            var userId = _userManager.GetUserId(User) ?? string.Empty;
             await _manager.ToggleListActiveAsync(id, userId);
 
             var list = await _manager.GetListByIdAsync(id);
@@ -116,7 +116,7 @@ namespace RentACar.Web.Controllers
         {
             if (string.IsNullOrWhiteSpace(email)) return BadRequest("Email is required");
 
-            var userId = _userManager.GetUserId(User);
+            var userId = _userManager.GetUserId(User) ?? string.Empty;
             await _manager.AddMemberAsync(listId, email, label ?? "Manual", type ?? "Other", userId);
 
             var list = await _manager.GetListByIdAsync(listId);
@@ -130,7 +130,7 @@ namespace RentACar.Web.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> RemoveMember(int memberId, int listId)
         {
-            var userId = _userManager.GetUserId(User);
+            var userId = _userManager.GetUserId(User) ?? string.Empty;
             var list = await _manager.GetListByIdAsync(listId); // Get list info before deleting member relation if possible, or just log ID
             
             await _manager.RemoveMemberAsync(memberId);
@@ -147,7 +147,7 @@ namespace RentACar.Web.Controllers
         {
             if (string.IsNullOrWhiteSpace(email)) return BadRequest("Email is required");
 
-            var userId = _userManager.GetUserId(User);
+            var userId = _userManager.GetUserId(User) ?? string.Empty;
             
             // Get the member and update it
             var member = await _manager.GetMemberByIdAsync(memberId);
@@ -205,7 +205,7 @@ namespace RentACar.Web.Controllers
         {
             var recipients = await _manager.PreviewRecipientsAsync(rule);
             
-            var userId = _userManager.GetUserId(User);
+            var userId = _userManager.GetUserId(User) ?? string.Empty;
             
             var listDto = new DistributionListDto
             {

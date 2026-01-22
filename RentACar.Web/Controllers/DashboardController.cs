@@ -400,7 +400,7 @@ namespace RentACar.Web.Controllers
             // Assuming Category is accessible via Car or directly. Since we don't have _categoryManager injected here and unsure of DbSet, use Cars.
             model.CarCategories = await _dbContext.Cars
                 .Where(c => c.Category != null)
-                .Select(c => c.Category.Name)
+                .Select(c => c.Category!.Name)
                 .Distinct()
                 .ToListAsync();
 
@@ -409,7 +409,7 @@ namespace RentACar.Web.Controllers
             var suggestedQuery = _dbContext.Cars.Include(c => c.Category).Where(c => c.IsAvailable);
             if (!string.IsNullOrEmpty(bestCategory))
             {
-                suggestedQuery = suggestedQuery.Where(c => c.Category.Name == bestCategory);
+                suggestedQuery = suggestedQuery.Where(c => c.Category!.Name == bestCategory);
             }
             
             var suggestedCars = await suggestedQuery.Take(2).ToListAsync();

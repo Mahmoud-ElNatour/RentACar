@@ -270,7 +270,7 @@ namespace RentACar.Web.Controllers
                 values: new { area = "Identity", userId = userId, code = code },
                 protocol: Request.Scheme);
 
-            await _emailManager.SendConfirmationEmailAsync(user.Email, callbackUrl, customer.Name);
+            await _emailManager.SendConfirmationEmailAsync(user.Email ?? string.Empty, callbackUrl, customer.Name);
 
             return Ok(new { message = "Confirmation email sent successfully." });
         }

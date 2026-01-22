@@ -130,7 +130,7 @@ namespace RentACar.Web.Controllers
             if (payment == null) return NotFound();
 
             // Get current user ID to fetch visible promocodes
-            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
             var allPromos = await _promocodeManager.GetAllPromocodesAsync(userId);
             // Filter only active ones for the dropdown
             var activePromos = allPromos.Where(p => p.IsActive).ToList();

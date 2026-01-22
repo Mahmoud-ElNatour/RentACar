@@ -28,7 +28,7 @@ namespace RentACar.Web.Areas.Identity.Pages.Account.Manage
         {
         }
 
-        public async Task<IActionResult> OnGetAddFormAsync()
+        public IActionResult OnGetAddForm()
         {
             return Partial("_CardFormPartial", new CreditCardDto());
         }
