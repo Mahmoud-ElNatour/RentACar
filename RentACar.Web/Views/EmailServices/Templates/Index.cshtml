@@ -113,17 +113,20 @@ else
 }
 </td>
 <td class="px-6 py-5 text-right">
-<div class="flex justify-end gap-4">
-<a href="@Url.Action("Edit", "Templates", new { key = template.TemplateKey })" class="text-primary hover:scale-110 transition-transform flex items-center gap-1 group/btn" title="Edit Template">
-<span class="material-symbols-outlined text-xl">edit_square</span>
-</a>
-@* <button class="text-primary hover:scale-110 transition-transform flex items-center gap-1 group/btn" title="Live Preview">
-<span class="material-symbols-outlined text-xl">visibility</span>
-</button> *@
-@* <button class="text-primary hover:scale-110 transition-transform flex items-center gap-1 group/btn" title="Reset to Default">
-<span class="material-symbols-outlined text-xl">settings_backup_restore</span>
-</button> *@
-</div>
+                                <div class="flex justify-end gap-4">
+                                    <a href="@Url.Action("Edit", "Templates", new { key = template.TemplateKey })" class="text-primary hover:scale-110 transition-transform flex items-center gap-1 group/btn" title="Edit Template">
+                                        <span class="material-symbols-outlined text-xl">edit_square</span>
+                                    </a>
+                                    <button onclick="openDeleteModal('@Url.Action("Delete", "Templates", new { key = template.TemplateKey })')" class="text-red-500 hover:scale-110 transition-transform flex items-center gap-1 group/btn" title="Remove Template">
+                                        <span class="material-symbols-outlined text-xl">delete</span>
+                                    </button>
+                                    @* <button class="text-primary hover:scale-110 transition-transform flex items-center gap-1 group/btn" title="Live Preview">
+                                        <span class="material-symbols-outlined text-xl">visibility</span>
+                                    </button> *@
+                                    @* <button class="text-primary hover:scale-110 transition-transform flex items-center gap-1 group/btn" title="Reset to Default">
+                                        <span class="material-symbols-outlined text-xl">settings_backup_restore</span>
+                                    </button> *@
+                                </div>
 </td>
 </tr>
 }
@@ -148,5 +151,7 @@ else
 </button>
 </div>
 </div>
+
+<partial name="_DeleteConfirmationModal" />
 
 </body></html>

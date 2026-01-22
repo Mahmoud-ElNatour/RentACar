@@ -99,5 +99,12 @@ namespace RentACar.Web.Controllers
             await _emailTemplateManager.ResetTemplateToDefaultAsync(key);
             return RedirectToAction(nameof(Edit), new { key });
         }
+
+        [HttpPost("Delete/{key}")]
+        public async Task<IActionResult> Delete(string key)
+        {
+            await _emailTemplateManager.DeleteTemplateAsync(key);
+            return RedirectToAction(nameof(Index));
+        }
     }
 }

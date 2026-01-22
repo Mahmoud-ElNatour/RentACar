@@ -80,5 +80,14 @@ namespace RentACar.Application.Managers
             
             await UpdateTemplateAsync(template);
         }
+
+        public async Task DeleteTemplateAsync(string key)
+        {
+            var template = await _emailTemplateRepository.GetByKeyAsync(key);
+            if (template != null)
+            {
+                await _emailTemplateRepository.DeleteAsync(template);
+            }
+        }
     }
 }
