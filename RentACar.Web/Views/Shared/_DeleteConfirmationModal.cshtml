@@ -28,11 +28,11 @@
                 <div class="bg-black/20 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6 border-t border-border-dark/50">
                     <form id="deleteConfirmForm" method="post">
                         @Html.AntiForgeryToken()
-                        <button type="submit" class="inline-flex w-full justify-center rounded-lg bg-red-600 px-5 py-2.5 text-sm font-bold text-white shadow-lg hover:bg-red-500 hover:shadow-red-500/20 sm:ml-3 sm:w-auto transition-all">
+                        <button type="submit" class="inline-flex w-full justify-center rounded-lg bg-red-600 px-5 py-2.5 border-red-600 border-2 text-sm font-bold text-white shadow-lg hover:bg-red-500 hover:shadow-red-500/20 sm:ml-3 sm:w-auto transition-all">
                             Yes, Delete It
                         </button>
                     </form>
-                    <button type="button" onclick="closeDeleteModal()" class="mt-3 inline-flex w-full justify-center rounded-lg bg-transparent border border-border-dark px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-white/5 sm:mt-0 sm:w-auto transition-all">
+                    <button type="button" onclick="closeDeleteModal()" class=" inline-flex w-full justify-center rounded-lg bg-transparent border border-border-dark px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-white/5 sm:mt-0 sm:w-auto transition-all">
                         Cancel
                     </button>
                 </div>
