@@ -280,18 +280,46 @@
 </div>
 
 <!-- Store Templates in JS for Fast Switching -->
-<script>
-    var sysTemplates = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.Templates));
-    var distributionLists = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.DistributionLists));
+<script id="templates-data" type="application/json">
+@Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.Templates ?? new List<object>()))
+</script>
+<script id="distlists-data" type="application/json">
+@Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.DistributionLists ?? new List<object>()))
 </script>
 
 <script>
+    // Global variables initialization
+    var sysTemplates = [];
+    var distributionLists = [];
+    
+    try {
+        var templatesDataEl = document.getElementById('templates-data');
+        if (templatesDataEl && templatesDataEl.textContent) {
+            sysTemplates = JSON.parse(templatesDataEl.textContent);
+        }
+    } catch (e) {
+        console.error('Failed to parse templates:', e);
+    }
+    
+    try {
+        var distListsDataEl = document.getElementById('distlists-data');
+        if (distListsDataEl && distListsDataEl.textContent) {
+            distributionLists = JSON.parse(distListsDataEl.textContent);
+        }
+    } catch (e) {
+        console.error('Failed to parse distribution lists:', e);
+    }
+    
     var currentMode = 'manual';
     var recipients = [];
     var selectedDistLists = [];
     var currentDraftId = 0;
     var attachmentFiles = [];
     var savedSelectionRange = null;
+    
+    // Log to verify templates are loaded
+    console.log('Templates loaded:', sysTemplates);
+    console.log('Distribution lists loaded:', distributionLists);
 
     function setMode(mode) {
             currentMode = mode;
@@ -381,15 +409,38 @@
 
         // Template Selection
         function onTemplateSelect(elem) {
-            var key = elem.value;
-            if(!key) return;
-            
-            var tmpl = sysTemplates.find(t => t.TemplateKey === key);
-            if(tmpl) {
-                // Populate editor
-                document.getElementById('email-subject').value = tmpl.Subject;
-                setEditorContent(tmpl.Body);
-                focusEditor();
+            try {
+                var key = elem.value;
+                console.log('Template selected:', key);
+                
+                if(!key) {
+                    console.log('No template key selected');
+                    return;
+                }
+                
+                // Check if sysTemplates is defined and is an array
+                if (typeof sysTemplates === 'undefined' || !Array.isArray(sysTemplates)) {
+                    console.error('sysTemplates is not defined or not an array:', sysTemplates);
+                    alert('Error: Templates data not loaded. Please refresh the page.');
+                    return;
+                }
+                
+                console.log('Available templates:', sysTemplates);
+                var tmpl = sysTemplates.find(t => t.TemplateKey === key);
+                
+                if(tmpl) {
+                    console.log('Found template:', tmpl);
+                    // Populate editor
+                    document.getElementById('email-subject').value = tmpl.Subject || '';
+                    setEditorContent(tmpl.Body || '');
+                    focusEditor();
+                } else {
+                    console.warn('Template not found for key:', key);
+                    alert('Template not found');
+                }
+            } catch (error) {
+                console.error('Error in onTemplateSelect:', error);
+                alert('An error occurred while selecting the template: ' + error.message);
             }
         }
         
