@@ -30,6 +30,10 @@
                 <i class="fas fa-user-tie"></i>
                 <div>Employees</div>
             </a>
+            <a asp-controller="Drivers" asp-action="Index" class="panel-action">
+                <i class="fas fa-shuttle-van"></i>
+                <div>Drivers</div>
+            </a>
             @if (User.IsInRole("Admin"))
             {
                 <a href="/ControlPanel/ChangeRole" class="panel-action">
