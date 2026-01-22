@@ -45,8 +45,9 @@
     </style>
 </head>
 <body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen transition-colors duration-200">
-<form method="post" asp-action="Edit" asp-route-key="@Model.TemplateKey">
+<form method="post" asp-action="Edit" asp-route-key="@Model.TemplateKey" id="editForm">
 <input type="hidden" asp-for="TemplateKey" />
+<input type="hidden" asp-for="Body" id="hiddenBody" />
 @Html.AntiForgeryToken()
 
 <header class="border-b border-slate-200 dark:border-border-dark bg-white dark:bg-surface-dark px-6 py-4 flex items-center justify-between sticky top-0 z-50">
@@ -74,74 +75,172 @@
 <a href="@Url.Action("Index")" class="px-6 py-2.5 text-sm font-semibold rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 transition-colors border border-transparent text-slate-500 dark:text-slate-300" style="text-decoration:none;">
                     Discard
                 </a>
-<button type="submit" class="px-6 py-2.5 bg-primary hover:bg-opacity-90 text-white font-bold text-sm rounded-lg shadow-lg shadow-primary/20 transition-all transform active:scale-95 uppercase tracking-wider">
+<button type="button" onclick="submitForm()" class="px-6 py-2.5 bg-primary hover:bg-opacity-90 text-white font-bold text-sm rounded-lg shadow-lg shadow-primary/20 transition-all transform active:scale-95 uppercase tracking-wider">
                     Save Template
                 </button>
 </div>
 </div>
 </header>
-<main class="max-w-[1600px] mx-auto p-6 grid grid-cols-12 gap-6">
-<div class="col-span-12 lg:col-span-8 flex flex-col gap-6">
-<section class="bg-white dark:bg-surface-dark border border-slate-200 dark:border-border-dark rounded-xl p-6">
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-<div>
-<label class="block text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">Template Name</label>
-<input class="w-full bg-slate-50 dark:bg-black/40 border-slate-200 dark:border-border-dark rounded-lg px-4 py-2.5 text-sm focus:ring-primary focus:border-primary transition-all" type="text" asp-for="Name" />
+<main class="max-w-[1600px] mx-auto p-6 grid grid-cols-12 gap-6 h-[calc(100vh-100px)]">
+<!-- Left Column: Inputs & Editor -->
+<div class="col-span-12 lg:col-span-7 flex flex-col gap-6 h-full">
+    <!-- Meta Data Section -->
+    <section class="bg-white dark:bg-surface-dark border border-slate-200 dark:border-border-dark rounded-xl p-5 shrink-0">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div>
+                <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">Template Name</label>
+                <input class="w-full bg-slate-50 dark:bg-black/40 border-slate-200 dark:border-border-dark rounded-lg px-4 py-2 text-sm focus:ring-primary focus:border-primary transition-all" type="text" asp-for="Name" />
+            </div>
+            <div>
+                <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">Template Key</label>
+                <input class="w-full bg-slate-50 dark:bg-black/40 border-slate-200 dark:border-border-dark rounded-lg px-4 py-2 text-sm font-mono text-primary/80 focus:ring-primary focus:border-primary transition-all" type="text" asp-for="TemplateKey" readonly />
+            </div>
+            <div>
+                <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">Category</label>
+                <select class="w-full bg-slate-50 dark:bg-black/40 border-slate-200 dark:border-border-dark rounded-lg px-4 py-2 text-sm focus:ring-primary focus:border-primary transition-all appearance-none" asp-for="Category">
+                    <option value="Customer">Customer</option>
+                    <option value="Employee">Employee</option>
+                    <option value="System">System</option>
+                </select>
+            </div>
+        </div>
+        <div>
+            <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">Email Subject</label>
+            <input class="w-full bg-slate-50 dark:bg-black/40 border-slate-200 dark:border-border-dark rounded-lg px-4 py-2 text-sm focus:ring-primary focus:border-primary transition-all" type="text" asp-for="Subject" />
+        </div>
+    </section>
+
+    <!-- Editor Section -->
+    <section class="bg-white dark:bg-surface-dark border border-slate-200 dark:border-border-dark rounded-xl flex flex-col grow overflow-hidden shadow-2xl">
+        <div class="px-4 py-2 border-b border-slate-200 dark:border-border-dark flex items-center justify-between bg-slate-50/50 dark:bg-black/20 shrink-0">
+            <div class="flex items-center gap-2">
+                <span class="material-icons-round text-blue-400 text-sm">code</span>
+                <span class="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Rich HTML Editor</span>
+            </div>
+            <div class="flex items-center gap-1.5 opacity-50">
+                <div class="w-2.5 h-2.5 rounded-full bg-red-500/30"></div>
+                <div class="w-2.5 h-2.5 rounded-full bg-amber-500/30"></div>
+                <div class="w-2.5 h-2.5 rounded-full bg-green-500/30"></div>
+            </div>
+        </div>
+        <div class="flex-1 relative" id="editor-container">
+            <!-- Monaco Editor will be rendered here -->
+        </div>
+    </section>
 </div>
-<div>
-<label class="block text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">Template Key</label>
-<input class="w-full bg-slate-50 dark:bg-black/40 border-slate-200 dark:border-border-dark rounded-lg px-4 py-2.5 text-sm font-mono text-primary/80 focus:ring-primary focus:border-primary transition-all" type="text" asp-for="TemplateKey" readonly />
+
+<!-- Right Column: Tokens & Preview -->
+<div class="col-span-12 lg:col-span-5 flex flex-col gap-6 h-full">
+    <!-- Tokens -->
+    <section class="bg-white dark:bg-surface-dark border border-slate-200 dark:border-border-dark rounded-xl p-5 shrink-0">
+        <div class="flex items-center gap-2 mb-3">
+            <span class="material-icons-round text-primary text-lg">token</span>
+            <h2 class="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Available Tokens</h2>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+            <button type="button" onclick="insertToken('{{CustomerName}}')" class="group flex items-center justify-between px-3 py-2 rounded-lg border border-slate-200 dark:border-border-dark bg-slate-50 dark:bg-black/20 hover:border-primary/50 transition-all text-left">
+                <code class="text-xs font-mono text-slate-700 dark:text-slate-300">{{CustomerName}}</code>
+            </button>
+            <button type="button" onclick="insertToken('{{BookingRef}}')" class="group flex items-center justify-between px-3 py-2 rounded-lg border border-slate-200 dark:border-border-dark bg-slate-50 dark:bg-black/20 hover:border-primary/50 transition-all text-left">
+                <code class="text-xs font-mono text-slate-700 dark:text-slate-300">{{BookingRef}}</code>
+            </button>
+             <button type="button" onclick="insertToken('{{VehicleModel}}')" class="group flex items-center justify-between px-3 py-2 rounded-lg border border-slate-200 dark:border-border-dark bg-slate-50 dark:bg-black/20 hover:border-primary/50 transition-all text-left">
+                <code class="text-xs font-mono text-slate-700 dark:text-slate-300">{{VehicleModel}}</code>
+            </button>
+             <button type="button" onclick="insertToken('{{PickupDate}}')" class="group flex items-center justify-between px-3 py-2 rounded-lg border border-slate-200 dark:border-border-dark bg-slate-50 dark:bg-black/20 hover:border-primary/50 transition-all text-left">
+                <code class="text-xs font-mono text-slate-700 dark:text-slate-300">{{PickupDate}}</code>
+            </button>
+             <button type="button" onclick="insertToken('{{TotalAmount}}')" class="group flex items-center justify-between px-3 py-2 rounded-lg border border-slate-200 dark:border-border-dark bg-slate-50 dark:bg-black/20 hover:border-primary/50 transition-all text-left">
+                <code class="text-xs font-mono text-slate-700 dark:text-slate-300">{{TotalAmount}}</code>
+            </button>
+        </div>
+    </section>
+
+    <!-- Preview -->
+    <section class="bg-white dark:bg-surface-dark border border-slate-200 dark:border-border-dark rounded-xl flex flex-col grow overflow-hidden shadow-2xl">
+        <div class="px-4 py-2 border-b border-slate-200 dark:border-border-dark flex items-center justify-between bg-slate-50/50 dark:bg-black/20 shrink-0">
+             <div class="flex items-center gap-2">
+                <span class="material-icons-round text-emerald-400 text-sm">preview</span>
+                <span class="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Live Rendering</span>
+            </div>
+            <div class="flex gap-2">
+                <span class="material-icons-round text-slate-500 text-xs">desktop_windows</span>
+                <span class="material-icons-round text-slate-500 text-xs">smartphone</span>
+            </div>
+        </div>
+        <div class="flex-1 bg-white relative">
+            <iframe id="previewFields" class="w-full h-full border-0 absolute inset-0"></iframe>
+        </div>
+    </section>
 </div>
-<div>
-<label class="block text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">Category</label>
-<select class="w-full bg-slate-50 dark:bg-black/40 border-slate-200 dark:border-border-dark rounded-lg px-4 py-2.5 text-sm focus:ring-primary focus:border-primary transition-all appearance-none" asp-for="Category">
-<option value="Customer">Customer</option>
-<option value="Employee">Employee</option>
-<option value="System">System</option>
-</select>
-</div>
-</div>
-<div>
-<label class="block text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">Email Subject</label>
-<input class="w-full bg-slate-50 dark:bg-black/40 border-slate-200 dark:border-border-dark rounded-lg px-4 py-2.5 text-sm focus:ring-primary focus:border-primary transition-all" type="text" asp-for="Subject" />
-</div>
-</section>
-<section class="bg-white dark:bg-surface-dark border border-slate-200 dark:border-border-dark rounded-xl flex flex-col h-[600px] overflow-hidden">
-<div class="px-4 py-3 border-b border-slate-200 dark:border-border-dark flex items-center justify-between bg-slate-50/50 dark:bg-black/20">
-<div class="flex items-center gap-1">
-<span class="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mr-4">Rich HTML Editor</span>
-</div>
-<div class="flex items-center gap-1.5">
-<div class="w-2.5 h-2.5 rounded-full bg-red-500/30"></div>
-<div class="w-2.5 h-2.5 rounded-full bg-amber-500/30"></div>
-<div class="w-2.5 h-2.5 rounded-full bg-green-500/30"></div>
-</div>
-</div>
-<div class="flex-1 overflow-auto bg-[#0d0d0d] p-0 font-mono text-sm leading-relaxed text-slate-300">
-    <textarea asp-for="Body" class="w-full h-full bg-transparent border-none text-slate-300 p-4 focus:ring-0 font-mono"></textarea>
-</div>
-</section>
-</div>
-<aside class="col-span-12 lg:col-span-4 flex flex-col gap-6">
-<section class="bg-white dark:bg-surface-dark border border-slate-200 dark:border-border-dark rounded-xl p-6">
-<div class="flex items-center gap-2 mb-4">
-<span class="material-icons-round text-primary text-xl">token</span>
-<h2 class="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Available Tokens</h2>
-</div>
-<p class="text-xs text-slate-500 dark:text-slate-400 mb-4 italic">Click to copy token to clipboard</p>
-<div class="flex flex-col gap-2">
-<button type="button" onclick="navigator.clipboard.writeText('{{CustomerName}}')" class="group flex items-center justify-between px-4 py-2.5 rounded-lg border border-slate-200 dark:border-border-dark bg-slate-50 dark:bg-black/20 hover:border-primary/50 transition-all">
-<code class="text-sm font-mono text-slate-700 dark:text-slate-300">{{CustomerName}}</code>
-<span class="material-icons-round text-xs opacity-0 group-hover:opacity-100 text-primary transition-opacity">content_copy</span>
-</button>
-<button type="button" onclick="navigator.clipboard.writeText('{{BookingRef}}')" class="group flex items-center justify-between px-4 py-2.5 rounded-lg border border-slate-200 dark:border-border-dark bg-slate-50 dark:bg-black/20 hover:border-primary/50 transition-all">
-<code class="text-sm font-mono text-slate-700 dark:text-slate-300">{{BookingRef}}</code>
-<span class="material-icons-round text-xs opacity-0 group-hover:opacity-100 text-primary transition-opacity">content_copy</span>
-</button>
-<!-- Add more tokens as needed -->
-</div>
-</section>
-</aside>
 </main>
 </form>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.0/min/vs/loader.min.js"></script>
+<script>
+    require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.0/min/vs' } });
+
+    var editor;
+    var initialContent = `@Html.Raw(Model.Body?.Replace("`", "\\`") ?? "")`;
+
+    require(['vs/editor/editor.main'], function () {
+        editor = monaco.editor.create(document.getElementById('editor-container'), {
+            value: initialContent,
+            language: 'html',
+            theme: 'vs-dark',
+            automaticLayout: true,
+            minimap: { enabled: false },
+            fontSize: 14,
+            fontFamily: 'JetBrains Mono, monospace',
+            padding: { top: 20, bottom: 20 },
+            scrollBeyondLastLine: false,
+            renderLineHighlight: 'all',
+            lineNumbers: 'on',
+        });
+
+        // Update preview initially
+        updatePreview();
+
+        // Update on change
+        editor.onDidChangeModelContent(function (e) {
+            updatePreview();
+        });
+    });
+
+    function updatePreview() {
+        var content = editor.getValue();
+        
+        // Replace tokens with sample data
+        content = content.replace(/{{CustomerName}}/g, "Alexander Pierce");
+        content = content.replace(/{{BookingRef}}/g, "LFM-2023-881");
+        content = content.replace(/{{VehicleModel}}/g, "Range Rover Autobiography");
+        content = content.replace(/{{PickupDate}}/g, "Nov 12, 2023");
+        content = content.replace(/{{TotalAmount}}/g, "$2,450.00");
+        content = content.replace(/{{InvoiceId}}/g, "INV-999001");
+
+        var iframe = document.getElementById('previewFields');
+        var doc = iframe.contentWindow.document;
+        doc.open();
+        doc.write(content);
+        doc.close();
+    }
+
+    function insertToken(token) {
+        if (editor) {
+            var position = editor.getPosition();
+            editor.executeEdits("", [{
+                range: new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column),
+                text: token
+            }]);
+            editor.focus();
+        }
+    }
+
+    function submitForm() {
+        if (editor) {
+            document.getElementById('hiddenBody').value = editor.getValue();
+        }
+        document.getElementById('editForm').submit();
+    }
+</script>
 </body></html>
