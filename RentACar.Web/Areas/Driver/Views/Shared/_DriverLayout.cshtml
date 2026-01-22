@@ -1,0 +1,55 @@
+@{
+    var title = ViewData["Title"] ?? "Driver Portal";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@title - RentACar Driver</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <style>
+        body { background: #0f0f0f; color: #f2f2f2; }
+        .driver-sidebar { width: 240px; background: #151515; min-height: 100vh; padding: 24px; }
+        .driver-sidebar a { color: #f5f5f5; text-decoration: none; display: block; padding: 10px 12px; border-radius: 8px; margin-bottom: 8px; }
+        .driver-sidebar a.active, .driver-sidebar a:hover { background: #f7c948; color: #1a1a1a; }
+        .driver-header { padding: 20px 32px; background: #151515; border-bottom: 1px solid #232323; }
+        .driver-content { padding: 32px; }
+        .driver-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 16px; padding: 20px; }
+    </style>
+</head>
+<body>
+    <div class="d-flex">
+        <aside class="driver-sidebar">
+            <div class="mb-4">
+                <h4 class="text-warning mb-0"><i class="fa-solid fa-car-side me-2"></i>Driver Portal</h4>
+                <small class="text-muted">RentACar</small>
+            </div>
+            <a href="/Driver/Dashboard" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Dashboard" ? "active" : "")">Dashboard</a>
+            <a href="/Driver/Bookings" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Bookings" ? "active" : "")">Bookings</a>
+            <a href="/Driver/Calendar" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Calendar" ? "active" : "")">Calendar</a>
+            <a href="/Driver/Availability" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Availability" ? "active" : "")">Availability</a>
+            <a href="/Bookings/MyBookings" class="text-muted">Switch to Customer</a>
+        </aside>
+        <main class="flex-grow-1">
+            <div class="driver-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="mb-0">@title</h3>
+                    <small class="text-muted">Manage your trips, tracking, and availability.</small>
+                </div>
+                <div>
+                    <span class="badge bg-warning text-dark">Driver</span>
+                </div>
+            </div>
+            <div class="driver-content">
+                @RenderBody()
+            </div>
+        </main>
+    </div>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

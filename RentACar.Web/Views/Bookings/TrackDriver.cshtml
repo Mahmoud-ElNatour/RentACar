@@ -1,0 +1,110 @@
+@inject IConfiguration Configuration
+@model RentACar.Web.Models.TrackDriverViewModel
+@{
+    ViewData["Title"] = "Track Driver";
+    var mapsKey = Configuration["GoogleMaps:ApiKey"] ?? string.Empty;
+}
+
+<div class="container py-5">
+    <div class="card bg-dark text-white border-0 shadow-lg p-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h3 class="mb-1">Track Your Driver</h3>
+                <p class="text-muted mb-0">Booking #@Model.BookingId</p>
+            </div>
+            <div>
+                <span class="badge @(Model.IsTrackingActive ? "bg-success" : "bg-secondary")">
+                    @(Model.IsTrackingActive ? "Live Tracking ON" : "Tracking Off")
+                </span>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <div class="p-3 bg-black rounded-3">
+                    <h5>@Model.DriverName</h5>
+                    <p class="text-muted mb-1">@Model.DriverPhone</p>
+                    <small class="text-muted d-block">Last update: <span id="lastUpdate">@Model.LastUpdatedUtc?.ToString("HH:mm:ss") ?? "N/A"</span></small>
+                    <hr class="border-secondary" />
+                    <p class="mb-0">Pickup: @Model.PickupAddress</p>
+                </div>
+            </div>
+            <div class="col-lg-8">
+                <div id="trackingMap" style="height: 420px; border-radius: 16px;"></div>
+                <div class="mt-3 text-muted" id="trackingStatus">
+                    @(Model.IsTrackingActive ? "Receiving live updates..." : "Tracking is currently off.")
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=@mapsKey&callback=initTrackingMap"></script>
+    <script>
+        let trackingMap;
+        let driverMarker;
+        let pickupMarker;
+        const bookingId = @Model.BookingId;
+
+        function initTrackingMap() {
+            const pickupLat = Number('@Model.PickupLat');
+            const pickupLng = Number('@Model.PickupLng');
+            const initialLat = Number('@Model.DriverLat');
+            const initialLng = Number('@Model.DriverLng');
+            const center = initialLat && initialLng ? { lat: initialLat, lng: initialLng } : { lat: pickupLat || 25.2048, lng: pickupLng || 55.2708 };
+
+            trackingMap = new google.maps.Map(document.getElementById('trackingMap'), {
+                center,
+                zoom: 13,
+                styles: [
+                    { elementType: 'geometry', stylers: [{ color: '#1f1f1f' }] },
+                    { elementType: 'labels.text.fill', stylers: [{ color: '#f5f5f5' }] }
+                ]
+            });
+
+            if (pickupLat && pickupLng) {
+                pickupMarker = new google.maps.Marker({
+                    position: { lat: pickupLat, lng: pickupLng },
+                    map: trackingMap,
+                    icon: { url: "https://maps.google.com/mapfiles/ms/icons/yellow-dot.png" },
+                    title: 'Pickup'
+                });
+            }
+
+            if (initialLat && initialLng) {
+                driverMarker = new google.maps.Marker({
+                    position: { lat: initialLat, lng: initialLng },
+                    map: trackingMap,
+                    title: 'Driver'
+                });
+            }
+        }
+
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl('/hubs/driver-tracking')
+            .withAutomaticReconnect()
+            .build();
+
+        connection.on('ReceiveLocationUpdate', payload => {
+            const { lat, lng, timestamp } = payload;
+            const position = { lat, lng };
+            if (!driverMarker) {
+                driverMarker = new google.maps.Marker({ position, map: trackingMap, title: 'Driver' });
+            } else {
+                driverMarker.setPosition(position);
+            }
+            trackingMap.setCenter(position);
+            document.getElementById('lastUpdate').textContent = new Date(timestamp).toLocaleTimeString();
+            document.getElementById('trackingStatus').textContent = 'Receiving live updates...';
+        });
+
+        async function startTracking() {
+            await connection.start();
+            await connection.invoke('JoinBookingTracking', bookingId);
+        }
+
+        startTracking();
+    </script>
+}

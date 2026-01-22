@@ -1,0 +1,61 @@
+@model List<DriverBookingListItemViewModel>
+@{
+    ViewData["Title"] = "Driver Bookings";
+}
+
+<div class="driver-card mb-4">
+    <form class="row g-3 align-items-end" method="get" action="/Driver/Bookings">
+        <div class="col-md-4">
+            <label class="form-label">Filter by Status</label>
+            <input type="text" name="status" class="form-control" value="@ViewBag.SelectedStatus" placeholder="Booked / Pending / Returned" />
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Filter by Date</label>
+            <input type="date" name="date" class="form-control" value="@ViewBag.SelectedDate" />
+        </div>
+        <div class="col-md-4">
+            <button type="submit" class="btn btn-warning">Search</button>
+            <a href="/Driver/Bookings" class="btn btn-outline-light ms-2">Reset</a>
+        </div>
+    </form>
+</div>
+
+<div class="driver-card">
+    <h5 class="mb-3">Assigned Bookings</h5>
+    @if (!Model.Any())
+    {
+        <p class="text-muted mb-0">No bookings found.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Booking</th>
+                        <th>Customer</th>
+                        <th>Dates</th>
+                        <th>Status</th>
+                        <th>Pickup</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var booking in Model)
+                    {
+                        <tr>
+                            <td>#@booking.BookingId</td>
+                            <td>@booking.CustomerName</td>
+                            <td>@booking.StartDate:MMM dd - @booking.EndDate:MMM dd</td>
+                            <td>@booking.Status</td>
+                            <td>@booking.PickupAddress</td>
+                            <td>
+                                <a class="btn btn-sm btn-outline-warning" href="/Driver/Bookings/@booking.BookingId">Details</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

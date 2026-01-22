@@ -30,6 +30,11 @@ namespace RentACar.Infrastructure.Data.Repository
             return await _dbContext.Bookings.Where(b => b.CarId == carId).ToListAsync();
         }
 
+        public async Task<List<Booking>> GetBookingsByDriverIdAsync(int driverId)
+        {
+            return await _dbContext.Bookings.Where(b => b.DriverId == driverId).ToListAsync();
+        }
+
         public async Task<List<Booking>> GetBookingsBetweenDatesAsync(DateOnly startDate, DateOnly endDate)
         {
             return await _dbContext.Bookings

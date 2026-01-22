@@ -14,6 +14,8 @@ using Microsoft.EntityFrameworkCore;
 using RentACar.Web.Models;
 using System.Security.Claims;
 using System.Linq;
+using Microsoft.Extensions.Options;
+using RentACar.Application.Services;
 
 namespace RentACar.Web.Controllers
 {
@@ -28,9 +30,12 @@ namespace RentACar.Web.Controllers
         private readonly CustomerManager _customerManager;
         private readonly PromocodeManager _promocodeManager;
         private readonly EmployeeManager _employeeManager;
+        private readonly DriverManager _driverManager;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly IMapper _mapper;
         private readonly ILogger<BookingController> _logger;
+        private readonly AuditLogManager _auditLogManager;
+        private readonly DriverFeeOptions _driverFeeOptions;
 
         public BookingController(
             BookingManager bookingManager,
@@ -39,9 +44,12 @@ namespace RentACar.Web.Controllers
             CustomerManager customerManager,
             PromocodeManager promocodeManager,
             EmployeeManager employeeManager,
+            DriverManager driverManager,
             UserManager<IdentityUser> userManager,
             IMapper mapper,
-            ILogger<BookingController> logger)
+            ILogger<BookingController> logger,
+            AuditLogManager auditLogManager,
+            IOptions<DriverFeeOptions> driverFeeOptions)
         {
             _bookingManager = bookingManager;
             _paymentManager = paymentManager;
@@ -49,9 +57,12 @@ namespace RentACar.Web.Controllers
             _customerManager = customerManager;
             _promocodeManager = promocodeManager;
             _employeeManager = employeeManager;
+            _driverManager = driverManager;
             _userManager = userManager;
             _mapper = mapper;
             _logger = logger;
+            _auditLogManager = auditLogManager;
+            _driverFeeOptions = driverFeeOptions.Value;
         }
 
         [HttpGet("~/Booking")]
@@ -73,6 +84,9 @@ namespace RentACar.Web.Controllers
                 ViewBag.EndDate = end.ToDateTime(TimeOnly.MinValue).ToString("yyyy-MM-dd");
                 ViewBag.CarId = carId.Value.ToString();
             }
+
+            ViewBag.DriverFeeRate = _driverFeeOptions.Rate;
+            ViewBag.DriverFeeMode = _driverFeeOptions.Mode;
 
             return View("~/Views/ControlPanel/Booking/Add.cshtml", new BookingDto());
         }
@@ -138,6 +152,9 @@ namespace RentACar.Web.Controllers
             var promo = booking.PromocodeId.HasValue
                 ? await _promocodeManager.GetPromocodeByIdAsync(booking.PromocodeId.Value)
                 : null;
+            var driver = booking.DriverId.HasValue
+                ? (await _driverManager.GetAllDriversAsync()).FirstOrDefault(d => d.DriverId == booking.DriverId.Value)
+                : null;
 
             var viewModel = new BookingDetailsViewModel
             {
@@ -152,6 +169,13 @@ namespace RentACar.Web.Controllers
                 CustomerEmail = customer?.Email,
                 CustomerPhone = customer?.PhoneNumber,
                 EmployeeName = employee?.Name,
+                DriverName = driver?.DisplayName,
+                DriverPhone = driver?.PhoneNumber,
+                HasDriver = booking.HasDriver,
+                DriverFee = booking.DriverFee,
+                PickupAddress = booking.PickupAddress,
+                PickupLat = booking.PickupLat,
+                PickupLng = booking.PickupLng,
                 CarModel = car?.ModelName,
                 CarPlateNumber = car?.PlateNumber,
                 CarCategory = car?.CategoryName,
@@ -166,6 +190,67 @@ namespace RentACar.Web.Controllers
 
             return PartialView("~/Views/ControlPanel/Booking/_BookingDetailsPartial.cshtml", viewModel);
 
+        }
+
+        [HttpGet("~/Booking/{id}/AvailableDrivers")]
+        [Authorize(Roles = "Admin,Employee")]
+        public async Task<IActionResult> AvailableDrivers(int id)
+        {
+            var booking = await _bookingManager.GetBookingByIdAsync(id);
+            if (booking == null)
+            {
+                return NotFound();
+            }
+
+            var drivers = await _driverManager.GetAvailableDriversAsync(booking.Startdate, booking.Enddate);
+            var result = drivers.Select(d => new
+            {
+                driverId = d.DriverId,
+                name = d.DisplayName,
+                phone = d.PhoneNumber
+            });
+
+            return Ok(result);
+        }
+
+        [HttpPost("~/Booking/AssignDriver")]
+        [Authorize(Roles = "Admin,Employee")]
+        public async Task<IActionResult> AssignDriver([FromBody] AssignDriverRequest request)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var booking = await _bookingManager.GetBookingByIdAsync(request.BookingId);
+            if (booking == null)
+            {
+                return NotFound();
+            }
+
+            var availableDrivers = await _driverManager.GetAvailableDriversAsync(booking.Startdate, booking.Enddate);
+            if (request.DriverId.HasValue && !availableDrivers.Any(d => d.DriverId == request.DriverId.Value))
+            {
+                return BadRequest("Selected driver is not available for this booking timeframe.");
+            }
+
+            var editDto = _mapper.Map<BookingEditDto>(booking);
+            editDto.DriverId = request.DriverId;
+            editDto.BookingStatus = booking.BookingStatus ?? "Pending";
+
+            var updated = await _bookingManager.UpdateBookingAsync(editDto);
+            if (updated == null)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Unable to assign driver.");
+            }
+
+            var summary = request.DriverId.HasValue
+                ? $"Assigned driver {request.DriverId.Value} to booking {request.BookingId}."
+                : $"Unassigned driver from booking {request.BookingId}.";
+
+            await _auditLogManager.LogEventAsync("Booking.DriverAssignmentChanged", "Booking", request.BookingId.ToString(), summary, null, "Success");
+
+            return Ok(new { success = true });
         }
 
         [HttpGet]

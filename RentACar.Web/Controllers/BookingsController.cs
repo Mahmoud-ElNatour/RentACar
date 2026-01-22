@@ -6,10 +6,12 @@ using RentACar.Application.Managers;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using System.Linq;
+using RentACar.Core.Repositories;
+using RentACar.Web.Models;
 
 namespace RentACar.Web.Controllers
 {
-    [Authorize(Roles = "Customer")]
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class BookingsController : Controller
@@ -18,6 +20,8 @@ namespace RentACar.Web.Controllers
         private readonly PaymentManager _paymentManager;
         private readonly CarManager _carManager;
         private readonly CustomerManager _customerManager;
+        private readonly DriverManager _driverManager;
+        private readonly IDriverLocationRepository _driverLocationRepository;
         private readonly UserManager<IdentityUser> _userManager;
 
         public BookingsController(
@@ -25,12 +29,16 @@ namespace RentACar.Web.Controllers
             PaymentManager paymentManager,
             CarManager carManager,
             CustomerManager customerManager,
+            DriverManager driverManager,
+            IDriverLocationRepository driverLocationRepository,
             UserManager<IdentityUser> userManager)
         {
             _bookingManager = bookingManager;
             _paymentManager = paymentManager;
             _carManager = carManager;
             _customerManager = customerManager;
+            _driverManager = driverManager;
+            _driverLocationRepository = driverLocationRepository;
             _userManager = userManager;
         }
 
@@ -43,6 +51,7 @@ namespace RentACar.Web.Controllers
         }
 
         [HttpGet("~/Bookings/MyBookings")]
+        [Authorize(Roles = "Customer")]
         [ApiExplorerSettings(IgnoreApi = true)]
         public IActionResult MyBookings()
         {
@@ -50,6 +59,7 @@ namespace RentACar.Web.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "Customer")]
         public async Task<IActionResult> Get()
         {
             var customerId = await GetCurrentCustomerId();
@@ -74,13 +84,16 @@ namespace RentACar.Web.Controllers
                     paymentStatus = latestPayment?.Status,
                     startdate = b.Startdate.ToString("yyyy-MM-dd"),
                     enddate = b.Enddate.ToString("yyyy-MM-dd"),
-                    totalPrice = b.TotalPrice
+                    totalPrice = b.TotalPrice,
+                    hasDriver = b.HasDriver,
+                    driverId = b.DriverId
                 });
             }
             return Ok(result);
         }
 
         [HttpPost("Pay")]
+        [Authorize(Roles = "Customer")]
         public async Task<IActionResult> Pay([FromBody] MakePaymentRequestDto request)
         {
             if (!ModelState.IsValid)
@@ -101,6 +114,7 @@ namespace RentACar.Web.Controllers
         }
 
         [HttpGet("~/Bookings/Ticket/{id}")]
+        [Authorize(Roles = "Customer")]
         public async Task<IActionResult> Ticket(int id)
         {
             var customerId = await GetCurrentCustomerId();
@@ -119,6 +133,49 @@ namespace RentACar.Web.Controllers
 
             var bytes = GenerateTicketPdf(booking, car, payment);
             return File(bytes, "application/pdf", $"booking_{id}.pdf");
+        }
+
+        [HttpGet("~/Bookings/{id}/TrackDriver")]
+        [Authorize(Roles = "Customer,Admin,Employee")]
+        public async Task<IActionResult> TrackDriver(int id)
+        {
+            var booking = await _bookingManager.GetBookingByIdAsync(id);
+            if (booking == null)
+            {
+                return NotFound();
+            }
+
+            var userId = _userManager.GetUserId(User);
+            var isEmployee = User.IsInRole("Employee") || User.IsInRole("Admin");
+            if (!isEmployee)
+            {
+                var customer = await _customerManager.GetCustomerByAspNetUserId(userId);
+                if (customer == null || booking.CustomerId != customer.UserId)
+                {
+                    return Forbid();
+                }
+            }
+
+            var driver = booking.DriverId.HasValue
+                ? (await _driverManager.GetAllDriversAsync()).FirstOrDefault(d => d.DriverId == booking.DriverId.Value)
+                : null;
+            var location = await _driverLocationRepository.GetLatestByBookingIdAsync(booking.BookingId);
+
+            var viewModel = new TrackDriverViewModel
+            {
+                BookingId = booking.BookingId,
+                DriverName = driver?.DisplayName,
+                DriverPhone = driver?.PhoneNumber,
+                DriverLat = location?.Latitude,
+                DriverLng = location?.Longitude,
+                LastUpdatedUtc = location?.LastUpdatedUtc,
+                PickupAddress = booking.PickupAddress,
+                PickupLat = booking.PickupLat,
+                PickupLng = booking.PickupLng,
+                IsTrackingActive = location?.IsTrackingActive ?? false
+            };
+
+            return View("~/Views/Bookings/TrackDriver.cshtml", viewModel);
         }
 
         private byte[] GenerateTicketPdf(BookingDto booking, CarDto? car, PaymentDto? payment)

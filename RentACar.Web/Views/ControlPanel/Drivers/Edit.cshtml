@@ -1,0 +1,48 @@
+@model RentACar.Web.Models.Driver.DriverFormViewModel
+@{
+    ViewData["Title"] = "Edit Driver";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body class="bg-dark text-white">
+    <div class="container py-4">
+        <a href="/ControlPanel/Drivers" class="btn btn-outline-warning mb-3">Back</a>
+        <h2>Edit Driver</h2>
+        <form method="post" action="/ControlPanel/Drivers/Edit" class="mt-3">
+            <input type="hidden" asp-for="DriverId" />
+            <div class="mb-3">
+                <label class="form-label">AspNet User ID</label>
+                <input asp-for="AspNetUserId" class="form-control" readonly />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Display Name</label>
+                <input asp-for="DisplayName" class="form-control" />
+                <span asp-validation-for="DisplayName" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Phone</label>
+                <input asp-for="PhoneNumber" class="form-control" />
+            </div>
+            <div class="form-check mb-2">
+                <input asp-for="IsActive" class="form-check-input" />
+                <label asp-for="IsActive" class="form-check-label">Active</label>
+            </div>
+            <div class="form-check mb-3">
+                <input asp-for="IsAvailableManual" class="form-check-input" />
+                <label asp-for="IsAvailableManual" class="form-check-label">Manual Availability</label>
+            </div>
+            <button type="submit" class="btn btn-warning">Save Changes</button>
+        </form>
+    </div>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

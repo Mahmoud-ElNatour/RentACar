@@ -1,0 +1,84 @@
+@model DriverDashboardViewModel
+@{
+    ViewData["Title"] = "Driver Dashboard";
+}
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="driver-card mb-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="mb-1">Today's Bookings</h4>
+                    <p class="text-muted mb-0">You have @Model.TodayBookings.Count booking(s) scheduled today.</p>
+                </div>
+                <form method="post" action="/Driver/Dashboard/ToggleAvailability">
+                    <button type="submit" class="btn btn-sm @(Model.IsAvailableManual ? "btn-success" : "btn-outline-light")">
+                        @(Model.IsAvailableManual ? "Available" : "Unavailable")
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="driver-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0">Upcoming Assignments</h5>
+                <a class="btn btn-outline-warning btn-sm" href="/Driver/Bookings">View all</a>
+            </div>
+            @if (!Model.UpcomingBookings.Any())
+            {
+                <p class="text-muted mb-0">No upcoming bookings yet.</p>
+            }
+            else
+            {
+                <div class="list-group list-group-flush">
+                    @foreach (var booking in Model.UpcomingBookings)
+                    {
+                        <a class="list-group-item list-group-item-action bg-transparent text-white border-secondary" href="/Driver/Bookings/@booking.BookingId">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <strong>Booking #@booking.BookingId</strong>
+                                    <div class="text-muted">@booking.CustomerName · @booking.CarModel</div>
+                                </div>
+                                <div class="text-warning">@booking.StartDate:MMM dd - @booking.EndDate:MMM dd</div>
+                            </div>
+                        </a>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="driver-card mb-4">
+            <h5>Status</h5>
+            <p class="text-muted mb-2">Hello @Model.DriverName</p>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge @(Model.IsOnTrip ? "bg-danger" : "bg-success")">
+                    @(Model.IsOnTrip ? "On Trip" : "Off Trip")
+                </span>
+                <span class="badge @(Model.IsAvailableManual ? "bg-warning text-dark" : "bg-secondary")">
+                    @(Model.IsAvailableManual ? "Available" : "Unavailable")
+                </span>
+            </div>
+        </div>
+
+        <div class="driver-card">
+            <h5>Today's Trips</h5>
+            @if (!Model.TodayBookings.Any())
+            {
+                <p class="text-muted mb-0">No trips today. Stay ready for updates.</p>
+            }
+            else
+            {
+                <ul class="list-unstyled mb-0">
+                    @foreach (var booking in Model.TodayBookings)
+                    {
+                        <li class="mb-3">
+                            <div class="fw-semibold">#@booking.BookingId · @booking.CustomerName</div>
+                            <small class="text-muted">@booking.PickupAddress</small>
+                        </li>
+                    }
+                </ul>
+            }
+        </div>
+    </div>
+</div>
