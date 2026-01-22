@@ -53,7 +53,7 @@ namespace RentACar.Web.Controllers
         }
 
         [HttpPost("Send")]
-        public async Task<IActionResult> Send([FromForm] SendEmailRequestDto request)
+        public async Task<IActionResult> Send([FromBody] SendEmailRequestDto request)
         {
              if (request == null) return BadRequest("Invalid request");
 
