@@ -378,7 +378,54 @@
                     });
                 });
             }
+            
+            // Auto-calculate estimated recipients when filter checkboxes change
+            const filterCheckboxes = document.querySelectorAll('.filter-checkbox');
+            filterCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    updateEstimatedRecipients();
+                });
+            });
+            
+            // Initial calculation on page load
+            updateEstimatedRecipients();
         });
+        
+        // Function to update estimated recipients via AJAX
+        function updateEstimatedRecipients() {
+            const includeEmployees = document.getElementById('include-employees')?.checked || false;
+            const includeCustomers = document.getElementById('include-customers')?.checked || false;
+            const includeAdmins = document.getElementById('include-admins')?.checked || false;
+            
+            const rule = {
+                IncludeEmployees: includeEmployees,
+                IncludeCustomers: includeCustomers,
+                IncludeAdmins: includeAdmins
+            };
+            
+            fetch('/DistributionLists/CalculateEstimatedRecipients', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(rule)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    // Update total count
+                    const totalCountElem = document.getElementById('total-count');
+                    if (totalCountElem) {
+                        totalCountElem.textContent = data.totalCount || 0;
+                    }
+                    
+                    // Update breakdown text
+                    const breakdownElem = document.getElementById('breakdown-text');
+                    if (breakdownElem && data.breakdown) {
+                        breakdownElem.textContent = data.breakdown;
+                    }
+                })
+                .catch(err => {
+                    console.error('Failed to calculate recipients', err);
+                });
+        }
         
         // Member Modal Functions
         function openMemberModal(id) {

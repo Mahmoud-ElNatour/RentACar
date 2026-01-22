@@ -167,6 +167,7 @@ namespace RentACar.Web.Controllers
         }
 
         [HttpPost]
+        [IgnoreAntiforgeryToken]
         public async Task<IActionResult> CalculateEstimatedRecipients([FromBody] DistributionListRuleDto rule)
         {
             var data = await _manager.PreviewRecipientsAsync(rule);
@@ -174,16 +175,24 @@ namespace RentACar.Web.Controllers
             var customers = data.Count(r => r.MemberType == "Customer");
             var admins = data.Count(r => r.MemberType == "Admin");
             
+            var breakdownParts = new System.Collections.Generic.List<string>();
+            if (employees > 0) breakdownParts.Add($"{employees} Employees");
+            if (customers > 0) breakdownParts.Add($"{customers} Customers");
+            if (admins > 0) breakdownParts.Add($"{admins} Admins");
+            
+            var breakdown = breakdownParts.Count > 0 
+                ? string.Join(" • ", breakdownParts)
+                : "Select filters to calculate";
+            
             return Json(new 
             { 
-                total = data.Count,
-                employees = employees,
-                customers = customers,
-                admins = admins
+                totalCount = data.Count,
+                breakdown = breakdown
             });
         }
 
         [HttpPost]
+        [IgnoreAntiforgeryToken]
         public async Task<IActionResult> PreviewRecipients([FromBody] DistributionListRuleDto rule)
         {
             var data = await _manager.PreviewRecipientsAsync(rule);
