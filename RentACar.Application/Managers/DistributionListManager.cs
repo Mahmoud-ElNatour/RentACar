@@ -32,7 +32,12 @@ namespace RentACar.Application.Managers
                     UpdatedAt = l.UpdatedAt,
                     CreatedByUserId = l.CreatedByUserId,
                     UpdatedByUserId = l.UpdatedByUserId,
-                    MemberCount = l.Members.Count(m => m.IsActive)
+                    MemberCount = l.Members.Count(m => m.IsActive),
+                    IncludedRoles = l.Members
+                        .Where(m => m.IsActive)
+                        .Select(m => m.MemberType)
+                        .Distinct()
+                        .ToList()
                 })
                 .ToListAsync();
         }
@@ -155,6 +160,17 @@ namespace RentACar.Application.Managers
                 _context.DistributionListMembers.Remove(member);
                 await _context.SaveChangesAsync();
             }
+        }
+
+        public async Task<DistributionListMember> GetMemberByIdAsync(int memberId)
+        {
+            return await _context.DistributionListMembers.FindAsync(memberId);
+        }
+
+        public async Task UpdateMemberAsync(DistributionListMember member)
+        {
+            _context.DistributionListMembers.Update(member);
+            await _context.SaveChangesAsync();
         }
 
         // The core logic for generating recipients based on rules

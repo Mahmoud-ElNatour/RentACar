@@ -20,6 +20,7 @@ namespace RentACar.Application.DTOs
         public string UpdatedByUserId { get; set; }
 
         public int MemberCount { get; set; } // For display
+        public List<string> IncludedRoles { get; set; } = new List<string>(); // Calculated from members
 
         public List<DistributionListMemberDto> Members { get; set; } = new List<DistributionListMemberDto>();
         public List<DistributionListRuleDto> Rules { get; set; } = new List<DistributionListRuleDto>();

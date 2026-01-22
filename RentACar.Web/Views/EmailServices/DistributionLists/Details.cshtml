@@ -1,0 +1,483 @@
+@model RentACar.Application.DTOs.DistributionListDto
+
+@{
+    ViewData["Title"] = Model.Name + " - Distribution List";
+}
+
+<div class="container-fluid py-4" style="background-color: #0f1114; min-height: 100vh;">
+    <div class="container">
+        <!-- Header Section -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <!-- Breadcrumb -->
+                <nav aria-label="breadcrumb" class="mb-3">
+                    <ol class="breadcrumb" style="background: transparent; padding: 0; margin: 0;">
+                        <li class="breadcrumb-item">
+                            <a href="@Url.Action("Index", "DistributionLists")" style="color: #9ca3af; text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='#daad52'" onmouseout="this.style.color='#9ca3af'">
+                                <span class="material-symbols-outlined align-middle" style="font-size: 16px;">arrow_back</span>
+                                Distribution Lists
+                            </a>
+                        </li>
+                        <li class="breadcrumb-item active" style="color: #daad52;">@Model.Name</li>
+                    </ol>
+                </nav>
+                
+                <!-- Header Card -->
+                <div class="card" style="background: linear-gradient(135deg, rgba(218, 173, 82, 0.1) 0%, rgba(218, 173, 82, 0.05) 100%); border: 1px solid rgba(218, 173, 82, 0.3); border-radius: 12px;">
+                    <div class="card-body p-4">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 60px; height: 60px; background-color: rgba(218, 173, 82, 0.2); border: 2px solid #daad52;">
+                                        <span class="material-symbols-outlined" style="color: #daad52; font-size: 32px;">campaign</span>
+                                    </div>
+                                    <div>
+                                        <h1 class="mb-1" style="color: #daad52; font-size: 1.75rem; font-weight: 700;">@Model.Name</h1>
+                                        <p class="mb-0" style="color: #9ca3af; font-size: 0.95rem;">@Model.Description</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-end mt-3 mt-md-0">
+                                <div class="d-flex flex-column align-items-end gap-2">
+                                    <span class="badge px-3 py-2" style="@(Model.IsActive ? "background-color: rgba(34, 197, 94, 0.2); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3);" : "background-color: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3);") font-size: 0.9rem;">
+                                        <span class="material-symbols-outlined align-middle me-1" style="font-size: 16px;">@(Model.IsActive ? "check_circle" : "cancel")</span>
+                                        @(Model.IsActive ? "Active" : "Inactive")
+                                    </span>
+                                    <small style="color: #9ca3af;">ID: #@Model.Id</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="row mb-4">
+            <div class="col-md-4 mb-3">
+                <div class="card" style="background-color: #1c1f26; border: 1px solid #2d323d;">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <p class="text-uppercase small mb-1" style="color: #9ca3af; font-weight: 600;">Total Members</p>
+                                <h3 class="mb-0" style="color: #daad52; font-weight: 700;">@Model.MemberCount</h3>
+                            </div>
+                            <div class="rounded-circle d-flex align-items-center justify-center" style="width: 60px; height: 60px; background-color: rgba(218, 173, 82, 0.1);">
+                                <span class="material-symbols-outlined" style="color: #daad52; font-size: 32px;">group</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card" style="background-color: #1c1f26; border: 1px solid #2d323d;">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <p class="text-uppercase small mb-1" style="color: #9ca3af; font-weight: 600;">Created</p>
+                                <h5 class="mb-0" style="color: white;">@Model.CreatedAt.ToString("MMM dd, yyyy")</h5>
+                            </div>
+                            <div class="rounded-circle d-flex align-items-center justify-center" style="width: 60px; height: 60px; background-color: rgba(59, 130, 246, 0.1);">
+                                <span class="material-symbols-outlined" style="color: #3b82f6; font-size: 32px;">calendar_today</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card" style="background-color: #1c1f26; border: 1px solid #2d323d;">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <p class="text-uppercase small mb-1" style="color: #9ca3af; font-weight: 600;">Last Updated</p>
+                                <h5 class="mb-0" style="color: white;">@(Model.UpdatedAt?.ToString("MMM dd, yyyy") ?? "Never")</h5>
+                            </div>
+                            <div class="rounded-circle d-flex align-items-center justify-center" style="width: 60px; height: 60px; background-color: rgba(16, 185, 129, 0.1);">
+                                <span class="material-symbols-outlined" style="color: #10b981; font-size: 32px;">update</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Member Section -->
+        <div class="card mb-4" style="background-color: #1c1f26; border: 1px solid #2d323d;">
+            <div class="card-header" style="background-color: rgba(218, 173, 82, 0.1); border-bottom: 1px solid #2d323d;">
+                <h5 class="mb-0" style="color: #daad52; font-weight: 600;">
+                    <span class="material-symbols-outlined align-middle me-2">person_add</span>
+                    Add New Member
+                </h5>
+            </div>
+            <div class="card-body">
+                <form asp-action="AddMember" asp-controller="DistributionLists" method="post">
+                    <input type="hidden" name="listId" value="@Model.Id" />
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label text-uppercase small" style="color: #9ca3af; font-weight: 600;">Email Address</label>
+                            <input type="email" name="email" required class="form-control" placeholder="user@example.com" style="background-color: #0f1114; border-color: #2d323d; color: white;" />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label text-uppercase small" style="color: #9ca3af; font-weight: 600;">Type</label>
+                            <select name="type" class="form-select" style="background-color: #0f1114; border-color: #2d323d; color: white;">
+                                <option value="Other">Other</option>
+                                <option value="Employee">Employee</option>
+                                <option value="Customer">Customer</option>
+                                <option value="Admin">Admin</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label text-uppercase small" style="color: #9ca3af; font-weight: 600;">Label (Optional)</label>
+                            <input type="text" name="label" class="form-control" placeholder="e.g. Partner" style="background-color: #0f1114; border-color: #2d323d; color: white;" />
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn w-100" style="background-color: #daad52; color: #0f1114; font-weight: 600;">
+                                <span class="material-symbols-outlined align-middle" style="font-size: 18px;">add</span>
+                                Add
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Members List -->
+        <div class="card" style="background-color: #1c1f26; border: 1px solid #2d323d;">
+            <div class="card-header d-flex justify-content-between align-items-center" style="background-color: rgba(218, 173, 82, 0.05); border-bottom: 1px solid #2d323d;">
+                <h5 class="mb-0" style="color: white; font-weight: 600;">
+                    <span class="material-symbols-outlined align-middle me-2" style="color: #daad52;">group</span>
+                    Members List
+                </h5>
+                <span class="badge" style="background-color: rgba(218, 173, 82, 0.2); color: #daad52; font-weight: 600;">
+                    <span id="member-count">@Model.Members.Count</span> member(s)
+                </span>
+            </div>
+            
+            <!-- Search Bar -->
+            <div class="card-body border-bottom" style="background-color: rgba(218, 173, 82, 0.02); border-color: #2d323d !important;">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="position-relative">
+                            <span class="material-symbols-outlined position-absolute" style="left: 12px; top: 50%; transform: translateY(-50%); color: #9ca3af; font-size: 20px;">search</span>
+                            <input type="text" id="member-search" class="form-control ps-5" placeholder="Search by email, type, or label..." style="background-color: #0f1114; border-color: #2d323d; color: white;" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card-body p-0">
+                @if (Model.Members.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0" id="members-table" style="color: white;">
+                            <thead style="background-color: rgba(255, 255, 255, 0.05); border-bottom: 1px solid #2d323d;">
+                                <tr>
+                                    <th class="px-4 py-3 text-uppercase small" style="color: #9ca3af; font-weight: 600; border: none; width: 80px;">#</th>
+                                    <th class="px-4 py-3 text-uppercase small" style="color: #9ca3af; font-weight: 600; border: none;">Email</th>
+                                    <th class="px-4 py-3 text-uppercase small" style="color: #9ca3af; font-weight: 600; border: none;">Type</th>
+                                    <th class="px-4 py-3 text-uppercase small" style="color: #9ca3af; font-weight: 600; border: none;">Label</th>
+                                    <th class="px-4 py-3 text-uppercase small" style="color: #9ca3af; font-weight: 600; border: none;">Status</th>
+                                    <th class="px-4 py-3 text-uppercase small text-end" style="color: #9ca3af; font-weight: 600; border: none; width: 120px;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody style="border-top: none;">
+                                @{int rowNum = 1;}
+                                @foreach (var member in Model.Members)
+                                {
+                                    <tr class="member-row" style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);" 
+                                        data-email="@member.Email.ToLower()" 
+                                        data-type="@member.MemberType.ToLower()" 
+                                        data-label="@(member.Label?.ToLower() ?? "")">
+                                        <td class="px-4 py-3 text-muted small" style="border: none;">@rowNum</td>
+                                        <td class="px-4 py-3" style="border: none;">@member.Email</td>
+                                        <td class="px-4 py-3" style="border: none;">
+                                            @if (member.MemberType == "Customer")
+                                            {
+                                                <span class="badge" style="background-color: rgba(34, 197, 94, 0.2); color: #22c55e;">Customer</span>
+                                            }
+                                            else if (member.MemberType == "Employee")
+                                            {
+                                                <span class="badge" style="background-color: rgba(59, 130, 246, 0.2); color: #3b82f6;">Employee</span>
+                                            }
+                                            else if (member.MemberType == "Admin")
+                                            {
+                                                <span class="badge" style="background-color: rgba(239, 68, 68, 0.2); color: #ef4444;">Admin</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary">@member.MemberType</span>
+                                            }
+                                        </td>
+                                        <td class="px-4 py-3" style="border: none; color: #9ca3af;">@member.Label</td>
+                                        <td class="px-4 py-3" style="border: none;">
+                                            @if (member.IsActive)
+                                            {
+                                                <span class="badge" style="background-color: rgba(218, 173, 82, 0.2); color: #daad52;">Active</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge" style="background-color: rgba(239, 68, 68, 0.2); color: #ef4444;">Inactive</span>
+                                            }
+                                        </td>
+                                        <td class="px-4 py-3 text-end" style="border: none;">
+                                            <button onclick="openEditModal(@member.Id, '@member.Email', '@member.MemberType', '@member.Label', @member.IsActive.ToString().ToLower())" class="btn btn-sm me-1" style="background-color: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3);">
+                                                <span class="material-symbols-outlined align-middle" style="font-size: 16px;">edit</span>
+                                            </button>
+                                            <button onclick="openDeleteModal(@member.Id, '@member.Email')" class="btn btn-sm" style="background-color: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3);">
+                                                <span class="material-symbols-outlined align-middle" style="font-size: 16px;">delete</span>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    rowNum++;
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    <div class="d-flex justify-content-between align-items-center px-4 py-3 border-top" style="background-color: rgba(255, 255, 255, 0.02); border-color: #2d323d !important;">
+                        <div class="text-muted small">
+                            Showing <span id="showing-start">1</span>-<span id="showing-end">10</span> of <span id="total-count">@Model.Members.Count</span> members
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <button id="prev-page" class="btn btn-sm" style="background-color: #2d323d; color: white; border: 1px solid #3d424d;" disabled>
+                                <span class="material-symbols-outlined" style="font-size: 18px;">chevron_left</span>
+                            </button>
+                            <span class="text-muted small">Page <span id="current-page">1</span></span>
+                            <button id="next-page" class="btn btn-sm" style="background-color: #2d323d; color: white; border: 1px solid #3d424d;">
+                                <span class="material-symbols-outlined" style="font-size: 18px;">chevron_right</span>
+                            </button>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-5">
+                        <span class="material-symbols-outlined mb-3" style="font-size: 64px; color: #9ca3af;">inbox</span>
+                        <p class="text-muted">No members in this list yet. Add one above.</p>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Back Button -->
+        <div class="mt-4">
+            <a href="@Url.Action("Index", "DistributionLists")" class="btn" style="background-color: #2d323d; color: white; border: 1px solid #3d424d;">
+                <span class="material-symbols-outlined align-middle me-2" style="font-size: 18px;">arrow_back</span>
+                Back to Lists
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="delete-modal" class="modal fade" tabindex="-1" style="display: none;">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background-color: #1c1f26; border: 1px solid #2d323d;">
+            <div class="modal-header" style="border-bottom: 1px solid #2d323d;">
+                <h5 class="modal-title" style="color: #ef4444;">
+                    <span class="material-symbols-outlined align-middle me-2">warning</span>
+                    Confirm Delete
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p style="color: #d1d5db;">Are you sure you want to remove <strong id="delete-email" style="color: #daad52;"></strong> from this list?</p>
+                <div class="alert" style="background-color: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444;">
+                    <strong>Warning:</strong> This action cannot be undone.
+                </div>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid #2d323d;">
+                <button type="button" class="btn" data-bs-dismiss="modal" style="background-color: #2d323d; color: white;">Cancel</button>
+                <form id="delete-form" method="post" asp-action="RemoveMember" class="d-inline">
+                    <input type="hidden" name="memberId" id="delete-member-id" />
+                    <input type="hidden" name="listId" value="@Model.Id" />
+                    <button type="submit" class="btn" style="background-color: #ef4444; color: white;">
+                        <span class="material-symbols-outlined align-middle me-1" style="font-size: 18px;">delete</span>
+                        Delete Member
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Member Modal -->
+<div id="edit-modal" class="modal fade" tabindex="-1" style="display: none;">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background-color: #1c1f26; border: 1px solid #2d323d;">
+            <div class="modal-header" style="border-bottom: 1px solid #2d323d;">
+                <h5 class="modal-title" style="color: #daad52;">
+                    <span class="material-symbols-outlined align-middle me-2">edit</span>
+                    Edit Member
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="edit-form" method="post" asp-action="UpdateMember">
+                <div class="modal-body">
+                    <input type="hidden" name="memberId" id="edit-member-id" />
+                    <input type="hidden" name="listId" value="@Model.Id" />
+                    
+                    <div class="mb-3">
+                        <label class="form-label text-uppercase small" style="color: #9ca3af; font-weight: 600;">Email Address</label>
+                        <input type="email" name="email" id="edit-email" required class="form-control" style="background-color: #0f1114; border-color: #2d323d; color: white;" />
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label text-uppercase small" style="color: #9ca3af; font-weight: 600;">Type</label>
+                        <select name="type" id="edit-type" class="form-select" style="background-color: #0f1114; border-color: #2d323d; color: white;">
+                            <option value="Other">Other</option>
+                            <option value="Employee">Employee</option>
+                            <option value="Customer">Customer</option>
+                            <option value="Admin">Admin</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label text-uppercase small" style="color: #9ca3af; font-weight: 600;">Label</label>
+                        <input type="text" name="label" id="edit-label" class="form-control" style="background-color: #0f1114; border-color: #2d323d; color: white;" />
+                    </div>
+                    
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="isActive" id="edit-active" value="true" />
+                        <label class="form-check-label" for="edit-active" style="color: #d1d5db;">
+                            Active
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top: 1px solid #2d323d;">
+                    <button type="button" class="btn" data-bs-dismiss="modal" style="background-color: #2d323d; color: white;">Cancel</button>
+                    <button type="submit" class="btn" style="background-color: #daad52; color: #0f1114; font-weight: 600;">
+                        <span class="material-symbols-outlined align-middle me-1" style="font-size: 18px;">save</span>
+                        Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+    <style>
+        body {
+            background-color: #0f1114 !important;
+        }
+        
+        .breadcrumb-item + .breadcrumb-item::before {
+            color: # 9ca3af;
+            content: "/";
+        }
+        
+        .table tbody tr:hover {
+            background-color: rgba(218, 173, 82, 0.05) !important;
+        }
+        
+        /* Make email text gold on hover */
+        .table tbody tr:hover td:nth-child(2) {
+            color: #daad52 !important;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: #daad52 !important;
+            box-shadow: 0 0 0 0.2rem rgba(218, 173, 82, 0.25) !important;
+        }
+        
+        .btn:hover {
+            opacity: 0.9;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        let currentPage = 1;
+        const rowsPerPage = 10;
+        let allRows = [];
+        let filteredRows = [];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            allRows = Array.from(document.querySelectorAll('.member-row'));
+            filteredRows = [...allRows];
+            updatePagination();
+        });
+
+        // Search functionality
+        document.getElementById('member-search').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            
+            filteredRows = allRows.filter(row => {
+                const email = row.getAttribute('data-email');
+                const type = row.getAttribute('data-type');
+                const label = row.getAttribute('data-label');
+                
+                return email.includes(searchTerm) || type.includes(searchTerm) || label.includes(searchTerm);
+            });
+            
+            currentPage = 1; // Reset to first page on search
+            updatePagination();
+        });
+
+        // Pagination functions
+        function updatePagination() {
+            const totalRows = filteredRows.length;
+            const totalPages = Math.ceil(totalRows / rowsPerPage);
+            const startIndex = (currentPage - 1) * rowsPerPage;
+            const endIndex = Math.min(startIndex + rowsPerPage, totalRows);
+            
+            // Hide all rows first
+            allRows.forEach(row => row.style.display = 'none');
+            
+            // Show only current page rows
+            for (let i = startIndex; i < endIndex; i++) {
+                filteredRows[i].style.display = '';
+            }
+            
+            // Update pagination UI
+            document.getElementById('showing-start').textContent = totalRows > 0 ? startIndex + 1 : 0;
+            document.getElementById('showing-end').textContent = endIndex;
+            document.getElementById('total-count').textContent = totalRows;
+            document.getElementById('current-page').textContent = currentPage;
+            
+            // Update button states
+            document.getElementById('prev-page').disabled = currentPage === 1;
+            document.getElementById('next-page').disabled = currentPage >= totalPages || totalRows === 0;
+        }
+
+        // Previous page
+        document.getElementById('prev-page').addEventListener('click', function() {
+            if (currentPage > 1) {
+                currentPage--;
+                updatePagination();
+            }
+        });
+
+        // Next page
+        document.getElementById('next-page').addEventListener('click', function() {
+            const totalPages = Math.ceil(filteredRows.length / rowsPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                updatePagination();
+            }
+        });
+
+        // Delete modal
+        function openDeleteModal(memberId, email) {
+            document.getElementById('delete-member-id').value = memberId;
+            document.getElementById('delete-email').textContent = email;
+            const modal = new bootstrap.Modal(document.getElementById('delete-modal'));
+            modal.show();
+        }
+
+        // Edit modal
+        function openEditModal(memberId, email, type, label, isActive) {
+            document.getElementById('edit-member-id').value = memberId;
+            document.getElementById('edit-email').value = email;
+            document.getElementById('edit-type').value = type;
+            document.getElementById('edit-label').value = label || '';
+            document.getElementById('edit-active').checked = isActive;
+            const modal = new bootstrap.Modal(document.getElementById('edit-modal'));
+            modal.show();
+        }
+    </script>
+}

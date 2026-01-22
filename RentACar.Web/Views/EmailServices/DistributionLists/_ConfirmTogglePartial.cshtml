@@ -1,0 +1,41 @@
+@model RentACar.Application.DTOs.DistributionListDto
+
+<div class="p-6 bg-card-dark rounded-lg border border-primary/30" style="background-color: #1c1f26;">
+    <div class="flex items-start gap-4 mb-4">
+        <div class="flex-shrink-0">
+            <span class="material-symbols-outlined text-primary text-4xl">power_settings_new</span>
+        </div>
+        <div class="flex-1">
+            <h3 class="text-xl font-bold text-white mb-2">Toggle List Status?</h3>
+            <p class="text-gray-400 mb-4">
+                Are you sure you want to @(Model.IsActive ? "deactivate" : "activate") <strong class="text-primary">@Model.Name</strong>?
+            </p>
+            @if (Model.IsActive)
+            {
+                <div class="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 mb-4" style="background-color: rgba(234, 179, 8, 0.1);">
+                    <p class="text-sm text-yellow-400">
+                        Deactivating this list will prevent it from being used in email campaigns until reactivated.
+                    </p>
+                </div>
+            }
+            else
+            {
+                <div class="bg-primary/10 border border-primary/30 rounded-lg p-3 mb-4" style="background-color: rgba(218, 173, 82, 0.1);">
+                    <p class="text-sm text-primary">
+                        Activating this list will make it available for use in email campaigns.
+                    </p>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="flex gap-3 justify-end">
+        <button onclick="closeConfirmModal()" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-all">Cancel</button>
+        <form asp-action="ToggleActive" asp-route-id="@Model.Id" method="post" class="inline">
+            <button type="submit" class="px-4 py-2 bg-primary hover:brightness-110 text-background-dark rounded-lg transition-all flex items-center gap-2 font-bold">
+                <span class="material-symbols-outlined text-lg">power_settings_new</span>
+                @(Model.IsActive ? "Deactivate" : "Activate")
+            </button>
+        </form>
+    </div>
+</div>

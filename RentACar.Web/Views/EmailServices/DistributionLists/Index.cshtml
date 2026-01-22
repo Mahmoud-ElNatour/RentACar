@@ -128,24 +128,31 @@
         .distribution-lists-page .bg-slate-50 {
             background-color: rgba(255, 255, 255, 0.05) !important;
         }
+        
+        /* Remove table row borders */
+        .distribution-lists-page tbody tr {
+            border: none !important;
+            border-bottom: none !important;
+        }
+        
+        .distribution-lists-page .divide-y > * {
+            border-top: none !important;
+        }
+        
+        /* Add alternating row colors for readability */
+        .distribution-lists-page tbody tr:nth-child(even) {
+            background-color: rgba(255, 255, 255, 0.02) !important;
+        }
+        
+        .distribution-lists-page tbody tr:hover {
+            background-color: rgba(218, 173, 82, 0.05) !important;
+        }
     </style>
 }
 
 <div class="distribution-lists-page bg-background-dark text-white min-h-screen" style="background-color: #13151b; color: white; font-family: 'Epilogue', sans-serif;">
     <!-- Main Content Section -->
     <main class="flex-1 flex flex-col max-w-[1280px] w-full mx-auto px-4 md:px-10 py-8 gap-8" style="margin-top: 0; padding-top: 2rem;">
-            
-            <!-- Success Notification (Dynamic Inject) -->
-            @if (TempData["SuccessMessage"] != null)
-            {
-                <div style="background-color: #daad52; background: linear-gradient(135deg, rgba(218, 173, 82, 0.2) 0%, rgba(218, 173, 82, 0.1) 100%); border: 1px solid #daad52; color: #daad52;" class="px-4 py-3 rounded-lg relative mb-4 flex items-center gap-3" role="alert">
-                    <span class="material-symbols-outlined text-2xl">check_circle</span>
-                    <div>
-                        <strong class="font-bold">Success!</strong>
-                        <span class="block sm:inline ml-1">@TempData["SuccessMessage"]</span>
-                    </div>
-                </div>
-            }
 
             <div class="flex flex-wrap items-end justify-between gap-4">
                 <div class="flex flex-col gap-1">
@@ -203,9 +210,36 @@
                                         </td>
                                         <td class="px-6 py-4 font-medium text-sm">@item.MemberCount</td>
                                         <td class="px-6 py-4">
-                                           @* Display roles tags *@
+                                           @* Display roles tags with colors *@
                                             <div class="flex flex-wrap gap-1.5">
-                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase" style="background-color: rgba(218, 173, 82, 0.2); color: #daad52; border: 1px solid rgba(218, 173, 82, 0.3);">Mixed</span>
+                                                @if (item.IncludedRoles.Count == 1)
+                                                {
+                                                    var role = item.IncludedRoles.First();
+                                                    if (role == "Customer")
+                                                    {
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase" style="background-color: rgba(34, 197, 94, 0.2); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3);">Customer</span>
+                                                    }
+                                                    else if (role == "Employee")
+                                                    {
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase" style="background-color: rgba(59, 130, 246, 0.2); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3);">Employee</span>
+                                                    }
+                                                    else if (role == "Admin")
+                                                    {
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase" style="background-color: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3);">Admin</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase text-gray-400">@role</span>
+                                                    }
+                                                }
+                                                else if (item.IncludedRoles.Count > 1)
+                                                {
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase" style="background-color: rgba(218, 173, 82, 0.2); color: #daad52; border: 1px solid rgba(218, 173, 82, 0.3);">Mixed</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold text-gray-500">Empty</span>
+                                                }
                                             </div>
                                         </td>
                                         <td class="px-6 py-4">
@@ -227,20 +261,21 @@
                                         <td class="px-6 py-4 text-sm text-slate-400">@(item.UpdatedAt?.ToString("MMM dd, yyyy") ?? "-")</td>
                                         <td class="px-6 py-4 text-center bg-primary/5 border-l border-primary/20">
                                             <div class="flex justify-center items-center gap-2">
-                                                <a href="#" onclick="openMemberModal(@item.Id); return false;" class="flex items-center justify-center size-8 rounded-lg text-primary bg-primary/10 hover:bg-primary hover:text-background-dark transition-all no-underline" title="View List">
+                                                <a href="@Url.Action("Details", "DistributionLists", new { id = item.Id })" class="flex items-center justify-center size-8 rounded-lg text-primary bg-primary/10 hover:bg-primary hover:text-background-dark transition-all no-underline" title="View List">
                                                     <span class="material-symbols-outlined text-lg">visibility</span>
                                                 </a>
-                                                 <!-- Toggle Active -->
-                                                <form asp-action="ToggleActive" asp-route-id="@item.Id" method="post" class="d-inline">
-                                                     <button type="submit" class="flex items-center justify-center size-8 rounded-lg text-primary bg-primary/10 hover:bg-primary hover:text-background-dark transition-all border-none cursor-pointer" title="Toggle Status">
-                                                        <span class="material-symbols-outlined text-lg">power_settings_new</span>
-                                                    </button>
-                                                </form>
-                                                <form asp-action="DeleteList" asp-route-id="@item.Id" method="post" onsubmit="return confirm('Are you sure you want to delete this list?');">
-                                                    <button type="submit" class="flex items-center justify-center size-8 rounded-lg text-primary bg-primary/10 hover:bg-red-500 hover:text-white transition-all border-none cursor-pointer" title="Delete List">
-                                                        <span class="material-symbols-outlined text-lg">delete</span>
-                                                    </button>
-                                                </form>
+                                                 <!-- Toggle Active - Now with confirmation -->
+                                                 <a href="#" onclick="openConfirmToggleModal(@item.Id); return false;" class="flex items-center justify-center size-8 rounded-lg text-primary bg-primary/10 hover:bg-primary hover:text-background-dark transition-all no-underline cursor-pointer" title="Toggle Status">
+                                                    <span class="material-symbols-outlined text-lg">power_settings_new</span>
+                                                </a>
+                                                <!-- Download Excel -->
+                                                <a href="@Url.Action("ExportToExcel", new { id = item.Id })" class="flex items-center justify-center size-8 rounded-lg text-primary bg-primary/10 hover:bg-primary hover:text-background-dark transition-all no-underline" title="Download Excel">
+                                                    <span class="material-symbols-outlined text-lg">download</span>
+                                                </a>
+                                                <!-- Delete - Now with confirmation -->
+                                                <a href="#" onclick="openConfirmDeleteModal(@item.Id); return false;" class="flex items-center justify-center size-8 rounded-lg text-primary bg-primary/10 hover:bg-red-500 hover:text-white transition-all no-underline cursor-pointer" title="Delete List">
+                                                    <span class="material-symbols-outlined text-lg">delete</span>
+                                                </a>
                                             </div>
                                         </td>
                                     </tr>
@@ -281,6 +316,36 @@
         </div>
     </div>
 
+    <!-- Confirmation Modal Container -->
+    <div id="confirm-modal-container" class="fixed inset-0 z-[100] hidden" aria-labelledby="confirm-modal-title" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-gray-500/75 backdrop-blur-sm transition-opacity" onclick="closeConfirmModal()"></div>
+        <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <div id="confirm-modal-content" class="relative transform overflow-hidden rounded-lg text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl">
+                     <!-- Content loaded via AJAX -->
+                     <div class="p-10 flex justify-center">
+                         <span class="material-symbols-outlined animate-spin text-primary text-4xl">progress_activity</span>
+                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Preview Modal Container -->
+    <div id="preview-modal-container" class="fixed inset-0 z-[100] hidden" aria-labelledby="preview-modal-title" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-gray-500/75 backdrop-blur-sm transition-opacity" onclick="closePreviewModal()"></div>
+        <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <div id="preview-modal-content" class="relative transform overflow-hidden rounded-lg text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-4xl">
+                     <!-- Content loaded via AJAX -->
+                     <div class="p-10 flex justify-center">
+                         <span class="material-symbols-outlined animate-spin text-primary text-4xl">progress_activity</span>
+                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 @section Scripts {
@@ -288,6 +353,34 @@
         // Enable dark mode for Tailwind classes
         document.documentElement.classList.add('dark');
         
+        // Filter functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const filterInput = document.querySelector('input[placeholder="Filter lists..."]');
+            if (filterInput) {
+                filterInput.addEventListener('input', function(e) {
+                    const searchTerm = e.target.value.toLowerCase();
+                    const rows = document.querySelectorAll('tbody tr');
+                    
+                    rows.forEach(row => {
+                        const nameElem = row.querySelector('.font-bold.text-sm');
+                        const descElem = row.querySelector('.text-\\[10px\\].text-slate-400');
+                        
+                        if (nameElem && descElem) {
+                            const name = nameElem.textContent.toLowerCase();
+                            const desc = descElem.textContent.toLowerCase();
+                            
+                            if (name.includes(searchTerm) || desc.includes(searchTerm)) {
+                                row.style.display = '';
+                            } else {
+                                row.style.display = 'none';
+                            }
+                        }
+                    });
+                });
+            }
+        });
+        
+        // Member Modal Functions
         function openMemberModal(id) {
             const container = document.getElementById('member-modal-container');
             const content = document.getElementById('member-modal-content');
@@ -309,6 +402,88 @@
             const container = document.getElementById('member-modal-container');
             container.classList.add('hidden');
             document.getElementById('member-modal-content').innerHTML = '<div class="p-10 flex justify-center"><span class="material-symbols-outlined animate-spin text-primary text-4xl">progress_activity</span></div>';
+        }
+
+        // Confirm Delete Modal
+        function openConfirmDeleteModal(id) {
+            const container = document.getElementById('confirm-modal-container');
+            const content = document.getElementById('confirm-modal-content');
+            
+            container.classList.remove('hidden');
+            
+            fetch(`/DistributionLists/ConfirmDelete/${id}`)
+                .then(response => response.text())
+                .then(html => {
+                    content.innerHTML = html;
+                })
+                .catch(err => {
+                    console.error('Failed to load confirmation', err);
+                    content.innerHTML = '<div class="p-6 text-red-500">Failed to load confirmation</div>';
+                });
+        }
+
+        // Confirm Toggle Modal
+        function openConfirmToggleModal(id) {
+            const container = document.getElementById('confirm-modal-container');
+            const content = document.getElementById('confirm-modal-content');
+            
+            container.classList.remove('hidden');
+            
+            fetch(`/DistributionLists/ConfirmToggle/${id}`)
+                .then(response => response.text())
+                .then(html => {
+                    content.innerHTML = html;
+                })
+                .catch(err => {
+                    console.error('Failed to load confirmation', err);
+                    content.innerHTML = '<div class="p-6 text-red-500">Failed to load confirmation</div>';
+                });
+        }
+
+        function closeConfirmModal() {
+            const container = document.getElementById('confirm-modal-container');
+            container.classList.add('hidden');
+            document.getElementById('confirm-modal-content').innerHTML = '<div class="p-10 flex justify-center"><span class="material-symbols-outlined animate-spin text-primary text-4xl">progress_activity</span></div>';
+        }
+
+        // Preview Modal
+        function openPreviewModal() {
+            const container = document.getElementById('preview-modal-container');
+            const content = document.getElementById('preview-modal-content');
+            
+            container.classList.remove('hidden');
+            
+            // Get filter values using IDs (jQuery :contains doesn't work in vanilla JS)
+            const includeEmployees = document.getElementById('include-employees')?.checked || false;
+            const includeCustomers = document.getElementById('include-customers')?.checked || false;
+            const includeAdmins = document.getElementById('include-admins')?.checked || false;
+            
+            // Build rule object
+            const rule = {
+                IncludeEmployees: includeEmployees,
+                IncludeCustomers: includeCustomers,
+                IncludeAdmins: includeAdmins
+            };
+
+            fetch('/DistributionLists/PreviewRecipients', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(rule)
+            })
+                .then(response => response.text())
+                .then(html => {
+                    content.innerHTML = html;
+                })
+                .catch(err => {
+                    console.error('Failed to load preview', err);
+                    content.innerHTML = '<div class="p-6 text-red-500">Failed to load preview</div>';
+                });
+        }
+
+        function closePreviewModal() {
+            const container = document.getElementById('preview-modal-container');
+            container.classList.add('hidden');
+            document.getElementById('preview-modal-content').innerHTML = '<div class="p-10 flex justify-center"><span class="material-symbols-outlined animate-spin text-primary text-4xl">progress_activity</span></div>';
         }
     </script>
 }
