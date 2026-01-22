@@ -219,13 +219,17 @@
                                                 <span class="badge" style="background-color: rgba(239, 68, 68, 0.2); color: #ef4444;">Inactive</span>
                                             }
                                         </td>
+
+
                                         <td class="px-4 py-3 text-end" style="border: none;">
-                                            <button onclick="openEditModal(@member.Id, '@member.Email', '@member.MemberType', '@member.Label', @member.IsActive.ToString().ToLower())" class="btn btn-sm me-1" style="background-color: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3);">
-                                                <span class="material-symbols-outlined align-middle" style="font-size: 16px;">edit</span>
-                                            </button>
-                                            <button onclick="openDeleteModal(@member.Id, '@member.Email')" class="btn btn-sm" style="background-color: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3);">
-                                                <span class="material-symbols-outlined align-middle" style="font-size: 16px;">delete</span>
-                                            </button>
+                                            <div class="d-flex justify-content-end gap-2">
+                                                <button onclick="openEditModal(@member.Id, '@member.Email', '@member.MemberType', '@member.Label', @member.IsActive.ToString().ToLower())" class="btn btn-sm" style="background-color: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3);">
+                                                    <span class="material-symbols-outlined align-middle" style="font-size: 16px;">edit</span>
+                                                </button>
+                                                <button onclick="openDeleteModal(@member.Id, '@member.Email')" class="btn btn-sm" style="background-color: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3);">
+                                                    <span class="material-symbols-outlined align-middle" style="font-size: 16px;">delete</span>
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                     rowNum++;
