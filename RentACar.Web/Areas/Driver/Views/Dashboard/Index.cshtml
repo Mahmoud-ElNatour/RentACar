@@ -1,0 +1,125 @@
+@model DriverDashboardViewModel
+@{
+    ViewData["Title"] = "Driver Dashboard";
+}
+
+<div class="space-y-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="bg-surface-dark/80 border border-white/5 rounded-xl p-6 shadow-lg">
+            <p class="text-sm text-white/60">Today's Bookings</p>
+            <h3 class="text-3xl font-semibold text-white mt-2" id="todayCount">0</h3>
+            <p class="text-sm text-white/60 mt-1">Assignments scheduled today</p>
+        </div>
+        <div class="bg-surface-dark/80 border border-white/5 rounded-xl p-6 shadow-lg">
+            <p class="text-sm text-white/60">Upcoming Bookings</p>
+            <h3 class="text-3xl font-semibold text-white mt-2" id="upcomingCount">0</h3>
+            <p class="text-sm text-white/60 mt-1">Trips on your calendar</p>
+        </div>
+        <div class="bg-surface-dark/80 border border-white/5 rounded-xl p-6 shadow-lg">
+            <p class="text-sm text-white/60">Duty Status</p>
+            <div class="flex items-center justify-between mt-4">
+                <div>
+                    <p class="text-white font-semibold" id="driverName">Driver</p>
+                    <p class="text-xs text-white/50">Live status updates</p>
+                </div>
+                <button type="button" id="toggleAvailabilityBtn" class="px-4 py-2 rounded-full bg-primary text-black text-sm font-semibold">
+                    Available
+                </button>
+            </div>
+            <div class="mt-4 flex gap-2">
+                <span id="onTripBadge" class="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300">Off Trip</span>
+                <span id="availabilityBadge" class="px-3 py-1 rounded-full text-xs font-semibold bg-primary/20 text-primary">Available</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 bg-surface-dark/80 border border-white/5 rounded-xl p-6 shadow-lg">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h2 class="text-xl font-semibold text-white">Upcoming Assignments</h2>
+                    <p class="text-sm text-white/60">Manage your next trips and pickups</p>
+                </div>
+                <a class="text-sm text-primary font-semibold" href="/Driver/Bookings">View all</a>
+            </div>
+            <div id="upcomingList" class="space-y-3">
+                <div class="text-sm text-white/60">Loading upcoming bookings...</div>
+            </div>
+        </div>
+        <div class="bg-surface-dark/80 border border-white/5 rounded-xl p-6 shadow-lg">
+            <h2 class="text-xl font-semibold text-white">Today's Trips</h2>
+            <p class="text-sm text-white/60 mb-4">Stay ready for pickups</p>
+            <div id="todayList" class="space-y-3">
+                <div class="text-sm text-white/60">Loading today's bookings...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        async function loadDashboard() {
+            const res = await fetch('/api/driver/dashboard');
+            if (!res.ok) {
+                document.getElementById('todayList').textContent = 'Unable to load dashboard data.';
+                return;
+            }
+
+            const data = await res.json();
+            document.getElementById('todayCount').textContent = data.todayCount ?? 0;
+            document.getElementById('upcomingCount').textContent = data.upcomingCount ?? 0;
+            document.getElementById('driverName').textContent = data.driverName ?? 'Driver';
+
+            const availabilityBadge = document.getElementById('availabilityBadge');
+            const onTripBadge = document.getElementById('onTripBadge');
+            availabilityBadge.textContent = data.isAvailableManual ? 'Available' : 'Unavailable';
+            availabilityBadge.className = data.isAvailableManual
+                ? 'px-3 py-1 rounded-full text-xs font-semibold bg-primary/20 text-primary'
+                : 'px-3 py-1 rounded-full text-xs font-semibold bg-white/10 text-white/60';
+            onTripBadge.textContent = data.isOnTrip ? 'On Trip' : 'Off Trip';
+            onTripBadge.className = data.isOnTrip
+                ? 'px-3 py-1 rounded-full text-xs font-semibold bg-red-500/20 text-red-300'
+                : 'px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300';
+
+            const toggleBtn = document.getElementById('toggleAvailabilityBtn');
+            toggleBtn.textContent = data.isAvailableManual ? 'Available' : 'Unavailable';
+            toggleBtn.className = data.isAvailableManual
+                ? 'px-4 py-2 rounded-full bg-primary text-black text-sm font-semibold'
+                : 'px-4 py-2 rounded-full bg-white/10 text-white text-sm font-semibold';
+
+            renderBookingList('upcomingList', data.upcomingBookings);
+            renderBookingList('todayList', data.todayBookings);
+        }
+
+        function renderBookingList(containerId, bookings) {
+            const container = document.getElementById(containerId);
+            if (!bookings || bookings.length === 0) {
+                container.innerHTML = '<div class="text-sm text-white/60">No bookings found.</div>';
+                return;
+            }
+
+            container.innerHTML = bookings.map(booking => `
+                <a href="/Driver/Bookings/${booking.bookingId}"
+                   class="block p-4 rounded-lg border border-white/5 bg-surface-darker/60 hover:border-primary/40 transition">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-white font-semibold">Booking #${booking.bookingId}</p>
+                            <p class="text-xs text-white/60">${booking.customerName ?? 'Customer'} · ${booking.carModel ?? 'Vehicle'}</p>
+                        </div>
+                        <span class="text-xs text-primary">${booking.startDate} → ${booking.endDate}</span>
+                    </div>
+                    <p class="text-xs text-white/50 mt-2">${booking.pickupAddress ?? 'Pickup details pending'}</p>
+                </a>
+            `).join('');
+        }
+
+        document.getElementById('toggleAvailabilityBtn').addEventListener('click', async () => {
+            const res = await fetch('/Driver/Dashboard/ToggleAvailability', { method: 'POST' });
+            if (res.ok) {
+                await loadDashboard();
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', loadDashboard);
+    </script>
+}

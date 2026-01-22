@@ -16,6 +16,7 @@
                         <th>Start</th>
                         <th>End</th>
                         <th>Price</th>
+                        <th>Driver</th>
                         <th></th>
                     </tr>
                 </thead>
@@ -104,6 +105,7 @@
                     `<td>${b.startdate}</td>` +
                     `<td>${b.enddate}</td>` +
                     `<td>${Number(b.totalPrice ?? 0).toFixed(2)}</td>` +
+                    `<td>${b.hasDriver ? 'Assigned' : 'Self-drive'}</td>` +
                     `<td>
                                 ${showPayButton ? `
                                     <button class="btn btn-primary btn-sm me-2 pay-btn"
@@ -112,6 +114,12 @@
                                             ${payDisabled ? 'disabled' : ''}>
                                         Pay
                                     </button>
+                                ` : ''}
+                                ${b.hasDriver ? `
+                                    <a class="btn btn-warning btn-sm me-2"
+                                       href="/Bookings/${b.bookingId}/TrackDriver">
+                                        Track Driver
+                                    </a>
                                 ` : ''}
                                 <a class="btn btn-secondary btn-sm"
                                    href="/Bookings/Ticket/${b.bookingId}"

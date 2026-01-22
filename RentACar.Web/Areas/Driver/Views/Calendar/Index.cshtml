@@ -1,0 +1,64 @@
+@model DriverCalendarViewModel
+@{
+    ViewData["Title"] = "Driver Calendar";
+    var monthLabel = Model.Month.ToString("MMMM yyyy");
+}
+
+<div class="driver-card mb-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <h4 class="mb-0">Calendar & Schedule</h4>
+        <div>
+            <a class="btn btn-outline-light" href="/Driver/Calendar?year=@Model.Month.AddMonths(-1).Year&month=@Model.Month.AddMonths(-1).Month">&laquo; Prev</a>
+            <span class="mx-3">@monthLabel</span>
+            <a class="btn btn-outline-light" href="/Driver/Calendar?year=@Model.Month.AddMonths(1).Year&month=@Model.Month.AddMonths(1).Month">Next &raquo;</a>
+        </div>
+    </div>
+    <p class="text-muted mt-2">Manage your bookings and availability blocks in a single view.</p>
+</div>
+
+<div class="driver-card">
+    <div class="row">
+        <div class="col-lg-8">
+            <h5>Bookings</h5>
+            @if (!Model.Bookings.Any())
+            {
+                <p class="text-muted">No bookings scheduled for this month.</p>
+            }
+            else
+            {
+                <ul class="list-group list-group-flush">
+                    @foreach (var booking in Model.Bookings)
+                    {
+                        <li class="list-group-item bg-transparent text-white border-secondary">
+                            <strong>#@booking.BookingId</strong>
+                            <span class="ms-2 text-muted">@booking.StartDate:MMM dd - @booking.EndDate:MMM dd</span>
+                            <span class="ms-2 text-warning">@booking.CustomerName</span>
+                        </li>
+                    }
+                </ul>
+            }
+        </div>
+        <div class="col-lg-4">
+            <h5>Availability Blocks</h5>
+            @if (!Model.AvailabilityBlocks.Any())
+            {
+                <p class="text-muted">No availability blocks added.</p>
+            }
+            else
+            {
+                <ul class="list-group list-group-flush">
+                    @foreach (var block in Model.AvailabilityBlocks)
+                    {
+                        <li class="list-group-item bg-transparent text-white border-secondary">
+                            @block.StartTime:g - @block.EndTime:g
+                            @if (block.IsRecurringWeekly)
+                            {
+                                <span class="badge bg-warning text-dark ms-2">Weekly</span>
+                            }
+                        </li>
+                    }
+                </ul>
+            }
+        </div>
+    </div>
+</div>

@@ -1,0 +1,59 @@
+@model List<RentACar.Core.Entities.Driver>
+@{
+    ViewData["Title"] = "Drivers";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body class="bg-dark text-white">
+    <div class="container py-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Drivers Management</h2>
+            <a class="btn btn-warning" href="/ControlPanel/Drivers/Create">Add Driver</a>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Phone</th>
+                        <th>Status</th>
+                        <th>Manual Availability</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var driver in Model)
+                    {
+                        <tr>
+                            <td>@driver.DriverId</td>
+                            <td>@driver.DisplayName</td>
+                            <td>@driver.PhoneNumber</td>
+                            <td>@(driver.IsActive ? "Active" : "Inactive")</td>
+                            <td>@(driver.IsAvailableManual ? "Available" : "Unavailable")</td>
+                            <td class="text-end">
+                                <a class="btn btn-sm btn-outline-light" href="/ControlPanel/Drivers/Edit/@driver.DriverId">Edit</a>
+                                <form method="post" action="/ControlPanel/Drivers/Deactivate" class="d-inline">
+                                    <input type="hidden" name="id" value="@driver.DriverId" />
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Deactivate</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
