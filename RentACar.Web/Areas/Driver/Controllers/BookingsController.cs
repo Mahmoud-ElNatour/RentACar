@@ -82,6 +82,7 @@ public class BookingsController : Controller
 
         var booking = await _dbContext.Bookings
             .Include(b => b.Customer)
+                .ThenInclude(c => c.User)
             .Include(b => b.Car)
             .FirstOrDefaultAsync(b => b.BookingId == id && b.DriverId == driver.DriverId);
 
@@ -102,8 +103,8 @@ public class BookingsController : Controller
             StartDate = booking.Startdate,
             EndDate = booking.Enddate,
             CustomerName = booking.Customer?.Name,
-            CustomerEmail = booking.Customer?.Email,
-            CustomerPhone = booking.Customer?.PhoneNumber,
+            CustomerEmail = booking.Customer?.User?.Email,
+            CustomerPhone = booking.Customer?.User?.PhoneNumber,
             CarModel = booking.Car?.ModelName,
             CarPlateNumber = booking.Car?.PlateNumber,
             PickupAddress = booking.PickupAddress,
