@@ -53,7 +53,7 @@ namespace RentACar.Web.Controllers
         }
 
         [HttpPost("Send")]
-        public async Task<IActionResult> Send([FromBody] SendEmailRequestDto request)
+        public async Task<IActionResult> Send([FromForm] SendEmailRequestDto request)
         {
              if (request == null) return BadRequest("Invalid request");
 
@@ -101,29 +101,58 @@ namespace RentACar.Web.Controllers
                  return BadRequest("No valid recipients selected.");
              }
 
+             // Process Attachments
+             Dictionary<string, byte[]> attachments = null;
+             if (request.Attachments != null && request.Attachments.Any())
+             {
+                 attachments = new Dictionary<string, byte[]>();
+                 foreach (var file in request.Attachments)
+                 {
+                     if (file.Length > 0)
+                     {
+                         using (var ms = new System.IO.MemoryStream())
+                         {
+                             await file.CopyToAsync(ms);
+                             attachments.Add(file.FileName, ms.ToArray());
+                         }
+                     }
+                 }
+             }
+
              // Send Logic
              string subject = request.Subject;
              string body = request.Body;
+             int delivered;
 
-             // If Template Mode, we might want to wrap the body or treat it differently?
-             // But the user editor shows the "final" HTML or text.
-             // For now, assume the frontend sends the *rendered* or *final* content in request.Body.
-             // If manual, it's just the HTML.
-             
-             // UNLESS: The user just selected a template and didn't edit it? 
-             // We need to support fetching the template if Body is empty but TemplateKey is set.
-             if (request.IsTemplateMode && string.IsNullOrEmpty(body) && !string.IsNullOrEmpty(request.TemplateKey))
+             if (request.IsTemplateMode)
              {
-                  var template = await _templateManager.GetTemplateByKeyAsync(request.TemplateKey);
-                  if (template != null)
-                  {
-                       subject = template.Subject; // Override or use provided? Usually provided subject overrides.
-                       body = template.Body;
-                  }
+                 // Template Mode: Use regular ad-hoc sender which might wrap logic, 
+                 // BUT wait. If the user edited the body in template mode, that IS the raw HTML we want.
+                 // "SendAdHocEmailBatchAsync" wraps it in "GetStandardTemplate". 
+                 // If the body already contains the template container (div class="email-container"), wrapping it again is double wrapping.
+                 // The editor shows the FULL HTML. 
+                 // So we should probably use Raw send for everything IF the body is "complete".
+                 // However, "Manual" mode definitely uses Raw send per request.
+                 
+                 // If TemplateKey is present and Body matches template default, we use Standard logic?
+                 // Let's rely on IsTemplateMode. If IsTemplateMode is true, we assume it's "System Template" flow, 
+                 // but if the Editor has the FULL content, we should just send it as Raw.
+                 
+                 // The safest bet given "SendRawEmailBatchAsync" exists is to use it if we want EXACT content.
+                 // "SendAdHocEmailBatchAsync" WRAPS the content.
+                 // If the user's template ALREADY has the wrapper (it does in the HTML snippet), we should NOT wrap it again.
+                 
+                 // So actually, both modes send RAW content if the editor contains the full HTML.
+                 // "SendAdHoc" is only for simple strings.
+                 
+                 // Let's use SendRawEmailBatchAsync for everything coming from the Composer, as the Composer controls the full HTML.
+                 delivered = await _emailManager.SendRawEmailBatchAsync(recipients, subject, body, attachments);
              }
-
-             // ACTUALLY SEND
-             int delivered = await _emailManager.SendAdHocEmailBatchAsync(recipients, subject, body);
+             else
+             {
+                 // Manual Mode: Explicitly requested Raw.
+                 delivered = await _emailManager.SendRawEmailBatchAsync(recipients, subject, body, attachments);
+             }
              
              return Ok(new { success = true, recipientsCount = recipients.Count, deliveredCount = delivered });
         }

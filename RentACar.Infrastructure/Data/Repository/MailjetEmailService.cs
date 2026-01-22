@@ -3,6 +3,7 @@ using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System.Linq;
 using RentACar.Core.Repositories;
 
 namespace RentACar.Infrastructure.Data.Repository
@@ -16,7 +17,7 @@ namespace RentACar.Infrastructure.Data.Repository
             _httpClient = httpClient;
         }
 
-        public async Task SendEmailAsync(string toEmail, string subject, string message)
+        public async Task SendEmailAsync(string toEmail, string subject, string message, System.Collections.Generic.Dictionary<string, byte[]> attachments = null)
         {
             var apiKey = Environment.GetEnvironmentVariable("MAILJET_API_KEY") ?? Environment.GetEnvironmentVariable("MAILJET_API_KEY", EnvironmentVariableTarget.User);
             var secretKey = Environment.GetEnvironmentVariable("MAILJET_SECRET_KEY") ?? Environment.GetEnvironmentVariable("MAILJET_SECRET_KEY", EnvironmentVariableTarget.User);
@@ -46,7 +47,13 @@ namespace RentACar.Infrastructure.Data.Repository
                             }
                         },
                         Subject = subject,
-                        HTMLPart = message
+                        HTMLPart = message,
+                        Attachments = attachments != null ? attachments.Select(a => new
+                        {
+                            ContentType = "application/octet-stream", // Fallback, ideally we pass filename/type
+                            Filename = a.Key,
+                            Base64Content = Convert.ToBase64String(a.Value)
+                        }).ToArray() : null
                     }
                 }
             };

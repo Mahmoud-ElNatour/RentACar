@@ -29,6 +29,7 @@ namespace RentACar.Application.DTOs
          public string Body { get; set; }
          public bool IsTemplateMode { get; set; }
          public string TemplateKey { get; set; }
+         public System.Collections.Generic.List<Microsoft.AspNetCore.Http.IFormFile> Attachments { get; set; }
          
          // In "Template Mode", Body might be auto-generated or overridden.
          // If IsTemplateMode is true, we might use TemplateKey to look up the base template, 

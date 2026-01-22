@@ -29,12 +29,12 @@ namespace RentACar.Application.Managers
             _auditLogManager = auditLogManager;
         }
 
-        private async Task<bool> SendEmailSafeAsync(string recipient, string subject, string message, string emailType)
+        private async Task<bool> SendEmailSafeAsync(string recipient, string subject, string message, string emailType, Dictionary<string, byte[]> attachments = null)
         {
             if (string.IsNullOrEmpty(recipient)) return false;
             try
             {
-                await _emailService.SendEmailAsync(recipient, subject, message);
+                await _emailService.SendEmailAsync(recipient, subject, message, attachments);
                 await _auditLogManager.LogEventAsync("EmailSent", "Notification", recipient, $"Sent {emailType} to {recipient}", status: "Success");
                 return true;
             }
@@ -343,7 +343,7 @@ namespace RentACar.Application.Managers
         }
 
         // Generic Send for "Send Email" Feature
-        public async Task<int> SendAdHocEmailBatchAsync(IEnumerable<string> recipients, string subject, string bodyHtml)
+        public async Task<int> SendAdHocEmailBatchAsync(IEnumerable<string> recipients, string subject, string bodyHtml, Dictionary<string, byte[]> attachments = null)
         {
             var message = EmailTemplates.GetStandardTemplate(bodyHtml, subject);
             int successCount = 0;
@@ -351,7 +351,35 @@ namespace RentACar.Application.Managers
             // In a real campaign we might want parallel or queue, but for now linear safe send
             foreach (var email in recipients)
             {
-                if(await SendEmailSafeAsync(email, subject, message, "AdHoc Campaign"))
+                if(await SendEmailSafeAsync(email, subject, message, "AdHoc Campaign", attachments))
+                {
+                    successCount++;
+                }
+            }
+            return successCount;
+        }
+        public async Task<int> SendRawEmailBatchAsync(IEnumerable<string> recipients, string subject, string bodyHtml, Dictionary<string, byte[]> attachments = null)
+        {
+            // Direct send without wrapping in GetStandardTemplate
+            int successCount = 0;
+            foreach (var email in recipients)
+            {
+                // SendEmailSafeAsync wrapping? No, SendEmailSafeAsync calls GetStandardTemplate? 
+                // Wait, SendEmailSafeAsync calls _emailService.SendEmailAsync direct. 
+                // BUT SendEmailSafeAsync logs audits. Let's reuse it but we need to pass strict message.
+                // The issue is SendEmailSafeAsync takes 'message' and passes it to _emailService.
+                // It does NOT wrap in template. The CALLER wraps it.
+                // So I can check usage.
+                
+                // Check usage:
+                // var message = EmailTemplates.GetStandardTemplate(...)
+                // await SendEmailSafeAsync(..., message, ...)
+                
+                // So SendEmailSafeAsync is fine. I just trigger it with raw body.
+                // Does SendEmailSafeAsync support attachments?
+                // I need to update SendEmailSafeAsync to support attachments too within EmailManager.
+                
+                if(await SendEmailSafeAsync(email, subject, bodyHtml, "Raw Email", attachments))
                 {
                     successCount++;
                 }
