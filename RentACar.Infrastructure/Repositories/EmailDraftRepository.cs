@@ -28,5 +28,20 @@ namespace RentACar.Infrastructure.Repositories
             return await _dbContext.EmailDrafts
                 .FirstOrDefaultAsync(d => d.Id == id && d.CreatedByUserId == userId);
         }
+
+        public async Task DeleteDraftsByUserIdAsync(string userId)
+        {
+            var drafts = await _dbContext.EmailDrafts
+                .Where(d => d.CreatedByUserId == userId)
+                .ToListAsync();
+
+            if (drafts.Count == 0)
+            {
+                return;
+            }
+
+            _dbContext.EmailDrafts.RemoveRange(drafts);
+            await _dbContext.SaveChangesAsync();
+        }
     }
 }

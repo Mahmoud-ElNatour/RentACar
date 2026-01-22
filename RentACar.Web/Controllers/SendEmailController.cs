@@ -53,7 +53,7 @@ namespace RentACar.Web.Controllers
         }
 
         [HttpPost("Send")]
-        public async Task<IActionResult> Send([FromBody] SendEmailRequestDto request)
+        public async Task<IActionResult> Send([FromForm] SendEmailRequestDto request)
         {
              if (request == null) return BadRequest("Invalid request");
 
@@ -174,12 +174,38 @@ namespace RentACar.Web.Controllers
              return Ok(draft);
         }
 
+        [HttpGet("Drafts")]
+        public async Task<IActionResult> Drafts()
+        {
+            var userId = _userManager.GetUserId(User);
+            var drafts = await _draftManager.GetDraftsByUserAsync(userId);
+            var response = drafts.Select(draft => new
+            {
+                id = draft.Id,
+                subject = draft.Subject,
+                body = draft.Body,
+                recipientsRaw = draft.RecipientsRaw,
+                selectedDistributionListIdsRaw = draft.SelectedDistributionListIdsRaw,
+                lastUpdated = draft.LastUpdated.ToString("MMM dd")
+            });
+
+            return Ok(response);
+        }
+
         [HttpDelete("DeleteDraft/{id}")]
         public async Task<IActionResult> DeleteDraft(int id)
         {
              var userId = _userManager.GetUserId(User);
              await _draftManager.DeleteDraftAsync(id, userId);
              return Ok(new { success = true });
+        }
+
+        [HttpDelete("DeleteAllDrafts")]
+        public async Task<IActionResult> DeleteAllDrafts()
+        {
+            var userId = _userManager.GetUserId(User);
+            await _draftManager.DeleteAllDraftsAsync(userId);
+            return Ok(new { success = true });
         }
     }
 }

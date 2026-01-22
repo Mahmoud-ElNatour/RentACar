@@ -62,17 +62,17 @@
         <div class="p-8 border-b border-border-dark">
             <div class="flex items-center justify-between mb-6">
                 <h3 class="text-white font-extrabold text-sm tracking-[0.2em] uppercase">Drafts</h3>
-                <span class="bg-primary/20 text-primary text-[10px] font-black px-2 py-0.5 rounded-full">@(((List<RentACar.Application.DTOs.EmailDraftDto>)ViewBag.Drafts).Count)</span>
+                <span id="draft-count" class="bg-primary/20 text-primary text-[10px] font-black px-2 py-0.5 rounded-full">@(((List<RentACar.Application.DTOs.EmailDraftDto>)ViewBag.Drafts).Count)</span>
             </div>
             <div class="relative">
                 <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-sm">search</span>
                 <input class="w-full bg-surface-dark border border-border-dark rounded-lg pl-9 pr-4 py-2 text-xs text-white focus:ring-1 focus:ring-primary focus:border-primary outline-none" placeholder="Search drafts..." type="text" id="draftSearch"/>
             </div>
         </div>
-        <div class="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-2">
+        <div id="drafts-list" class="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-2">
             @foreach (var draft in (List<RentACar.Application.DTOs.EmailDraftDto>)ViewBag.Drafts)
             {
-                <div onclick="loadDraft(@draft.Id, '@System.Web.HttpUtility.JavaScriptStringEncode(draft.Subject)', '@System.Web.HttpUtility.JavaScriptStringEncode(draft.Body)', '@draft.RecipientsRaw')" class="p-4 rounded-xl hover:bg-surface-dark border border-transparent hover:border-border-dark transition-all cursor-pointer group @(Model != null && Model.Id == draft.Id ? "bg-primary/5 border-primary/20" : "")">
+                <div data-draft-item="true" onclick="loadDraft(@draft.Id, '@System.Web.HttpUtility.JavaScriptStringEncode(draft.Subject)', '@System.Web.HttpUtility.JavaScriptStringEncode(draft.Body)', '@System.Web.HttpUtility.JavaScriptStringEncode(draft.RecipientsRaw)', '@System.Web.HttpUtility.JavaScriptStringEncode(draft.SelectedDistributionListIdsRaw)')" class="p-4 rounded-xl hover:bg-surface-dark border border-transparent hover:border-border-dark transition-all cursor-pointer group @(Model != null && Model.Id == draft.Id ? "bg-primary/5 border-primary/20" : "")">
                     <div class="flex justify-between items-start mb-1">
                         <span class="text-zinc-500 text-[10px] font-extrabold uppercase tracking-widest group-hover:text-primary transition-colors">Draft #@draft.Id</span>
                         <span class="text-zinc-600 text-[9px]">@draft.LastUpdated.ToString("MMM dd")</span>
@@ -83,7 +83,7 @@
             }
         </div>
         <div class="p-6 border-t border-border-dark">
-            <button class="w-full bg-surface-dark border border-border-dark text-zinc-400 py-3 rounded-lg text-[10px] font-extrabold uppercase tracking-widest hover:text-white hover:border-zinc-700 transition-all flex items-center justify-center gap-2">
+            <button onclick="clearAllDrafts()" class="w-full bg-surface-dark border border-border-dark text-zinc-400 py-3 rounded-lg text-[10px] font-extrabold uppercase tracking-widest hover:text-white hover:border-zinc-700 transition-all flex items-center justify-center gap-2">
                 <span class="material-symbols-outlined text-sm">delete</span>
                 Clear All Drafts
             </button>
@@ -170,15 +170,30 @@
                         <button onclick="execCmd('insertOrderedList')" class="p-2 text-zinc-400 hover:text-white transition-colors rounded hover:bg-white/5"><span class="material-symbols-outlined text-[20px]">format_list_numbered</span></button>
                         <div class="w-px h-6 bg-border-dark mx-2"></div>
                         <!-- Links/Images omitted for brevity of tool, but logic is same -->
-                        <button class="p-2 text-zinc-400 hover:text-white transition-colors rounded hover:bg-white/5"><span class="material-symbols-outlined text-[20px]">link</span></button>
+                        <button onclick="insertLink()" class="p-2 text-zinc-400 hover:text-white transition-colors rounded hover:bg-white/5"><span class="material-symbols-outlined text-[20px]">link</span></button>
                         <div class="flex-1"></div>
                         <button onclick="execCmd('undo')" class="p-2 text-zinc-400 hover:text-white transition-colors rounded hover:bg-white/5"><span class="material-symbols-outlined text-[20px]">undo</span></button>
                         <button onclick="execCmd('redo')" class="p-2 text-zinc-400 hover:text-white transition-colors rounded hover:bg-white/5"><span class="material-symbols-outlined text-[20px]">redo</span></button>
                     </div>
                     
                     <!-- Content Area -->
-                    <div id="email-body-editor" class="p-10 text-lg leading-relaxed text-zinc-300 focus:outline-none flex-1 overflow-y-auto custom-scrollbar" contenteditable="true" spellcheck="false">
+                    <div id="email-body-editor" class="p-10 text-lg leading-relaxed text-zinc-300 focus:outline-none flex-1 overflow-y-auto custom-scrollbar" contenteditable="true" spellcheck="false" data-placeholder="Start typing your message here...">
                         <p class="text-zinc-600 italic">Start typing your message here...</p>
+                    </div>
+                </div>
+
+                <div class="mt-6">
+                    <label class="block text-zinc-500 text-[10px] font-black uppercase tracking-[0.2em] mb-3">Attachments</label>
+                    <div class="flex flex-col gap-3 bg-background-black border border-border-dark rounded-xl p-4">
+                        <div class="flex items-center gap-3">
+                            <input id="attachment-input" type="file" multiple class="hidden" />
+                            <button onclick="triggerAttachmentPicker()" class="text-primary text-[10px] font-black uppercase tracking-widest border border-primary/30 px-4 py-2 rounded-lg hover:bg-primary/10 transition-all flex items-center gap-2">
+                                <span class="material-symbols-outlined text-[16px]">attach_file</span>
+                                Add documents
+                            </button>
+                            <span class="text-zinc-500 text-xs" id="attachment-count">No files attached</span>
+                        </div>
+                        <div id="attachment-list" class="flex flex-wrap gap-2"></div>
                     </div>
                 </div>
             </div>
@@ -267,12 +282,16 @@
 <!-- Store Templates in JS for Fast Switching -->
 <script>
     var sysTemplates = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.Templates));
+    var distributionLists = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.DistributionLists));
 </script>
 
 <script>
     var currentMode = 'manual';
     var recipients = [];
     var selectedDistLists = [];
+    var currentDraftId = 0;
+    var attachmentFiles = [];
+    var savedSelectionRange = null;
 
     function setMode(mode) {
             currentMode = mode;
@@ -301,8 +320,9 @@
         
         // Toolbar Logic
         function execCmd(command, value = null) {
+            restoreSelection();
             document.execCommand(command, false, value);
-            document.getElementById('email-body-editor').focus();
+            focusEditor();
         }
 
         // Recipients Handling (Chips)
@@ -340,11 +360,17 @@
                 chip.innerHTML = `${email} <button onclick="removeRecipient('${email}')" class="material-symbols-outlined text-[14px] leading-none hover:opacity-70 cursor-pointer">close</button>`;
                 container.appendChild(chip);
             });
-            // Show selected lists chip? maybe
+            selectedDistLists.forEach(list => {
+                var listChip = document.createElement('div');
+                listChip.className = "bg-zinc-800 text-primary text-[11px] font-extrabold px-3 py-1.5 rounded-full flex items-center gap-2 border border-primary/30";
+                listChip.innerHTML = `${list.name} <button onclick="removeDistList('${list.id}')" class="material-symbols-outlined text-[14px] leading-none hover:opacity-70 cursor-pointer">close</button>`;
+                container.appendChild(listChip);
+            });
         }
 
         function updateHiddenInputs() {
             document.getElementById('RecipientsRaw').value = recipients.join(',');
+            document.getElementById('SelectedDistributionListIdsRaw').value = selectedDistLists.map(l => l.id).join(',');
         }
 
         function validateEmail(email) {
@@ -362,7 +388,8 @@
             if(tmpl) {
                 // Populate editor
                 document.getElementById('email-subject').value = tmpl.Subject;
-                document.getElementById('email-body-editor').innerHTML = tmpl.Body;
+                setEditorContent(tmpl.Body);
+                focusEditor();
             }
         }
         
@@ -372,6 +399,7 @@
 
         // Modals
         function openDistListModal() {
+            syncDistListSelections();
             document.getElementById('distListModal').classList.add('open');
         }
         function closeDistListModal() {
@@ -379,11 +407,15 @@
         }
         function confirmDistLists() {
             var checkboxes = document.querySelectorAll('input[name="distListIds"]:checked');
-            var ids = [];
-            checkboxes.forEach(cb => ids.push(cb.value));
-            document.getElementById('SelectedDistributionListIdsRaw').value = ids.join(',');
+            var selectedIds = [];
+            checkboxes.forEach(cb => selectedIds.push(cb.value));
+            selectedDistLists = distributionLists
+                .filter(list => selectedIds.includes(list.Id.toString()))
+                .map(list => ({ id: list.Id.toString(), name: list.Name }));
+            renderChips();
+            updateHiddenInputs();
             closeDistListModal();
-            alert('Added ' + ids.length + ' lists.');
+            alert('Added ' + selectedIds.length + ' lists.');
         }
 
         function openPreview() {
@@ -409,19 +441,18 @@
              // Ensure hidden inputs updated
              updateHiddenInputs();
 
-             var payload = {
-                 RecipientsRaw: document.getElementById('RecipientsRaw').value,
-                 SelectedDistributionListIdsRaw: document.getElementById('SelectedDistributionListIdsRaw').value,
-                 Subject: subject,
-                 Body: body,
-                 IsTemplateMode: currentMode === 'template',
-                 TemplateKey: templateKey
-             };
+             var formData = new FormData();
+             formData.append('RecipientsRaw', document.getElementById('RecipientsRaw').value);
+             formData.append('SelectedDistributionListIdsRaw', document.getElementById('SelectedDistributionListIdsRaw').value);
+             formData.append('Subject', subject);
+             formData.append('Body', body);
+             formData.append('IsTemplateMode', currentMode === 'template');
+             formData.append('TemplateKey', templateKey);
+             attachmentFiles.forEach(file => formData.append('Attachments', file));
 
              const response = await fetch('/Admin/EmailServices/SendEmail/Send', {
                  method: 'POST',
-                 headers: { 'Content-Type': 'application/json' },
-                 body: JSON.stringify(payload)
+                 body: formData
              });
              
              if(response.ok) {
@@ -438,7 +469,7 @@
              updateHiddenInputs();
 
              var payload = {
-                 Id: 0, // 0 for new, or need to track current draft ID
+                 Id: currentDraftId,
                  Subject: subject,
                  Body: body,
                  RecipientsRaw: document.getElementById('RecipientsRaw').value,
@@ -453,14 +484,16 @@
              
             if(response.ok) {
                  var res = await response.json();
+                 currentDraftId = res.draftId;
                  alert('Draft Saved! ID: ' + res.draftId);
-                 // reload page or sidebar?
+                 await refreshDrafts();
              }
         }
         
-        function loadDraft(id, subject, body, recipientsStr) {
+        function loadDraft(id, subject, body, recipientsStr, selectedDistIdsRaw) {
+            currentDraftId = id;
             document.getElementById('email-subject').value = subject;
-            document.getElementById('email-body-editor').innerHTML = body;
+            setEditorContent(body);
             
             // clear recipients
             recipients = [];
@@ -471,8 +504,177 @@
             } else {
                 renderChips();
             }
+
+            selectedDistLists = [];
+            if (selectedDistIdsRaw) {
+                var selectedIds = selectedDistIdsRaw.split(',').map(id => id.trim()).filter(Boolean);
+                selectedDistLists = distributionLists
+                    .filter(list => selectedIds.includes(list.Id.toString()))
+                    .map(list => ({ id: list.Id.toString(), name: list.Name }));
+            }
+            renderChips();
+            updateHiddenInputs();
+            syncDistListSelections();
         }
 
+        function removeDistList(id) {
+            selectedDistLists = selectedDistLists.filter(list => list.id !== id);
+            renderChips();
+            updateHiddenInputs();
+            syncDistListSelections();
+        }
+
+        function syncDistListSelections() {
+            var selectedIds = selectedDistLists.map(list => list.id);
+            document.querySelectorAll('input[name="distListIds"]').forEach(cb => {
+                cb.checked = selectedIds.includes(cb.value);
+            });
+        }
+
+        function triggerAttachmentPicker() {
+            document.getElementById('attachment-input').click();
+        }
+
+        function handleAttachmentChange(event) {
+            Array.from(event.target.files).forEach(file => {
+                if (!attachmentFiles.some(existing => existing.name === file.name && existing.size === file.size)) {
+                    attachmentFiles.push(file);
+                }
+            });
+            syncAttachmentInput();
+            renderAttachments();
+        }
+
+        function removeAttachment(index) {
+            attachmentFiles.splice(index, 1);
+            syncAttachmentInput();
+            renderAttachments();
+        }
+
+        function syncAttachmentInput() {
+            var dataTransfer = new DataTransfer();
+            attachmentFiles.forEach(file => dataTransfer.items.add(file));
+            document.getElementById('attachment-input').files = dataTransfer.files;
+        }
+
+        function renderAttachments() {
+            var list = document.getElementById('attachment-list');
+            var count = document.getElementById('attachment-count');
+            list.innerHTML = '';
+            if (attachmentFiles.length === 0) {
+                count.textContent = 'No files attached';
+                return;
+            }
+
+            count.textContent = `${attachmentFiles.length} file(s) attached`;
+            attachmentFiles.forEach((file, index) => {
+                var item = document.createElement('div');
+                item.className = "bg-zinc-800 text-zinc-200 text-[11px] font-semibold px-3 py-1.5 rounded-full flex items-center gap-2 border border-white/10";
+                item.innerHTML = `${file.name} <button onclick="removeAttachment(${index})" class="material-symbols-outlined text-[14px] leading-none hover:opacity-70 cursor-pointer">close</button>`;
+                list.appendChild(item);
+            });
+        }
+
+        function clearAllDrafts() {
+            if (!confirm('Delete all drafts? This cannot be undone.')) return;
+            fetch('/Admin/EmailServices/SendEmail/DeleteAllDrafts', { method: 'DELETE' })
+                .then(response => {
+                    if (!response.ok) throw new Error('Failed to delete drafts.');
+                    return response.json();
+                })
+                .then(() => {
+                    document.querySelectorAll('[data-draft-item]').forEach(item => item.remove());
+                    document.getElementById('draft-count').textContent = '0';
+                    currentDraftId = 0;
+                    alert('All drafts deleted.');
+                })
+                .catch(() => alert('Failed to delete drafts.'));
+        }
+
+        async function refreshDrafts() {
+            const response = await fetch('/Admin/EmailServices/SendEmail/Drafts');
+            if (!response.ok) return;
+            const drafts = await response.json();
+            var draftList = document.getElementById('drafts-list');
+            if (!draftList) return;
+            draftList.innerHTML = '';
+            drafts.forEach(draft => {
+                var item = document.createElement('div');
+                item.setAttribute('data-draft-item', 'true');
+                item.className = "p-4 rounded-xl hover:bg-surface-dark border border-transparent hover:border-border-dark transition-all cursor-pointer group";
+                item.onclick = () => loadDraft(draft.id, draft.subject, draft.body, draft.recipientsRaw, draft.selectedDistributionListIdsRaw);
+                item.innerHTML = `
+                    <div class="flex justify-between items-start mb-1">
+                        <span class="text-zinc-500 text-[10px] font-extrabold uppercase tracking-widest group-hover:text-primary transition-colors">Draft #${draft.id}</span>
+                        <span class="text-zinc-600 text-[9px]">${draft.lastUpdated}</span>
+                    </div>
+                    <p class="text-zinc-300 text-xs font-bold truncate mb-1">${draft.subject || 'No Subject'}</p>
+                    <p class="text-zinc-500 text-[10px] line-clamp-1 italic">${draft.recipientsRaw || ''}</p>
+                `;
+                draftList.appendChild(item);
+            });
+            document.getElementById('draft-count').textContent = drafts.length.toString();
+        }
+
+        function focusEditor() {
+            document.getElementById('email-body-editor').focus();
+        }
+
+        function saveSelection() {
+            var selection = window.getSelection();
+            if (selection.rangeCount === 0) return;
+            var range = selection.getRangeAt(0);
+            var editor = document.getElementById('email-body-editor');
+            if (editor.contains(range.commonAncestorContainer)) {
+                savedSelectionRange = range;
+            }
+        }
+
+        function restoreSelection() {
+            if (!savedSelectionRange) return;
+            var selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(savedSelectionRange);
+        }
+
+        function setEditorContent(html) {
+            var editor = document.getElementById('email-body-editor');
+            editor.innerHTML = html && html.trim() ? html : `<p class="text-zinc-600 italic">${editor.dataset.placeholder}</p>`;
+        }
+
+        function insertLink() {
+            var url = prompt('Enter URL');
+            if (!url) return;
+            if (!/^https?:\/\//i.test(url)) {
+                url = `https://${url}`;
+            }
+            restoreSelection();
+            var selection = window.getSelection();
+            if (selection && selection.isCollapsed) {
+                document.execCommand('insertHTML', false, `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`);
+            } else {
+                document.execCommand('createLink', false, url);
+            }
+            focusEditor();
+        }
+
+        document.getElementById('attachment-input').addEventListener('change', handleAttachmentChange);
+        document.addEventListener('selectionchange', saveSelection);
+        document.getElementById('email-body-editor').addEventListener('focus', saveSelection);
+        document.getElementById('email-body-editor').addEventListener('blur', saveSelection);
+
+        document.getElementById('email-body-editor').addEventListener('input', function() {
+            if (this.textContent.trim() === '') {
+                setEditorContent('');
+            }
+        });
+
+        document.getElementById('email-body-editor').addEventListener('focus', function() {
+            var placeholder = this.dataset.placeholder;
+            if (this.textContent.trim() === placeholder) {
+                this.innerHTML = '';
+            }
+        });
     </script>
 </body>
 </html>

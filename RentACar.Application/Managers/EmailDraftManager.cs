@@ -91,5 +91,10 @@ namespace RentACar.Application.Managers
                 await _draftRepository.DeleteAsync(draft);
             }
         }
+
+        public async Task DeleteAllDraftsAsync(string userId)
+        {
+            await _draftRepository.DeleteDraftsByUserIdAsync(userId);
+        }
     }
 }
