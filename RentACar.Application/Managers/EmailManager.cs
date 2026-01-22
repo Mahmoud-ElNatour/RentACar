@@ -329,7 +329,7 @@ namespace RentACar.Application.Managers
             return await SendEmailSafeAsync(email, "Confirm Your Email", message, "Confirmation Email");
         }
 
-        public async Task<bool> SendRecoveryCodesEmailAsync(string email, IEnumerable<string> codes, string name = "User")
+        public async Task SendRecoveryCodesEmailAsync(string email, IEnumerable<string> codes, string name = "User")
         {
             var codesList = string.Join(" ", codes.Select(c => $"<span style='padding:5px; margin:2px; background:#333; color:#d4af37;'>{c}</span>"));
             var bodyContent = $@"
@@ -339,7 +339,24 @@ namespace RentACar.Application.Managers
                 <div style='text-align:center; padding: 10px;'>{codesList}</div>";
 
             var message = EmailTemplates.GetStandardTemplate(bodyContent, "Recovery Codes");
-            return await SendEmailSafeAsync(email, "New Recovery Codes", message, "Recovery Codes");
+            await SendEmailSafeAsync(email, "New Recovery Codes", message, "Recovery Codes");
+        }
+
+        // Generic Send for "Send Email" Feature
+        public async Task<int> SendAdHocEmailBatchAsync(IEnumerable<string> recipients, string subject, string bodyHtml)
+        {
+            var message = EmailTemplates.GetStandardTemplate(bodyHtml, subject);
+            int successCount = 0;
+            
+            // In a real campaign we might want parallel or queue, but for now linear safe send
+            foreach (var email in recipients)
+            {
+                if(await SendEmailSafeAsync(email, subject, message, "AdHoc Campaign"))
+                {
+                    successCount++;
+                }
+            }
+            return successCount;
         }
     }
 }
