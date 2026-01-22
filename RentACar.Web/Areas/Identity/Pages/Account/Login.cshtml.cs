@@ -171,7 +171,11 @@ namespace RentACar.Web.Areas.Identity.Pages.Account
                     var roles = await _userManager.GetRolesAsync(user);
                     string roleStr = roles.Any() ? string.Join(", ", roles) : "User";
                     await _auditLogManager.LogAsync("Login", "User", user?.Id ?? "Unknown", $"User {Input.Email} logged in successfully.", "Success", Input.Email, roleStr);
-                    
+                    if (roles.Contains("Driver"))
+                    {
+                        return Redirect("/Driver/Dashboard");
+                    }
+
                     return LocalRedirect(returnUrl);
                 }
                 if (result.RequiresTwoFactor)

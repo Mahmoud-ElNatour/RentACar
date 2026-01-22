@@ -15,6 +15,13 @@ namespace RentACar.Web.Models
         public string? CustomerEmail { get; set; }
         public string? CustomerPhone { get; set; }
         public string? EmployeeName { get; set; }
+        public string? DriverName { get; set; }
+        public string? DriverPhone { get; set; }
+        public bool HasDriver { get; set; }
+        public decimal? DriverFee { get; set; }
+        public string? PickupAddress { get; set; }
+        public decimal? PickupLat { get; set; }
+        public decimal? PickupLng { get; set; }
         public string? CarModel { get; set; }
         public string? CarPlateNumber { get; set; }
         public string? CarCategory { get; set; }

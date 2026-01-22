@@ -1,6 +1,7 @@
 ﻿@inject UserManager<IdentityUser> UserManager
 @inject SignInManager<IdentityUser> SignInManager
 @inject PaymentMethodManager PaymentMethodManager
+@inject IConfiguration Configuration
 
 @using Microsoft.AspNetCore.Identity
 @using RentACar.Application.Managers
@@ -19,6 +20,9 @@
     var startValue = ViewBag.StartDate ?? DateTime.Today.ToString("yyyy-MM-dd");
     var endValue = ViewBag.EndDate ?? DateTime.Today.AddDays(1).ToString("yyyy-MM-dd");
     var backUrl = isCustomer ? "/Bookings/MyBookings" : "/Booking";
+    var mapsKey = Configuration["GoogleMaps:ApiKey"] ?? string.Empty;
+    var driverFeeRate = ViewBag.DriverFeeRate ?? 0;
+    var driverFeeMode = ViewBag.DriverFeeMode ?? "PerDay";
 
 }
 
@@ -69,6 +73,37 @@
             var methods = await PaymentMethodManager.GetAllActivePaymentMethodsAsync();
             }
             <div class="mb-3">
+                <label class="form-label">Driver Option</label>
+                <div class="d-flex gap-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="HasDriver" id="HasDriverFalse" value="false" checked />
+                        <label class="form-check-label" for="HasDriverFalse">Without Driver (Self-drive)</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="HasDriver" id="HasDriverTrue" value="true" />
+                        <label class="form-check-label" for="HasDriverTrue">With Driver</label>
+                    </div>
+                </div>
+                <div class="form-text text-muted mt-1">
+                    Driver fee: <strong id="driverFeeLabel">@driverFeeRate</strong> (@driverFeeMode)
+                </div>
+            </div>
+            <div class="mb-3" id="pickupDetailsSection" style="display:none;">
+                <label class="form-label">Pickup Address</label>
+                <input type="text" id="PickupAddress" class="form-control" placeholder="Enter pickup address" />
+                <input type="hidden" id="PickupLat" />
+                <input type="hidden" id="PickupLng" />
+                <div class="mt-3">
+                    <div id="pickupMap" style="height: 280px; border-radius: 12px;"></div>
+                    <small class="text-muted d-block mt-2">Click on the map to set pickup location.</small>
+                </div>
+            </div>
+            <div class="mb-3">
+                <div class="alert alert-secondary">
+                    Estimated Driver Fee: <strong id="driverFeeValue">0.00</strong>
+                </div>
+            </div>
+            <div class="mb-3">
                 <p>Found @methods.Count payment methods.</p>
 
                 <label class="form-label">Payment Method</label>
@@ -93,21 +128,76 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script>
+        const driverFeeRate = Number('@driverFeeRate');
+        const driverFeeMode = '@driverFeeMode';
+        const hasDriverInputs = document.querySelectorAll('input[name="HasDriver"]');
+        const pickupSection = document.getElementById('pickupDetailsSection');
+        const driverFeeLabel = document.getElementById('driverFeeLabel');
+        const driverFeeValue = document.getElementById('driverFeeValue');
+
+        function updateDriverSection() {
+            const selected = document.querySelector('input[name="HasDriver"]:checked');
+            const isWithDriver = selected && selected.value === 'true';
+            pickupSection.style.display = isWithDriver ? 'block' : 'none';
+            if (!isWithDriver) {
+                document.getElementById('PickupLat').value = '';
+                document.getElementById('PickupLng').value = '';
+            }
+            updateDriverFee();
+        }
+
+        function updateDriverFee() {
+            const isWithDriver = document.querySelector('input[name="HasDriver"]:checked')?.value === 'true';
+            if (!isWithDriver) {
+                driverFeeValue.textContent = '0.00';
+                return;
+            }
+
+            const start = new Date(document.getElementById('Startdate').value);
+            const end = new Date(document.getElementById('Enddate').value);
+            const diffDays = Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)));
+            let fee = driverFeeRate;
+
+            if (driverFeeMode === 'PerDay') {
+                fee = driverFeeRate * diffDays;
+            }
+
+            driverFeeValue.textContent = fee.toFixed(2);
+        }
+
+        driverFeeLabel.textContent = `${driverFeeRate}`;
+        hasDriverInputs.forEach(input => input.addEventListener('change', updateDriverSection));
+        document.getElementById('Startdate').addEventListener('change', updateDriverFee);
+        document.getElementById('Enddate').addEventListener('change', updateDriverFee);
+        updateDriverSection();
+
         document.getElementById('bookingForm').addEventListener('submit', async function (e) {
             e.preventDefault();
 
             const form = e.target;
             const customerIdInput = document.getElementById('CustomerId');
+            const hasDriver = document.querySelector('input[name="HasDriver"]:checked')?.value === 'true';
+            const pickupLat = document.getElementById('PickupLat').value;
+            const pickupLng = document.getElementById('PickupLng').value;
             const data = {
                 carId: parseInt(document.getElementById('CarId').value),
                 startdate: document.getElementById('Startdate').value,
                 enddate: document.getElementById('Enddate').value,
                 paymentMethodId: parseInt(document.getElementById('paymentMethod').value),
                 promocode: document.getElementById('promocode').value || null,
+                hasDriver: hasDriver,
+                pickupAddress: document.getElementById('PickupAddress').value || null,
+                pickupLat: pickupLat ? parseFloat(pickupLat) : null,
+                pickupLng: pickupLng ? parseFloat(pickupLng) : null
             };
 
             if (customerIdInput) {
                 data.customerId = parseInt(customerIdInput.value);
+            }
+
+            if (hasDriver && (!data.pickupLat || !data.pickupLng)) {
+                showPopup('Please select a pickup location on the map.', 'error');
+                return;
             }
 
             try {
@@ -137,6 +227,38 @@
             }
         });
 
+    </script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=@mapsKey&callback=initPickupMap"></script>
+    <script>
+        let pickupMap;
+        let pickupMarker;
+        function initPickupMap() {
+            const defaultCenter = { lat: 25.2048, lng: 55.2708 };
+            pickupMap = new google.maps.Map(document.getElementById('pickupMap'), {
+                center: defaultCenter,
+                zoom: 10,
+                styles: [
+                    { elementType: 'geometry', stylers: [{ color: '#1f1f1f' }] },
+                    { elementType: 'labels.text.stroke', stylers: [{ color: '#1f1f1f' }] },
+                    { elementType: 'labels.text.fill', stylers: [{ color: '#f5f5f5' }] }
+                ]
+            });
+
+            pickupMap.addListener('click', (event) => {
+                const lat = event.latLng.lat();
+                const lng = event.latLng.lng();
+                document.getElementById('PickupLat').value = lat.toFixed(6);
+                document.getElementById('PickupLng').value = lng.toFixed(6);
+                if (!pickupMarker) {
+                    pickupMarker = new google.maps.Marker({
+                        position: { lat, lng },
+                        map: pickupMap
+                    });
+                } else {
+                    pickupMarker.setPosition({ lat, lng });
+                }
+            });
+        }
     </script>
 </body>
 </html>

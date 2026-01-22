@@ -1,0 +1,40 @@
+@model RentACar.Web.Models.Driver.DriverFormViewModel
+@{
+    ViewData["Title"] = "Create Driver";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body class="bg-dark text-white">
+    <div class="container py-4">
+        <a href="/ControlPanel/Drivers" class="btn btn-outline-warning mb-3">Back</a>
+        <h2>Create Driver</h2>
+        <form method="post" action="/ControlPanel/Drivers/Create" class="mt-3">
+            <div class="mb-3">
+                <label class="form-label">AspNet User ID</label>
+                <input asp-for="AspNetUserId" class="form-control" />
+                <span asp-validation-for="AspNetUserId" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Display Name</label>
+                <input asp-for="DisplayName" class="form-control" />
+                <span asp-validation-for="DisplayName" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Phone</label>
+                <input asp-for="PhoneNumber" class="form-control" />
+            </div>
+            <button type="submit" class="btn btn-warning">Create</button>
+        </form>
+    </div>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

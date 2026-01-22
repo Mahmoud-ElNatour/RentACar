@@ -1,0 +1,98 @@
+@model List<DriverBookingListItemViewModel>
+@{
+    ViewData["Title"] = "Driver Bookings";
+}
+
+<div class="bg-surface-dark/80 border border-white/5 rounded-xl p-6 shadow-lg mb-6">
+    <form id="bookingFilters" class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+        <div>
+            <label class="text-sm text-white/70">Filter by Status</label>
+            <input type="text" name="status" class="mt-2 w-full rounded-lg bg-surface-darker border border-white/10 text-white"
+                   placeholder="Booked / Pending / Returned" />
+        </div>
+        <div>
+            <label class="text-sm text-white/70">Filter by Date</label>
+            <input type="date" name="date" class="mt-2 w-full rounded-lg bg-surface-darker border border-white/10 text-white" />
+        </div>
+        <div class="flex gap-3">
+            <button type="submit" class="px-5 py-2 rounded-full bg-primary text-black text-sm font-semibold">Search</button>
+            <button type="button" id="resetFilters" class="px-5 py-2 rounded-full bg-white/10 text-white text-sm font-semibold">Reset</button>
+        </div>
+    </form>
+</div>
+
+<div class="bg-surface-dark/80 border border-white/5 rounded-xl p-6 shadow-lg">
+    <div class="flex items-center justify-between mb-4">
+        <div>
+            <h2 class="text-xl font-semibold text-white">Assigned Bookings</h2>
+            <p class="text-sm text-white/60">Review your scheduled trips</p>
+        </div>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="min-w-full text-sm text-left text-white/80">
+            <thead class="text-xs uppercase text-white/50 border-b border-white/10">
+                <tr>
+                    <th class="py-3 px-4">Booking</th>
+                    <th class="py-3 px-4">Customer</th>
+                    <th class="py-3 px-4">Dates</th>
+                    <th class="py-3 px-4">Status</th>
+                    <th class="py-3 px-4">Pickup</th>
+                    <th class="py-3 px-4"></th>
+                </tr>
+            </thead>
+            <tbody id="bookingRows"></tbody>
+        </table>
+        <div id="bookingEmptyState" class="text-sm text-white/60 mt-4">Loading bookings...</div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const bookingRows = document.getElementById('bookingRows');
+        const emptyState = document.getElementById('bookingEmptyState');
+
+        async function loadBookings(params = '') {
+            const res = await fetch(`/api/driver/bookings${params}`);
+            if (!res.ok) {
+                emptyState.textContent = 'Unable to load bookings.';
+                return;
+            }
+            const bookings = await res.json();
+            bookingRows.innerHTML = '';
+            if (!bookings.length) {
+                emptyState.textContent = 'No bookings found.';
+                return;
+            }
+
+            emptyState.textContent = '';
+            bookings.forEach(booking => {
+                const row = document.createElement('tr');
+                row.className = 'border-b border-white/5';
+                row.innerHTML = `
+                    <td class="py-3 px-4">#${booking.bookingId}</td>
+                    <td class="py-3 px-4">${booking.customerName ?? '-'}</td>
+                    <td class="py-3 px-4">${booking.startDate} - ${booking.endDate}</td>
+                    <td class="py-3 px-4">${booking.status ?? '-'}</td>
+                    <td class="py-3 px-4">${booking.pickupAddress ?? '-'}</td>
+                    <td class="py-3 px-4 text-right">
+                        <a class="text-primary font-semibold" href="/Driver/Bookings/${booking.bookingId}">Details</a>
+                    </td>`;
+                bookingRows.appendChild(row);
+            });
+        }
+
+        document.getElementById('bookingFilters').addEventListener('submit', event => {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const params = new URLSearchParams(formData).toString();
+            loadBookings(params ? `?${params}` : '');
+        });
+
+        document.getElementById('resetFilters').addEventListener('click', () => {
+            document.getElementById('bookingFilters').reset();
+            loadBookings();
+        });
+
+        document.addEventListener('DOMContentLoaded', () => loadBookings());
+    </script>
+}
