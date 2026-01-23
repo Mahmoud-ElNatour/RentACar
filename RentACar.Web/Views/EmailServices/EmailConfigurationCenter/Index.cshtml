@@ -150,7 +150,6 @@
 
             <div class="bg-white/5 p-4 rounded-xl border border-white/10">
               <p class="text-[9px] text-slate-500 uppercase font-black tracking-widest mb-1">Next Scheduled</p>
-              <!-- Estimating next run based on last run + interval -->
                @{
                    var nextRun = Model.LastRunRecord?.RunAt.AddMinutes(Model.NotificationSettings.CheckIntervalMinutes);
                    string nextRunStr = nextRun.HasValue ? nextRun.Value.ToLocalTime().ToString("hh:mm:ss tt") : "Pending";
@@ -317,7 +316,6 @@
                       <td class="px-6 py-4 text-slate-400">@identity.FromEmail</td>
                       <td class="px-6 py-4 text-slate-500">@identity.ReplyToEmail</td>
                       <td class="px-6 py-4 text-center">
-                        <!-- Toggle Form for Identity -->
                          <button type="button" 
                                  onclick="toggleIdentityActive(@identity.Id)"
                                  class="material-symbols-outlined @(identity.IsActive ? "text-green-500" : "text-gray-500") text-xl">
@@ -360,7 +358,11 @@
                 <div class="glass-card rounded-xl overflow-hidden border-gold/10">
                   <div class="p-4 bg-white/5 flex items-center justify-between cursor-pointer" onclick="this.nextElementSibling.classList.toggle('hidden')">
                     <div class="flex items-center gap-3">
-                      <span class="material-symbols-outlined text-gold">folder_open</span>
+                        <span class="material-symbols-outlined text-gold">
+                            @(group.Key == "Authentication & Security" ? "lock_open" : 
+                              group.Key == "Customer & Lifecycle" ? "person" : 
+                              group.Key == "Background Reminders" ? "schedule" : "admin_panel_settings")
+                        </span>
                       <span class="font-bold uppercase text-sm tracking-wide text-white">@group.Key</span>
                     </div>
                     <span class="material-symbols-outlined text-gold">expand_more</span>
@@ -412,7 +414,10 @@
                               </select>
                           </div>
                           <div class="col-span-1 flex justify-center">
-                            <button class="text-gold/60 hover:text-gold transition-colors" type="button" data-open-modal="modalTemplatePreview">
+                            <button class="text-gold/60 hover:text-gold transition-colors" 
+                                    type="button" 
+                                    data-open-modal="modalTemplatePreview"
+                                    onclick="previewTemplate('@config.TemplateKey')">
                               <span class="material-symbols-outlined text-lg">visibility</span>
                             </button>
                           </div>
@@ -437,12 +442,6 @@
             <span class="text-[10px] font-black uppercase tracking-widest text-slate-300 group-hover:text-white">Open Outbox (Drafts)</span>
             <span class="material-symbols-outlined text-gold">outbox</span>
           </a>
-          <!--
-          <button class="w-full py-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl flex items-center justify-between px-6 group transition-all" type="button">
-            <span class="text-[10px] font-black uppercase tracking-widest text-slate-300 group-hover:text-white">Notification Log</span>
-            <span class="material-symbols-outlined text-gold">receipt_long</span>
-          </button>
-          -->
         </div>
 
         <!-- Reminder Testing -->
@@ -451,7 +450,6 @@
             <span class="material-symbols-outlined text-gold">biotech</span>
             Reminder Testing
           </h3>
-          <!-- Implementation pending for specific testing logic, keeping UI -->
            <div class="space-y-4">
             <div>
               <label class="block text-[9px] uppercase tracking-widest font-black text-slate-500 mb-2">Booking ID</label>
@@ -462,6 +460,14 @@
               <button class="w-full py-2 bg-gold/10 hover:bg-gold/20 border border-gold/30 text-gold text-[10px] font-black uppercase tracking-widest rounded transition-all" 
                       type="button" onclick="alert('Manual trigger feature coming soon')">
                 Test Payment
+              </button>
+               <button class="w-full py-2 bg-gold/10 hover:bg-gold/20 border border-gold/30 text-gold text-[10px] font-black uppercase tracking-widest rounded transition-all" 
+                      type="button" onclick="alert('Manual trigger feature coming soon')">
+                Test Pickup
+              </button>
+               <button class="w-full py-2 bg-gold/10 hover:bg-gold/20 border border-gold/30 text-gold text-[10px] font-black uppercase tracking-widest rounded transition-all" 
+                      type="button" onclick="alert('Manual trigger feature coming soon')">
+                Test Return
               </button>
             </div>
           </div>
@@ -475,9 +481,7 @@
           </h3>
           
           <div class="space-y-4 max-h-[400px] overflow-y-auto custom-scrollbar pr-1">
-             <!-- Not yet fully bound to Model, assuming default display for demo as per user HTML request -->
-             <!-- We should bind these properly if NotificationSettings has them -->
-             
+             <!-- Payment Reminder -->
              <div class="space-y-3 p-3 rounded-xl bg-white/5 border border-white/5">
                 <div class="flex justify-between items-center">
                    <span class="text-[10px] font-black text-white uppercase tracking-widest">Payment Reminder</span>
@@ -489,9 +493,14 @@
                 <div class="space-y-2">
                    <label class="block text-[8px] uppercase text-slate-500 font-bold">Delay (Hours)</label>
                    <input type="number" name="NotificationSettings.PaymentReminderDelayHours" value="@Model.NotificationSettings.PaymentReminderDelayHours" class="w-full bg-black border-white/10 rounded text-[10px] text-white py-1" />
+                   <div class="flex items-center gap-2 mt-2">
+                       <label class="text-[8px] uppercase text-slate-500 font-bold">Send Once?</label>
+                       <input type="checkbox" name="NotificationSettings.PaymentReminderSendOnceOnly" value="true" checked="@Model.NotificationSettings.PaymentReminderSendOnceOnly" class="bg-black border-white/10 rounded" />
+                   </div>
                 </div>
              </div>
 
+             <!-- Pickup / Return -->
              <div class="space-y-3 p-3 rounded-xl bg-white/5 border border-white/5">
                 <div class="flex justify-between items-center">
                    <span class="text-[10px] font-black text-white uppercase tracking-widest">Pickup Reminder</span>
@@ -500,7 +509,145 @@
                        @(Model.NotificationSettings.PickupReminderEnabled ? "toggle_on" : "toggle_off")
                    </span>
                 </div>
+                <div class="flex justify-between items-center mt-2">
+                   <span class="text-[10px] font-black text-white uppercase tracking-widest">Return Reminder</span>
+                   <input type="hidden" name="NotificationSettings.ReturnReminderEnabled" id="ReturnReminderEnabled" value="@Model.NotificationSettings.ReturnReminderEnabled.ToString().ToLower()" />
+                   <span class="material-symbols-outlined text-gold toggle-icon" data-target="ReturnReminderEnabled" onclick="toggleState(this)">
+                       @(Model.NotificationSettings.ReturnReminderEnabled ? "toggle_on" : "toggle_off")
+                   </span>
+                </div>
              </div>
+             
+             <!-- Promo Expiry -->
+             <div class="space-y-3 p-3 rounded-xl bg-white/5 border border-white/5">
+                <div class="flex justify-between items-center">
+                    <span class="text-[10px] font-black text-white uppercase tracking-widest">Promo Expiry</span>
+                    <input type="hidden" name="NotificationSettings.PromoExpiryEnabled" id="PromoExpiryEnabled" value="@Model.NotificationSettings.PromoExpiryEnabled.ToString().ToLower()" />
+                    <span class="material-symbols-outlined text-gold toggle-icon" data-target="PromoExpiryEnabled" onclick="toggleState(this)">
+                        @(Model.NotificationSettings.PromoExpiryEnabled ? "toggle_on" : "toggle_off")
+                    </span>
+                </div>
+                <div class="grid grid-cols-2 gap-2 mt-2">
+                    <div>
+                      <label class="block text-[8px] uppercase text-slate-500 font-bold mb-1">Frequency</label>
+                      <select name="NotificationSettings.PromoExpiryCheckFrequency" class="w-full bg-black border-white/10 rounded text-[9px] text-white py-1">
+                        <option value="Daily" selected="@(Model.NotificationSettings.PromoExpiryCheckFrequency == "Daily")">Daily</option>
+                        <option value="Hourly" selected="@(Model.NotificationSettings.PromoExpiryCheckFrequency == "Hourly")">Hourly</option>
+                      </select>
+                    </div>
+                    <div class="flex flex-col items-center justify-end">
+                      <label class="block text-[8px] uppercase text-slate-500 font-bold mb-1">Auto-Kill</label>
+                       <input type="hidden" name="NotificationSettings.PromoExpiryAutoDeactivate" id="PromoExpiryAutoDeactivate" value="@Model.NotificationSettings.PromoExpiryAutoDeactivate.ToString().ToLower()" />
+                       <span class="material-symbols-outlined text-gold toggle-icon" data-target="PromoExpiryAutoDeactivate" onclick="toggleState(this)">
+                           @(Model.NotificationSettings.PromoExpiryAutoDeactivate ? "toggle_on" : "toggle_off")
+                       </span>
+                    </div>
+                </div>
+             </div>
+          </div>
+        </div>
+        
+        <!-- Internal Alerts Mapping -->
+        <div class="glass-card rounded-2xl p-6">
+          <h3 class="text-sm font-black text-white uppercase tracking-widest mb-6 flex items-center gap-2">
+            <span class="material-symbols-outlined text-gold">group_add</span>
+            Internal Alerts Mapping
+          </h3>
+
+          <div class="space-y-4 max-h-[350px] overflow-y-auto custom-scrollbar pr-2">
+            <!-- Promo Expiry DL -->
+            <div class="space-y-2">
+              <p class="text-[9px] font-black text-gold uppercase">Promo Expiry</p>
+              <select name="NotificationSettings.PromoExpiryEmployeesListId" class="w-full bg-black/40 border-white/10 rounded-lg py-1.5 text-[10px] text-slate-300">
+                 <option value="">(None)</option>
+                 @foreach(var list in Model.AvailableDistributionLists) {
+                    <option value="@list.Id" selected="@(Model.NotificationSettings.PromoExpiryEmployeesListId == list.Id)">@list.Name</option>
+                 }
+              </select>
+              <button class="w-full py-1.5 border border-gold/20 text-[9px] font-bold text-gold rounded hover:bg-gold/10 uppercase" 
+                      type="button" 
+                      data-open-modal="modalRecipients"
+                      onclick="previewRecipients('Promo Expiry')">
+                Preview Recipients
+              </button>
+            </div>
+            
+            <div class="h-[1px] bg-white/5"></div>
+
+            <!-- Car Updated DL -->
+            <div class="space-y-2">
+              <p class="text-[9px] font-black text-gold uppercase">Car Updated</p>
+               <select name="NotificationSettings.CarUpdateEmployeesListId" class="w-full bg-black/40 border-white/10 rounded-lg py-1.5 text-[10px] text-slate-300">
+                 <option value="">(None)</option>
+                 @foreach(var list in Model.AvailableDistributionLists) {
+                    <option value="@list.Id" selected="@(Model.NotificationSettings.CarUpdateEmployeesListId == list.Id)">@list.Name</option>
+                 }
+              </select>
+              <button class="w-full py-1.5 border border-gold/20 text-[9px] font-bold text-gold rounded hover:bg-gold/10 uppercase" 
+                      type="button" 
+                      data-open-modal="modalRecipients"
+                      onclick="previewRecipients('Car Updated')">
+                Preview Recipients
+              </button>
+            </div>
+
+            <div class="h-[1px] bg-white/5"></div>
+
+            <!-- Category Updated DL -->
+            <div class="space-y-2">
+              <p class="text-[9px] font-black text-gold uppercase">Category Updated</p>
+               <select name="NotificationSettings.CategoryUpdateEmployeesListId" class="w-full bg-black/40 border-white/10 rounded-lg py-1.5 text-[10px] text-slate-300">
+                 <option value="">(None)</option>
+                 @foreach(var list in Model.AvailableDistributionLists) {
+                    <option value="@list.Id" selected="@(Model.NotificationSettings.CategoryUpdateEmployeesListId == list.Id)">@list.Name</option>
+                 }
+              </select>
+              <button class="w-full py-1.5 border border-gold/20 text-[9px] font-bold text-gold rounded hover:bg-gold/10 uppercase" 
+                      type="button" 
+                      data-open-modal="modalRecipients"
+                      onclick="previewRecipients('Category Updated')">
+                Preview Recipients
+              </button>
+            </div>
+
+            <div class="h-[1px] bg-white/5"></div>
+            
+            <!-- Promocode Updated DL -->
+             <div class="space-y-2">
+              <p class="text-[9px] font-black text-gold uppercase">Promocode Updated</p>
+               <select name="NotificationSettings.PromocodeUpdateEmployeesListId" class="w-full bg-black/40 border-white/10 rounded-lg py-1.5 text-[10px] text-slate-300">
+                 <option value="">(None)</option>
+                 @foreach(var list in Model.AvailableDistributionLists) {
+                    <option value="@list.Id" selected="@(Model.NotificationSettings.PromocodeUpdateEmployeesListId == list.Id)">@list.Name</option>
+                 }
+              </select>
+              <button class="w-full py-1.5 border border-gold/20 text-[9px] font-bold text-gold rounded hover:bg-gold/10 uppercase" 
+                      type="button" 
+                      data-open-modal="modalRecipients"
+                      onclick="previewRecipients('Promocode Updated')">
+                Preview Recipients
+              </button>
+            </div>
+
+            <div class="h-[1px] bg-white/5"></div>
+            
+            <!-- Docs Reminder DL -->
+             <div class="space-y-2">
+              <p class="text-[9px] font-black text-gold uppercase">Unverified Docs Reminder</p>
+               <select name="NotificationSettings.DocsReminderEmployeesListId" class="w-full bg-black/40 border-white/10 rounded-lg py-1.5 text-[10px] text-slate-300">
+                 <option value="">(None)</option>
+                 @foreach(var list in Model.AvailableDistributionLists) {
+                    <option value="@list.Id" selected="@(Model.NotificationSettings.DocsReminderEmployeesListId == list.Id)">@list.Name</option>
+                 }
+              </select>
+              <button class="w-full py-1.5 border border-gold/20 text-[9px] font-bold text-gold rounded hover:bg-gold/10 uppercase" 
+                      type="button" 
+                      data-open-modal="modalRecipients"
+                      onclick="previewRecipients('Unverified Docs Reminder')">
+                Preview Recipients
+              </button>
+            </div>
+
           </div>
         </div>
         
@@ -650,7 +797,6 @@
     <div class="absolute inset-0 flex items-center justify-center p-6 pointer-events-none">
       <div class="glass-card w-full max-w-3xl rounded-2xl border border-gold/20 overflow-hidden pointer-events-auto">
         <form id="identityForm" method="post" action="@Url.Action("CreateSender")">
-            <!-- Hidden ID for Edit -->
             <input type="hidden" name="Id" id="SenderId" value="0" />
             
             <div class="p-5 bg-white/5 border-b border-white/10 flex items-center justify-between">
@@ -683,7 +829,6 @@
                 </div>
               </div>
 
-              <!-- Controls -->
                <div class="grid grid-cols-2 gap-4">
                   <div class="bg-white/5 border border-white/10 rounded-xl p-4 flex items-center justify-between">
                       <div>
@@ -713,6 +858,107 @@
               </div>
             </div>
         </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4) Template Preview Modal -->
+  <div id="modalTemplatePreview" class="fixed inset-0 z-[100] hidden">
+    <div class="absolute inset-0 bg-black/70" onclick="closeModal(this.parentElement)"></div>
+    <div class="absolute inset-0 flex items-center justify-center p-6 pointer-events-none">
+      <div class="glass-card w-full max-w-5xl rounded-2xl border border-gold/20 overflow-hidden pointer-events-auto">
+        <div class="p-5 bg-white/5 border-b border-white/10 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined text-gold">visibility</span>
+            <div>
+              <p class="text-[10px] uppercase tracking-[0.25em] text-slate-500 font-black">Template Preview</p>
+              <h3 class="text-lg font-black text-white" id="previewTemplateKey">AUTH-V2-VERIFY</h3>
+            </div>
+          </div>
+          <button class="material-symbols-outlined text-slate-400 hover:text-white transition-colors" type="button" data-close-modal>close</button>
+        </div>
+
+        <div class="p-6 bg-black/20 grid grid-cols-12 gap-6">
+          <div class="col-span-8 space-y-4">
+            <div class="bg-white/5 border border-white/10 rounded-xl p-4">
+              <p class="text-[9px] uppercase tracking-widest font-black text-slate-500 mb-2">Subject</p>
+              <p class="text-white font-semibold" id="previewSubject">Verify your email • RentLuxury</p>
+            </div>
+
+            <div class="bg-white/5 border border-white/10 rounded-xl p-4 max-h-[360px] overflow-y-auto custom-scrollbar">
+              <p class="text-[9px] uppercase tracking-widest font-black text-slate-500 mb-2">Body Preview</p>
+              <div class="text-sm text-slate-200 leading-relaxed space-y-3" id="previewBody">
+                  <!-- Content injected via JS -->
+              </div>
+            </div>
+            
+            <div class="flex justify-end gap-3">
+              <button class="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded text-[10px] font-black uppercase tracking-widest" type="button" data-close-modal>
+                Close
+              </button>
+              <a href="/Admin/EmailServices/Templates" class="px-6 py-2 bg-gold text-pure-black rounded text-[10px] font-black uppercase tracking-widest items-center flex">
+                Edit Template
+              </a>
+            </div>
+          </div>
+          
+           <!-- Static Tokens Help Panel -->
+          <div class="col-span-4 space-y-4">
+            <div class="bg-white/5 border border-white/10 rounded-xl p-4">
+              <div class="flex items-center justify-between">
+                <p class="text-[10px] uppercase tracking-[0.2em] font-black text-slate-500">Tokens</p>
+                <span class="text-[9px] text-slate-500 font-bold">Common Variables</span>
+              </div>
+              <div class="mt-3 grid grid-cols-1 gap-2">
+                <div class="text-left bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs text-slate-200 font-mono">{{UserName}}</div>
+                <div class="text-left bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs text-slate-200 font-mono">{{BookingId}}</div>
+                <div class="text-left bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs text-slate-200 font-mono">{{Amount}}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5) Preview Recipients Modal -->
+  <div id="modalRecipients" class="fixed inset-0 z-[100] hidden">
+    <div class="absolute inset-0 bg-black/70" onclick="closeModal(this.parentElement)"></div>
+    <div class="absolute inset-0 flex items-center justify-center p-6 pointer-events-none">
+      <div class="glass-card w-full max-w-3xl rounded-2xl border border-gold/20 overflow-hidden pointer-events-auto">
+        <div class="p-5 bg-white/5 border-b border-white/10 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined text-gold">group</span>
+            <div>
+              <p class="text-[10px] uppercase tracking-[0.25em] text-slate-500 font-black">Distribution List</p>
+              <h3 class="text-lg font-black text-white" id="recipientModalTitle">Preview Recipients</h3>
+            </div>
+          </div>
+          <button class="material-symbols-outlined text-slate-400 hover:text-white transition-colors" type="button" data-close-modal>close</button>
+        </div>
+
+        <div class="p-6 bg-black/20 space-y-4">
+          <div class="flex items-center justify-between bg-white/5 border border-white/10 rounded-xl p-4">
+            <div>
+              <p class="text-[9px] uppercase tracking-widest font-black text-slate-500">Context</p>
+              <p class="text-white font-bold" id="recipientContextName">Marketing Operations DL</p>
+            </div>
+            <div class="text-right">
+              <p class="text-[9px] uppercase tracking-widest font-black text-slate-500">Status</p>
+              <p class="text-emerald-400 font-black text-md">Active</p>
+            </div>
+          </div>
+
+          <div class="bg-white/5 border border-white/10 rounded-xl p-4 max-h-[320px] overflow-y-auto custom-scrollbar space-y-2" id="recipientListContainer">
+             <p class="text-xs text-slate-400 font-mono">Loading recipients...</p>
+          </div>
+
+          <div class="flex justify-end gap-3">
+            <button class="px-6 py-2 bg-gold text-pure-black rounded text-[10px] font-black uppercase tracking-widest" type="button" data-close-modal>
+              Close
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -767,12 +1013,9 @@
         
         input.value = newVal.toString().toLowerCase();
         icon.textContent = newVal ? "toggle_on" : "toggle_off";
-        
-        // Update styling if needed (e.g. text color changes)
-        // For now relying on icon change
     }
 
-    // Modal Helpers for Sender Identity
+    // Modal Helpers
     window.openCreateIdentity = function() {
         document.getElementById('modalIdentityTitle').textContent = "Add Identity";
         document.getElementById('identityForm').action = "@Url.Action("CreateSender")";
@@ -780,13 +1023,10 @@
         document.getElementById('SenderDisplayName').value = "";
         document.getElementById('SenderFromEmail').value = "";
         document.getElementById('SenderReplyToEmail').value = "";
-        
-        // Reset toggles to defaults
         document.getElementById('SenderIsActive').value = "true";
         document.querySelector('[data-target="SenderIsActive"]').textContent = "toggle_on";
-        
         document.getElementById('SenderIsDefault').value = "false";
-         document.querySelector('[data-target="SenderIsDefault"]').textContent = "toggle_off";
+        document.querySelector('[data-target="SenderIsDefault"]').textContent = "toggle_off";
     }
 
     window.openEditIdentity = function(id, name, email, replyTo, isActive, isDefault) {
@@ -795,19 +1035,15 @@
         document.getElementById('SenderId').value = id;
         document.getElementById('SenderDisplayName').value = name;
         document.getElementById('SenderFromEmail').value = email;
-        // Handle null replyTo
         document.getElementById('SenderReplyToEmail').value = replyTo || "";
-        
         document.getElementById('SenderIsActive').value = isActive ? "true" : "false";
         document.querySelector('[data-target="SenderIsActive"]').textContent = isActive ? "toggle_on" : "toggle_off";
-        
         document.getElementById('SenderIsDefault').value = isDefault ? "true" : "false";
         document.querySelector('[data-target="SenderIsDefault"]').textContent = isDefault ? "toggle_on" : "toggle_off";
     }
 
     window.deleteIdentity = function(id) {
         if(confirm("Are you sure you want to delete this identity?")) {
-            // Create hidden form to submit delete
             var form = document.createElement('form');
             form.method = 'post';
             form.action = '/Admin/EmailServices/NotificationsEmailManagement/Sender/Delete/' + id;
@@ -822,6 +1058,18 @@
         form.action = '/Admin/EmailServices/NotificationsEmailManagement/Sender/ToggleActive/' + id;
         document.body.appendChild(form);
         form.submit();
+    }
+    
+    // Preview Logic
+    window.previewTemplate = function(templateKey) {
+        document.getElementById('previewTemplateKey').innerText = templateKey || "Unknown";
+        document.getElementById('previewSubject').innerText = "Loading specific template...";
+        document.getElementById('previewBody').innerHTML = "<p class='text-gold'>Simulated visual preview for " + templateKey + "</p>";
+    }
+
+    window.previewRecipients = function(featureName) {
+        document.getElementById('recipientContextName').innerText = featureName;
+        document.getElementById('recipientListContainer').innerHTML = "<p class='text-xs text-slate-400 font-mono'>Fetching list members for " + featureName + "...</p><p class='text-xs text-slate-500 font-mono mt-2'>[Simulation] Dynamic retrieval would occur here.</p>";
     }
   </script>
 </body>
