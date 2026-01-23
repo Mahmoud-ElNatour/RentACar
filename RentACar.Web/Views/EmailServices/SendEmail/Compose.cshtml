@@ -170,14 +170,20 @@
     <!-- Drafts Sidebar (25%) -->
     <aside class="w-[25%] bg-background-black border-r border-border-dark flex flex-col h-full overflow-hidden shrink-0">
         <div class="p-4 border-b border-border-dark">
-            <div class="flex items-center justify-between mb-5">
-                <h3 class="text-white font-extrabold text-sm tracking-[0.2em] uppercase">Drafts</h3>
+            <div class="flex items-center gap-6 mb-5 border-b border-white/5 pb-2">
+                 <button onclick="switchSidebarTab('drafts')" id="tab-drafts" class="text-white font-extrabold text-sm tracking-[0.2em] uppercase border-b-2 border-primary pb-2 transition-colors">Drafts</button>
+                 <button onclick="switchSidebarTab('sent')" id="tab-sent" class="text-zinc-500 hover:text-white font-extrabold text-sm tracking-[0.2em] uppercase border-b-2 border-transparent pb-2 transition-colors">Sent</button>
+            </div>
+
+            <div class="flex items-center justify-between mb-3" id="drafts-meta">
+                <span class="text-zinc-500 text-[10px] uppercase tracking-widest font-bold">Total</span>
                 <span id="draft-count" class="bg-primary/20 text-primary text-[10px] font-black px-2 py-0.5 rounded-full">@drafts.Count</span>
             </div>
+            
             <div class="relative">
                 <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-sm">search</span>
                 <input class="w-full bg-surface-dark border border-border-dark rounded-lg pl-9 pr-4 py-2 text-xs text-white focus:ring-1 focus:ring-primary focus:border-primary outline-none"
-                       placeholder="Search drafts..." type="text" id="draftSearch"/>
+                       placeholder="Search..." type="text" id="draftSearch"/>
             </div>
         </div>
 
@@ -207,7 +213,17 @@
             }
         </div>
 
-        <div class="p-3 border-t border-border-dark">
+        <div id="sent-list" class="flex-1 overflow-y-auto custom-scrollbar p-0 space-y-2 hidden">
+            <!-- Sent emails will be loaded here -->
+            <div class="flex items-center justify-center h-full text-zinc-500 text-xs">
+                 <div class="flex flex-col items-center gap-2">
+                     <span class="material-symbols-outlined animate-spin">refresh</span>
+                     <span>Loading history...</span>
+                 </div>
+            </div>
+        </div>
+
+        <div id="drafts-footer" class="p-3 border-t border-border-dark">
             <button type="button" onclick="clearAllDrafts()"
                     class="w-full bg-surface-dark border border-border-dark text-zinc-400 py-2 rounded-lg text-[10px] font-extrabold uppercase tracking-widest hover:text-white hover:border-zinc-700 transition-all flex items-center justify-center gap-2">
                 <span class="material-symbols-outlined text-sm">delete</span>
@@ -462,6 +478,15 @@
             <button type="button" onclick="confirmDistLists()" class="bg-primary text-black px-6 py-2 rounded-lg text-xs font-bold uppercase hover:bg-yellow-400">
                 Add Selected
             </button>
+        </div>
+    </div>
+</div>
+
+<!-- Sent Email Detail Modal -->
+<div id="sentEmailModal" class="modal fixed inset-0 z-[60] bg-black/90 backdrop-blur-md items-center justify-center p-4 hidden">
+    <div class="bg-surface-dark border border-white/10 rounded-2xl w-full max-w-4xl h-[85vh] overflow-hidden flex flex-col shadow-2xl relative">
+        <div id="sentEmailContent" class="flex-1 flex flex-col overflow-hidden relative">
+            <!-- Content loaded via AJAX -->
         </div>
     </div>
 </div>
@@ -1062,6 +1087,95 @@
         var placeholder = this.dataset.placeholder;
         if (this.textContent.trim() === placeholder) this.innerHTML = '';
     });
+</script>
+
+<script>
+    // Sent Emails Logic
+    function switchSidebarTab(tab) {
+        const btnDrafts = document.getElementById('tab-drafts');
+        const btnSent = document.getElementById('tab-sent');
+        const listDrafts = document.getElementById('drafts-list');
+        const listSent = document.getElementById('sent-list');
+        const draftsFooter = document.getElementById('drafts-footer');
+        const draftsMeta = document.getElementById('drafts-meta');
+
+        if (tab === 'drafts') {
+            btnDrafts.classList.replace('text-zinc-500', 'text-white');
+            btnDrafts.classList.replace('border-transparent', 'border-primary');
+            
+            btnSent.classList.replace('text-white', 'text-zinc-500');
+            btnSent.classList.replace('border-primary', 'border-transparent');
+            
+            listDrafts.classList.remove('hidden');
+            listSent.classList.add('hidden');
+            draftsFooter.classList.remove('hidden');
+            if (draftsMeta) draftsMeta.style.visibility = 'visible';
+        } else {
+            btnSent.classList.replace('text-zinc-500', 'text-white');
+            btnSent.classList.replace('border-transparent', 'border-primary');
+            
+            btnDrafts.classList.replace('text-white', 'text-zinc-500');
+            btnDrafts.classList.replace('border-primary', 'border-transparent');
+            
+            listSent.classList.remove('hidden');
+            listDrafts.classList.add('hidden');
+            draftsFooter.classList.add('hidden');
+            if (draftsMeta) draftsMeta.style.visibility = 'hidden';
+            
+            loadSentEmails();
+        }
+    }
+
+    async function loadSentEmails() {
+        const container = document.getElementById('sent-list');
+        container.innerHTML = `<div class="flex items-center justify-center h-full text-zinc-500 text-xs gap-2"><span class="material-symbols-outlined animate-spin text-lg">refresh</span>Loading history...</div>`;
+        
+        try {
+            const response = await fetch('/Admin/EmailServices/SendEmail/SentEmails');
+            if (response.ok) {
+                const html = await response.text();
+                container.innerHTML = html;
+            } else {
+                container.innerHTML = '<div class="text-center py-4 text-red-500 text-xs">Failed to load sent emails</div>';
+            }
+        } catch (error) {
+            container.innerHTML = '<div class="text-center py-4 text-red-500 text-xs">Error loading history</div>';
+        }
+    }
+
+    async function viewSentEmail(id) {
+        // New Logic: Open in Modal instead of Editor
+        showLoading('Loading details...');
+        
+        try {
+            const response = await fetch(`/Admin/EmailServices/SendEmail/ViewSentEmail/${id}`);
+            if (response.ok) {
+                const html = await response.text();
+                const modal = document.getElementById('sentEmailModal');
+                const container = document.getElementById('sentEmailContent');
+                
+                container.innerHTML = html;
+                modal.classList.remove('hidden');
+                modal.style.display = 'flex'; // Ensure flex centering
+                
+                hideLoading();
+            } else {
+                hideLoading();
+                showToast('Failed to load email details', 'error');
+            }
+        } catch (error) {
+            hideLoading();
+            showToast('Error loading details', 'error');
+            console.error(error);
+        }
+    }
+    
+    function closeSentEmailModal() {
+        const modal = document.getElementById('sentEmailModal');
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+        document.getElementById('sentEmailContent').innerHTML = '';
+    }
 </script>
 </body>
 </html>

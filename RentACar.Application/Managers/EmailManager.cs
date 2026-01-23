@@ -29,20 +29,57 @@ namespace RentACar.Application.Managers
             _auditLogManager = auditLogManager;
         }
 
-        private async Task<bool> SendEmailSafeAsync(string recipient, string subject, string message, string emailType, Dictionary<string, byte[]> attachments = null)
+        private async Task<bool> SendEmailSafeAsync(string recipient, string subject, string message, string emailType, Dictionary<string, byte[]> attachments = null, string userId = null)
         {
             if (string.IsNullOrEmpty(recipient)) return false;
+            
+            var emailLog = new EmailLog
+            {
+                RecipientsRaw = recipient,
+                Subject = subject ?? "",
+                Body = message ?? "",
+                EmailType = emailType,
+                CreatedAt = DateTime.UtcNow,
+                Attempts = 1,
+                CreatedByUserId = userId ?? "System",
+                TemplateKey = "",
+                LastError = "",
+                Status = "Pending"
+            };
+
             try
             {
+                // Try to get current user ID relative to the request context if possible, or from a passed parameter?
+                // For now, we leave Creator as null/System unless we refactor to pass userId.
+                
                 await _emailService.SendEmailAsync(recipient, subject, message, attachments);
+                
+                emailLog.Status = "Sent";
+                emailLog.SentAt = DateTime.UtcNow;
+                
                 await _auditLogManager.LogEventAsync("EmailSent", "Notification", recipient, $"Sent {emailType} to {recipient}", status: "Success");
-                return true;
             }
             catch (Exception ex)
             {
+                emailLog.Status = "Failed";
+                emailLog.LastError = ex.Message;
+                
                 await _auditLogManager.LogEventAsync("EmailFailed", "Notification", recipient, $"Failed to send {emailType}", status: "Failed", failureReason: ex.Message);
-                return false;
             }
+            
+            // Save Email Log
+            try 
+            {
+                _dbContext.EmailLogs.Add(emailLog);
+                await _dbContext.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                // Debugging: Throw to see the error in the response
+                throw new InvalidOperationException($"Email Log Save Failed: {ex.Message} | Inner: {ex.InnerException?.Message}", ex);
+            }
+
+            return emailLog.Status == "Sent";
         }
 
         // 1. BOOKING STATUS UPDATE EMAILS
@@ -358,33 +395,37 @@ namespace RentACar.Application.Managers
             }
             return successCount;
         }
-        public async Task<int> SendRawEmailBatchAsync(IEnumerable<string> recipients, string subject, string bodyHtml, Dictionary<string, byte[]> attachments = null)
+        public async Task<int> SendRawEmailBatchAsync(IEnumerable<string> recipients, string subject, string bodyHtml, Dictionary<string, byte[]> attachments = null, string userId = null)
         {
             // Direct send without wrapping in GetStandardTemplate
             int successCount = 0;
             foreach (var email in recipients)
             {
-                // SendEmailSafeAsync wrapping? No, SendEmailSafeAsync calls GetStandardTemplate? 
-                // Wait, SendEmailSafeAsync calls _emailService.SendEmailAsync direct. 
-                // BUT SendEmailSafeAsync logs audits. Let's reuse it but we need to pass strict message.
-                // The issue is SendEmailSafeAsync takes 'message' and passes it to _emailService.
-                // It does NOT wrap in template. The CALLER wraps it.
-                // So I can check usage.
-                
-                // Check usage:
-                // var message = EmailTemplates.GetStandardTemplate(...)
-                // await SendEmailSafeAsync(..., message, ...)
-                
-                // So SendEmailSafeAsync is fine. I just trigger it with raw body.
-                // Does SendEmailSafeAsync support attachments?
-                // I need to update SendEmailSafeAsync to support attachments too within EmailManager.
-                
-                if(await SendEmailSafeAsync(email, subject, bodyHtml, "Raw Email", attachments))
+                if(await SendEmailSafeAsync(email, subject, bodyHtml, "Raw Email", attachments, userId))
                 {
                     successCount++;
                 }
             }
             return successCount;
+        }
+        public async Task<List<EmailLog>> GetRecentEmailLogsAsync(string userId = null, int count = 50)
+        {
+            var query = _dbContext.EmailLogs.AsQueryable();
+            
+            if (!string.IsNullOrEmpty(userId))
+            {
+                query = query.Where(l => l.CreatedByUserId == userId);
+            }
+
+            return await query
+                .OrderByDescending(l => l.SentAt)
+                .Take(count)
+                .ToListAsync();
+        }
+
+        public async Task<EmailLog> GetEmailLogAsync(int id)
+        {
+            return await _dbContext.EmailLogs.FindAsync(id);
         }
     }
 }

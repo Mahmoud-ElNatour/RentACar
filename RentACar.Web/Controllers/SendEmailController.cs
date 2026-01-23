@@ -123,6 +123,7 @@ namespace RentACar.Web.Controllers
              string subject = request.Subject;
              string body = request.Body;
              int delivered;
+             var userId = _userManager.GetUserId(User);
 
              if (request.IsTemplateMode)
              {
@@ -146,12 +147,12 @@ namespace RentACar.Web.Controllers
                  // "SendAdHoc" is only for simple strings.
                  
                  // Let's use SendRawEmailBatchAsync for everything coming from the Composer, as the Composer controls the full HTML.
-                 delivered = await _emailManager.SendRawEmailBatchAsync(recipients, subject, body, attachments);
+                 delivered = await _emailManager.SendRawEmailBatchAsync(recipients, subject, body, attachments, userId);
              }
              else
              {
                  // Manual Mode: Explicitly requested Raw.
-                 delivered = await _emailManager.SendRawEmailBatchAsync(recipients, subject, body, attachments);
+                 delivered = await _emailManager.SendRawEmailBatchAsync(recipients, subject, body, attachments, userId);
              }
              
              return Ok(new { success = true, recipientsCount = recipients.Count, deliveredCount = delivered });
@@ -206,6 +207,25 @@ namespace RentACar.Web.Controllers
             var userId = _userManager.GetUserId(User);
             await _draftManager.DeleteAllDraftsAsync(userId);
             return Ok(new { success = true });
+        }
+
+        [HttpGet("SentEmails")]
+        public async Task<IActionResult> SentEmails()
+        {
+            var userId = _userManager.GetUserId(User);
+            var logs = await _emailManager.GetRecentEmailLogsAsync(userId);
+            return PartialView("~/Views/EmailServices/SendEmail/_SentEmailsList.cshtml", logs);
+        }
+
+        [HttpGet("ViewSentEmail/{id}")]
+        public async Task<IActionResult> ViewSentEmail(int id)
+        {
+            var userId = _userManager.GetUserId(User);
+            var log = await _emailManager.GetEmailLogAsync(id);
+            
+            if (log == null || log.CreatedByUserId != userId) return NotFound();
+
+            return PartialView("~/Views/EmailServices/SendEmail/_ViewSentEmail.cshtml", log);
         }
     }
 }
