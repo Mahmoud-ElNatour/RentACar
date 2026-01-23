@@ -40,7 +40,7 @@ namespace RentACar.Application.DTOs
         public DateOnly? DriverLicenseExpiry { get; set; }
         public string? DriverLanguages { get; set; }
         public string? DriverNotes { get; set; }
-        public bool? DriverIsActive { get; set; }
+        public bool DriverIsActive { get; set; } = true;
         public DateTime? DriverCreatedAt { get; set; }
         public DateTime? DriverUpdatedAt { get; set; }
     }
@@ -77,7 +77,7 @@ namespace RentACar.Application.DTOs
         public DateOnly? DriverLicenseExpiry { get; set; }
         public string? DriverLanguages { get; set; }
         public string? DriverNotes { get; set; }
-        public bool? DriverIsActive { get; set; }
+        public bool DriverIsActive { get; set; } = true;
     }
 
     public class EmployeeDisplayDto
@@ -100,7 +100,7 @@ namespace RentACar.Application.DTOs
         public string? DriverLicenseNumber { get; set; }
         public DateOnly? DriverLicenseExpiry { get; set; }
         public string? DriverLanguages { get; set; }
-        public bool? DriverIsActive { get; set; }
+        public bool DriverIsActive { get; set; } = true;
         public DateTime? DriverCreatedAt { get; set; }
         public DateTime? DriverUpdatedAt { get; set; }
     }

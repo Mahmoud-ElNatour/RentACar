@@ -1,12 +1,9 @@
-using System;
+﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-// Place this file in: RentACar.Infrastructure\Migrations
-// IMPORTANT: This namespace MUST match your other EF migrations namespace.
-// In your project, the active migrations folder is: RentACar.Infrastructure\Migrations
-namespace RentACar.Infrastructure.Migrations
+namespace RentACar.Infrastructure.Data.Migrations
 {
     public partial class AddDriverFeature : Migration
     {

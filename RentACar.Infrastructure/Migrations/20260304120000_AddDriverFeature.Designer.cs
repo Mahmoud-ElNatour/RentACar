@@ -16,11 +16,6 @@ namespace RentACar.Infrastructure.Migrations
     [Migration("20260304120000_AddDriverFeature")]
     public partial class AddDriverFeature
     {
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
-        {
-            // Intentionally left minimal.
-            // Your migration operations are in 20260304120000_AddDriverFeature.cs (Up/Down).
-            // After applying, consider regenerating a clean migration so the snapshot stays accurate.
-        }
+       
     }
 }

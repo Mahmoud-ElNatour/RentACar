@@ -441,7 +441,8 @@ namespace RentACar.Application.Managers
                     DriverLicenseNumber = driver?.LicenseNumber,
                     DriverLicenseExpiry = driver?.LicenseExpiry,
                     DriverLanguages = driver?.Languages,
-                    DriverIsActive = driver != null ? emp.IsActive && driver.IsActive : null,
+                    DriverIsActive = driver != null && emp.IsActive && driver.IsActive,
+
                     DriverCreatedAt = driver?.CreatedAt,
                     DriverUpdatedAt = driver?.UpdatedAt
                 };
@@ -502,7 +503,7 @@ namespace RentACar.Application.Managers
             driver.LicenseExpiry = dto.DriverLicenseExpiry;
             driver.Languages = dto.DriverLanguages;
             driver.Notes = dto.DriverNotes;
-            driver.IsActive = employee.IsActive && (dto.DriverIsActive ?? true);
+            driver.IsActive = employee.IsActive && dto.DriverIsActive;
             driver.UpdatedAt = DateTime.UtcNow;
 
             if (isNew)
@@ -541,7 +542,7 @@ namespace RentACar.Application.Managers
             driver.LicenseExpiry = dto.DriverLicenseExpiry;
             driver.Languages = dto.DriverLanguages;
             driver.Notes = dto.DriverNotes;
-            driver.IsActive = employee.IsActive && (dto.DriverIsActive ?? true);
+            driver.IsActive = employee.IsActive && dto.DriverIsActive;
             driver.UpdatedAt = DateTime.UtcNow;
 
             if (isNew)
