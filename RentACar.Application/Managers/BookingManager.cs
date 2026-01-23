@@ -277,6 +277,12 @@ namespace RentACar.Application.Managers
 
             foreach (var driver in drivers)
             {
+                var identityUser = await _userManager.FindByIdAsync(driver.AspNetUserId);
+                if (identityUser == null || !await _userManager.IsInRoleAsync(identityUser, "Driver"))
+                {
+                    continue;
+                }
+
                 var driverBookings = await _bookingRepository.GetBookingsByDriverIdAsync(driver.DriverId);
                 var hasConflict = driverBookings.Any(b =>
                     IsBlockingStatus(b.BookingStatus) &&
