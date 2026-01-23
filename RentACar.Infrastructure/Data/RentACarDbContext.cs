@@ -145,6 +145,13 @@ public partial class RentACarDbContext : DbContext
             entity.HasOne(d => d.User).WithMany(p => p.Drivers)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Drivers_AspNetUsers");
+
+            entity.HasOne(d => d.Employee).WithOne(p => p.Driver)
+                .HasForeignKey<Driver>(d => d.EmployeeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Drivers_Employees");
+
+            entity.HasIndex(d => d.EmployeeId).IsUnique();
         });
 
         modelBuilder.Entity<DriverAvailability>(entity =>

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -54,7 +53,7 @@ public class DriverLocationController : ControllerBase
         }
 
         var driver = await _driverRepository.GetByAspNetUserIdAsync(userId);
-        if (driver == null || !driver.IsActive)
+        if (driver == null || !driver.IsActive || !driver.Employee.IsActive)
         {
             return Forbid();
         }

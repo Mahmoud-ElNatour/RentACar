@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using RentACar.Application.DTOs;
 using RentACar.Application.Managers;
@@ -19,14 +19,14 @@ namespace RentACar.Web.Controllers
     public class EmployeeController : Controller
     {
         private readonly EmployeeManager _employeeManager;
-        private readonly IMapper _mapper;
         private readonly ILogger<EmployeeController> _logger;
+        private readonly RoleManager<IdentityRole> _roleManager;
 
-        public EmployeeController(EmployeeManager employeeManager, IMapper mapper, ILogger<EmployeeController> logger)
+        public EmployeeController(EmployeeManager employeeManager, RoleManager<IdentityRole> roleManager, ILogger<EmployeeController> logger)
         {
             _employeeManager = employeeManager;
-            _mapper = mapper;
             _logger = logger;
+            _roleManager = roleManager;
         }
 
         [HttpGet("~/Employee")]
@@ -41,7 +41,8 @@ namespace RentACar.Web.Controllers
         [ApiExplorerSettings(IgnoreApi = true)]
         public IActionResult AddForm()
         {
-            return PartialView("~/Views/ControlPanel/Employee/_EmployeeFormPartial.cshtml", new EmployeeDto { IsActive = true });
+            ViewBag.Roles = _roleManager.Roles.Select(r => r.Name).ToList();
+            return PartialView("~/Views/ControlPanel/Employee/_EmployeeFormPartial.cshtml", new EmployeeDto { IsActive = true, DriverIsActive = true });
         }
 
         [HttpGet("~/Employee/Edit/{id}")]
@@ -51,6 +52,7 @@ namespace RentACar.Web.Controllers
         {
             var emp = await _employeeManager.GetEmployeeById(id);
             if (emp == null) return NotFound();
+            ViewBag.Roles = _roleManager.Roles.Select(r => r.Name).ToList();
             return PartialView("~/Views/ControlPanel/Employee/_EmployeeFormPartial.cshtml", emp);
         }
 
@@ -72,7 +74,8 @@ namespace RentACar.Web.Controllers
             {
                 employees = employees.Where(e =>
                     (!string.IsNullOrEmpty(e.Name) && e.Name.Contains(search, System.StringComparison.OrdinalIgnoreCase)) ||
-                    (!string.IsNullOrEmpty(e.Email) && e.Email.Contains(search, System.StringComparison.OrdinalIgnoreCase))
+                    (!string.IsNullOrEmpty(e.Email) && e.Email.Contains(search, System.StringComparison.OrdinalIgnoreCase)) ||
+                    (!string.IsNullOrEmpty(e.DriverCode) && e.DriverCode.Contains(search, System.StringComparison.OrdinalIgnoreCase))
                 ).ToList();
             }
             if (active.HasValue)
@@ -81,7 +84,25 @@ namespace RentACar.Web.Controllers
             }
             if (!string.IsNullOrWhiteSpace(role))
             {
-                employees = employees.Where(e => string.Equals(e.Role, role, System.StringComparison.OrdinalIgnoreCase)).ToList();
+                if (role.Equals("Employee", System.StringComparison.OrdinalIgnoreCase))
+                {
+                    employees = employees
+                        .Where(e => e.Roles.Any(r => r.Equals("Employee", System.StringComparison.OrdinalIgnoreCase))
+                                    && !e.Roles.Any(r => r.Equals("Driver", System.StringComparison.OrdinalIgnoreCase)))
+                        .ToList();
+                }
+                else if (role.Equals("Driver", System.StringComparison.OrdinalIgnoreCase))
+                {
+                    employees = employees
+                        .Where(e => e.Roles.Any(r => r.Equals("Driver", System.StringComparison.OrdinalIgnoreCase)) && e.DriverId.HasValue)
+                        .ToList();
+                }
+                else
+                {
+                    employees = employees
+                        .Where(e => e.Roles.Any(r => r.Equals(role, System.StringComparison.OrdinalIgnoreCase)))
+                        .ToList();
+                }
             }
             return Ok(employees);
         }

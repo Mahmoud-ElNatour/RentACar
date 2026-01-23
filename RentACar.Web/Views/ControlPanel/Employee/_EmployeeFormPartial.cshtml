@@ -10,6 +10,19 @@
                 <form id="employeeForm">
                     <input type="hidden" asp-for="EmployeeId" />
                     <div class="mb-3">
+                        <label class="form-label">Roles</label>
+                        <div class="d-flex flex-wrap gap-3">
+                            @foreach (var role in (IEnumerable<string>)(ViewBag.Roles ?? new List<string>()))
+                            {
+                                var isChecked = Model.Roles != null && Model.Roles.Contains(role, StringComparer.OrdinalIgnoreCase);
+                                <div class="form-check">
+                                    <input class="form-check-input role-checkbox" type="checkbox" value="@role" id="role_@role" @(isChecked ? "checked" : "") />
+                                    <label class="form-check-label" for="role_@role">@role</label>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                    <div class="mb-3">
                         <label class="form-label">Name</label>
                         <input asp-for="Name" class="form-control" />
                     </div>
@@ -41,6 +54,65 @@
                         <input asp-for="IsActive" class="form-check-input" />
                         <label class="form-check-label" asp-for="IsActive">Active</label>
                     </div>
+                    <div id="driverSection" class="mt-4 p-3 border rounded bg-dark">
+                        <h6 class="text-warning mb-3">Driver Details</h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Driver Code</label>
+                                <input asp-for="DriverCode" class="form-control" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Full Name</label>
+                                <input asp-for="DriverFullName" class="form-control" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Phone</label>
+                                <input asp-for="DriverPhone" class="form-control" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Email</label>
+                                <input asp-for="DriverEmail" class="form-control" />
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Rating</label>
+                                <input asp-for="DriverRating" class="form-control" />
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">License Number</label>
+                                <input asp-for="DriverLicenseNumber" class="form-control" />
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">License Expiry</label>
+                                <input asp-for="DriverLicenseExpiry" type="date" class="form-control" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Languages</label>
+                                <input asp-for="DriverLanguages" class="form-control" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Is Active</label>
+                                <input asp-for="DriverIsActive" type="checkbox" class="form-check-input ms-2" />
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Notes</label>
+                                <textarea asp-for="DriverNotes" class="form-control" rows="2"></textarea>
+                            </div>
+                            @if (Model.DriverCreatedAt.HasValue)
+                            {
+                                <div class="col-md-6">
+                                    <label class="form-label">Created At</label>
+                                    <input class="form-control" value="@Model.DriverCreatedAt.Value.ToString("g")" readonly />
+                                </div>
+                            }
+                            @if (Model.DriverUpdatedAt.HasValue)
+                            {
+                                <div class="col-md-6">
+                                    <label class="form-label">Updated At</label>
+                                    <input class="form-control" value="@Model.DriverUpdatedAt.Value.ToString("g")" readonly />
+                                </div>
+                            }
+                        </div>
+                    </div>
                     <button type="submit" class="btn btn-primary">@(Model.EmployeeId == 0 ? "Add" : "Save")</button>
                 </form>
             </div>
@@ -48,10 +120,27 @@
     </div>
 </div>
 <script>
+    function getSelectedRoles() {
+        return Array.from(document.querySelectorAll('.role-checkbox:checked')).map(cb => cb.value);
+    }
+
+    function toggleDriverSection() {
+        const roles = getSelectedRoles();
+        const driverSection = document.getElementById('driverSection');
+        const show = roles.some(role => role.toLowerCase() === 'driver');
+        driverSection.style.display = show ? 'block' : 'none';
+    }
+
+    document.querySelectorAll('.role-checkbox').forEach(cb => {
+        cb.addEventListener('change', toggleDriverSection);
+    });
+    toggleDriverSection();
+
     document.getElementById('employeeForm').addEventListener('submit', async function (e) {
         e.preventDefault();
         const form = e.target;
         const f = form.elements;
+        const roles = getSelectedRoles();
         const data = {
             employeeId: parseInt(form.querySelector('[name="EmployeeId"]')?.value || '0'),
             name: f['Name']?.value,
@@ -60,7 +149,18 @@
             phoneNumber: f['PhoneNumber']?.value,
             salary: parseFloat(f['Salary']?.value || '0'),
             address: f['Address']?.value,
-            isActive: form.querySelector('[name="IsActive"]')?.checked ?? false
+            isActive: form.querySelector('[name="IsActive"]')?.checked ?? false,
+            roles: roles,
+            driverCode: f['DriverCode']?.value,
+            driverFullName: f['DriverFullName']?.value,
+            driverPhone: f['DriverPhone']?.value,
+            driverEmail: f['DriverEmail']?.value,
+            driverRating: f['DriverRating']?.value ? parseFloat(f['DriverRating']?.value) : null,
+            driverLicenseNumber: f['DriverLicenseNumber']?.value,
+            driverLicenseExpiry: f['DriverLicenseExpiry']?.value || null,
+            driverLanguages: f['DriverLanguages']?.value,
+            driverNotes: f['DriverNotes']?.value,
+            driverIsActive: form.querySelector('[name="DriverIsActive"]')?.checked ?? false
             };
         let url = '/api/Employee';
         let method = 'POST';

@@ -655,6 +655,10 @@ namespace RentACar.Infrastructure.Data.Migrations
                         .HasColumnType("nvarchar(450)")
                         .HasColumnName("aspNetUserId");
 
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("int")
+                        .HasColumnName("employeeID");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2")
                         .HasColumnName("createdAt");
@@ -717,6 +721,9 @@ namespace RentACar.Infrastructure.Data.Migrations
                     b.HasKey("DriverId");
 
                     b.HasIndex("AspNetUserId");
+
+                    b.HasIndex("EmployeeId")
+                        .IsUnique();
 
                     b.ToTable("Drivers");
                 });
@@ -1142,7 +1149,15 @@ namespace RentACar.Infrastructure.Data.Migrations
                         .IsRequired()
                         .HasConstraintName("FK_Drivers_AspNetUsers");
 
+                    b.HasOne("RentACar.Core.Entities.Employee", "Employee")
+                        .WithOne("Driver")
+                        .HasForeignKey("RentACar.Core.Entities.Driver", "EmployeeId")
+                        .IsRequired()
+                        .HasConstraintName("FK_Drivers_Employees");
+
                     b.Navigation("User");
+
+                    b.Navigation("Employee");
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.DriverAvailability", b =>
@@ -1254,6 +1269,8 @@ namespace RentACar.Infrastructure.Data.Migrations
                     b.Navigation("BlackLists");
 
                     b.Navigation("Bookings");
+
+                    b.Navigation("Driver");
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.Driver", b =>
