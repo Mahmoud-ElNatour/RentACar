@@ -22,9 +22,21 @@ namespace RentACar.Web.Controllers
         }
 
         [HttpGet("")]
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string search = null)
         {
             var templates = await _templateManager.GetAllTemplatesAsync();
+            
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                search = search.ToLower();
+                templates = templates.Where(t => 
+                    t.Name.ToLower().Contains(search) || 
+                    t.TemplateKey.ToLower().Contains(search) ||
+                    t.Subject.ToLower().Contains(search)
+                ).ToList();
+                ViewData["Search"] = search;
+            }
+            
             return View("~/Views/EmailServices/Templates/Index.cshtml", templates);
         }
 
@@ -100,7 +112,7 @@ namespace RentACar.Web.Controllers
         public async Task<IActionResult> Delete(string key)
         {
             await _templateManager.DeleteTemplateByKeyAsync(key);
-            return RedirectToAction("EmailServicesHub", "EmailServices", new { area = "Admin" });
+            return RedirectToAction("Index");
         }
 
         // Assuming ToggleActive might be called by ID still or Key. 
