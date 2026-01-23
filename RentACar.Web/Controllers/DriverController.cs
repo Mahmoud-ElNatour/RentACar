@@ -12,7 +12,7 @@ using RentACar.Application.Managers;
 
 namespace RentACar.Web.Controllers;
 
-[Authorize(Roles = "Admin,Employee")]
+[Authorize(Roles = "Admin,Employee,Driver")]
 [ApiController]
 [Route("api/[controller]")]
 public class DriverController : Controller

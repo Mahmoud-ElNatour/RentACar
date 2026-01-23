@@ -32,7 +32,7 @@ namespace RentACar.Infrastructure.Data.Migrations
 
                     b.HasKey("RoleId", "UserId");
 
-                    b.ToTable("AspNetRoleAspNetUser");
+                    b.ToTable("AspNetRoleAspNetUser", (string)null);
                 });
 
             modelBuilder.Entity("AspNetUserRole", b =>
@@ -68,7 +68,7 @@ namespace RentACar.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("AspNetRoles");
+                    b.ToTable("AspNetRoles", (string)null);
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.AspNetRoleClaim", b =>
@@ -94,7 +94,7 @@ namespace RentACar.Infrastructure.Data.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("AspNetRoleClaims");
+                    b.ToTable("AspNetRoleClaims", (string)null);
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.AspNetUser", b =>
@@ -150,7 +150,7 @@ namespace RentACar.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("AspNetUsers");
+                    b.ToTable("AspNetUsers", (string)null);
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.AspNetUserClaim", b =>
@@ -176,7 +176,7 @@ namespace RentACar.Infrastructure.Data.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("AspNetUserClaims");
+                    b.ToTable("AspNetUserClaims", (string)null);
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.AspNetUserLogin", b =>
@@ -201,7 +201,7 @@ namespace RentACar.Infrastructure.Data.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("AspNetUserLogins");
+                    b.ToTable("AspNetUserLogins", (string)null);
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.AspNetUserToken", b =>
@@ -222,7 +222,7 @@ namespace RentACar.Infrastructure.Data.Migrations
 
                     b.HasKey("UserId", "LoginProvider", "Name");
 
-                    b.ToTable("AspNetUserTokens");
+                    b.ToTable("AspNetUserTokens", (string)null);
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.AuditLog", b =>
@@ -313,7 +313,7 @@ namespace RentACar.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("AuditLogs");
+                    b.ToTable("AuditLogs", (string)null);
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.BlackList", b =>
@@ -349,7 +349,7 @@ namespace RentACar.Infrastructure.Data.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("BlackList");
+                    b.ToTable("BlackList", (string)null);
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.Booking", b =>
@@ -378,38 +378,15 @@ namespace RentACar.Infrastructure.Data.Migrations
                         .HasColumnType("int")
                         .HasColumnName("EmployeebookerID");
 
-                    b.Property<decimal?>("DriverDailyFee")
-                        .HasColumnType("decimal(18, 2)")
-                        .HasColumnName("driverDailyFee");
-
-                    b.Property<int?>("DriverId")
-                        .HasColumnType("int")
-                        .HasColumnName("driverID");
-
                     b.Property<DateOnly>("Enddate")
                         .HasColumnType("date")
                         .HasColumnName("enddate");
-
-                    b.Property<bool>("HasDriver")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false)
-                        .HasColumnName("hasDriver");
 
                     b.Property<bool?>("IsBookedByEmployee")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(false)
                         .HasColumnName("isBookedByEmployee");
-
-                    b.Property<string>("PickupAddress")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)")
-                        .HasColumnName("pickupAddress");
-
-                    b.Property<DateTime?>("PickupDateTime")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("pickupDateTime");
 
                     b.Property<int?>("PromocodeId")
                         .HasColumnType("int")
@@ -433,13 +410,11 @@ namespace RentACar.Infrastructure.Data.Migrations
 
                     b.HasIndex("CustomerId");
 
-                    b.HasIndex("DriverId");
-
                     b.HasIndex("EmployeebookerId");
 
                     b.HasIndex("PromocodeId");
 
-                    b.ToTable("Bookings");
+                    b.ToTable("Bookings", (string)null);
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.Car", b =>
@@ -492,7 +467,7 @@ namespace RentACar.Infrastructure.Data.Migrations
 
                     b.HasIndex("CategoryId");
 
-                    b.ToTable("Cars");
+                    b.ToTable("Cars", (string)null);
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.Category", b =>
@@ -519,7 +494,7 @@ namespace RentACar.Infrastructure.Data.Migrations
 
                     b.HasKey("CategoryId");
 
-                    b.ToTable("Categories");
+                    b.ToTable("Categories", (string)null);
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.CreditCard", b =>
@@ -559,7 +534,7 @@ namespace RentACar.Infrastructure.Data.Migrations
                     b.HasKey("CreditCardId")
                         .HasName("PK_CreditCard_1");
 
-                    b.ToTable("CreditCard");
+                    b.ToTable("CreditCard", (string)null);
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.Customer", b =>
@@ -618,7 +593,7 @@ namespace RentACar.Infrastructure.Data.Migrations
                     b.HasIndex("aspNetUserId")
                         .IsUnique();
 
-                    b.ToTable("Customers");
+                    b.ToTable("Customers", (string)null);
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.CustomerCreditCard", b =>
@@ -637,182 +612,7 @@ namespace RentACar.Infrastructure.Data.Migrations
 
                     b.HasIndex("CreditCardId");
 
-                    b.ToTable("CustomerCreditCard");
-                });
-
-            modelBuilder.Entity("RentACar.Core.Entities.Driver", b =>
-                {
-                    b.Property<int>("DriverId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("driverID");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("DriverId"));
-
-                    b.Property<string>("AspNetUserId")
-                        .IsRequired()
-                        .HasMaxLength(450)
-                        .HasColumnType("nvarchar(450)")
-                        .HasColumnName("aspNetUserId");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("createdAt");
-
-                    b.Property<string>("DriverCode")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)")
-                        .HasColumnName("driverCode");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)")
-                        .HasColumnName("email");
-
-                    b.Property<string>("FullName")
-                        .IsRequired()
-                        .HasMaxLength(120)
-                        .HasColumnType("nvarchar(120)")
-                        .HasColumnName("fullName");
-
-                    b.Property<bool>("IsActive")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true)
-                        .HasColumnName("isActive");
-
-                    b.Property<DateOnly?>("LicenseExpiry")
-                        .HasColumnType("date")
-                        .HasColumnName("licenseExpiry");
-
-                    b.Property<string>("LicenseNumber")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
-                        .HasColumnName("licenseNumber");
-
-                    b.Property<string>("Languages")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)")
-                        .HasColumnName("languages");
-
-                    b.Property<string>("Notes")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("notes");
-
-                    b.Property<string>("Phone")
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)")
-                        .HasColumnName("phone");
-
-                    b.Property<decimal?>("Rating")
-                        .HasColumnType("decimal(3, 2)")
-                        .HasColumnName("rating");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("updatedAt");
-
-                    b.HasKey("DriverId");
-
-                    b.HasIndex("AspNetUserId");
-
-                    b.ToTable("Drivers");
-                });
-
-            modelBuilder.Entity("RentACar.Core.Entities.DriverAvailability", b =>
-                {
-                    b.Property<int>("DriverAvailabilityId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("driverAvailabilityID");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("DriverAvailabilityId"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("createdAt");
-
-                    b.Property<int>("DriverId")
-                        .HasColumnType("int")
-                        .HasColumnName("driverID");
-
-                    b.Property<DateTime>("EndDateTime")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("endDateTime");
-
-                    b.Property<bool>("IsAvailable")
-                        .HasColumnType("bit")
-                        .HasColumnName("isAvailable");
-
-                    b.Property<bool>("IsRecurringWeekly")
-                        .HasColumnType("bit")
-                        .HasColumnName("isRecurringWeekly");
-
-                    b.Property<DateTime>("StartDateTime")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("startDateTime");
-
-                    b.HasKey("DriverAvailabilityId");
-
-                    b.HasIndex("DriverId");
-
-                    b.ToTable("DriverAvailabilities");
-                });
-
-            modelBuilder.Entity("RentACar.Core.Entities.DriverLocationPing", b =>
-                {
-                    b.Property<int>("DriverLocationPingId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("driverLocationPingID");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("DriverLocationPingId"));
-
-                    b.Property<decimal?>("AccuracyMeters")
-                        .HasColumnType("decimal(10, 2)")
-                        .HasColumnName("accuracyMeters");
-
-                    b.Property<int?>("BatteryPercent")
-                        .HasColumnType("int")
-                        .HasColumnName("batteryPercent");
-
-                    b.Property<int>("BookingId")
-                        .HasColumnType("int")
-                        .HasColumnName("bookingID");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("createdAt");
-
-                    b.Property<int>("DriverId")
-                        .HasColumnType("int")
-                        .HasColumnName("driverID");
-
-                    b.Property<decimal?>("Heading")
-                        .HasColumnType("decimal(10, 2)")
-                        .HasColumnName("heading");
-
-                    b.Property<decimal>("Latitude")
-                        .HasColumnType("decimal(9, 6)")
-                        .HasColumnName("latitude");
-
-                    b.Property<decimal>("Longitude")
-                        .HasColumnType("decimal(9, 6)")
-                        .HasColumnName("longitude");
-
-                    b.Property<decimal?>("Speed")
-                        .HasColumnType("decimal(10, 2)")
-                        .HasColumnName("speed");
-
-                    b.HasKey("DriverLocationPingId");
-
-                    b.HasIndex("BookingId");
-
-                    b.HasIndex("DriverId");
-
-                    b.ToTable("DriverLocationPings");
+                    b.ToTable("CustomerCreditCard", (string)null);
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.Employee", b =>
@@ -852,7 +652,7 @@ namespace RentACar.Infrastructure.Data.Migrations
 
                     b.HasIndex("aspNetUserId");
 
-                    b.ToTable("Employees");
+                    b.ToTable("Employees", (string)null);
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.Payment", b =>
@@ -915,7 +715,7 @@ namespace RentACar.Infrastructure.Data.Migrations
                     b.HasIndex("BookingId")
                         .IsUnique();
 
-                    b.ToTable("Payments");
+                    b.ToTable("Payments", (string)null);
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.PaymentMethod", b =>
@@ -938,7 +738,7 @@ namespace RentACar.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("PaymentMethods");
+                    b.ToTable("PaymentMethods", (string)null);
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.Promocode", b =>
@@ -973,7 +773,7 @@ namespace RentACar.Infrastructure.Data.Migrations
 
                     b.HasKey("PromocodeId");
 
-                    b.ToTable("Promocodes");
+                    b.ToTable("Promocodes", (string)null);
                 });
 
             modelBuilder.Entity("AspNetUserRole", b =>
@@ -1073,11 +873,6 @@ namespace RentACar.Infrastructure.Data.Migrations
                         .HasForeignKey("EmployeebookerId")
                         .HasConstraintName("FK_Bookings_Employees");
 
-                    b.HasOne("RentACar.Core.Entities.Driver", "Driver")
-                        .WithMany("Bookings")
-                        .HasForeignKey("DriverId")
-                        .HasConstraintName("FK_Bookings_Drivers");
-
                     b.HasOne("RentACar.Core.Entities.Promocode", "Promocode")
                         .WithMany("Bookings")
                         .HasForeignKey("PromocodeId")
@@ -1088,8 +883,6 @@ namespace RentACar.Infrastructure.Data.Migrations
                     b.Navigation("Customer");
 
                     b.Navigation("Employeebooker");
-
-                    b.Navigation("Driver");
 
                     b.Navigation("Promocode");
                 });
@@ -1134,47 +927,6 @@ namespace RentACar.Infrastructure.Data.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("RentACar.Core.Entities.Driver", b =>
-                {
-                    b.HasOne("RentACar.Core.Entities.AspNetUser", "User")
-                        .WithMany("Drivers")
-                        .HasForeignKey("AspNetUserId")
-                        .IsRequired()
-                        .HasConstraintName("FK_Drivers_AspNetUsers");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("RentACar.Core.Entities.DriverAvailability", b =>
-                {
-                    b.HasOne("RentACar.Core.Entities.Driver", "Driver")
-                        .WithMany("DriverAvailabilities")
-                        .HasForeignKey("DriverId")
-                        .IsRequired()
-                        .HasConstraintName("FK_DriverAvailability_Drivers");
-
-                    b.Navigation("Driver");
-                });
-
-            modelBuilder.Entity("RentACar.Core.Entities.DriverLocationPing", b =>
-                {
-                    b.HasOne("RentACar.Core.Entities.Booking", "Booking")
-                        .WithMany("DriverLocationPings")
-                        .HasForeignKey("BookingId")
-                        .IsRequired()
-                        .HasConstraintName("FK_DriverLocationPings_Bookings");
-
-                    b.HasOne("RentACar.Core.Entities.Driver", "Driver")
-                        .WithMany("LocationPings")
-                        .HasForeignKey("DriverId")
-                        .IsRequired()
-                        .HasConstraintName("FK_DriverLocationPings_Drivers");
-
-                    b.Navigation("Booking");
-
-                    b.Navigation("Driver");
-                });
-
             modelBuilder.Entity("RentACar.Core.Entities.Employee", b =>
                 {
                     b.HasOne("RentACar.Core.Entities.AspNetUser", "User")
@@ -1215,15 +967,11 @@ namespace RentACar.Infrastructure.Data.Migrations
 
                     b.Navigation("Customer");
 
-                    b.Navigation("Drivers");
-
                     b.Navigation("Employees");
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.Booking", b =>
                 {
-                    b.Navigation("DriverLocationPings");
-
                     b.Navigation("Payment");
                 });
 
@@ -1254,15 +1002,6 @@ namespace RentACar.Infrastructure.Data.Migrations
                     b.Navigation("BlackLists");
 
                     b.Navigation("Bookings");
-                });
-
-            modelBuilder.Entity("RentACar.Core.Entities.Driver", b =>
-                {
-                    b.Navigation("Bookings");
-
-                    b.Navigation("DriverAvailabilities");
-
-                    b.Navigation("LocationPings");
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.Promocode", b =>

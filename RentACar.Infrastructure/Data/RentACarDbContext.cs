@@ -92,8 +92,8 @@ public partial class RentACarDbContext : DbContext
             entity.HasOne(d => d.Driver).WithMany(p => p.Bookings)
                 .HasConstraintName("FK_Bookings_Drivers");
 
-             entity.HasOne(d => d.Promocode).WithMany(p => p.Bookings)
-                .HasConstraintName("FK_Bookings_Promocodes1");
+            entity.HasOne(d => d.Promocode).WithMany(p => p.Bookings)
+               .HasConstraintName("FK_Bookings_Promocodes1");
         });
 
         modelBuilder.Entity<Car>(entity =>
@@ -190,13 +190,13 @@ public partial class RentACarDbContext : DbContext
     {
         ChangeTracker.DetectChanges();
         var auditEntries = new List<AuditLog>();
-        
+
         var user = _httpContextAccessor?.HttpContext?.User;
-        var userName = user?.Identity?.Name ?? "System"; 
-        
+        var userName = user?.Identity?.Name ?? "System";
+
         if (user?.Identity?.IsAuthenticated == true && string.IsNullOrEmpty(userName))
         {
-             userName = user.FindFirst(ClaimTypes.Email)?.Value ?? user.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "Unknown User";
+            userName = user.FindFirst(ClaimTypes.Email)?.Value ?? user.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "Unknown User";
         }
 
         var userRole = "Unknown";
@@ -208,7 +208,7 @@ public partial class RentACarDbContext : DbContext
                 userRole = string.Join(", ", roles.Select(r => r.Value));
             }
         }
-        
+
         var ipAddress = _httpContextAccessor?.HttpContext?.Connection?.RemoteIpAddress?.ToString() ?? "Unknown";
         var userAgent = _httpContextAccessor?.HttpContext?.Request?.Headers["User-Agent"].ToString();
 
@@ -268,7 +268,7 @@ public partial class RentACarDbContext : DbContext
                             // Only log if effectively different
                             var strOriginal = originalVal?.ToString();
                             var strCurrent = currentVal?.ToString();
-                            
+
                             if (strOriginal != strCurrent)
                             {
                                 oldValues[propertyName] = MaskSensitiveData(propertyName, originalVal);
@@ -279,18 +279,18 @@ public partial class RentACarDbContext : DbContext
                         break;
                 }
             }
-            
+
             // Serialize
-            if (oldValues.Count > 0) 
+            if (oldValues.Count > 0)
                 auditEntry.OldValuesJson = System.Text.Json.JsonSerializer.Serialize(oldValues);
-            
-            if (newValues.Count > 0) 
+
+            if (newValues.Count > 0)
                 auditEntry.NewValuesJson = System.Text.Json.JsonSerializer.Serialize(newValues);
 
             // Summary
             var summary = string.Join("; ", changes);
             if (summary.Length > 2000) summary = summary.Substring(0, 1997) + "..."; // Increased limit or reliance on nvarchar(max)
-            
+
             auditEntry.Summary = string.IsNullOrWhiteSpace(summary) ? $"{entry.State} {auditEntry.Entity}" : summary;
 
             auditEntries.Add(auditEntry);
@@ -302,17 +302,17 @@ public partial class RentACarDbContext : DbContext
     private object MaskSensitiveData(string key, object value)
     {
         if (value == null) return null;
-        
+
         var lowerKey = key.ToLower();
-        if (lowerKey.Contains("password") || 
-            lowerKey.Contains("cvv") || 
-            lowerKey.Contains("token") || 
+        if (lowerKey.Contains("password") ||
+            lowerKey.Contains("cvv") ||
+            lowerKey.Contains("token") ||
             lowerKey.Contains("secret") ||
             lowerKey.Contains("cardnumber")) // Partial mask for card?
         {
             return "***MASKED***";
         }
-        
+
         return value;
     }
 
@@ -336,7 +336,7 @@ public partial class RentACarDbContext : DbContext
         }
 
         await this.AuditLogs.AddRangeAsync(auditEntries);
-        await base.SaveChangesAsync(); 
+        await base.SaveChangesAsync();
     }
 
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);

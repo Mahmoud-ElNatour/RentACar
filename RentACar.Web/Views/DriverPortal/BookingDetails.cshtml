@@ -8,12 +8,21 @@
         backdrop-filter: blur(12px);
         border: 1px solid rgba(255, 255, 255, 0.05);
     }
+
     .pulse-live {
         animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
     }
-    @keyframes pulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.4; }
+
+    @@keyframes pulse {
+
+        0%,
+        100% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.4;
+        }
     }
 </style>
 
@@ -27,11 +36,13 @@
             </div>
             <div class="flex flex-wrap justify-between items-end gap-4 py-2">
                 <div class="flex flex-col gap-1">
-                    <h1 class="text-white text-4xl font-black leading-tight tracking-[-0.033em]">Booking Details &amp; Tracking</h1>
+                    <h1 class="text-white text-4xl font-black leading-tight tracking-[-0.033em]">Booking Details &amp;
+                        Tracking</h1>
                     <p class="text-white/60 text-base">Real-time trip management and live updates.</p>
                 </div>
                 <div class="flex gap-3">
-                    <span class="px-3 py-1 rounded-full bg-primary/20 text-primary text-xs font-bold border border-primary/30 uppercase tracking-widest">@Model.BookingStatus</span>
+                    <span
+                        class="px-3 py-1 rounded-full bg-primary/20 text-primary text-xs font-bold border border-primary/30 uppercase tracking-widest">@Model.BookingStatus</span>
                 </div>
             </div>
         </div>
@@ -41,7 +52,8 @@
                 <div class="flex-1 space-y-3">
                     <div>
                         <h2 class="text-2xl font-bold text-white leading-none mb-1">@Model.CarName</h2>
-                        <p class="text-white/60 font-medium">Plate: <span class="text-primary/80">@Model.CarPlate</span></p>
+                        <p class="text-white/60 font-medium">Plate: <span class="text-primary/80">@Model.CarPlate</span>
+                        </p>
                     </div>
                     <div class="text-white/60">
                         Pickup: @Model.PickupAddress
@@ -52,7 +64,7 @@
                     </div>
                 </div>
                 <div class="w-full md:w-64 h-36 bg-center bg-no-repeat bg-cover rounded-xl shadow-inner border border-white/5"
-                     style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCYipjA8bC8dQm3Ku-lVmnpUGAspp5jNQtmP7FjP6T9o86C20SRvkZvtV_rkntA51xx-hBS8kvvJ-uKdfQGQ5HuuOzG44-taJV2Mk8GyWlZ3M6fM-2oKnruMZQrdr_xz1tgF6HLCsqglhf3T3RREBZBycw_vdEemSzx3nkaDI8B4kKyfKOmL8UaGZEfnTL9ttHZZUA2F-ztuoI1_BGdayX8VjWIVctn-h_hr7eXVc5opbZl-C8zUZpOAHRLYn5j-Y1uB31Bp4C8YfGW");'>
+                    style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCYipjA8bC8dQm3Ku-lVmnpUGAspp5jNQtmP7FjP6T9o86C20SRvkZvtV_rkntA51xx-hBS8kvvJ-uKdfQGQ5HuuOzG44-taJV2Mk8GyWlZ3M6fM-2oKnruMZQrdr_xz1tgF6HLCsqglhf3T3RREBZBycw_vdEemSzx3nkaDI8B4kKyfKOmL8UaGZEfnTL9ttHZZUA2F-ztuoI1_BGdayX8VjWIVctn-h_hr7eXVc5opbZl-C8zUZpOAHRLYn5j-Y1uB31Bp4C8YfGW");'>
                 </div>
             </div>
         </div>
@@ -77,9 +89,11 @@
 
         <div class="glass-card rounded-xl p-8 border border-primary/10 shadow-2xl relative overflow-hidden">
             <div class="absolute top-0 right-0 p-4">
-                <div class="flex items-center gap-2 bg-green-500/10 px-3 py-1.5 rounded-full border border-green-500/20">
+                <div
+                    class="flex items-center gap-2 bg-green-500/10 px-3 py-1.5 rounded-full border border-green-500/20">
                     <div class="size-2 rounded-full bg-green-500 pulse-live"></div>
-                    <span class="text-green-500 text-[10px] font-black tracking-widest uppercase" id="trackingStatus">Live: Not started</span>
+                    <span class="text-green-500 text-[10px] font-black tracking-widest uppercase"
+                        id="trackingStatus">Live: Not started</span>
                 </div>
             </div>
             <div class="flex flex-col items-center text-center max-w-md mx-auto gap-8">
@@ -88,12 +102,15 @@
                     <p class="text-white/50 text-sm">Start tracking to share your live location with the customer.</p>
                 </div>
                 <div class="flex flex-col sm:flex-row gap-4 w-full">
-                    <button id="startTracking" class="flex-[2] h-16 flex items-center justify-center rounded-xl bg-primary text-background-dark text-lg font-black tracking-wider shadow-[0_0_25px_-5px_#f4c325] hover:brightness-110 transition-all">
+                    <button id="startTracking"
+                        class="flex-[2] h-16 flex items-center justify-center rounded-xl bg-primary text-background-dark text-lg font-black tracking-wider shadow-[0_0_25px_-5px_#f4c325] hover:brightness-110 transition-all">
                         <span class="material-symbols-outlined mr-3 font-black text-2xl">sensors</span>
                         START TRACKING
                     </button>
-                    <button id="stopTracking" class="flex-1 h-16 flex items-center justify-center rounded-xl border-2 border-red-500/30 bg-red-500/5 text-red-500 font-bold hover:bg-red-500/10 transition-all group">
-                        <span class="material-symbols-outlined mr-2 group-hover:rotate-180 transition-transform">stop_circle</span>
+                    <button id="stopTracking"
+                        class="flex-1 h-16 flex items-center justify-center rounded-xl border-2 border-red-500/30 bg-red-500/5 text-red-500 font-bold hover:bg-red-500/10 transition-all group">
+                        <span
+                            class="material-symbols-outlined mr-2 group-hover:rotate-180 transition-transform">stop_circle</span>
                         STOP
                     </button>
                 </div>
