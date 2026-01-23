@@ -100,7 +100,7 @@ namespace RentACar.Web.Controllers
         public async Task<IActionResult> Delete(string key)
         {
             await _templateManager.DeleteTemplateByKeyAsync(key);
-            return Ok(new { success = true });
+            return RedirectToAction("EmailServicesHub", "EmailServices", new { area = "Admin" });
         }
 
         // Assuming ToggleActive might be called by ID still or Key. 
