@@ -2,91 +2,91 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using RentACar.Core.Constants;
+using Microsoft.EntityFrameworkCore;
+using RentACar.Application.DTOs;
 using RentACar.Core.Entities;
-using RentACar.Core.Repositories;
+using RentACar.Infrastructure.Data;
 
 namespace RentACar.Application.Managers
 {
     public class EmailTemplateManager
     {
-        private readonly IEmailTemplateRepository _emailTemplateRepository;
+        private readonly RentACarDbContext _context;
 
-        public EmailTemplateManager(IEmailTemplateRepository emailTemplateRepository)
+        public EmailTemplateManager(RentACarDbContext context)
         {
-            _emailTemplateRepository = emailTemplateRepository;
+            _context = context;
         }
 
         public async Task<List<EmailTemplate>> GetAllTemplatesAsync()
         {
-            var templates = await _emailTemplateRepository.GetAllAsync();
-            return templates.OrderBy(t => t.Category).ThenBy(t => t.Name).ToList();
-        }
-
-        public async Task<EmailTemplate> GetTemplateByKeyAsync(string key)
-        {
-            return await _emailTemplateRepository.GetByKeyAsync(key);
+            return await _context.EmailTemplates
+                .OrderBy(t => t.Category)
+                .ThenBy(t => t.Name)
+                .ToListAsync();
         }
 
         public async Task<EmailTemplate> GetTemplateByIdAsync(int id)
         {
-            return await _emailTemplateRepository.GetByIdAsync(id);
+            return await _context.EmailTemplates.FindAsync(id);
         }
 
-        public async Task UpdateTemplateAsync(EmailTemplate template)
+        public async Task<EmailTemplate> GetTemplateByKeyAsync(string key)
         {
-            await _emailTemplateRepository.UpdateAsync(template);
+            return await _context.EmailTemplates
+                .FirstOrDefaultAsync(t => t.TemplateKey == key);
         }
 
-        public async Task CreateTemplateAsync(EmailTemplate template)
+        public async Task<int> CreateTemplateAsync(EmailTemplate template, string userId)
         {
-            // Ensure ID is 0 so EF knows it's new, though usually it is by default
-            template.Id = 0;
+            // Ensure unique key
+            if (await _context.EmailTemplates.AnyAsync(t => t.TemplateKey == template.TemplateKey))
+                throw new Exception($"Template Key '{template.TemplateKey}' already exists.");
+
             template.UpdatedAt = DateTime.UtcNow;
+            template.UpdatedByUserId = userId;
             
-            // Check if key exists? For now assume controller handles or unique constraint throws
-            await _emailTemplateRepository.AddAsync(template);
+            _context.EmailTemplates.Add(template);
+            await _context.SaveChangesAsync();
+            return template.Id;
         }
 
-        public async Task ResetTemplateToDefaultAsync(string key)
+        public async Task UpdateTemplateAsync(EmailTemplate template, string userId)
         {
-            var template = await GetTemplateByKeyAsync(key);
-            if (template == null) return;
+            var existing = await _context.EmailTemplates.FindAsync(template.Id);
+            if (existing == null) throw new Exception("Template not found");
 
-            // Define defaults
-            string defaultSubject = "";
-            string defaultBody = "";
+            existing.Name = template.Name;
+            existing.Subject = template.Subject;
+            existing.Body = template.Body;
+            existing.Category = template.Category;
+            existing.UpdatedAt = DateTime.UtcNow;
+            existing.UpdatedByUserId = userId;
+            // Key is generally not editable to prevent breaking code references, 
+            // strictly mostly strictly internal keys.
 
-            switch (key)
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task DeleteTemplateAsync(int id)
+        {
+            var t = await _context.EmailTemplates.FindAsync(id);
+            if (t != null)
             {
-                case EmailTemplateKeys.BookingConfirmation:
-                    defaultSubject = "Your Reservation #{{BookingRef}} is Confirmed";
-                    defaultBody = "<h1>Confirmed</h1><p>Dear {{CustomerName}},</p><p>Your reservation {{BookingRef}} is confirmed.</p>";
-                    break;
-                case EmailTemplateKeys.PaymentReminder:
-                    defaultSubject = "Payment Reminder: Invoice #{{InvoiceId}}";
-                    defaultBody = "<p>Dear {{CustomerName}},</p><p>Please pay your invoice.</p>";
-                    break;
-                 // Add cases for other keys as needed
-                default:
-                    defaultSubject = "New Notification";
-                    defaultBody = "<p>Notification content.</p>";
-                    break;
+                _context.EmailTemplates.Remove(t);
+                await _context.SaveChangesAsync();
             }
-
-            template.Subject = defaultSubject;
-            template.Body = defaultBody;
-            template.UpdatedAt = DateTime.UtcNow;
-            
-            await UpdateTemplateAsync(template);
         }
-
-        public async Task DeleteTemplateAsync(string key)
+        
+        public async Task ToggleActiveAsync(int id, string userId)
         {
-            var template = await _emailTemplateRepository.GetByKeyAsync(key);
-            if (template != null)
+            var t = await _context.EmailTemplates.FindAsync(id);
+            if (t != null)
             {
-                await _emailTemplateRepository.DeleteAsync(template);
+                t.IsActive = !t.IsActive;
+                t.UpdatedAt = DateTime.UtcNow;
+                t.UpdatedByUserId = userId;
+                await _context.SaveChangesAsync();
             }
         }
     }

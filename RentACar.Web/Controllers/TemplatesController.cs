@@ -1,110 +1,114 @@
+using System;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using RentACar.Application.Managers;
 using RentACar.Core.Entities;
-using System.Threading.Tasks;
-using System;
 
 namespace RentACar.Web.Controllers
 {
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Employee")]
     [Route("Admin/EmailServices/Templates")]
     public class TemplatesController : Controller
     {
-        private readonly EmailTemplateManager _emailTemplateManager;
+        private readonly EmailTemplateManager _templateManager;
         private readonly UserManager<IdentityUser> _userManager;
 
-        public TemplatesController(EmailTemplateManager emailTemplateManager, UserManager<IdentityUser> userManager)
+        public TemplatesController(EmailTemplateManager templateManager, UserManager<IdentityUser> userManager)
         {
-            _emailTemplateManager = emailTemplateManager;
+            _templateManager = templateManager;
             _userManager = userManager;
         }
 
         [HttpGet("")]
         public async Task<IActionResult> Index()
         {
-            var templates = await _emailTemplateManager.GetAllTemplatesAsync();
+            var templates = await _templateManager.GetAllTemplatesAsync();
             return View("~/Views/EmailServices/Templates/Index.cshtml", templates);
         }
 
         [HttpGet("Create")]
         public IActionResult Create()
         {
-            return View("~/Views/EmailServices/Templates/Create.cshtml", new EmailTemplate { IsActive = true });
+            return View("~/Views/EmailServices/Templates/Create.cshtml");
         }
 
         [HttpPost("Create")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(EmailTemplate model)
+        public async Task<IActionResult> Create(EmailTemplate template)
         {
-            // Simple validation
-            if (string.IsNullOrWhiteSpace(model.TemplateKey) || string.IsNullOrWhiteSpace(model.Name))
+            if (!ModelState.IsValid)
             {
-                ModelState.AddModelError("", "Key and Name are required");
-                return View("~/Views/EmailServices/Templates/Create.cshtml", model);
+                return View("~/Views/EmailServices/Templates/Create.cshtml", template);
             }
 
-            var existing = await _emailTemplateManager.GetTemplateByKeyAsync(model.TemplateKey);
-            if (existing != null)
+            try
             {
-                ModelState.AddModelError("TemplateKey", "This key already exists.");
-                return View("~/Views/EmailServices/Templates/Create.cshtml", model);
+                var userId = _userManager.GetUserId(User);
+                 // Normalize key if needed
+                template.TemplateKey = template.TemplateKey.Trim().Replace(" ", "_");
+                
+                await _templateManager.CreateTemplateAsync(template, userId);
+                return RedirectToAction("Index");
             }
-
-            model.UpdatedAt = DateTime.UtcNow;
-            model.UpdatedByUserId = _userManager.GetUserId(User) ?? string.Empty;
-
-            await _emailTemplateManager.CreateTemplateAsync(model);
-
-            return RedirectToAction(nameof(Index));
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", ex.Message);
+                return View("~/Views/EmailServices/Templates/Create.cshtml", template);
+            }
         }
 
-        [HttpGet("Edit/{key}")]
-        public async Task<IActionResult> Edit(string key)
+        [HttpGet("Edit/{id}")]
+        public async Task<IActionResult> Edit(int id)
         {
-            var template = await _emailTemplateManager.GetTemplateByKeyAsync(key);
+            var template = await _templateManager.GetTemplateByIdAsync(id);
             if (template == null) return NotFound();
+
             return View("~/Views/EmailServices/Templates/Edit.cshtml", template);
         }
 
-        [HttpPost("Edit/{key}")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(string key, EmailTemplate model)
+        [HttpPost("Edit/{id}")]
+        public async Task<IActionResult> Edit(int id, EmailTemplate template)
         {
-            if (key != model.TemplateKey) return BadRequest();
-
-            var template = await _emailTemplateManager.GetTemplateByKeyAsync(key);
-            if (template == null) return NotFound();
-
-            template.Subject = model.Subject;
-            template.Body = model.Body;
-            template.Category = model.Category;
-            // Name and Key might be read-only ideally, but respecting the form
-            template.Name = model.Name;
-            template.IsActive = model.IsActive;
-            template.UpdatedAt = DateTime.UtcNow;
-            template.UpdatedByUserId = _userManager.GetUserId(User) ?? string.Empty;
-
-            await _emailTemplateManager.UpdateTemplateAsync(template);
-
-            // Redirect to list or stay on page with success message
-            // For now redirect to Index
-            return RedirectToAction(nameof(Index));
+             if (id != template.Id) return BadRequest();
+             
+             try 
+             {
+                 var userId = _userManager.GetUserId(User);
+                 await _templateManager.UpdateTemplateAsync(template, userId);
+                 return RedirectToAction("Index");
+             }
+             catch(Exception ex)
+             {
+                 ModelState.AddModelError("", ex.Message);
+                 return View("~/Views/EmailServices/Templates/Edit.cshtml", template);
+             }
         }
 
-        [HttpPost("Reset/{key}")]
-        public async Task<IActionResult> Reset(string key)
+        [HttpGet("Preview/{id}")]
+        public async Task<IActionResult> Preview(int id)
         {
-            await _emailTemplateManager.ResetTemplateToDefaultAsync(key);
-            return RedirectToAction(nameof(Edit), new { key });
+             var template = await _templateManager.GetTemplateByIdAsync(id);
+             if (template == null) return NotFound();
+             
+             // In a real scenario, we might inject sample data here for placeholders
+             // But for now, just show the body
+             return View("~/Views/EmailServices/Templates/Preview.cshtml", template);
         }
 
-        [HttpPost("Delete/{key}")]
-        public async Task<IActionResult> Delete(string key)
+        [HttpPost("Delete/{id}")]
+        public async Task<IActionResult> Delete(int id)
         {
-            await _emailTemplateManager.DeleteTemplateAsync(key);
-            return RedirectToAction(nameof(Index));
+            await _templateManager.DeleteTemplateAsync(id);
+            return Ok(new { success = true });
+        }
+
+        [HttpPost("ToggleActive/{id}")]
+        public async Task<IActionResult> ToggleActive(int id)
+        {
+            var userId = _userManager.GetUserId(User);
+            await _templateManager.ToggleActiveAsync(id, userId);
+            return Ok(new { success = true });
         }
     }
 }
