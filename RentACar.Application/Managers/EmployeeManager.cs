@@ -17,17 +17,19 @@ namespace RentACar.Application.Managers
         private readonly UserManager<IdentityUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IEmployeeRepository _employeeRepository;
+        private readonly IDriverRepository _driverRepository;
         private readonly IMapper _mapper;
         private readonly CustomerManager _customerManager; // To access CustomerManager methods
         private readonly ILogger<EmployeeManager> _logger;
         private readonly IBookingRepository _bookingRepository;
         private readonly AuditLogManager _auditLogManager;
 
-        public EmployeeManager(UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager, IEmployeeRepository employeeRepository, IBookingRepository bookingRepository, IMapper mapper, CustomerManager customerManager, ILogger<EmployeeManager> logger, AuditLogManager auditLogManager)
+        public EmployeeManager(UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager, IEmployeeRepository employeeRepository, IDriverRepository driverRepository, IBookingRepository bookingRepository, IMapper mapper, CustomerManager customerManager, ILogger<EmployeeManager> logger, AuditLogManager auditLogManager)
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _employeeRepository = employeeRepository;
+            _driverRepository = driverRepository;
             _mapper = mapper;
             _customerManager = customerManager;
             _logger = logger;
@@ -64,18 +66,33 @@ namespace RentACar.Application.Managers
 
             if (result.Succeeded)
             {
-                if (!await _roleManager.RoleExistsAsync("Employee"))
+                var roles = createDto.Roles?.Distinct(StringComparer.OrdinalIgnoreCase).ToList() ?? new List<string>();
+                if (!roles.Any())
                 {
-                    await _roleManager.CreateAsync(new IdentityRole("Employee"));
+                    roles.Add("Employee");
                 }
 
-                await _userManager.AddToRoleAsync(user, "Employee");
+                foreach (var role in roles)
+                {
+                    if (!await _roleManager.RoleExistsAsync(role))
+                    {
+                        await _roleManager.CreateAsync(new IdentityRole(role));
+                    }
+                }
+
+                await _userManager.AddToRolesAsync(user, roles);
 
                 var employee = _mapper.Map<Employee>(createDto);
                 employee.IsActive = createDto.IsActive;
                 employee.aspNetUserId = user.Id;
                 await _employeeRepository.AddAsync(employee);
                 _logger.LogInformation("Employee created with id {Id}", employee.EmployeeId);
+
+                if (roles.Any(r => string.Equals(r, "Driver", StringComparison.OrdinalIgnoreCase)))
+                {
+                    var driver = await CreateOrUpdateDriverAsync(employee, createDto);
+                    _logger.LogInformation("Driver extension created for employee {Id}", employee.EmployeeId);
+                }
 
                 await _auditLogManager.LogAsync("Create", "Employee", employee.EmployeeId.ToString(), $"Created new employee: {employee.Name} ({createDto.Email})");
 
@@ -103,13 +120,25 @@ namespace RentACar.Application.Managers
         public async Task<EmployeeDto?> GetEmployeeById(int id)
         {
             var employee = await _employeeRepository.GetByIdAsync(id);
-            return _mapper.Map<EmployeeDto>(employee);
+            if (employee == null)
+            {
+                return null;
+            }
+
+            var dto = _mapper.Map<EmployeeDto>(employee);
+            await EnrichEmployeeDtoAsync(dto, employee);
+            return dto;
         }
 
         public async Task<List<EmployeeDto>> GetAllEmployees()
         {
             var employees = await _employeeRepository.GetAllAsync();
-            return _mapper.Map<List<EmployeeDto>>(employees);
+            var dtos = _mapper.Map<List<EmployeeDto>>(employees);
+            for (var i = 0; i < employees.Count; i++)
+            {
+                await EnrichEmployeeDtoAsync(dtos[i], employees[i]);
+            }
+            return dtos;
         }
 
         public async Task UpdateEmployee(EmployeeDto employeeDto)
@@ -139,12 +168,59 @@ namespace RentACar.Application.Managers
                     await _userManager.UpdateAsync(user);
                 }
 
+                var selectedRoles = employeeDto.Roles?.Distinct(StringComparer.OrdinalIgnoreCase).ToList() ?? new List<string>();
+                if (!selectedRoles.Any())
+                {
+                    selectedRoles.Add("Employee");
+                }
+
+                foreach (var role in selectedRoles)
+                {
+                    if (!await _roleManager.RoleExistsAsync(role))
+                    {
+                        await _roleManager.CreateAsync(new IdentityRole(role));
+                    }
+                }
+
+                if (user != null)
+                {
+                    var currentRoles = await _userManager.GetRolesAsync(user);
+                    await _userManager.RemoveFromRolesAsync(user, currentRoles);
+                    await _userManager.AddToRolesAsync(user, selectedRoles);
+                }
+
                 employeeEntity.Name = employeeDto.Name;
                 employeeEntity.Salary = employeeDto.Salary;
                 employeeEntity.Address = employeeDto.Address;
                 employeeEntity.IsActive = employeeDto.IsActive;
 
                 await _employeeRepository.UpdateAsync(employeeEntity);
+
+                var isDriverSelected = selectedRoles.Any(r => string.Equals(r, "Driver", StringComparison.OrdinalIgnoreCase));
+                if (isDriverSelected)
+                {
+                    await CreateOrUpdateDriverAsync(employeeEntity, employeeDto);
+                }
+                else
+                {
+                    var existingDriver = await _driverRepository.GetByEmployeeIdAsync(employeeEntity.EmployeeId);
+                    if (existingDriver != null)
+                    {
+                        await _driverRepository.DeleteAsync(existingDriver.DriverId);
+                    }
+                }
+
+                if (!employeeEntity.IsActive)
+                {
+                    var driver = await _driverRepository.GetByEmployeeIdAsync(employeeEntity.EmployeeId);
+                    if (driver != null && driver.IsActive)
+                    {
+                        driver.IsActive = false;
+                        driver.UpdatedAt = DateTime.UtcNow;
+                        await _driverRepository.UpdateAsync(driver);
+                    }
+                }
+
                 await _auditLogManager.LogAsync("Update", "Employee", employeeDto.EmployeeId.ToString(), $"Updated employee profile: {employeeDto.Name}");
             }
             else
@@ -178,6 +254,14 @@ namespace RentACar.Application.Managers
                     await _employeeRepository.UpdateAsync(employee);
                 }
 
+                var driver = await _driverRepository.GetByEmployeeIdAsync(employee.EmployeeId);
+                if (driver != null && driver.IsActive)
+                {
+                    driver.IsActive = false;
+                    driver.UpdatedAt = DateTime.UtcNow;
+                    await _driverRepository.UpdateAsync(driver);
+                }
+
                 if (user != null)
                 {
                     user.LockoutEnabled = true;
@@ -191,6 +275,12 @@ namespace RentACar.Application.Managers
             if (user != null)
             {
                 await _userManager.DeleteAsync(user);
+            }
+
+            var existingDriver = await _driverRepository.GetByEmployeeIdAsync(employee.EmployeeId);
+            if (existingDriver != null)
+            {
+                await _driverRepository.DeleteAsync(existingDriver.DriverId);
             }
 
             await _employeeRepository.DeleteAsync(id);
@@ -229,6 +319,14 @@ namespace RentACar.Application.Managers
                 {
                     employee.IsActive = isActive;
                     await _employeeRepository.UpdateAsync(employee);
+
+                    var driver = await _driverRepository.GetByEmployeeIdAsync(employee.EmployeeId);
+                    if (driver != null)
+                    {
+                        driver.IsActive = isActive;
+                        driver.UpdatedAt = DateTime.UtcNow;
+                        await _driverRepository.UpdateAsync(driver);
+                    }
                     return true;
                 }
             }
@@ -287,6 +385,14 @@ namespace RentACar.Application.Managers
             {
                 employee.IsActive = isActive;
                 await _employeeRepository.UpdateAsync(employee);
+
+                var driver = await _driverRepository.GetByEmployeeIdAsync(employee.EmployeeId);
+                if (driver != null)
+                {
+                    driver.IsActive = isActive;
+                    driver.UpdatedAt = DateTime.UtcNow;
+                    await _driverRepository.UpdateAsync(driver);
+                }
             }
         }
 
@@ -312,24 +418,158 @@ namespace RentACar.Application.Managers
             foreach (var emp in employees)
             {
                 var user = await _userManager.FindByIdAsync(emp.aspNetUserId);
-                var roles = await _userManager.GetRolesAsync(user);
+                var roles = user != null ? await _userManager.GetRolesAsync(user) : new List<string>();
+                var driver = await _driverRepository.GetByEmployeeIdAsync(emp.EmployeeId);
 
                 var displayDto = new EmployeeDisplayDto
                 {
                     EmployeeId = emp.EmployeeId,
                     Name = emp.Name,
-                    Email = user.Email,
-                    PhoneNumber = user.PhoneNumber,
+                    Email = user?.Email ?? string.Empty,
+                    PhoneNumber = user?.PhoneNumber ?? string.Empty,
                     Salary = emp.Salary,
                     Address = emp.Address,
                     IsActive = emp.IsActive,
-                    Role = roles.FirstOrDefault() ?? "N/A"
+                    Roles = roles.ToList(),
+                    IsDriver = roles.Any(r => string.Equals(r, "Driver", StringComparison.OrdinalIgnoreCase)),
+                    DriverId = driver?.DriverId,
+                    DriverCode = driver?.DriverCode,
+                    DriverFullName = driver?.FullName,
+                    DriverPhone = driver?.Phone,
+                    DriverEmail = driver?.Email,
+                    DriverRating = driver?.Rating,
+                    DriverLicenseNumber = driver?.LicenseNumber,
+                    DriverLicenseExpiry = driver?.LicenseExpiry,
+                    DriverLanguages = driver?.Languages,
+                    DriverIsActive = driver != null ? emp.IsActive && driver.IsActive : null,
+                    DriverCreatedAt = driver?.CreatedAt,
+                    DriverUpdatedAt = driver?.UpdatedAt
                 };
 
                 result.Add(displayDto);
             }
 
             return result;
+        }
+
+        private async Task EnrichEmployeeDtoAsync(EmployeeDto dto, Employee employee)
+        {
+            var user = await _userManager.FindByIdAsync(employee.aspNetUserId);
+            dto.Roles = user != null
+                ? (await _userManager.GetRolesAsync(user)).ToList()
+                : new List<string>();
+
+            var driver = await _driverRepository.GetByEmployeeIdAsync(employee.EmployeeId);
+            if (driver != null)
+            {
+                dto.DriverId = driver.DriverId;
+                dto.DriverCode = driver.DriverCode;
+                dto.DriverFullName = driver.FullName;
+                dto.DriverPhone = driver.Phone;
+                dto.DriverEmail = driver.Email;
+                dto.DriverRating = driver.Rating;
+                dto.DriverLicenseNumber = driver.LicenseNumber;
+                dto.DriverLicenseExpiry = driver.LicenseExpiry;
+                dto.DriverLanguages = driver.Languages;
+                dto.DriverNotes = driver.Notes;
+                dto.DriverIsActive = employee.IsActive && driver.IsActive;
+                dto.DriverCreatedAt = driver.CreatedAt;
+                dto.DriverUpdatedAt = driver.UpdatedAt;
+            }
+        }
+
+        private async Task<Driver> CreateOrUpdateDriverAsync(Employee employee, EmployeeCreateDTO dto)
+        {
+            var driver = await _driverRepository.GetByEmployeeIdAsync(employee.EmployeeId);
+            var isNew = driver == null;
+            driver ??= new Driver
+            {
+                CreatedAt = DateTime.UtcNow,
+                DriverCode = await GenerateDriverCodeAsync(dto.DriverCode)
+            };
+
+            driver.EmployeeId = employee.EmployeeId;
+            driver.AspNetUserId = employee.aspNetUserId;
+            if (!string.IsNullOrWhiteSpace(dto.DriverCode) && dto.DriverCode != driver.DriverCode)
+            {
+                driver.DriverCode = await GenerateDriverCodeAsync(dto.DriverCode);
+            }
+            driver.FullName = string.IsNullOrWhiteSpace(dto.DriverFullName) ? employee.Name : dto.DriverFullName;
+            driver.Phone = string.IsNullOrWhiteSpace(dto.DriverPhone) ? dto.PhoneNumber : dto.DriverPhone;
+            driver.Email = string.IsNullOrWhiteSpace(dto.DriverEmail) ? dto.Email : dto.DriverEmail;
+            driver.Rating = dto.DriverRating;
+            driver.LicenseNumber = dto.DriverLicenseNumber;
+            driver.LicenseExpiry = dto.DriverLicenseExpiry;
+            driver.Languages = dto.DriverLanguages;
+            driver.Notes = dto.DriverNotes;
+            driver.IsActive = employee.IsActive && (dto.DriverIsActive ?? true);
+            driver.UpdatedAt = DateTime.UtcNow;
+
+            if (isNew)
+            {
+                await _driverRepository.AddAsync(driver);
+            }
+            else
+            {
+                await _driverRepository.UpdateAsync(driver);
+            }
+
+            return driver;
+        }
+
+        private async Task<Driver> CreateOrUpdateDriverAsync(Employee employee, EmployeeDto dto)
+        {
+            var driver = await _driverRepository.GetByEmployeeIdAsync(employee.EmployeeId);
+            var isNew = driver == null;
+            driver ??= new Driver
+            {
+                CreatedAt = DateTime.UtcNow,
+                DriverCode = await GenerateDriverCodeAsync(dto.DriverCode)
+            };
+
+            driver.EmployeeId = employee.EmployeeId;
+            driver.AspNetUserId = employee.aspNetUserId;
+            if (!string.IsNullOrWhiteSpace(dto.DriverCode) && dto.DriverCode != driver.DriverCode)
+            {
+                driver.DriverCode = await GenerateDriverCodeAsync(dto.DriverCode);
+            }
+            driver.FullName = string.IsNullOrWhiteSpace(dto.DriverFullName) ? employee.Name : dto.DriverFullName;
+            driver.Phone = string.IsNullOrWhiteSpace(dto.DriverPhone) ? dto.PhoneNumber : dto.DriverPhone;
+            driver.Email = string.IsNullOrWhiteSpace(dto.DriverEmail) ? dto.Email : dto.DriverEmail;
+            driver.Rating = dto.DriverRating;
+            driver.LicenseNumber = dto.DriverLicenseNumber;
+            driver.LicenseExpiry = dto.DriverLicenseExpiry;
+            driver.Languages = dto.DriverLanguages;
+            driver.Notes = dto.DriverNotes;
+            driver.IsActive = employee.IsActive && (dto.DriverIsActive ?? true);
+            driver.UpdatedAt = DateTime.UtcNow;
+
+            if (isNew)
+            {
+                await _driverRepository.AddAsync(driver);
+            }
+            else
+            {
+                await _driverRepository.UpdateAsync(driver);
+            }
+
+            return driver;
+        }
+
+        private async Task<string> GenerateDriverCodeAsync(string? requestedCode)
+        {
+            if (!string.IsNullOrWhiteSpace(requestedCode) && !await _driverRepository.DriverCodeExistsAsync(requestedCode))
+            {
+                return requestedCode;
+            }
+
+            string code;
+            do
+            {
+                code = $"DR-{Random.Shared.Next(1000, 9999)}";
+            } while (await _driverRepository.DriverCodeExistsAsync(code));
+
+            return code;
         }
 
     }
@@ -341,6 +581,20 @@ namespace RentACar.Application.Managers
                 .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.User.Email))
                 .ForMember(dest => dest.username, opt => opt.MapFrom(src => src.User.UserName))
                 .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.User.PhoneNumber))
+                .ForMember(dest => dest.Roles, opt => opt.Ignore())
+                .ForMember(dest => dest.DriverId, opt => opt.Ignore())
+                .ForMember(dest => dest.DriverCode, opt => opt.Ignore())
+                .ForMember(dest => dest.DriverFullName, opt => opt.Ignore())
+                .ForMember(dest => dest.DriverPhone, opt => opt.Ignore())
+                .ForMember(dest => dest.DriverEmail, opt => opt.Ignore())
+                .ForMember(dest => dest.DriverRating, opt => opt.Ignore())
+                .ForMember(dest => dest.DriverLicenseNumber, opt => opt.Ignore())
+                .ForMember(dest => dest.DriverLicenseExpiry, opt => opt.Ignore())
+                .ForMember(dest => dest.DriverLanguages, opt => opt.Ignore())
+                .ForMember(dest => dest.DriverNotes, opt => opt.Ignore())
+                .ForMember(dest => dest.DriverIsActive, opt => opt.Ignore())
+                .ForMember(dest => dest.DriverCreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.DriverUpdatedAt, opt => opt.Ignore())
                 .ReverseMap()
                 .ForMember(dest => dest.User, opt => opt.Ignore()); // Prevent circular reference
 

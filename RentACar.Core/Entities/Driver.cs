@@ -16,6 +16,9 @@ public partial class Driver
     [StringLength(450)]
     public string AspNetUserId { get; set; } = null!;
 
+    [Column("employeeID")]
+    public int EmployeeId { get; set; }
+
     [Column("driverCode")]
     [StringLength(20)]
     public string DriverCode { get; set; } = null!;
@@ -61,6 +64,10 @@ public partial class Driver
     [ForeignKey("AspNetUserId")]
     [InverseProperty("Drivers")]
     public virtual AspNetUser User { get; set; } = null!;
+
+    [ForeignKey("EmployeeId")]
+    [InverseProperty("Driver")]
+    public virtual Employee Employee { get; set; } = null!;
 
     [InverseProperty("Driver")]
     public virtual ICollection<Booking> Bookings { get; set; } = new List<Booking>();

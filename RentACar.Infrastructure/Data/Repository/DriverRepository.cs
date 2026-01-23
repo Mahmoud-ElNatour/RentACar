@@ -20,13 +20,23 @@ public class DriverRepository : IDriverRepository
     {
         return await _dbContext.Drivers
             .Include(d => d.User)
+            .Include(d => d.Employee)
             .FirstOrDefaultAsync(d => d.DriverId == id);
+    }
+
+    public async Task<Driver?> GetByEmployeeIdAsync(int employeeId)
+    {
+        return await _dbContext.Drivers
+            .Include(d => d.User)
+            .Include(d => d.Employee)
+            .FirstOrDefaultAsync(d => d.EmployeeId == employeeId);
     }
 
     public async Task<Driver?> GetByAspNetUserIdAsync(string aspNetUserId)
     {
         return await _dbContext.Drivers
             .Include(d => d.User)
+            .Include(d => d.Employee)
             .FirstOrDefaultAsync(d => d.AspNetUserId == aspNetUserId);
     }
 
@@ -34,6 +44,7 @@ public class DriverRepository : IDriverRepository
     {
         return await _dbContext.Drivers
             .Include(d => d.User)
+            .Include(d => d.Employee)
             .ToListAsync();
     }
 
@@ -41,8 +52,14 @@ public class DriverRepository : IDriverRepository
     {
         return await _dbContext.Drivers
             .Include(d => d.User)
-            .Where(d => d.IsActive)
+            .Include(d => d.Employee)
+            .Where(d => d.IsActive && d.Employee.IsActive)
             .ToListAsync();
+    }
+
+    public async Task<bool> DriverCodeExistsAsync(string driverCode)
+    {
+        return await _dbContext.Drivers.AnyAsync(d => d.DriverCode == driverCode);
     }
 
     public async Task AddAsync(Driver driver)
