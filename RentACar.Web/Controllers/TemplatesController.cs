@@ -31,12 +31,17 @@ namespace RentACar.Web.Controllers
         [HttpGet("Create")]
         public IActionResult Create()
         {
-            return View("~/Views/EmailServices/Templates/Create.cshtml");
+            return View("~/Views/EmailServices/Templates/Create.cshtml", new EmailTemplate());
         }
 
         [HttpPost("Create")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(EmailTemplate template)
         {
+            // Remove error for UpdatedByUser as it's set in manager
+            ModelState.Remove(nameof(template.UpdatedByUser));
+            ModelState.Remove(nameof(template.UpdatedByUserId));
+
             if (!ModelState.IsValid)
             {
                 return View("~/Views/EmailServices/Templates/Create.cshtml", template);
@@ -45,8 +50,8 @@ namespace RentACar.Web.Controllers
             try
             {
                 var userId = _userManager.GetUserId(User);
-                 // Normalize key if needed
-                template.TemplateKey = template.TemplateKey.Trim().Replace(" ", "_");
+                 // Normalize key
+                template.TemplateKey = template.TemplateKey?.Trim().Replace(" ", "_");
                 
                 await _templateManager.CreateTemplateAsync(template, userId);
                 return RedirectToAction("Index");
@@ -58,19 +63,23 @@ namespace RentACar.Web.Controllers
             }
         }
 
-        [HttpGet("Edit/{id}")]
-        public async Task<IActionResult> Edit(int id)
+        // Changed to use Key
+        [HttpGet("Edit/{key}")]
+        public async Task<IActionResult> Edit(string key)
         {
-            var template = await _templateManager.GetTemplateByIdAsync(id);
+            if (string.IsNullOrEmpty(key)) return NotFound();
+
+            var template = await _templateManager.GetTemplateByKeyAsync(key);
             if (template == null) return NotFound();
 
             return View("~/Views/EmailServices/Templates/Edit.cshtml", template);
         }
 
-        [HttpPost("Edit/{id}")]
-        public async Task<IActionResult> Edit(int id, EmailTemplate template)
+        [HttpPost("Edit/{key}")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(string key, EmailTemplate template)
         {
-             if (id != template.Id) return BadRequest();
+             if (key != template.TemplateKey) return BadRequest();
              
              try 
              {
@@ -85,24 +94,20 @@ namespace RentACar.Web.Controllers
              }
         }
 
-        [HttpGet("Preview/{id}")]
-        public async Task<IActionResult> Preview(int id)
-        {
-             var template = await _templateManager.GetTemplateByIdAsync(id);
-             if (template == null) return NotFound();
-             
-             // In a real scenario, we might inject sample data here for placeholders
-             // But for now, just show the body
-             return View("~/Views/EmailServices/Templates/Preview.cshtml", template);
-        }
+        // Removed Preview (handled in Edit view via JS)
 
-        [HttpPost("Delete/{id}")]
-        public async Task<IActionResult> Delete(int id)
+        [HttpPost("Delete/{key}")]
+        public async Task<IActionResult> Delete(string key)
         {
-            await _templateManager.DeleteTemplateAsync(id);
+            await _templateManager.DeleteTemplateByKeyAsync(key);
             return Ok(new { success = true });
         }
 
+        // Assuming ToggleActive might be called by ID still or Key. 
+        // Index view doesn't seem to implement ToggleActive in the new design provided, 
+        // but let's keep it safe or update if needed. 
+        // The user's new Index.cshtml REMOVED the toggle button, so we can leave it or adapt it.
+        // Let's keep it but ideally use Key for consistency if we updated JS, but user didn't include JS for toggle in their snippet.
         [HttpPost("ToggleActive/{id}")]
         public async Task<IActionResult> ToggleActive(int id)
         {

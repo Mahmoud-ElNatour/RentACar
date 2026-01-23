@@ -53,17 +53,16 @@ namespace RentACar.Application.Managers
 
         public async Task UpdateTemplateAsync(EmailTemplate template, string userId)
         {
-            var existing = await _context.EmailTemplates.FindAsync(template.Id);
+            var existing = await _context.EmailTemplates.FirstOrDefaultAsync(t => t.TemplateKey == template.TemplateKey);
             if (existing == null) throw new Exception("Template not found");
 
             existing.Name = template.Name;
             existing.Subject = template.Subject;
             existing.Body = template.Body;
             existing.Category = template.Category;
+            existing.IsActive = template.IsActive; // Support status update
             existing.UpdatedAt = DateTime.UtcNow;
             existing.UpdatedByUserId = userId;
-            // Key is generally not editable to prevent breaking code references, 
-            // strictly mostly strictly internal keys.
 
             await _context.SaveChangesAsync();
         }
@@ -86,6 +85,15 @@ namespace RentACar.Application.Managers
                 t.IsActive = !t.IsActive;
                 t.UpdatedAt = DateTime.UtcNow;
                 t.UpdatedByUserId = userId;
+                await _context.SaveChangesAsync();
+            }
+        }
+        public async Task DeleteTemplateByKeyAsync(string key)
+        {
+            var t = await _context.EmailTemplates.FirstOrDefaultAsync(x => x.TemplateKey == key);
+            if (t != null)
+            {
+                _context.EmailTemplates.Remove(t);
                 await _context.SaveChangesAsync();
             }
         }
