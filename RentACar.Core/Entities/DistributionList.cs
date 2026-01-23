@@ -22,9 +22,13 @@ namespace RentACar.Core.Entities
 
         public DateTime? UpdatedAt { get; set; }
 
-        public string CreatedByUserId { get; set; }
+        public string? CreatedByUserId { get; set; }
+        [ForeignKey("CreatedByUserId")]
+        public virtual AspNetUser? CreatedByUser { get; set; }
 
-        public string UpdatedByUserId { get; set; }
+        public string? UpdatedByUserId { get; set; }
+        [ForeignKey("UpdatedByUserId")]
+        public virtual AspNetUser? UpdatedByUser { get; set; }
 
         public virtual ICollection<DistributionListMember> Members { get; set; } = new List<DistributionListMember>();
         public virtual ICollection<DistributionListRule> Rules { get; set; } = new List<DistributionListRule>();

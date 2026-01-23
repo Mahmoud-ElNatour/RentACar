@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace RentACar.Core.Entities
 {
@@ -21,5 +22,8 @@ namespace RentACar.Core.Entities
         public DateTime? UpdatedAt { get; set; }
 
         public string CreatedByUserId { get; set; }
+        
+        [ForeignKey("CreatedByUserId")]
+        public virtual AspNetUser CreatedByUser { get; set; }
     }
 }

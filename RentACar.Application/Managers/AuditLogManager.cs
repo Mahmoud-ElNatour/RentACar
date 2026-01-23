@@ -98,9 +98,16 @@ namespace RentACar.Application.Managers
                     }
                 }
 
+                string? userId = null;
+                if (user != null && user.Identity?.IsAuthenticated == true)
+                {
+                     userId = _userManager.GetUserId(user);
+                }
+
                 var log = new AuditLog
                 {
                     Timestamp = DateTime.UtcNow,
+                    UserId = userId,
                     ActorName = actorName,
                     ActorRole = actorRole,
                     Action = action,

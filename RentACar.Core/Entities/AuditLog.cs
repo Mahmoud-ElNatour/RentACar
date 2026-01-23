@@ -13,6 +13,10 @@ namespace RentACar.Core.Entities
         [MaxLength(100)]
         public string ActorName { get; set; } = "System";
 
+        public string? UserId { get; set; }
+        [System.ComponentModel.DataAnnotations.Schema.ForeignKey("UserId")]
+        public virtual AspNetUser? User { get; set; }
+
         [MaxLength(50)]
         public string ActorRole { get; set; } = "Unknown";
 

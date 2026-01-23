@@ -41,7 +41,7 @@ namespace RentACar.Application.Managers
                 EmailType = emailType,
                 CreatedAt = DateTime.UtcNow,
                 Attempts = 1,
-                CreatedByUserId = userId ?? "System",
+                CreatedByUserId = string.IsNullOrEmpty(userId) ? null : userId,
                 TemplateKey = "",
                 LastError = "",
                 Status = "Pending"

@@ -26,7 +26,9 @@ namespace RentACar.Core.Entities
 
         public DateTime AddedAt { get; set; } = DateTime.UtcNow;
 
-        public string AddedByUserId { get; set; }
+        public string? AddedByUserId { get; set; }
+        [ForeignKey("AddedByUserId")]
+        public virtual AspNetUser? AddedByUser { get; set; }
 
         [ForeignKey("DistributionListId")]
         public virtual DistributionList DistributionList { get; set; }

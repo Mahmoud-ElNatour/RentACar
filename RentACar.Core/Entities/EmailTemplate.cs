@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace RentACar.Core.Entities
 {
@@ -28,6 +29,9 @@ namespace RentACar.Core.Entities
         public bool IsActive { get; set; } = true;
 
         public DateTime? UpdatedAt { get; set; }
-        public string UpdatedByUserId { get; set; }
+        public string? UpdatedByUserId { get; set; }
+        
+        [ForeignKey("UpdatedByUserId")]
+        public virtual AspNetUser? UpdatedByUser { get; set; }
     }
 }

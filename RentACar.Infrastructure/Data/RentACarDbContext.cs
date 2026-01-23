@@ -165,6 +165,50 @@ public partial class RentACarDbContext : DbContext
             entity.HasIndex(e => e.TemplateKey).IsUnique();
         });
 
+        // Foreign Key Configurations for User Content
+        modelBuilder.Entity<EmailDraft>()
+            .HasOne(d => d.CreatedByUser)
+            .WithMany()
+            .HasForeignKey(d => d.CreatedByUserId)
+            .OnDelete(DeleteBehavior.Cascade); // Drafts are personal, delete if user deleted
+
+        modelBuilder.Entity<DistributionList>()
+            .HasOne(d => d.CreatedByUser)
+            .WithMany()
+            .HasForeignKey(d => d.CreatedByUserId)
+            .OnDelete(DeleteBehavior.ClientSetNull); // Shared resource, keep list if user deleted
+
+        modelBuilder.Entity<DistributionList>()
+            .HasOne(d => d.UpdatedByUser)
+            .WithMany()
+            .HasForeignKey(d => d.UpdatedByUserId)
+            .OnDelete(DeleteBehavior.ClientSetNull);
+
+        modelBuilder.Entity<DistributionListMember>()
+            .HasOne(d => d.AddedByUser)
+            .WithMany()
+            .HasForeignKey(d => d.AddedByUserId)
+            .OnDelete(DeleteBehavior.ClientSetNull);
+
+        modelBuilder.Entity<EmailTemplate>()
+            .HasOne(d => d.UpdatedByUser)
+            .WithMany()
+            .HasForeignKey(d => d.UpdatedByUserId)
+            .OnDelete(DeleteBehavior.ClientSetNull);
+
+        // Logs - Preserve History
+        modelBuilder.Entity<EmailLog>()
+            .HasOne(d => d.CreatedByUser)
+            .WithMany()
+            .HasForeignKey(d => d.CreatedByUserId)
+            .OnDelete(DeleteBehavior.ClientSetNull);
+
+        modelBuilder.Entity<AuditLog>()
+            .HasOne(d => d.User)
+            .WithMany()
+            .HasForeignKey(d => d.UserId)
+            .OnDelete(DeleteBehavior.ClientSetNull);
+
         OnModelCreatingPartial(modelBuilder);
     }
 
@@ -207,9 +251,12 @@ public partial class RentACarDbContext : DbContext
             if (entry.Entity is AuditLog || entry.State == EntityState.Detached || entry.State == EntityState.Unchanged)
                 continue;
 
+            var userId = user?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
             var auditEntry = new AuditLog
             {
                 Timestamp = DateTime.UtcNow,
+                UserId = userId,
                 ActorName = userName,
                 ActorRole = userRole,
                 IpAddress = ipAddress,
