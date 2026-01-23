@@ -1,0 +1,534 @@
+@model RentACar.Web.ViewModels.EmailConfigurationCenterVM
+@{
+    ViewData["Title"] = "Email Configuration Center";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    
+    // Group Feature Configs by Category
+    var featuresByCategory = Model.FeatureConfigs.GroupBy(x => x.Category).ToDictionary(g => g.Key, g => g.ToList());
+}
+
+@section Styles {
+    <!-- Tailwind Config Injection for colors if not already in system -->
+    <script>
+      // Extending existing config if possible, or just add custom styles below
+      // Since we are in _Layout, we assume tailwind is loaded. 
+      // We will add the custom classes via style block.
+    </script>
+    <style>
+        .text-gold { color: #d4af37; }
+        .bg-gold { background-color: #d4af37; }
+        .border-gold { border-color: #d4af37; }
+        .shadow-gold\/10 { --tw-shadow-color: rgba(212, 175, 55, 0.1); }
+        .shadow-gold\/20 { --tw-shadow-color: rgba(212, 175, 55, 0.2); }
+        
+        .glass-card {
+            background: linear-gradient(135deg, rgba(30, 30, 30, 0.8), rgba(10, 10, 10, 0.9));
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(212, 175, 55, 0.15);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+        }
+        .gold-glow { box-shadow: 0 0 15px rgba(212, 175, 55, 0.3); }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(212, 175, 55, 0.3);
+            border-radius: 10px;
+        }
+        /* Utility for specialized colors if missing in base theme */
+        .bg-pure-black { background-color: #000000; }
+        
+        /* Modal Transitions */
+        .modal { transition: opacity 0.3s ease-in-out; }
+    </style>
+}
+
+<div class="max-w-[1600px] mx-auto px-8 py-10">
+
+ <form asp-action="Save" method="post" id="mainConfigForm">
+    <!-- Header -->
+    <header class="mb-10 flex justify-between items-center">
+      <div>
+        <h1 class="text-4xl font-black tracking-tighter text-white uppercase">Advanced Email Config</h1>
+        <p class="text-slate-400 mt-1">Final Complete Hub • Comprehensive control over providers, routing, and automated reminders</p>
+      </div>
+      <div class="flex items-center gap-4">
+        <div class="text-right">
+          <p class="text-[10px] uppercase tracking-[0.2em] text-gold font-bold">Engine Status</p>
+          <p class="text-xl font-mono text-white">SYSTEM ONLINE</p>
+        </div>
+        <div class="h-10 w-[1px] bg-white/10 mx-2"></div>
+      </div>
+    </header>
+
+    <div class="grid grid-cols-12 gap-8 items-start">
+
+      <!-- Main Column -->
+      <div class="col-span-9 space-y-8">
+
+        <!-- Master Switch -->
+        <div class="glass-card rounded-2xl p-6 border-gold/30 bg-gold/5">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-4">
+              <span class="material-symbols-outlined text-3xl text-gold">notifications_active</span>
+              <div>
+                <h3 class="text-lg font-bold text-white uppercase tracking-wider">Enable All Notification Emails</h3>
+                <p class="text-xs text-slate-400">Master switch for all outgoing communication triggers</p>
+              </div>
+            </div>
+            
+             <input type="hidden" asp-for="NotificationSettings.AllNotificationEmailsEnabled" id="AllNotificationEmailsEnabled_Hidden" />
+             <button type="button" class="material-symbols-outlined text-5xl @(Model.NotificationSettings.AllNotificationEmailsEnabled ? "text-gold" : "text-slate-600")" 
+                     onclick="toggleBoolean('AllNotificationEmailsEnabled_Hidden', this)">
+                 @(Model.NotificationSettings.AllNotificationEmailsEnabled ? "toggle_on" : "toggle_off")
+             </button>
+          </div>
+        </div>
+
+        <!-- System Health & Processing -->
+        <div class="glass-card rounded-2xl p-6">
+          <div class="flex items-center justify-between mb-6">
+            <h3 class="text-lg font-bold flex items-center gap-2">
+              <span class="material-symbols-outlined text-gold">analytics</span>
+              System Health &amp; Processing
+            </h3>
+            <div class="flex items-center gap-4">
+              
+              <input type="hidden" asp-for="NotificationSettings.ReminderProcessingEnabled" id="ReminderProcessingEnabled_Hidden" />
+              <div class="flex items-center gap-3 bg-black/40 px-4 py-2 rounded-lg border border-white/5">
+                <span class="text-xs font-bold uppercase tracking-widest text-slate-400">Enable Processing</span>
+                 <button type="button" class="material-symbols-outlined text-2xl @(Model.NotificationSettings.ReminderProcessingEnabled ? "text-gold" : "text-slate-600")" 
+                         onclick="toggleBoolean('ReminderProcessingEnabled_Hidden', this)">
+                    @(Model.NotificationSettings.ReminderProcessingEnabled ? "toggle_on" : "toggle_off")
+                 </button>
+              </div>
+
+               <input type="hidden" asp-for="NotificationSettings.ReminderProcessingPaused" id="ReminderProcessingPaused_Hidden" />
+              <div class="flex items-center gap-3 bg-black/40 px-4 py-2 rounded-lg border border-white/5">
+                <span class="text-xs font-bold uppercase tracking-widest text-slate-400">Pause Processing</span>
+                 <button type="button" class="material-symbols-outlined text-2xl @(Model.NotificationSettings.ReminderProcessingPaused ? "text-gold" : "text-slate-600")" 
+                         onclick="toggleBoolean('ReminderProcessingPaused_Hidden', this)">
+                     @(Model.NotificationSettings.ReminderProcessingPaused ? "toggle_on" : "toggle_off")
+                 </button>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Stats -->
+          <div class="grid grid-cols-7 gap-4">
+            <div class="bg-white/5 p-4 rounded-xl border border-white/10">
+              <p class="text-[9px] text-slate-500 uppercase font-black tracking-widest mb-1">Last Run Time</p>
+              <p class="text-lg font-bold text-white">@(Model.NotificationSettings.LastRunAt?.ToLocalTime().ToString("hh:mm:ss tt") ?? "--")</p>
+            </div>
+
+            <div class="bg-white/5 p-4 rounded-xl border border-white/10">
+              <p class="text-[9px] text-slate-500 uppercase font-black tracking-widest mb-1">Next Scheduled</p>
+              <p class="text-lg font-bold text-gold">@(Model.NotificationSettings.NextRunAt?.ToLocalTime().ToString("hh:mm:ss tt") ?? "--")</p>
+            </div>
+
+            <div class="bg-white/5 p-4 rounded-xl border border-white/10">
+              <p class="text-[9px] text-slate-500 uppercase font-black tracking-widest mb-1">Processed</p>
+              <p class="text-lg font-bold text-white">@Model.NotificationSettings.LastRunProcessedCount</p>
+            </div>
+
+            <div class="bg-white/5 p-4 rounded-xl border border-white/10">
+              <p class="text-[9px] text-slate-500 uppercase font-black tracking-widest mb-1">Sent</p>
+              <p class="text-lg font-bold text-white">@Model.NotificationSettings.LastRunSentCount</p>
+            </div>
+
+            <div class="bg-white/5 p-4 rounded-xl border border-white/10">
+              <p class="text-[9px] text-slate-500 uppercase font-black tracking-widest mb-1">Failed</p>
+              <p class="text-lg font-bold text-white">@Model.NotificationSettings.LastRunFailedCount</p>
+            </div>
+
+            <div class="bg-white/5 p-4 rounded-xl border border-white/10">
+              <p class="text-[9px] text-slate-500 uppercase font-black tracking-widest mb-1">Interval (Mins)</p>
+              <input asp-for="NotificationSettings.CheckIntervalMinutes" class="w-full bg-transparent border-none p-0 text-lg font-bold text-white focus:ring-0" type="number" />
+            </div>
+
+            <div class="flex items-center justify-end">
+              <button
+                class="w-full h-full bg-white/5 hover:bg-white/10 border border-white/20 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                type="button"
+                data-open-modal="modalLastRun"
+              >
+                View Details
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Provider Settings -->
+        <div class="glass-card rounded-2xl p-6">
+            <input type="hidden" asp-for="ProviderSettings.Id" />
+          <div class="flex items-center justify-between mb-8 border-b border-white/5 pb-4">
+            <div class="flex items-center gap-4">
+              <h3 class="text-lg font-bold flex items-center gap-2">
+                <span class="material-symbols-outlined text-gold">api</span>
+                Provider Settings
+              </h3>
+              <div class="h-4 w-[1px] bg-white/10"></div>
+              
+              <input type="hidden" asp-for="ProviderSettings.SandboxModeEnabled" id="SandboxModeEnabled_Hidden" />
+              <div class="flex items-center gap-2 bg-yellow-500/10 border border-yellow-500/30 px-3 py-1 rounded">
+                <span class="text-[10px] font-bold text-yellow-500 uppercase tracking-widest">Sandbox Mode</span>
+                <button type="button" class="material-symbols-outlined text-yellow-500 text-lg" 
+                        onclick="toggleBoolean('SandboxModeEnabled_Hidden', this)">
+                    @(Model.ProviderSettings.SandboxModeEnabled ? "toggle_on" : "toggle_off")
+                </button>
+              </div>
+            </div>
+            <div class="flex items-center gap-3">
+              <button
+                class="px-5 py-2 border border-gold/40 text-gold text-[10px] font-black uppercase tracking-widest rounded hover:bg-gold/10 transition-colors"
+                type="button"
+                data-open-modal="modalTestProvider"
+              >
+                Test Provider
+              </button>
+              <!-- Small save button in section, submits main form -->
+              <button class="px-8 py-2 bg-gold text-pure-black text-[10px] font-black uppercase tracking-widest rounded shadow-lg shadow-gold/20 hover:brightness-110" type="submit">
+                Save
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-4 gap-6">
+            <div class="space-y-4">
+             <!-- Removed API Key Input as requested (Safe) -->
+              <div>
+                <label class="block text-[9px] uppercase tracking-widest font-black text-slate-500 mb-1.5">Reply-To</label>
+                <input asp-for="ProviderSettings.DefaultReplyToEmail" class="w-full bg-black/20 border-white/10 text-white rounded-lg py-2 px-3 text-sm" type="email" />
+              </div>
+            </div>
+
+            <div class="space-y-4">
+               <div>
+                <!-- Removed Secret Key Input managed via AppSettings -->
+                <p class="text-xs text-slate-600 mt-6 italic">Keys managed via Env/AppSettings</p>
+              </div>
+              <div>
+                <label class="block text-[9px] uppercase tracking-widest font-black text-slate-500 mb-1.5">Rate Limit</label>
+                <input asp-for="ProviderSettings.RateLimitPerMinute" class="w-full bg-black/20 border-white/10 text-white rounded-lg py-2 px-3 text-sm" type="number" />
+              </div>
+            </div>
+
+            <div class="space-y-4">
+              <div>
+                <label class="block text-[9px] uppercase tracking-widest font-black text-slate-500 mb-1.5">Retry Count</label>
+                <input asp-for="ProviderSettings.RetryCount" class="w-full bg-black/20 border-white/10 text-white rounded-lg py-2 px-3 text-sm" type="number" />
+              </div>
+            </div>
+
+            <div class="space-y-4">
+              <div>
+                <label class="block text-[9px] uppercase tracking-widest font-black text-slate-500 mb-1.5">Retry Delay (ms)</label>
+                <input asp-for="ProviderSettings.RetryDelayMinutes" class="w-full bg-black/20 border-white/10 text-white rounded-lg py-2 px-3 text-sm" type="number" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sender Identities -->
+        <div class="glass-card rounded-2xl p-6">
+          <div class="flex items-center justify-between mb-6">
+            <h3 class="text-lg font-bold flex items-center gap-2">
+              <span class="material-symbols-outlined text-gold">verified_user</span>
+              Sender Identities
+            </h3>
+            <button class="text-[10px] text-gold font-black hover:underline tracking-[0.2em] uppercase" type="button" onclick="openSenderModal()">
+              + Add Identity
+            </button>
+          </div>
+
+          <div class="overflow-hidden border border-white/10 rounded-xl bg-black/20">
+            <table class="w-full text-left text-sm">
+              <thead class="bg-white/5 text-[9px] uppercase tracking-widest font-black text-slate-500 border-b border-white/5">
+                <tr>
+                  <th class="px-6 py-4">Label &amp; Status</th>
+                  <th class="px-6 py-4">Email Address</th>
+                  <th class="px-6 py-4">Reply-To</th>
+                  <th class="px-6 py-4 text-center">Active</th>
+                  <th class="px-6 py-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-white/5">
+                 @foreach (var sender in Model.SenderIdentities)
+                 {
+                    <tr class="hover:bg-white/[0.04] transition-colors">
+                      <td class="px-6 py-4">
+                        <div class="flex items-center gap-2">
+                          <span class="font-bold text-white">@sender.DisplayName</span>
+                          @if(sender.IsDefault) { <span class="material-symbols-outlined text-[16px] text-gold fill-1" title="Default">stars</span> }
+                          <span class="ml-2 text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">@sender.VerifiedStatus</span>
+                        </div>
+                      </td>
+                      <td class="px-6 py-4 text-slate-400">@sender.FromEmail</td>
+                      <td class="px-6 py-4 text-slate-500">@sender.ReplyToEmail</td>
+                      <td class="px-6 py-4 text-center">
+                          <form asp-action="ToggleSenderActive" asp-route-id="@sender.Id" method="post" class="inline">
+                            <button type="submit" class="material-symbols-outlined text-xl @(sender.IsActive ? "text-green-500" : "text-slate-600")">
+                                @(sender.IsActive ? "toggle_on" : "toggle_off")
+                            </button>
+                          </form>
+                      </td>
+                      <td class="px-6 py-4 text-right">
+                        <div class="flex justify-end gap-3 text-slate-500">
+                          <button class="hover:text-gold transition-colors material-symbols-outlined text-lg" type="button">grade</button> <!-- Set Default Placeholder -->
+                          <button class="hover:text-white transition-colors material-symbols-outlined text-lg" type="button" 
+                                  onclick="openSenderModal(@Json.Serialize(sender))">edit</button>
+                          <form asp-action="DeleteSender" asp-route-id="@sender.Id" method="post" class="inline" onsubmit="return confirm('Delete identity?');">
+                             <button class="hover:text-red-400 transition-colors material-symbols-outlined text-lg" type="submit">delete</button>
+                          </form>
+                        </div>
+                      </td>
+                    </tr>
+                 }
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Feature Routing Expansion -->
+        <div class="space-y-4">
+          <h3 class="text-lg font-bold flex items-center gap-2 px-2">
+            <span class="material-symbols-outlined text-gold">route</span>
+            Feature Routing Expansion
+          </h3>
+
+          <div class="space-y-4">
+
+            @for (int i = 0; i < Model.FeatureConfigs.Count; i++)
+            {
+               <!-- Hidden inputs for binding list on post -->
+               <input type="hidden" name="FeatureConfigs[@i].Id" value="@Model.FeatureConfigs[i].Id" />
+               <input type="hidden" name="FeatureConfigs[@i].FeatureKey" value="@Model.FeatureConfigs[i].FeatureKey" />
+             }
+
+             @foreach(var category in featuresByCategory)
+             {
+                <div class="glass-card rounded-xl overflow-hidden border-gold/10">
+                  <div class="p-4 bg-white/5 flex items-center justify-between cursor-pointer" onclick="this.nextElementSibling.classList.toggle('hidden')">
+                    <div class="flex items-center gap-3">
+                      <span class="material-symbols-outlined text-gold">folder</span>
+                      <span class="font-bold uppercase text-sm tracking-wide text-white">@category.Key</span>
+                    </div>
+                    <span class="material-symbols-outlined text-gold">expand_more</span>
+                  </div>
+
+                  <div class="p-4 bg-black/20 space-y-2">
+                     @foreach(var feature in category.Value)
+                     {
+                         // Find index in master list for binding
+                         var index = Model.FeatureConfigs.IndexOf(feature);
+                         
+                         <div class="grid grid-cols-12 gap-4 items-center bg-white/[0.03] p-3 rounded-lg border border-white/5">
+                            <div class="col-span-1 flex justify-center">
+                                <input type="hidden" name="FeatureConfigs[@index].Enabled" value="@feature.Enabled.ToString()" id="Feature_@index" />
+                                <button type="button" class="material-symbols-outlined text-xl @(feature.Enabled ? "text-gold" : "text-slate-600")"
+                                        onclick="toggleBoolean('Feature_@index', this)">
+                                    @(feature.Enabled ? "toggle_on" : "toggle_off")
+                                </button>
+                            </div>
+                            <div class="col-span-4 text-sm font-medium text-white">@feature.FeatureName</div>
+                            <div class="col-span-3">
+                                <select name="FeatureConfigs[@index].SenderIdentityId" class="w-full bg-black border-white/10 rounded py-1 text-xs text-slate-300">
+                                    <option value="">(Default Sender)</option>
+                                    @foreach(var s in Model.SenderIdentities)
+                                    {
+                                        var selected = feature.SenderIdentityId == s.Id ? "selected" : "";
+                                        <!option value="@s.Id" @selected>@s.DisplayName</!option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-span-3">
+                                <select name="FeatureConfigs[@index].TemplateKey" class="w-full bg-black border-white/10 rounded py-1 text-xs text-gold font-mono">
+                                    <option value="">(Default/System)</option>
+                                    @foreach(var t in Model.AvailableTemplates)
+                                    {
+                                        var selected = feature.TemplateKey == t.TemplateKey ? "selected" : "";
+                                        <!option value="@t.TemplateKey" @selected>@t.TemplateKey</!option>
+                                    }
+                                </select>
+                            </div>
+                             <div class="col-span-1 flex justify-center">
+                                <button class="text-gold/60 hover:text-gold transition-colors" type="button" onclick="alert('Preview logic here');">
+                                  <span class="material-symbols-outlined text-lg">visibility</span>
+                                </button>
+                              </div>
+                         </div>
+                     }
+                  </div>
+                </div>
+             }
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column -->
+      <div class="col-span-3 sticky top-10 space-y-6">
+
+        <div class="space-y-3">
+          <a href="/Admin/EmailServices/Templates" class="w-full py-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl flex items-center justify-between px-6 group transition-all text-decoration-none">
+            <span class="text-[10px] font-black uppercase tracking-widest text-slate-300 group-hover:text-white">Open Templates</span>
+            <span class="material-symbols-outlined text-gold">auto_stories</span>
+          </a>
+           <!-- Add other links if routes exist -->
+        </div>
+
+        <!-- Reminder Policies & Internal Alerts Mapping (Simplified Form Binding) -->
+        <div class="glass-card rounded-2xl p-6">
+           <h3 class="text-sm font-black text-white uppercase tracking-widest mb-6 flex items-center gap-2">
+            <span class="material-symbols-outlined text-gold">settings</span>
+            Quick Policies
+           </h3>
+           <div class="space-y-4">
+                <div>
+                  <label class="block text-[8px] uppercase text-slate-500 font-bold mb-1">Promo Expiry List</label>
+                  <select asp-for="NotificationSettings.PromoExpiryEmployeesListId" class="w-full bg-black/40 border-white/10 rounded-lg py-1.5 text-[10px] text-slate-300">
+                      <option value="">-- Select Distribution List --</option>
+                      @foreach(var list in Model.AvailableDistributionLists)
+                      {
+                          <!option value="@list.Id">@list.Name</!option>
+                      }
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-[8px] uppercase text-slate-500 font-bold mb-1">Fleet Updates List</label>
+                  <select asp-for="NotificationSettings.CarUpdateEmployeesListId" class="w-full bg-black/40 border-white/10 rounded-lg py-1.5 text-[10px] text-slate-300">
+                      <option value="">-- Select Distribution List --</option>
+                       @foreach(var list in Model.AvailableDistributionLists)
+                      {
+                          <!option value="@list.Id">@list.Name</!option>
+                      }
+                  </select>
+                </div>
+           </div>
+        </div>
+
+        <button type="submit" class="w-full py-5 bg-gold text-pure-black font-black text-xs rounded-2xl hover:brightness-110 active:scale-95 transition-all uppercase tracking-[0.3em] flex items-center justify-center gap-2 gold-glow">
+          <span class="material-symbols-outlined font-black">save</span>
+          Commit Global Changes
+        </button>
+
+      </div>
+    </div>
+ </form>
+ 
+  <!-- Footer -->
+    <footer class="mt-16 border-t border-white/10 pt-8 flex justify-between items-center opacity-40">
+      <div class="flex items-center gap-4 text-[10px] font-bold tracking-[0.3em] uppercase">
+        <span>Enterprise Engine v5.8.0-FINAL</span>
+        <span class="size-1 rounded-full bg-slate-500"></span>
+        <span>Production Environment</span>
+      </div>
+    </footer>
+</div>
+
+  <!-- ========================= -->
+  <!-- MODALS -->
+  <!-- ========================= -->
+
+  <!-- 1) View Last Run Details Modal -->
+  <div id="modalLastRun" class="fixed inset-0 z-[100] hidden">
+    <div class="absolute inset-0 bg-black/70" onclick="closeModal('modalLastRun')"></div>
+    <div class="absolute inset-0 flex items-center justify-center p-6 pointer-events-none">
+      <div class="glass-card w-full max-w-5xl rounded-2xl border border-gold/20 overflow-hidden pointer-events-auto">
+        <div class="p-5 bg-white/5 border-b border-white/10 flex items-center justify-between">
+            <h3 class="text-lg font-black text-white">Last Run Details</h3>
+          <button class="material-symbols-outlined text-slate-400 hover:text-white transition-colors" type="button" onclick="closeModal('modalLastRun')">close</button>
+        </div>
+        <div class="p-6 bg-black/20">
+            <!-- Dynamic data would go here (simplified for now) -->
+             <p class="text-white">Run Summary: @(Model.NotificationSettings.LastRunSummary ?? "No run recorded locally.")</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3) Sender Identity Modal -->
+  <div id="modalIdentity" class="fixed inset-0 z-[100] hidden">
+    <div class="absolute inset-0 bg-black/70" onclick="closeModal('modalIdentity')"></div>
+    <div class="absolute inset-0 flex items-center justify-center p-6 pointer-events-none">
+      <div class="glass-card w-full max-w-3xl rounded-2xl border border-gold/20 overflow-hidden pointer-events-auto">
+        <div class="p-5 bg-white/5 border-b border-white/10 flex items-center justify-between">
+          <h3 class="text-lg font-black text-white" id="modalIdentityTitle">Add Identity</h3>
+          <button class="material-symbols-outlined text-slate-400 hover:text-white transition-colors" type="button" onclick="closeModal('modalIdentity')">close</button>
+        </div>
+        
+        <form asp-action="CreateSender" method="post" id="senderForm" class="p-6 bg-black/20 space-y-5">
+            <input type="hidden" name="Id" id="senderId" value="0" />
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                   <label class="block text-[9px] uppercase tracking-widest font-black text-gold mb-2">Label</label>
+                   <input name="DisplayName" id="senderName" class="w-full bg-black/40 border-white/10 rounded-lg py-2 px-3 text-sm text-white" required />
+                </div>
+                <div>
+                   <label class="block text-[9px] uppercase tracking-widest font-black text-gold mb-2">Email</label>
+                   <input name="FromEmail" id="senderEmail" class="w-full bg-black/40 border-white/10 rounded-lg py-2 px-3 text-sm text-white" required />
+                </div>
+            </div>
+            
+             <div class="flex justify-end gap-3">
+                <button class="px-7 py-2 bg-gold text-pure-black rounded text-[10px] font-black uppercase tracking-widest" type="submit">Save</button>
+             </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+
+<script>
+    function toggleBoolean(inputId, btn) {
+        var input = document.getElementById(inputId);
+        var val = input.value.toLowerCase() === 'true';
+        input.value = (!val).toString(); // toggle
+        
+        // update UI
+        if(!val) {
+            btn.classList.remove('text-slate-600');
+            btn.classList.add('text-gold');
+            btn.innerText = 'toggle_on';
+        } else {
+             btn.classList.remove('text-gold');
+            btn.classList.add('text-slate-600');
+            btn.innerText = 'toggle_off';
+        }
+    }
+
+    function openSenderModal(sender) {
+        var modal = document.getElementById('modalIdentity');
+        var form = document.getElementById('senderForm');
+        var title = document.getElementById('modalIdentityTitle');
+        
+        if (sender) {
+            // Edit
+            form.action = '@Url.Action("EditSender")';
+            title.innerText = "Edit Identity";
+            document.getElementById('senderId').value = sender.id;
+            document.getElementById('senderName').value = sender.displayName;
+            document.getElementById('senderEmail').value = sender.fromEmail;
+        } else {
+            // Create
+            form.action = '@Url.Action("CreateSender")';
+            title.innerText = "Add Identity";
+            document.getElementById('senderId').value = 0;
+            form.reset();
+        }
+        
+        modal.classList.remove('hidden');
+    }
+
+    function closeModal(id) {
+        document.getElementById(id).classList.add('hidden');
+    }
+    
+    // Auto-wire helper for data-open-modal if present
+    document.querySelectorAll("[data-open-modal]").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const id = btn.getAttribute("data-open-modal");
+            document.getElementById(id).classList.remove("hidden");
+        });
+    });
+</script>

@@ -99,6 +99,11 @@ builder.Services.AddScoped<EmailTemplateManager>();
 builder.Services.AddScoped<EmailDraftManager>();
 builder.Services.AddScoped<DistributionListManager>();
 builder.Services.AddScoped<RecipientResolverService>();
+builder.Services.AddScoped<EmailProviderSettingsManager>();
+builder.Services.AddScoped<SenderIdentityManager>();
+builder.Services.AddScoped<EmailFeatureConfigManager>();
+builder.Services.AddScoped<EmailRoutingService>();
+builder.Services.AddScoped<NotificationProcessingService>();
 
 // // ✅ HTTPS redirection
 // builder.Services.AddHttpsRedirection(options =>

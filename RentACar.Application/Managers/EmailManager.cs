@@ -408,6 +408,11 @@ namespace RentACar.Application.Managers
             }
             return successCount;
         }
+
+        public async Task<bool> SendTestEmailAsync(string recipient, string subject, string body)
+        {
+            return await SendEmailSafeAsync(recipient, subject, body, "Test Provider Email");
+        }
         public async Task<List<EmailLog>> GetRecentEmailLogsAsync(string userId = null, int count = 50)
         {
             var query = _dbContext.EmailLogs.AsQueryable();

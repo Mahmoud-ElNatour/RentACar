@@ -14,6 +14,11 @@ namespace RentACar.Infrastructure.Data
         public DbSet<NotificationSettings> NotificationSettings { get; set; }
         public DbSet<EmailLog> EmailLogs { get; set; }
         public DbSet<NotificationLog> NotificationLogs { get; set; }
+        public DbSet<EmailProviderSettings> EmailProviderSettings { get; set; }
+        public DbSet<SenderIdentity> SenderIdentities { get; set; }
+        public DbSet<EmailFeatureConfig> EmailFeatureConfigs { get; set; }
+        public DbSet<ServiceRunRecord> ServiceRunRecords { get; set; }
+        public DbSet<ServiceRunItem> ServiceRunItems { get; set; }
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
