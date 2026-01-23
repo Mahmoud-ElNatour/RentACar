@@ -20,10 +20,10 @@
       theme: {
         extend: {
           colors: {
-            "gold": "#d4af37",
-            "pure-black": "#000000",
-            "card-glass": "rgba(20, 20, 20, 0.7)",
-            "border-gold": "rgba(212, 175, 55, 0.2)",
+            "gold": "#d4af37", 
+            "pure-black": "#050505",
+            "card-glass": "rgba(18, 18, 20, 0.7)",
+            "border-gold": "rgba(242, 185, 13, 0.2)",
           },
           fontFamily: {
             "display": ["Manrope", "sans-serif"]
@@ -35,20 +35,19 @@
 
   <style type="text/tailwindcss">
     @@layer base {
-      body { @@apply bg-pure-black text-slate-200 font-display; }
+      body { @@apply bg-pure-black text-zinc-100 font-display; }
     }
     .glass-card {
-      background: linear-gradient(135deg, rgba(30, 30, 30, 0.8), rgba(10, 10, 10, 0.9));
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(212, 175, 55, 0.15);
-      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+      background: #121214; /* Fallback */
+      background: linear-gradient(145deg, #121214 0%, #080809 100%);
+      border: 1px solid rgba(255, 255, 255, 0.05);
     }
-    .gold-glow { box-shadow: 0 0 15px rgba(212, 175, 55, 0.3); }
+    .gold-glow { box-shadow: 0 0 15px rgba(242, 185, 13, 0.15); }
 
     .custom-scrollbar::-webkit-scrollbar { width: 4px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
     .custom-scrollbar::-webkit-scrollbar-thumb {
-      background: rgba(212, 175, 55, 0.3);
+      background: rgba(242, 185, 13, 0.2);
       border-radius: 10px;
     }
     .toggle-icon { cursor: pointer; user-select: none; }
@@ -60,10 +59,13 @@
   <div class="max-w-[1600px] mx-auto px-8 py-10">
 
     <!-- Header -->
-    <header class="mb-10 flex justify-between items-center">
+    <header class="mb-10 flex justify-between items-center bg-black/40 backdrop-blur-md p-6 -mx-8 -mt-10 border-b border-white/5 sticky top-0 z-50">
       <div>
-        <h1 class="text-4xl font-black tracking-tighter text-white uppercase">Advanced Email Config</h1>
-        <p class="text-slate-400 mt-1">Final Complete Hub • Comprehensive control over providers, routing, and automated reminders</p>
+        <div class="flex items-center gap-3">
+             <span class="material-symbols-outlined text-gold text-2xl">settings_applications</span>
+             <h1 class="text-xl font-bold tracking-[0.25em] uppercase text-zinc-100">Advanced Email Config</h1>
+        </div>
+        <div class="h-0.5 w-20 bg-gradient-to-r from-transparent via-gold to-transparent opacity-60 mt-2"></div>
       </div>
       <div class="flex items-center gap-4">
         <div class="text-right">
