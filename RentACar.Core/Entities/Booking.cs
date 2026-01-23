@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -34,6 +35,22 @@ public partial class Booking
     [Column("totalPrice", TypeName = "decimal(18, 2)")]
     public decimal TotalPrice { get; set; }
 
+    [Column("hasDriver")]
+    public bool HasDriver { get; set; }
+
+    [Column("driverID")]
+    public int? DriverId { get; set; }
+
+    [Column("driverDailyFee", TypeName = "decimal(18, 2)")]
+    public decimal? DriverDailyFee { get; set; }
+
+    [Column("pickupAddress")]
+    [StringLength(200)]
+    public string? PickupAddress { get; set; }
+
+    [Column("pickupDateTime")]
+    public DateTime? PickupDateTime { get; set; }
+
     [Column("bookingStatus")]
     [StringLength(50)]
     public string? BookingStatus { get; set; }
@@ -49,6 +66,10 @@ public partial class Booking
     [InverseProperty("Bookings")]
     public virtual Customer Customer { get; set; } = null!;
 
+    [ForeignKey("DriverId")]
+    [InverseProperty("Bookings")]
+    public virtual Driver? Driver { get; set; }
+
     [ForeignKey("EmployeebookerId")]
     [InverseProperty("Bookings")]
     public virtual Employee? Employeebooker { get; set; }
@@ -56,6 +77,9 @@ public partial class Booking
     [ForeignKey("PromocodeId")]
     [InverseProperty("Bookings")]
     public virtual Promocode? Promocode { get; set; }
+
+    [InverseProperty("Booking")]
+    public virtual ICollection<DriverLocationPing> DriverLocationPings { get; set; } = new List<DriverLocationPing>();
 
     public virtual Payment? Payment { get; set; }
 }

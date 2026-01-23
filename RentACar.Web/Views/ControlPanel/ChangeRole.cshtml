@@ -48,6 +48,10 @@
                         <input class="form-check-input" type="radio" asp-for="Role" value="Employee" id="roleEmployee" />
                         <label class="form-check-label" for="roleEmployee" style="color:white">Employee</label>
                     </div>
+                    <div class="form-check form-check-inline ">
+                        <input class="form-check-input" type="radio" asp-for="Role" value="Driver" id="roleDriver" />
+                        <label class="form-check-label" for="roleDriver" style="color:white">Driver</label>
+                    </div>
                     <br />
                     <span asp-validation-for="Role" class="text-danger"></span>
                 </div>

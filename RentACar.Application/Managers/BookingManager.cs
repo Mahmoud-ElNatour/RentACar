@@ -17,6 +17,8 @@ namespace RentACar.Application.Managers
         private readonly IBookingRepository _bookingRepository;
         private readonly ICustomerRepository _customerRepository;
         private readonly IEmployeeRepository _employeeRepository;
+        private readonly IDriverRepository _driverRepository;
+        private readonly IDriverAvailabilityRepository _driverAvailabilityRepository;
         private readonly ICarRepository _carRepository;
         private readonly IPromocodeRepository _promocodeRepository;
         private readonly IPaymentMethodRepository _paymentMethodRepository;
@@ -29,6 +31,8 @@ namespace RentACar.Application.Managers
 
         public BookingManager(
             IEmployeeRepository employeeRepository,
+            IDriverRepository driverRepository,
+            IDriverAvailabilityRepository driverAvailabilityRepository,
             IBookingRepository bookingRepository,
             ICustomerRepository customerRepository,
             ICarRepository carRepository,
@@ -42,6 +46,8 @@ namespace RentACar.Application.Managers
             AuditLogManager auditLogManager)
         {
             _employeeRepository = employeeRepository;
+            _driverRepository = driverRepository;
+            _driverAvailabilityRepository = driverAvailabilityRepository;
             _bookingRepository = bookingRepository;
             _customerRepository = customerRepository;
             _carRepository = carRepository;
@@ -125,6 +131,19 @@ namespace RentACar.Application.Managers
                 return null;
             }
 
+            int? assignedDriverId = null;
+            decimal? driverDailyFee = null;
+            if (requestDto.HasDriver)
+            {
+                driverDailyFee = requestDto.DriverDailyFee ?? 85m;
+                assignedDriverId = await FindAvailableDriverAsync(requestDto.Startdate, requestDto.Enddate);
+                if (!assignedDriverId.HasValue)
+                {
+                    _logger.LogWarning("Booking failed: No available driver found.");
+                    return null;
+                }
+            }
+
             // 🔹 Validate promocode
             Promocode? promocode = null;
             if (!string.IsNullOrEmpty(requestDto.Promocode))
@@ -138,7 +157,11 @@ namespace RentACar.Application.Managers
             }
 
             // 🔹 Calculate price
-            decimal subtotal = CalculateTotalPrice(car.PricePerDay ?? 0, requestDto.Startdate, requestDto.Enddate);
+            decimal baseSubtotal = CalculateTotalPrice(car.PricePerDay ?? 0, requestDto.Startdate, requestDto.Enddate);
+            decimal driverFeeTotal = requestDto.HasDriver && driverDailyFee.HasValue
+                ? CalculateTotalPrice(driverDailyFee.Value, requestDto.Startdate, requestDto.Enddate)
+                : 0m;
+            decimal subtotal = baseSubtotal + driverFeeTotal;
             decimal totalPrice = promocode != null ? ApplyPromocode(subtotal, promocode) : subtotal;
 
             // 🔹 Validate payment method
@@ -175,7 +198,12 @@ namespace RentACar.Application.Managers
                 BookingStatus = "Pending",
                 Subtotal = subtotal,
                 IsBookedByEmployee = isBookedByEmployee,
-                EmployeebookerId = isBookedByEmployee ? employeeBookerIntId : null
+                EmployeebookerId = isBookedByEmployee ? employeeBookerIntId : null,
+                HasDriver = requestDto.HasDriver,
+                DriverId = requestDto.HasDriver ? assignedDriverId : null,
+                DriverDailyFee = requestDto.HasDriver ? driverDailyFee : null,
+                PickupAddress = requestDto.PickupAddress,
+                PickupDateTime = requestDto.PickupDateTime
             };
 
             // Save booking first to generate BookingId
@@ -202,6 +230,11 @@ namespace RentACar.Application.Managers
             _logger.LogInformation("✅ Booking created with ID: {BookingId}", addedBooking.BookingId);
             
             await _auditLogManager.LogEventAsync("Booking.Created", "Booking", addedBooking.BookingId.ToString(), $"Created new booking for Car {addedBooking.CarId}", null, "Success");
+
+            if (addedBooking.HasDriver && addedBooking.DriverId.HasValue)
+            {
+                await _auditLogManager.LogEventAsync("Booking.DriverAssigned", "Booking", addedBooking.BookingId.ToString(), $"Driver {addedBooking.DriverId} assigned to booking.", null, "Success");
+            }
             
             var session = await _paymentManager.CreateCheckoutSessionForPaymentAsync(addedPayment);
             if (string.IsNullOrWhiteSpace(session.CheckoutUrl))
@@ -232,6 +265,45 @@ namespace RentACar.Application.Managers
 
             return !status.Equals("returned", StringComparison.OrdinalIgnoreCase)
                 && !status.Equals("rejected", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private async Task<int?> FindAvailableDriverAsync(DateOnly startDate, DateOnly endDate)
+        {
+            var drivers = await _driverRepository.GetActiveAsync();
+            if (!drivers.Any())
+            {
+                return null;
+            }
+
+            foreach (var driver in drivers)
+            {
+                var driverBookings = await _bookingRepository.GetBookingsByDriverIdAsync(driver.DriverId);
+                var hasConflict = driverBookings.Any(b =>
+                    IsBlockingStatus(b.BookingStatus) &&
+                    DatesOverlap(b.Startdate, b.Enddate, startDate, endDate));
+
+                if (hasConflict)
+                {
+                    continue;
+                }
+
+                var availability = await _driverAvailabilityRepository.GetByDriverIdAsync(driver.DriverId);
+                var startDateTime = startDate.ToDateTime(TimeOnly.MinValue);
+                var endDateTime = endDate.ToDateTime(TimeOnly.MaxValue);
+                var isUnavailable = availability.Any(a =>
+                    !a.IsAvailable &&
+                    a.StartDateTime <= endDateTime &&
+                    a.EndDateTime >= startDateTime);
+
+                if (isUnavailable)
+                {
+                    continue;
+                }
+
+                return driver.DriverId;
+            }
+
+            return null;
         }
 
         private static decimal CalculatePayableAmount(decimal totalPrice, string? paymentMethodName)
@@ -293,6 +365,12 @@ namespace RentACar.Application.Managers
         public async Task<List<BookingDto>> GetBookingsByEmployeeIdAsync(int employeeId)
         {
             var bookings = await _bookingRepository.GetBookingsByEmployeeIdAsync(employeeId);
+            return _mapper.Map<List<BookingDto>>(bookings);
+        }
+
+        public async Task<List<BookingDto>> GetBookingsByDriverIdAsync(int driverId)
+        {
+            var bookings = await _bookingRepository.GetBookingsByDriverIdAsync(driverId);
             return _mapper.Map<List<BookingDto>>(bookings);
         }
 

@@ -150,6 +150,15 @@
                                 <a class="nav-link text-light" asp-controller="Bookings" asp-action="MyBookings">My Bookings</a>
                             </li>
                         }
+                        @if (User.IsInRole("Driver"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-light" asp-controller="DriverPortal" asp-action="Dashboard">Driver Dashboard</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-light" asp-controller="DriverPortal" asp-action="Schedule">Schedule</a>
+                            </li>
+                        }
                     </ul>
                     <ul class="navbar-nav ms-auto">
                         @if (SignInManager.IsSignedIn(User))

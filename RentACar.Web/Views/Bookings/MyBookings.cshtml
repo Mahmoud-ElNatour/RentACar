@@ -94,6 +94,7 @@
 
                 const payDisabled = paymentStatus === 'unpaid';
                 const showPayButton = paymentStatus !== 'paid';
+                const canTrack = b.hasDriver && b.driverId && !['cancelled', 'returned', 'rejected'].includes((b.bookingStatus ?? '').toLowerCase());
 
                 const tr = document.createElement('tr');
                 tr.innerHTML =
@@ -112,6 +113,12 @@
                                             ${payDisabled ? 'disabled' : ''}>
                                         Pay
                                     </button>
+                                ` : ''}
+                                ${canTrack ? `
+                                    <a class="btn btn-warning btn-sm me-2"
+                                       href="/Tracking/CustomerLive/${b.bookingId}">
+                                        Track Driver
+                                    </a>
                                 ` : ''}
                                 <a class="btn btn-secondary btn-sm"
                                    href="/Bookings/Ticket/${b.bookingId}"

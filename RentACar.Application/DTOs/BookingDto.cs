@@ -30,6 +30,17 @@ namespace RentACar.Application.DTOs
         [Range(0.01, double.MaxValue, ErrorMessage = "Total price must be greater than 0.")]
         public decimal TotalPrice { get; set; }
 
+        public bool HasDriver { get; set; }
+
+        public int? DriverId { get; set; }
+
+        public decimal? DriverDailyFee { get; set; }
+
+        [StringLength(200)]
+        public string? PickupAddress { get; set; }
+
+        public DateTime? PickupDateTime { get; set; }
+
         [StringLength(50)]
         public string BookingStatus { get; set; } = "Pending";
 
@@ -55,6 +66,16 @@ namespace RentACar.Application.DTOs
         [Required]
         public DateOnly Enddate { get; set; }
 
+        public bool HasDriver { get; set; }
+
+        [Range(0, double.MaxValue)]
+        public decimal? DriverDailyFee { get; set; }
+
+        [StringLength(200)]
+        public string? PickupAddress { get; set; }
+
+        public DateTime? PickupDateTime { get; set; }
+
         public string? Promocode { get; set; } // To apply promocode by string
         public int PaymentMethodId { get; set; } // "Cash" or "CreditCard"
         public int? CreditcardId { get; set; } // If paying by credit card
@@ -74,6 +95,9 @@ namespace RentACar.Application.DTOs
         public DateOnly Enddate { get; set; }
         public decimal TotalPrice { get; set; } // still validated
         public string BookingStatus { get; set; } = "Pending";
+
+        public bool HasDriver { get; set; }
+        public int? DriverId { get; set; }
     }
 
     public class BookingCreationResultDto

@@ -34,6 +34,9 @@ public partial class RentACarDbContext : DbContext
     public virtual DbSet<CreditCard> CreditCards { get; set; }
     public virtual DbSet<Customer> Customers { get; set; }
     public virtual DbSet<CustomerCreditCard> CustomerCreditCards { get; set; }
+    public virtual DbSet<Driver> Drivers { get; set; }
+    public virtual DbSet<DriverAvailability> DriverAvailabilities { get; set; }
+    public virtual DbSet<DriverLocationPing> DriverLocationPings { get; set; }
     public virtual DbSet<Employee> Employees { get; set; }
     public virtual DbSet<Payment> Payments { get; set; }
     public virtual DbSet<PaymentMethod> PaymentMethods { get; set; }
@@ -73,6 +76,7 @@ public partial class RentACarDbContext : DbContext
         modelBuilder.Entity<Booking>(entity =>
         {
             entity.Property(e => e.IsBookedByEmployee).HasDefaultValue(false);
+            entity.Property(e => e.HasDriver).HasDefaultValue(false);
 
             entity.HasOne(d => d.Car).WithMany(p => p.Bookings)
                 .OnDelete(DeleteBehavior.ClientSetNull)
@@ -84,6 +88,9 @@ public partial class RentACarDbContext : DbContext
 
             entity.HasOne(d => d.Employeebooker).WithMany(p => p.Bookings)
                 .HasConstraintName("FK_Bookings_Employees");
+
+            entity.HasOne(d => d.Driver).WithMany(p => p.Bookings)
+                .HasConstraintName("FK_Bookings_Drivers");
 
              entity.HasOne(d => d.Promocode).WithMany(p => p.Bookings)
                 .HasConstraintName("FK_Bookings_Promocodes1");
@@ -129,6 +136,33 @@ public partial class RentACarDbContext : DbContext
                 .HasForeignKey(e => e.CreditCardId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_CustomerCreditCard_CreditCard");
+        });
+
+        modelBuilder.Entity<Driver>(entity =>
+        {
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+
+            entity.HasOne(d => d.User).WithMany(p => p.Drivers)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Drivers_AspNetUsers");
+        });
+
+        modelBuilder.Entity<DriverAvailability>(entity =>
+        {
+            entity.HasOne(d => d.Driver).WithMany(p => p.DriverAvailabilities)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_DriverAvailability_Drivers");
+        });
+
+        modelBuilder.Entity<DriverLocationPing>(entity =>
+        {
+            entity.HasOne(d => d.Booking).WithMany(p => p.DriverLocationPings)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_DriverLocationPings_Bookings");
+
+            entity.HasOne(d => d.Driver).WithMany(p => p.LocationPings)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_DriverLocationPings_Drivers");
         });
 
         modelBuilder.Entity<Payment>(entity =>

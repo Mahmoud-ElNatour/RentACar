@@ -1,0 +1,105 @@
+@model RentACar.Web.Models.DriverDashboardViewModel
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+    .glass-card {
+        background: rgba(39, 36, 27, 0.4);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(244, 195, 37, 0.15);
+    }
+    .glass-card-hover:hover {
+        border-color: rgba(244, 195, 37, 0.4);
+        background: rgba(39, 36, 27, 0.6);
+        transition: all 0.3s ease;
+    }
+</style>
+
+<main class="max-w-[1400px] mx-auto p-6 lg:px-20 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+    <section class="lg:col-span-7 space-y-6">
+        <div class="flex items-center justify-between mb-2">
+            <div>
+                <h1 class="text-3xl font-black tracking-tight text-white">Driver Dashboard</h1>
+                <p class="text-white/60 mt-1">Daily schedule for @Model.DriverName (@Model.DriverCode).</p>
+            </div>
+            <div class="text-sm font-semibold text-primary">
+                @(Model.IsAvailable ? "AVAILABLE" : "OFFLINE")
+            </div>
+        </div>
+
+        @if (!Model.TodayBookings.Any())
+        {
+            <div class="glass-card rounded-xl p-6 text-white/60">
+                No bookings assigned for today.
+            </div>
+        }
+        else
+        {
+            foreach (var booking in Model.TodayBookings)
+            {
+                <div class="glass-card glass-card-hover rounded-xl p-5 flex flex-col md:flex-row gap-6">
+                    <div class="flex-1 flex flex-col justify-between">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="text-[10px] font-bold tracking-widest text-primary uppercase">@booking.BookingStatus</span>
+                                <h3 class="text-xl font-bold text-white mt-1">Booking #@booking.BookingId</h3>
+                                <div class="flex items-center gap-2 mt-2">
+                                    <span class="material-symbols-outlined text-gray-400 text-base">person</span>
+                                    <span class="text-gray-300 font-medium">@booking.CustomerName</span>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-xs text-gray-500 uppercase font-bold">Dates</p>
+                                <p class="text-white font-bold">@booking.StartDate:yyyy-MM-dd → @booking.EndDate:yyyy-MM-dd</p>
+                            </div>
+                        </div>
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mt-4">
+                            <div class="flex items-center gap-2 text-gray-400">
+                                <span class="material-symbols-outlined text-primary text-sm">location_on</span>
+                                <span class="text-sm truncate">@booking.PickupAddress</span>
+                            </div>
+                            <a class="bg-primary text-background-dark px-6 py-2 rounded-lg font-bold text-sm shadow-[0_0_15px_rgba(244,195,37,0.3)] hover:scale-105 transition-transform"
+                               href="@Url.Action("BookingDetails", "DriverPortal", new { id = booking.BookingId })">
+                                Start Tracking
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </section>
+
+    <aside class="lg:col-span-5 space-y-8">
+        <div class="glass-card rounded-2xl p-6 shadow-2xl">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h2 class="text-xl font-bold text-white">Duty Status</h2>
+                    <p class="text-sm text-gray-400">Status updates are visible to dispatch.</p>
+                </div>
+                <span class="text-sm font-bold text-primary">@(Model.IsAvailable ? "AVAILABLE" : "OFFLINE")</span>
+            </div>
+            <p class="text-white/60 text-sm">Toggle availability from the schedule page to sync your weekly availability.</p>
+            <a class="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl font-bold transition-all"
+               href="@Url.Action("Schedule", "DriverPortal")">
+                <span class="material-symbols-outlined text-lg">calendar_today</span>
+                Manage Schedule
+            </a>
+        </div>
+
+        <div class="glass-card rounded-2xl p-6 shadow-2xl">
+            <h2 class="text-xl font-bold text-white mb-4">Next Pickup Route</h2>
+            <div class="h-64 relative bg-gray-800 rounded-xl overflow-hidden">
+                <div class="w-full h-full bg-cover bg-center opacity-70 grayscale contrast-125"
+                     style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuD5-H-seISq_Odd3hLB78Svg57eJur2vri8P68WghLNu5UYtO1s8STTR-L1B7QeiTDAX3pLPxZiXAOmE7dDVwsMzAlPVg5tRbdhgYj9q1Ufk5RYd964x15OgRw1CTBYov9fFyEUmo3GVhV_rtwPmrXujtmSsAFEkMSqI4iFp6DDe7U2vm4NujPt1rhhQhUBXgvrTxCzQ91kKIkSliDd57FoTAp03f5VwXfWtw4Wy06kQkuJD_4Cuy875PXTqOK-lgMQ7GXaMn7nQRLD');">
+                </div>
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <div class="relative">
+                        <div class="h-4 w-4 bg-primary rounded-full animate-ping absolute"></div>
+                        <div class="h-4 w-4 bg-primary rounded-full relative border-2 border-background-dark"></div>
+                    </div>
+                </div>
+            </div>
+            <p class="text-white/50 text-xs mt-3">Map preview uses a placeholder image. Live maps can be connected later.</p>
+        </div>
+    </aside>
+</main>

@@ -80,6 +80,10 @@
                             <span class="material-symbols-outlined text-[18px]">badge</span>
                             <span>Employees</span>
                         </a>
+                        <a href="/Driver" class="sidebar-sublink">
+                            <span class="material-symbols-outlined text-[18px]">badge</span>
+                            <span>Drivers</span>
+                        </a>
                         <a href="/Payment" class="sidebar-sublink">
                             <span class="material-symbols-outlined text-[18px]">payments</span>
                             <span>Financials</span>
@@ -106,6 +110,35 @@
                     <span class="material-symbols-outlined">bar_chart</span>
                     <span>Reports</span>
                 </a>
+            }
+
+            @if (User.IsInRole("Driver"))
+            {
+                <div class="sidebar-item-group">
+                    <div class="sidebar-link" style="justify-content: space-between; padding-right: 0.5rem;">
+                        <a href="/DriverPortal/Dashboard" style="display: flex; align-items: center; gap: 0.75rem; flex: 1; text-decoration: none; color: inherit;">
+                            <span class="material-symbols-outlined">badge</span>
+                            <span>Driver Portal</span>
+                        </a>
+                        <button onclick="toggleSidebarDropdown('driverMenu', 'driverArrow')" style="background: none; border: none; color: inherit; cursor: pointer; padding: 0.25rem;">
+                            <span id="driverArrow" class="material-symbols-outlined" style="font-size: 1rem; transition: transform 0.2s;">expand_more</span>
+                        </button>
+                    </div>
+                    <div id="driverMenu" class="sidebar-dropdown-menu">
+                        <a href="/DriverPortal/Dashboard" class="sidebar-sublink">
+                            <span class="material-symbols-outlined text-[18px]">dashboard</span>
+                            <span>Dashboard</span>
+                        </a>
+                        <a href="/DriverPortal/Schedule" class="sidebar-sublink">
+                            <span class="material-symbols-outlined text-[18px]">calendar_today</span>
+                            <span>Schedule</span>
+                        </a>
+                        <a href="#" class="sidebar-sublink">
+                            <span class="material-symbols-outlined text-[18px]">history</span>
+                            <span>History</span>
+                        </a>
+                    </div>
+                </div>
             }
 
             <a href="/Identity/Account/Manage" class="sidebar-link">

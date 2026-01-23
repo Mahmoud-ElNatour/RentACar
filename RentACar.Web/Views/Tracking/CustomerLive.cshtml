@@ -1,0 +1,121 @@
+@model RentACar.Web.Models.CustomerTrackingViewModel
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+    .glass-panel {
+        background: rgba(39, 36, 27, 0.7);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(244, 195, 37, 0.1);
+    }
+    .pulse-dot {
+        width: 8px;
+        height: 8px;
+        background-color: #f4c325;
+        border-radius: 50%;
+        position: relative;
+    }
+    .pulse-dot::after {
+        content: '';
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        background-color: #f4c325;
+        border-radius: 50%;
+        z-index: -1;
+        animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+        0% { transform: scale(1); opacity: 0.8; }
+        100% { transform: scale(3); opacity: 0; }
+    }
+</style>
+
+<main class="relative h-[calc(100vh-120px)] w-full">
+    <div class="absolute inset-0 bg-[#0a0a0a]">
+        <div class="absolute inset-0 bg-cover bg-center opacity-40 mix-blend-luminosity"
+             style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuD_mZsNnaYr-bdk2DZoXgbp-lX4a_qXx_9IzwBAtgk1vqdh8WZDQWO7b0Iu-baYgCbJgw2Pl1Db-3gVCZHhIs5E1R86fKoB57oxnCy4j84vMGlWSVEztVi5iWZZqT4j2ezHocWsN1atARTMtj_lxYqJA6lQclNrjchM9d3IozPsnSDunSIz5h9IotbqtpUU2vxPzgK_Wsj0_jwuJHTSWjMwbPqU9q3JKOcjIYT--UDdeN6Fa-l-_UPjVtUjGs41o_1nMdDuMBPHZOGq");'>
+        </div>
+    </div>
+
+    <div class="absolute top-24 left-1/2 -translate-x-1/2 w-full max-w-[520px] px-4">
+        <div class="glass-panel rounded-xl p-4 flex items-center justify-between shadow-2xl">
+            <div class="flex items-center gap-4">
+                <div class="size-14 rounded-lg bg-cover bg-center border border-white/10"
+                     style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDS8jS4BUD268rKiCfccjOmt00bNXOnXkES8PLdgkKhk4Z_nlNPPhGx1KNKmiz3bBaRu__eoluiLtClg0iofowAbAny-iRuKmWRludVYO6Sn9Lrn61fikk4kZnAIhVHX_HujoTXOXFh-PT8myk8Bf_k04HTmk1JWhZAAg_Q9dB1RLdr0LavvYdivm-roEdHOnMTWcA31QvyiHteuyq7fP0TrGDNuZA6vMSqP90vccMPgTjCXfVOIcmatDh-07F1Cg6PrQn1mMHqoDjY");'>
+                </div>
+                <div class="flex flex-col">
+                    <p class="text-[10px] font-bold uppercase tracking-widest text-primary/80">Track Your Driver</p>
+                    <h2 class="text-lg font-bold leading-none mt-0.5">@Model.DriverName</h2>
+                    <div class="flex items-center gap-2 mt-1">
+                        <span class="text-xs text-white/60">@Model.CarName</span>
+                        <span class="size-1 rounded-full bg-white/30"></span>
+                        <span class="text-xs font-mono bg-white/10 px-1.5 py-0.5 rounded text-white/80">@Model.CarPlate</span>
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <div class="text-right text-xs text-white/50">
+                    Booking #@Model.BookingId
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="absolute left-6 bottom-24 flex flex-col gap-4">
+        <div class="glass-panel rounded-xl p-4 min-w-[180px]">
+            <div class="flex items-center gap-3 mb-1">
+                <div class="pulse-dot"></div>
+                <p class="text-xs font-bold uppercase tracking-widest text-white/50">Status</p>
+            </div>
+            <p class="text-xl font-bold text-primary" id="trackingStatus">Live Tracking ON</p>
+        </div>
+        <div class="glass-panel rounded-xl p-4 min-w-[180px]">
+            <p class="text-xs font-bold uppercase tracking-widest text-white/50 mb-1">Last Ping</p>
+            <div class="flex items-baseline gap-1">
+                <span class="text-sm font-bold" id="lastPing">@Model.LastPingAt?.ToLocalTime().ToString("HH:mm:ss")</span>
+            </div>
+            <div class="mt-2 flex items-center gap-1.5 text-xs text-white/40">
+                <span class="material-symbols-outlined text-sm">distance</span>
+                <span id="lastCoordinates">@Model.LastLatitude?.ToString("F4"), @Model.LastLongitude?.ToString("F4")</span>
+            </div>
+        </div>
+    </div>
+
+    <footer class="absolute bottom-0 left-0 right-0 py-4 glass-panel border-t border-white/5 text-center">
+        <div class="flex items-center justify-center gap-2 text-white/40 text-[10px] uppercase tracking-[0.2em] font-medium">
+            <span class="material-symbols-outlined text-sm">security</span>
+            <span>Location sharing is active during your booking • Data is encrypted</span>
+        </div>
+    </footer>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+<script>
+    (function () {
+        const bookingId = @Model.BookingId;
+        const statusEl = document.getElementById('trackingStatus');
+        const lastPingEl = document.getElementById('lastPing');
+        const lastCoordinatesEl = document.getElementById('lastCoordinates');
+
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl('/hubs/driverTracking')
+            .withAutomaticReconnect()
+            .build();
+
+        connection.on('DriverLocationUpdated', (payload) => {
+            if (payload.bookingId !== bookingId) return;
+            statusEl.textContent = 'Live Tracking ON';
+            lastPingEl.textContent = new Date(payload.createdAt).toLocaleTimeString();
+            lastCoordinatesEl.textContent = `${Number(payload.latitude).toFixed(4)}, ${Number(payload.longitude).toFixed(4)}`;
+        });
+
+        connection.start()
+            .then(() => connection.invoke('JoinBookingGroup', bookingId))
+            .catch(() => {
+                statusEl.textContent = 'Tracking unavailable';
+            });
+    })();
+</script>

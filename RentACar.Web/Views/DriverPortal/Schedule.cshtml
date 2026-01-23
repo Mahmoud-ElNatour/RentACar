@@ -1,0 +1,134 @@
+@model RentACar.Web.Models.DriverScheduleViewModel
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+    .glass {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .glass-darker {
+        background: rgba(0, 0, 0, 0.2);
+        backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .hatched-bg {
+        background-image: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.05) 0, rgba(255, 255, 255, 0.05) 1px, transparent 0, transparent 50%);
+        background-size: 10px 10px;
+    }
+</style>
+
+<div class="flex flex-col h-screen overflow-hidden">
+    <div class="flex flex-1 overflow-hidden">
+        <main class="flex-1 flex overflow-hidden">
+            <div class="flex-1 flex flex-col p-8 overflow-y-auto">
+                <div class="flex flex-col gap-1 mb-8">
+                    <h1 class="text-4xl font-black tracking-tight text-white">Driver Calendar &amp; Schedule</h1>
+                    <p class="text-white/50 text-base">Manage availability blocks for @Model.DriverName.</p>
+                </div>
+
+                <div class="flex-1 glass-darker rounded-2xl overflow-hidden border border-white/5 flex flex-col">
+                    <div class="grid grid-cols-7 border-b border-white/5 bg-white/5">
+                        <div class="p-3 text-center text-xs font-bold text-white/30 uppercase tracking-widest">Sun</div>
+                        <div class="p-3 text-center text-xs font-bold text-white/30 uppercase tracking-widest">Mon</div>
+                        <div class="p-3 text-center text-xs font-bold text-white/30 uppercase tracking-widest">Tue</div>
+                        <div class="p-3 text-center text-xs font-bold text-white/30 uppercase tracking-widest">Wed</div>
+                        <div class="p-3 text-center text-xs font-bold text-white/30 uppercase tracking-widest">Thu</div>
+                        <div class="p-3 text-center text-xs font-bold text-white/30 uppercase tracking-widest">Fri</div>
+                        <div class="p-3 text-center text-xs font-bold text-white/30 uppercase tracking-widest">Sat</div>
+                    </div>
+                    <div class="grid grid-cols-7 grid-rows-5 flex-1 min-h-[600px]">
+                        @for (var day = 1; day <= 35; day++)
+                        {
+                            <div class="border-r border-b border-white/5 p-2 hover:bg-white/5 transition-colors group relative">
+                                <span class="text-xs font-bold text-white/30 group-hover:text-white/60">@day</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="mt-8">
+                    <h3 class="text-lg font-bold text-white mb-3">Upcoming Bookings</h3>
+                    <div class="space-y-3">
+                        @if (!Model.UpcomingBookings.Any())
+                        {
+                            <div class="glass p-4 rounded-xl text-white/50">No upcoming bookings assigned.</div>
+                        }
+                        else
+                        {
+                            foreach (var booking in Model.UpcomingBookings)
+                            {
+                                <div class="glass p-4 rounded-xl flex items-center justify-between">
+                                    <div>
+                                        <p class="text-sm font-bold text-white">Booking #@booking.BookingId</p>
+                                        <p class="text-xs text-white/50">@booking.CustomerName • @booking.PickupAddress</p>
+                                    </div>
+                                    <span class="text-xs text-primary font-bold">@booking.StartDate:yyyy-MM-dd</span>
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <aside class="w-80 glass-darker border-l border-white/10 flex flex-col p-6 gap-8 overflow-y-auto">
+                <div class="flex flex-col gap-6">
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">event_available</span>
+                        <h3 class="text-lg font-bold">Add Availability</h3>
+                    </div>
+                    <form method="post" asp-action="AddAvailability">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="IsAvailable" value="true" />
+                        <div class="space-y-4">
+                            <div class="flex flex-col gap-1.5">
+                                <label class="text-xs font-bold text-white/40 uppercase">From Date &amp; Time</label>
+                                <input class="w-full glass bg-white/5 border-none rounded-xl px-4 py-2.5 text-sm focus:ring-1 focus:ring-primary/50"
+                                       type="datetime-local" name="StartDateTime" required />
+                            </div>
+                            <div class="flex flex-col gap-1.5">
+                                <label class="text-xs font-bold text-white/40 uppercase">To Date &amp; Time</label>
+                                <input class="w-full glass bg-white/5 border-none rounded-xl px-4 py-2.5 text-sm focus:ring-1 focus:ring-primary/50"
+                                       type="datetime-local" name="EndDateTime" required />
+                            </div>
+                            <div class="flex items-center justify-between px-1">
+                                <span class="text-sm text-white/70">Recurring weekly</span>
+                                <input type="checkbox" name="IsRecurringWeekly" value="true" />
+                            </div>
+                            <button class="w-full bg-primary hover:bg-primary/90 text-background-dark font-bold py-3 rounded-xl transition-all shadow-lg shadow-primary/20 active:scale-[0.98]">
+                                Save Availability
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="mt-auto flex flex-col gap-4">
+                    <div class="border-t border-white/10 pt-6">
+                        <p class="text-xs font-bold text-white/40 uppercase tracking-widest mb-4">Availability Blocks</p>
+                        <div class="space-y-3">
+                            @if (!Model.Availability.Any())
+                            {
+                                <div class="glass p-3 rounded-xl text-white/50 text-xs">No availability set yet.</div>
+                            }
+                            else
+                            {
+                                foreach (var item in Model.Availability)
+                                {
+                                    <div class="glass p-3 rounded-xl">
+                                        <p class="text-xs text-white/60">
+                                            @item.StartDateTime:g → @item.EndDateTime:g
+                                        </p>
+                                        <p class="text-[10px] text-primary font-bold uppercase">
+                                            @(item.IsRecurringWeekly ? "Recurring Weekly" : "One-time")
+                                        </p>
+                                    </div>
+                                }
+                            }
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </main>
+    </div>
+</div>
