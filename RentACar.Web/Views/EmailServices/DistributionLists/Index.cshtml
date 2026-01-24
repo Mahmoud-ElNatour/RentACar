@@ -166,8 +166,8 @@
                 </button>
             </div>
             
-            <!-- Generate List Section (Using Partial for organization, but content matches template) -->
-            @await Html.PartialAsync("_GenerateEmailsListPartial")
+            <!-- Generate List Section -->
+            @await Html.PartialAsync("~/Views/EmailServices/DistributionLists/_GenerateEmailsListPartial.cshtml")
 
             <div class="flex flex-col gap-4">
                 <div class="flex items-center justify-between px-1">
@@ -353,8 +353,8 @@
         // Enable dark mode for Tailwind classes
         document.documentElement.classList.add('dark');
         
-        // Filter functionality
         document.addEventListener('DOMContentLoaded', function() {
+            // 1. Filter functionality for the table
             const filterInput = document.querySelector('input[placeholder="Filter lists..."]');
             if (filterInput) {
                 filterInput.addEventListener('input', function(e) {
@@ -379,7 +379,7 @@
                 });
             }
             
-            // Auto-calculate estimated recipients when filter checkboxes change
+            // 2. Auto-Update Listeners
             const filterCheckboxes = document.querySelectorAll('.filter-checkbox');
             filterCheckboxes.forEach(checkbox => {
                 checkbox.addEventListener('change', function() {
@@ -387,11 +387,45 @@
                 });
             });
             
-            // Initial calculation on page load
+            // Initial calculation
             updateEstimatedRecipients();
         });
-        
-        // Function to update estimated recipients via AJAX
+
+        // --- GLOBAL FUNCTIONS ---
+
+        // Create List
+        function createListFromFilters() {
+            const name = document.getElementById('gen-list-name')?.value;
+            if (!name) {
+                alert('Please enter a list name');
+                return;
+            }
+
+            const rule = {
+                IncludeEmployees: document.getElementById('include-employees')?.checked || false,
+                IncludeCustomers: document.getElementById('include-customers')?.checked || false,
+                IncludeAdmins: document.getElementById('include-admins')?.checked || false
+            };
+            
+            fetch(`/DistributionLists/CreateFromGenerated?listName=${encodeURIComponent(name)}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(rule)
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Failed to create list');
+                return response.json();
+            })
+            .then(data => {
+                window.location.href = `/DistributionLists/Details/${data.listId}`;
+            })
+            .catch(err => {
+                console.error('Error creating list', err);
+                alert('Failed to create list: ' + err.message);
+            });
+        }
+
+        // Calculate Recipients
         function updateEstimatedRecipients() {
             const includeEmployees = document.getElementById('include-employees')?.checked || false;
             const includeCustomers = document.getElementById('include-customers')?.checked || false;
@@ -408,37 +442,33 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(rule)
             })
-                .then(response => response.json())
-                .then(data => {
-                    // Update total count
-                    const totalCountElem = document.getElementById('total-count');
-                    if (totalCountElem) {
-                        totalCountElem.textContent = data.totalCount || 0;
-                    }
-                    
-                    // Update breakdown text
-                    const breakdownElem = document.getElementById('breakdown-text');
-                    if (breakdownElem && data.breakdown) {
-                        breakdownElem.textContent = data.breakdown;
-                    }
-                })
-                .catch(err => {
-                    console.error('Failed to calculate recipients', err);
-                });
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.json();
+            })
+            .then(data => {
+                const totalCountElem = document.getElementById('total-count');
+                if (totalCountElem) totalCountElem.textContent = data.totalCount || 0;
+                
+                const breakdownElem = document.getElementById('breakdown-text');
+                if (breakdownElem) breakdownElem.textContent = data.breakdown || "Select filters to calculate";
+            })
+            .catch(err => {
+                console.error('Failed to calculate recipients', err);
+                const breakdownElem = document.getElementById('breakdown-text');
+                if(breakdownElem) breakdownElem.textContent = "Error calculating recipients";
+            });
         }
         
-        // Member Modal Functions
+        // Member Modal
         function openMemberModal(id) {
             const container = document.getElementById('member-modal-container');
             const content = document.getElementById('member-modal-content');
-            
             container.classList.remove('hidden');
             
             fetch(`/DistributionLists/GetListMembers/${id}`)
                 .then(response => response.text())
-                .then(html => {
-                    content.innerHTML = html;
-                })
+                .then(html => content.innerHTML = html)
                 .catch(err => {
                     console.error('Failed to load members', err);
                     content.innerHTML = '<div class="p-6 text-red-500">Failed to load members</div>';
@@ -451,36 +481,30 @@
             document.getElementById('member-modal-content').innerHTML = '<div class="p-10 flex justify-center"><span class="material-symbols-outlined animate-spin text-primary text-4xl">progress_activity</span></div>';
         }
 
-        // Confirm Delete Modal
+        // Confirm Delete
         function openConfirmDeleteModal(id) {
             const container = document.getElementById('confirm-modal-container');
             const content = document.getElementById('confirm-modal-content');
-            
             container.classList.remove('hidden');
             
             fetch(`/DistributionLists/ConfirmDelete/${id}`)
                 .then(response => response.text())
-                .then(html => {
-                    content.innerHTML = html;
-                })
+                .then(html => content.innerHTML = html)
                 .catch(err => {
                     console.error('Failed to load confirmation', err);
                     content.innerHTML = '<div class="p-6 text-red-500">Failed to load confirmation</div>';
                 });
         }
 
-        // Confirm Toggle Modal
+        // Confirm Toggle
         function openConfirmToggleModal(id) {
             const container = document.getElementById('confirm-modal-container');
             const content = document.getElementById('confirm-modal-content');
-            
             container.classList.remove('hidden');
             
             fetch(`/DistributionLists/ConfirmToggle/${id}`)
                 .then(response => response.text())
-                .then(html => {
-                    content.innerHTML = html;
-                })
+                .then(html => content.innerHTML = html)
                 .catch(err => {
                     console.error('Failed to load confirmation', err);
                     content.innerHTML = '<div class="p-6 text-red-500">Failed to load confirmation</div>';
@@ -497,19 +521,12 @@
         function openPreviewModal() {
             const container = document.getElementById('preview-modal-container');
             const content = document.getElementById('preview-modal-content');
-            
             container.classList.remove('hidden');
             
-            // Get filter values using IDs (jQuery :contains doesn't work in vanilla JS)
-            const includeEmployees = document.getElementById('include-employees')?.checked || false;
-            const includeCustomers = document.getElementById('include-customers')?.checked || false;
-            const includeAdmins = document.getElementById('include-admins')?.checked || false;
-            
-            // Build rule object
             const rule = {
-                IncludeEmployees: includeEmployees,
-                IncludeCustomers: includeCustomers,
-                IncludeAdmins: includeAdmins
+                IncludeEmployees: document.getElementById('include-employees')?.checked || false,
+                IncludeCustomers: document.getElementById('include-customers')?.checked || false,
+                IncludeAdmins: document.getElementById('include-admins')?.checked || false
             };
 
             fetch('/DistributionLists/PreviewRecipients', {
@@ -517,14 +534,12 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(rule)
             })
-                .then(response => response.text())
-                .then(html => {
-                    content.innerHTML = html;
-                })
-                .catch(err => {
-                    console.error('Failed to load preview', err);
-                    content.innerHTML = '<div class="p-6 text-red-500">Failed to load preview</div>';
-                });
+            .then(response => response.text())
+            .then(html => content.innerHTML = html)
+            .catch(err => {
+                console.error('Failed to load preview', err);
+                content.innerHTML = '<div class="p-6 text-red-500">Failed to load preview</div>';
+            });
         }
 
         function closePreviewModal() {
