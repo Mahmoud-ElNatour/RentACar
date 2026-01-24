@@ -158,10 +158,12 @@ namespace RentACar.Application.Managers
                                 sentCount++;
                                 
                                 runRecord.RunItems.Add(new ServiceRunItem { EventType = "PaymentReminder", TargetType = "Booking", TargetId = booking.BookingId.ToString(), RecipientEmail = email, Result = "Success" });
+                                _context.NotificationLogs.Add(new NotificationLog { EventType = "PaymentReminder", TargetType = "Booking", TargetId = booking.BookingId.ToString(), RecipientEmail = email, Result = "Success", Actor = "System", CreatedAt = DateTime.UtcNow });
                             }
                             catch(Exception ex) {
                                 failedCount++;
                                 runRecord.RunItems.Add(new ServiceRunItem { EventType = "PaymentReminder", TargetType = "Booking", TargetId = booking.BookingId.ToString(), RecipientEmail = email, Result = "Failed", Error = ex.Message });
+                                _context.NotificationLogs.Add(new NotificationLog { EventType = "PaymentReminder", TargetType = "Booking", TargetId = booking.BookingId.ToString(), RecipientEmail = email, Result = "Failed", Details = ex.Message, Actor = "System", CreatedAt = DateTime.UtcNow });
                             }
                         }
                     }
@@ -189,10 +191,12 @@ namespace RentACar.Application.Managers
                             _appContext.Bookings.Update(booking);
                             sentCount++;
                              runRecord.RunItems.Add(new ServiceRunItem { EventType = "PickupReminder", TargetType = "Booking", TargetId = booking.BookingId.ToString(), RecipientEmail = email, Result = "Success" });
+                             _context.NotificationLogs.Add(new NotificationLog { EventType = "PickupReminder", TargetType = "Booking", TargetId = booking.BookingId.ToString(), RecipientEmail = email, Result = "Success", Actor = "System", CreatedAt = DateTime.UtcNow });
                          }
                          catch(Exception ex) {
                              failedCount++;
                              runRecord.RunItems.Add(new ServiceRunItem { EventType = "PickupReminder", TargetType = "Booking", TargetId = booking.BookingId.ToString(), RecipientEmail = email, Result = "Failed", Error = ex.Message });
+                             _context.NotificationLogs.Add(new NotificationLog { EventType = "PickupReminder", TargetType = "Booking", TargetId = booking.BookingId.ToString(), RecipientEmail = email, Result = "Failed", Details = ex.Message, Actor = "System", CreatedAt = DateTime.UtcNow });
                          }
                     }
                 }
@@ -219,10 +223,12 @@ namespace RentACar.Application.Managers
                             _appContext.Bookings.Update(booking);
                             sentCount++;
                             runRecord.RunItems.Add(new ServiceRunItem { EventType = "ReturnReminder", TargetType = "Booking", TargetId = booking.BookingId.ToString(), RecipientEmail = email, Result = "Success" });
+                            _context.NotificationLogs.Add(new NotificationLog { EventType = "ReturnReminder", TargetType = "Booking", TargetId = booking.BookingId.ToString(), RecipientEmail = email, Result = "Success", Actor = "System", CreatedAt = DateTime.UtcNow });
                         }
                          catch(Exception ex) {
                              failedCount++;
                              runRecord.RunItems.Add(new ServiceRunItem { EventType = "ReturnReminder", TargetType = "Booking", TargetId = booking.BookingId.ToString(), RecipientEmail = email, Result = "Failed", Error = ex.Message });
+                             _context.NotificationLogs.Add(new NotificationLog { EventType = "ReturnReminder", TargetType = "Booking", TargetId = booking.BookingId.ToString(), RecipientEmail = email, Result = "Failed", Details = ex.Message, Actor = "System", CreatedAt = DateTime.UtcNow });
                          }
                     }
                 }
@@ -266,10 +272,12 @@ namespace RentACar.Application.Managers
                              _appContext.Promocodes.Update(promo);
                              sentCount++; // Sent 1 email (to multiple recipients) or count per recipient? EmailManager sends bulk or loop? Assuming bulk single call count as 1 event.
                              runRecord.RunItems.Add(new ServiceRunItem { EventType = "PromoExpiry", TargetType = "Promocode", TargetId = promo.Name ?? promo.PromocodeId.ToString(), RecipientEmail = "DistributionList", Result = "Success" });
+                             _context.NotificationLogs.Add(new NotificationLog { EventType = "PromoExpiry", TargetType = "Promocode", TargetId = promo.Name ?? promo.PromocodeId.ToString(), RecipientEmail = "DistributionList", Result = "Success", Actor = "System", CreatedAt = DateTime.UtcNow });
                          }
                          catch(Exception ex) {
                              failedCount++;
                              runRecord.RunItems.Add(new ServiceRunItem { EventType = "PromoExpiry", TargetType = "Promocode", TargetId = promo.Name ?? promo.PromocodeId.ToString(), RecipientEmail = "DistributionList", Result = "Failed", Error = ex.Message });
+                             _context.NotificationLogs.Add(new NotificationLog { EventType = "PromoExpiry", TargetType = "Promocode", TargetId = promo.Name ?? promo.PromocodeId.ToString(), RecipientEmail = "DistributionList", Result = "Failed", Details = ex.Message, Actor = "System", CreatedAt = DateTime.UtcNow });
                          }
                      }
                 }

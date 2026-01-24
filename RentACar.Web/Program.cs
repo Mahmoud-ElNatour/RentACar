@@ -104,6 +104,7 @@ builder.Services.AddScoped<SenderIdentityManager>();
 builder.Services.AddScoped<EmailFeatureConfigManager>();
 builder.Services.AddScoped<EmailRoutingService>();
 builder.Services.AddScoped<NotificationProcessingService>();
+builder.Services.AddScoped<EmailLogManager>();
 
 // // ✅ HTTPS redirection
 // builder.Services.AddHttpsRedirection(options =>
@@ -143,6 +144,10 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapControllerRoute(
+    name: "areas",
+    pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
 
 app.MapControllerRoute(
     name: "default",
