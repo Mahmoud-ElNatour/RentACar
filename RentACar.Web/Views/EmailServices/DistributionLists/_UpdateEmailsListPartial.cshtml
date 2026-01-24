@@ -43,13 +43,21 @@
                         <div class="col-md-4 d-flex flex-column gap-3">
                             <p class="text-uppercase small fw-bold mb-0" style="color: #9ca3af;">Safety &amp; Status Filters</p>
                             <div class="d-flex flex-column gap-2">
-                                <label class="d-flex align-items-center gap-3 p-2">
-                                    <input checked disabled class="form-check-input" type="checkbox" style="background-color: #0f1114; border-color: #daad52; opacity: 0.6;"/>
-                                    <span class="small" style="color: #9ca3af;">Exclude blacklisted (Always On)</span>
+                                <label class="d-flex align-items-center gap-3 p-2 rounded" style="border: 1px solid #2d323d; cursor: pointer; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='rgba(218, 173, 82, 0.05)'" onmouseout="this.style.backgroundColor='transparent'">
+                                    <input id="update-exclude-blacklisted" class="form-check-input update-filter-checkbox" type="checkbox" checked style="background-color: #0f1114; border-color: #daad52;"/>
+                                    <span class="small" style="color: #9ca3af;">Exclude blacklisted</span>
                                 </label>
-                                <label class="d-flex align-items-center gap-3 p-2">
-                                    <input checked disabled class="form-check-input" type="checkbox" style="background-color: #0f1114; border-color: #daad52; opacity: 0.6;"/>
-                                    <span class="small" style="color: #9ca3af;">Active only (Always On)</span>
+                                <label class="d-flex align-items-center gap-3 p-2 rounded" style="border: 1px solid #2d323d; cursor: pointer; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='rgba(218, 173, 82, 0.05)'" onmouseout="this.style.backgroundColor='transparent'">
+                                    <input id="update-active-only" class="form-check-input update-filter-checkbox" type="checkbox" checked style="background-color: #0f1114; border-color: #daad52;"/>
+                                    <span class="small" style="color: #9ca3af;">Active only</span>
+                                </label>
+                                <label class="d-flex align-items-center gap-3 p-2 rounded" style="border: 1px solid #2d323d; cursor: pointer; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='rgba(218, 173, 82, 0.05)'" onmouseout="this.style.backgroundColor='transparent'">
+                                    <input id="update-marketing-optin" class="form-check-input update-filter-checkbox" type="checkbox" style="background-color: #0f1114; border-color: #daad52;"/>
+                                    <span class="small" style="color: #9ca3af;">Marketing opted-in</span>
+                                </label>
+                                <label class="d-flex align-items-center gap-3 p-2 rounded" style="border: 1px solid #2d323d; cursor: pointer; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='rgba(218, 173, 82, 0.05)'" onmouseout="this.style.backgroundColor='transparent'">
+                                    <input id="update-verified-only" class="form-check-input update-filter-checkbox" type="checkbox" style="background-color: #0f1114; border-color: #daad52;"/>
+                                    <span class="small" style="color: #9ca3af;">Verified emails only</span>
                                 </label>
                             </div>
                         </div>

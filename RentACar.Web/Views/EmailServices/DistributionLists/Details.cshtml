@@ -508,7 +508,11 @@
             return {
                 IncludeEmployees: document.getElementById('update-include-employees')?.checked || false,
                 IncludeCustomers: document.getElementById('update-include-customers')?.checked || false,
-                IncludeAdmins: document.getElementById('update-include-admins')?.checked || false
+                IncludeAdmins: document.getElementById('update-include-admins')?.checked || false,
+                OnlyActiveUsers: document.getElementById('update-active-only')?.checked || false,
+                ExcludeBlacklistedCustomers: document.getElementById('update-exclude-blacklisted')?.checked || false,
+                OnlyVerifiedEmails: document.getElementById('update-verified-only')?.checked || false
+                // MarketingOptedIn not supported in DTO yet, but UI requested
             };
         }
 
@@ -560,7 +564,7 @@
              const content = document.getElementById('update-preview-modal-content');
              const rule = getFilterRule();
              
-             container.classList.remove('hidden');
+             container.classList.remove('d-none');
              
              fetch('/DistributionLists/PreviewRecipients', {
                  method: 'POST',
@@ -577,9 +581,9 @@
              });
         }
         
-        function closeUpdatePreviewModal() {
+        function closePreviewModal() {
             const container = document.getElementById('update-preview-modal-container');
-            container.classList.add('hidden');
+            container.classList.add('d-none');
             document.getElementById('update-preview-modal-content').innerHTML = '<div class="p-10 flex justify-center"><span class="material-symbols-outlined animate-spin text-primary text-4xl">progress_activity</span></div>';
         }
     </script>
