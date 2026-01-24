@@ -226,6 +226,35 @@ namespace RentACar.Web.Controllers
             return Ok(new { listId });
         }
 
+        [HttpPost]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> UpdateFromGenerated([FromBody] DistributionListRuleDto rule, [FromQuery] int listId)
+        {
+            var recipients = await _manager.PreviewRecipientsAsync(rule);
+            var userId = _userManager.GetUserId(User) ?? string.Empty;
+            var list = await _manager.GetListByIdAsync(listId);
+            
+            if (list == null) return NotFound();
+
+            int addedCount = 0;
+            foreach (var r in recipients)
+            {
+                // Check if member already exists (simple check by email)
+                if (!list.Members.Any(m => m.Email.Equals(r.Email, StringComparison.OrdinalIgnoreCase)))
+                {
+                    await _manager.AddMemberAsync(listId, r.Email, r.Label, r.MemberType, userId);
+                    addedCount++;
+                }
+            }
+
+            if (addedCount > 0)
+            {
+                await _auditLogManager.LogAsync("Update from Filters", "DistributionList", listId.ToString(), $"Added {addedCount} new members to '{list.Name}' from filters");
+            }
+
+            return Ok(new { addedCount, message = $"Successfully added {addedCount} new members." });
+        }
+
         [HttpGet]
         public async Task<IActionResult> ExportToExcel(int id)
         {

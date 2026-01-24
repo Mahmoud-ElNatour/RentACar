@@ -101,6 +101,9 @@
             </div>
         </div>
 
+        <!-- Auto Update Section -->
+        @await Html.PartialAsync("~/Views/EmailServices/DistributionLists/_UpdateEmailsListPartial.cshtml", Model)
+
         <!-- Add Member Section -->
         <div class="card mb-4" style="background-color: #1c1f26; border: 1px solid #2d323d;">
             <div class="card-header" style="background-color: rgba(218, 173, 82, 0.1); border-bottom: 1px solid #2d323d;">
@@ -482,6 +485,102 @@
             document.getElementById('edit-active').checked = isActive;
             const modal = new bootstrap.Modal(document.getElementById('edit-modal'));
             modal.show();
+        }
+
+        // --- AUTO UPDATE FUNCTIONS ---
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // Auto-update listeners
+            const updateCheckboxes = document.querySelectorAll('.update-filter-checkbox');
+            updateCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    calculateUpdateCandidates();
+                });
+            });
+            
+            // Initial calc if variables exist
+             if(document.getElementById('update-total-count')) {
+                calculateUpdateCandidates();
+             }
+        });
+
+        function getFilterRule() {
+            return {
+                IncludeEmployees: document.getElementById('update-include-employees')?.checked || false,
+                IncludeCustomers: document.getElementById('update-include-customers')?.checked || false,
+                IncludeAdmins: document.getElementById('update-include-admins')?.checked || false
+            };
+        }
+
+        function calculateUpdateCandidates() {
+            const rule = getFilterRule();
+            
+            fetch('/DistributionLists/CalculateEstimatedRecipients', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(rule)
+            })
+            .then(response => response.json())
+            .then(data => {
+                const countElem = document.getElementById('update-total-count');
+                const breakdownElem = document.getElementById('update-breakdown-text');
+                if(countElem) countElem.textContent = data.totalCount || 0;
+                if(breakdownElem) breakdownElem.textContent = data.breakdown || "Select filters to calculate";
+            })
+            .catch(err => console.error('Error calculating candidates', err));
+        }
+        
+        function updateListFromFilters() {
+            const rule = getFilterRule();
+            const listId = document.getElementById('update-list-id').value;
+             
+            // Simple confirmation
+            if(!confirm('This will add new matching members to the list. Existing members will not be removed. Continue?')) {
+                return;
+            }
+            
+            fetch(`/DistributionLists/UpdateFromGenerated?listId=${listId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(rule)
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message); 
+                location.reload(); 
+            })
+            .catch(err => {
+                console.error('Error updating list', err);
+                alert('Failed to update list.');
+            });
+        }
+        
+        function openUpdatePreviewModal() {
+             const container = document.getElementById('update-preview-modal-container');
+             const content = document.getElementById('update-preview-modal-content');
+             const rule = getFilterRule();
+             
+             container.classList.remove('hidden');
+             
+             fetch('/DistributionLists/PreviewRecipients', {
+                 method: 'POST',
+                 headers: { 'Content-Type': 'application/json' },
+                 body: JSON.stringify(rule)
+             })
+             .then(response => response.text())
+             .then(html => {
+                 content.innerHTML = html;
+             })
+             .catch(err => {
+                 console.error('Failed to load preview', err);
+                 content.innerHTML = '<div class="p-6 text-red-500">Failed to load preview</div>';
+             });
+        }
+        
+        function closeUpdatePreviewModal() {
+            const container = document.getElementById('update-preview-modal-container');
+            container.classList.add('hidden');
+            document.getElementById('update-preview-modal-content').innerHTML = '<div class="p-10 flex justify-center"><span class="material-symbols-outlined animate-spin text-primary text-4xl">progress_activity</span></div>';
         }
     </script>
 }
