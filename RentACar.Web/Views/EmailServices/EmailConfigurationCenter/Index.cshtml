@@ -493,11 +493,19 @@
                    </span>
                 </div>
                 <div class="space-y-2">
-                   <label class="block text-[8px] uppercase text-slate-500 font-bold">Delay (Hours)</label>
-                   <input type="number" name="NotificationSettings.PaymentReminderDelayHours" value="@Model.NotificationSettings.PaymentReminderDelayHours" class="w-full bg-black border-white/10 rounded text-[10px] text-white py-1" />
-                   <div class="flex items-center gap-2 mt-2">
-                       <label class="text-[8px] uppercase text-slate-500 font-bold">Send Once?</label>
-                       <input type="checkbox" name="NotificationSettings.PaymentReminderSendOnceOnly" value="true" checked="@Model.NotificationSettings.PaymentReminderSendOnceOnly" class="bg-black border-white/10 rounded" />
+                   <div class="grid grid-cols-2 gap-2">
+                       <div>
+                            <label class="block text-[8px] uppercase text-slate-500 font-bold">Delay (Hrs)</label>
+                            <input type="number" name="NotificationSettings.PaymentReminderInitialDelayHours" value="@Model.NotificationSettings.PaymentReminderInitialDelayHours" class="w-full bg-black border-white/10 rounded text-[10px] text-white py-1" />
+                       </div>
+                       <div>
+                            <label class="block text-[8px] uppercase text-slate-500 font-bold">Interval (Hrs)</label>
+                            <input type="number" name="NotificationSettings.PaymentReminderIntervalHours" value="@Model.NotificationSettings.PaymentReminderIntervalHours" class="w-full bg-black border-white/10 rounded text-[10px] text-white py-1" />
+                       </div>
+                   </div>
+                   <div>
+                        <label class="block text-[8px] uppercase text-slate-500 font-bold">Max Duration (Hrs)</label>
+                        <input type="number" name="NotificationSettings.PaymentReminderMaxDurationHours" value="@Model.NotificationSettings.PaymentReminderMaxDurationHours" class="w-full bg-black border-white/10 rounded text-[10px] text-white py-1" />
                    </div>
                 </div>
              </div>
@@ -511,12 +519,23 @@
                        @(Model.NotificationSettings.PickupReminderEnabled ? "toggle_on" : "toggle_off")
                    </span>
                 </div>
+                <div class="mt-1">
+                     <label class="block text-[8px] uppercase text-slate-500 font-bold">Schedule (CSV Hours)</label>
+                     <input type="text" name="NotificationSettings.PickupReminderScheduleHoursCsv" value="@Model.NotificationSettings.PickupReminderScheduleHoursCsv" class="w-full bg-black border-white/10 rounded text-[10px] text-white py-1" placeholder="e.g. 24, 1" />
+                </div>
+                
+                <div class="h-[1px] bg-white/5 my-2"></div>
+
                 <div class="flex justify-between items-center mt-2">
                    <span class="text-[10px] font-black text-white uppercase tracking-widest">Return Reminder</span>
                    <input type="hidden" name="NotificationSettings.ReturnReminderEnabled" id="ReturnReminderEnabled" value="@Model.NotificationSettings.ReturnReminderEnabled.ToString().ToLower()" />
                    <span class="material-symbols-outlined text-gold toggle-icon" data-target="ReturnReminderEnabled" onclick="toggleState(this)">
                        @(Model.NotificationSettings.ReturnReminderEnabled ? "toggle_on" : "toggle_off")
                    </span>
+                </div>
+                <div class="mt-1">
+                     <label class="block text-[8px] uppercase text-slate-500 font-bold">Schedule (CSV Hours)</label>
+                     <input type="text" name="NotificationSettings.ReturnReminderScheduleHoursCsv" value="@Model.NotificationSettings.ReturnReminderScheduleHoursCsv" class="w-full bg-black border-white/10 rounded text-[10px] text-white py-1" placeholder="e.g. 24, 2" />
                 </div>
              </div>
              
@@ -529,6 +548,11 @@
                         @(Model.NotificationSettings.PromoExpiryEnabled ? "toggle_on" : "toggle_off")
                     </span>
                 </div>
+                <!-- Logic changed: No frequency (always daily check implied by code), just Days Before? -->
+                 <div class="mt-2">
+                      <label class="block text-[8px] uppercase text-slate-500 font-bold">Days Before Expiry</label>
+                      <input type="number" name="NotificationSettings.PromoExpiryDaysBefore" value="@Model.NotificationSettings.PromoExpiryDaysBefore" class="w-full bg-black border-white/10 rounded text-[10px] text-white py-1" />
+                 </div>
                 <div class="grid grid-cols-2 gap-2 mt-2">
                     <div>
                       <label class="block text-[8px] uppercase text-slate-500 font-bold mb-1">Frequency</label>

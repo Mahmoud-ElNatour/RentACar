@@ -25,34 +25,26 @@ namespace RentACar.Core.Entities
 
         // --- Payment Reminder Config ---
         public bool PaymentReminderEnabled { get; set; } = true;
-        public int PaymentReminderDelayHours { get; set; } = 24;
-        public bool PaymentReminderSendOnceOnly { get; set; } = true;
-        public int? PaymentReminderRepeatEveryHours { get; set; }
-        public int? PaymentReminderMaxSends { get; set; }
+        public int PaymentReminderInitialDelayHours { get; set; } = 6; // Start checking after 6 hours
+        public int PaymentReminderIntervalHours { get; set; } = 6; // Repeat every 6 hours
+        public int PaymentReminderMaxDurationHours { get; set; } = 48; // Stop after 48 hours
         public string PaymentReminderStatusCsv { get; set; } = "Pending";
 
         // --- Pickup Reminder Config ---
         public bool PickupReminderEnabled { get; set; } = true;
-        public int PickupReminderHoursBefore { get; set; } = 24;
-        public bool PickupReminderSendOnceOnly { get; set; } = true;
+        public string PickupReminderScheduleHoursCsv { get; set; } = "24,1"; // Alerts at 24h before and 1h before
 
         // --- Return Reminder Config ---
         public bool ReturnReminderEnabled { get; set; } = true;
-        public int ReturnReminderHoursBefore { get; set; } = 24;
-        public bool ReturnReminderSendOnceOnly { get; set; } = true;
+        public string ReturnReminderScheduleHoursCsv { get; set; } = "24,2"; // Alerts at 24h before and 2h before
 
         // --- Promo Expiry Config ---
         public bool PromoExpiryEnabled { get; set; } = true;
+        public int PromoExpiryDaysBefore { get; set; } = 1; // Notify 1 day before
         public string PromoExpiryCheckFrequency { get; set; } = "Daily";
         public bool PromoExpiryAutoDeactivate { get; set; } = true;
 
-        // --- Distribution List Mappings (Internal Groups) ---
-        public int? PromoExpiryEmployeesListId { get; set; }
-        public int? CarUpdateEmployeesListId { get; set; }
-        public int? CategoryUpdateEmployeesListId { get; set; }
-        public int? PromocodeUpdateEmployeesListId { get; set; }
-        public int? DocsReminderEmployeesListId { get; set; }
-        public int? EmployeesDefaultListId { get; set; } // Fallback
+
 
         // --- Metadata ---
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;

@@ -43,61 +43,36 @@ namespace RentACar.Application.Services
 
         public async Task<List<string>> GetRecipientsForCarUpdateAsync()
         {
-            var settings = await _context.NotificationSettings.FirstOrDefaultAsync();
-            int? listId = settings?.CarUpdateEmployeesListId;
-
-            return await GetEmailsFromListOrFallbackAsync(listId, async () => 
-            {
-                // Default: All Active Employees
-                // Accessing Email through the User navigation property
-                return await _context.Employees
-                    .Where(e => e.User.Email != null)
-                    .Select(e => e.User.Email)
-                    .ToListAsync();
-            });
+            // Default: All Active Employees
+            return await _context.Employees
+                .Where(e => e.User.Email != null)
+                .Select(e => e.User.Email)
+                .ToListAsync();
         }
 
         public async Task<List<string>> GetRecipientsForCategoryUpdateAsync()
         {
-            var settings = await _context.NotificationSettings.FirstOrDefaultAsync();
-            int? listId = settings?.CategoryUpdateEmployeesListId;
-
-            return await GetEmailsFromListOrFallbackAsync(listId, async () =>
-            {
-                return await _context.Employees
-                    .Where(e => e.User.Email != null)
-                    .Select(e => e.User.Email)
-                    .ToListAsync();
-            });
+            return await _context.Employees
+                .Where(e => e.User.Email != null)
+                .Select(e => e.User.Email)
+                .ToListAsync();
         }
 
         public async Task<List<string>> GetRecipientsForPromocodeUpdateAsync()
         {
-            var settings = await _context.NotificationSettings.FirstOrDefaultAsync();
-            int? listId = settings?.PromocodeUpdateEmployeesListId;
-
-            return await GetEmailsFromListOrFallbackAsync(listId, async () =>
-            {
-                return await _context.Employees
-                    .Where(e => e.User.Email != null)
-                    .Select(e => e.User.Email)
-                    .ToListAsync();
-            });
+            return await _context.Employees
+                .Where(e => e.User.Email != null)
+                .Select(e => e.User.Email)
+                .ToListAsync();
         }
 
         public async Task<List<string>> GetRecipientsForPromoExpiryAsync()
         {
-            var settings = await _context.NotificationSettings.FirstOrDefaultAsync();
-            int? listId = settings?.PromoExpiryEmployeesListId;
-
-            return await GetEmailsFromListOrFallbackAsync(listId, async () =>
-            {
-                // Default: All Active Employees
-                return await _context.Employees
-                    .Where(e => e.User.Email != null)
-                    .Select(e => e.User.Email)
-                    .ToListAsync();
-            });
+            // Default: All Active Employees
+            return await _context.Employees
+                .Where(e => e.User.Email != null)
+                .Select(e => e.User.Email)
+                .ToListAsync();
         }
 
         // Generic method for arbitrary lists
