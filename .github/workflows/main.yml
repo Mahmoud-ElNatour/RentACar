@@ -79,8 +79,8 @@ jobs:
           dotnet-ef --version
 
           # Run migrations
-          dotnet-ef database update --project .\RentACar.Infrastructure\RentACar.Infrastructure.csproj --startup-project .\RentACar.Web\RentACar.Web.csproj --context ApplicationDbContext --no-build
-          dotnet-ef database update --project .\RentACar.Infrastructure\RentACar.Infrastructure.csproj --startup-project .\RentACar.Web\RentACar.Web.csproj --context RentACarDbContext --no-build
+          dotnet-ef database update --project .\RentACar.Infrastructure\RentACar.Infrastructure.csproj --startup-project .\RentACar.Web\RentACar.Web.csproj --context ApplicationDbContext --configuration Release --no-build
+          dotnet-ef database update --project .\RentACar.Infrastructure\RentACar.Infrastructure.csproj --startup-project .\RentACar.Web\RentACar.Web.csproj --context RentACarDbContext --configuration Release --no-build
 
       - name: Deploy to IIS
         shell: powershell
