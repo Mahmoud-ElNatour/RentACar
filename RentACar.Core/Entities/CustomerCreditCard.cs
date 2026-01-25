@@ -6,12 +6,8 @@ namespace RentACar.Core.Entities;
 [Table("CustomerCreditCard")]
 public class CustomerCreditCard
 {
-    [Key]
-    [Column("userId", Order = 0)]
     public int UserId { get; set; }
 
-    [Key]
-    [Column("creditCardId", Order = 1)]
     public int CreditCardId { get; set; }
 
     [ForeignKey("CreditCardId")]

@@ -19,14 +19,18 @@ namespace RentACar.Application.Managers
 
 
         private readonly AuditLogManager _auditLogManager;
+        private readonly EmailManager _emailManager;
+        private readonly EmployeeManager _employeeManager;
 
-        public PromocodeManager(IPromocodeRepository promocodeRepository, IMapper mapper, UserManager<IdentityUser> userManager, ILogger<PromocodeManager> logger, AuditLogManager auditLogManager)
+        public PromocodeManager(IPromocodeRepository promocodeRepository, IMapper mapper, UserManager<IdentityUser> userManager, ILogger<PromocodeManager> logger, AuditLogManager auditLogManager, EmailManager emailManager, EmployeeManager employeeManager)
         {
             _promocodeRepository = promocodeRepository;
             _mapper = mapper;
             _userManager = userManager;
             _logger = logger;
             _auditLogManager = auditLogManager;
+            _emailManager = emailManager;
+            _employeeManager = employeeManager;
         }
 
         public async Task<PromocodeDto?> AddPromocodeAsync(PromocodeDto promocodeDto, string userId)
@@ -50,6 +54,10 @@ namespace RentACar.Application.Managers
 
             _logger.LogInformation("Promocode added with id {Id}", addedEntity.PromocodeId);
             await _auditLogManager.LogAsync("Create", "Promocode", addedEntity.PromocodeId.ToString(), $"Added promocode: {promocodeDto.Name} ({promocodeDto.DiscountPercentage}%)");
+            
+            var emails = await _employeeManager.GetActiveEmployeeEmailsAsync();
+            await _emailManager.SendPromocodeUpdateEmail(emails, addedEntity, "Create", "New Promocode", "System/Admin");
+
             return _mapper.Map<PromocodeDto>(addedEntity);
         }
 
@@ -105,11 +113,25 @@ namespace RentACar.Application.Managers
                 return null; // Or throw InvalidOperationException
             }
 
+            var oldIsActive = existingPromocode.IsActive;
+            
             _mapper.Map(promocodeDto, existingPromocode);
             await _promocodeRepository.UpdateAsync(existingPromocode);
-            await _promocodeRepository.UpdateAsync(existingPromocode);
+            
             _logger.LogInformation("Promocode {Id} updated", promocodeDto.PromocodeId);
             await _auditLogManager.LogAsync("Update", "Promocode", promocodeDto.PromocodeId.ToString(), $"Updated promocode: {promocodeDto.Name}");
+            
+            // Determine reason
+            string reason = "General Update";
+            if (oldIsActive != existingPromocode.IsActive)
+            {
+                reason = existingPromocode.IsActive ? "Activated" : "Deactivated";
+            }
+
+            // 📨 Send internal notification
+            var emails = await _employeeManager.GetActiveEmployeeEmailsAsync();
+            await _emailManager.SendPromocodeUpdateEmail(emails, existingPromocode, "Update", reason, "System/Admin");
+            
             return _mapper.Map<PromocodeDto>(existingPromocode);
         }
 
@@ -141,6 +163,10 @@ namespace RentACar.Application.Managers
                 
                 _logger.LogInformation("Promocode {Id} soft deleted (Usage: {Count})", id, usageCount);
                 await _auditLogManager.LogAsync("Delete", "Promocode", id.ToString(), $"Soft deleted promocode {id} (Used {usageCount} times)");
+                
+                // 📨 Send internal notification (Deactivated)
+                var emails = await _employeeManager.GetActiveEmployeeEmailsAsync();
+                await _emailManager.SendPromocodeUpdateEmail(emails, promocode, "Deactivated", "Soft Deleted (Used)", "System/Admin");
             }
             else
             {
@@ -149,6 +175,10 @@ namespace RentACar.Application.Managers
                 
                 _logger.LogInformation("Promocode {Id} hard deleted (Unused)", id);
                 await _auditLogManager.LogAsync("Delete", "Promocode", id.ToString(), $"Hard deleted unused promocode {id}");
+                
+                // 📨 Send internal notification (Deleted)
+                var emails2 = await _employeeManager.GetActiveEmployeeEmailsAsync();
+                await _emailManager.SendPromocodeUpdateEmail(emails2, promocode, "Deleted", "Hard Deleted (Unused)", "System/Admin");
             }
 
             return true;

@@ -223,7 +223,7 @@ namespace RentACar.Web.Controllers
         [HttpPost("{id}/reset-password")]
         public async Task<IActionResult> ResetPassword(int id)
         {
-            var success = await _customerManager.ResetPassword(id, "C@c123456");
+            var success = await _customerManager.ResetPassword(id);
             if (!success) return NotFound();
             return NoContent();
         }
@@ -270,7 +270,7 @@ namespace RentACar.Web.Controllers
                 values: new { area = "Identity", userId = userId, code = code },
                 protocol: Request.Scheme);
 
-            await _emailManager.SendConfirmationEmailAsync(user.Email, callbackUrl, customer.Name);
+            await _emailManager.SendConfirmationEmailAsync(user.Email ?? string.Empty, callbackUrl, customer.Name);
 
             return Ok(new { message = "Confirmation email sent successfully." });
         }

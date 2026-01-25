@@ -58,4 +58,13 @@ public partial class Booking
     public virtual Promocode? Promocode { get; set; }
 
     public virtual Payment? Payment { get; set; }
+
+    [Column("lastPaymentReminderSentAt")]
+    public DateTime? LastPaymentReminderSentAt { get; set; }
+
+    [Column("lastPickupReminderSentAt")]
+    public DateTime? LastPickupReminderSentAt { get; set; }
+
+    [Column("lastReturnReminderSentAt")]
+    public DateTime? LastReturnReminderSentAt { get; set; }
 }

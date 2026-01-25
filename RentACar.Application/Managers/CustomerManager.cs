@@ -21,6 +21,7 @@ namespace RentACar.Application.Managers
         private readonly ILogger<CustomerManager> _logger;
         private readonly IBookingRepository _bookingRepository;
         private readonly AuditLogManager _auditLogManager;
+        private readonly EmailManager _emailManager;
 
         public CustomerManager(
             UserManager<IdentityUser> userManager,
@@ -29,7 +30,8 @@ namespace RentACar.Application.Managers
             IBookingRepository bookingRepository,
             IMapper mapper,
             ILogger<CustomerManager> logger,
-            AuditLogManager auditLogManager)
+            AuditLogManager auditLogManager,
+            EmailManager emailManager)
         {
             _userManager = userManager;
             _roleManager = roleManager;
@@ -38,6 +40,7 @@ namespace RentACar.Application.Managers
             _logger = logger;
             _bookingRepository = bookingRepository;
             _auditLogManager = auditLogManager;
+            _emailManager = emailManager;
         }
         public async Task<CustomerDTO?> CreateCustomer(CustomerCreateDTO createDto)
         {
@@ -166,12 +169,26 @@ namespace RentACar.Application.Managers
 
         public async Task UpdateVerificationStatus(int customerId, bool isVerified)
         {
+             await UpdateVerificationStatus(customerId, isVerified, null);
+        }
+
+        public async Task UpdateVerificationStatus(int customerId, bool isVerified, string? reason)
+        {
             var customer = await _customerRepository.GetByIdAsync(customerId);
             if (customer != null)
             {
                 customer.IsVerified = isVerified;
                 await _customerRepository.UpdateAsync(customer);
                 await _auditLogManager.LogEventAsync("Customer.VerificationUpdated", "Customer", customerId.ToString(), $"Updated verification status to: {isVerified}", null, "Success");
+                
+                // 📨 Send Document Verification Email
+                var user = await _userManager.FindByIdAsync(customer.aspNetUserId);
+                if (user != null && !string.IsNullOrEmpty(user.Email)) {
+                     var status = isVerified ? "Verified" : "Rejected/Unverified";
+                     // If triggered by admin (assuming this method is called by admin action), 
+                     // reason should be provided for rejection.
+                     await _emailManager.SendDocumentVerificationEmail(user.Email, customer.Name, "Account/Documents", status, reason ?? "Administrative Decision", isVerified ? "You can now book cars." : "Please update your documents.");
+                }
             }
         }
 
@@ -193,6 +210,13 @@ namespace RentACar.Application.Managers
             {
                 customer.Isactive = isActive;
                 await _customerRepository.UpdateAsync(customer);
+                
+                // 📨 Send Account Status Email
+                var user = await _userManager.FindByIdAsync(customer.aspNetUserId);
+                if (user != null && !string.IsNullOrEmpty(user.Email)) {
+                     var status = isActive ? "Activated" : "Deactivated";
+                     await _emailManager.SendAccountStatusEmail(user.Email, customer.Name, status, "Administrative Action");
+                }
             }
         }
         public async Task UpdateCustomerAddress(int customerId, string newAddress)
@@ -305,6 +329,9 @@ namespace RentACar.Application.Managers
                     await _userManager.UpdateAsync(user);
                 }
 
+                var oldActive = customer.Isactive;
+                var oldVerified = customer.IsVerified;
+
                 customer.Name = dto.Name;
                 customer.Address = dto.Address;
                 customer.IsVerified = dto.IsVerified;
@@ -312,17 +339,43 @@ namespace RentACar.Application.Managers
 
                 await _customerRepository.UpdateAsync(customer);
                 await _auditLogManager.LogEventAsync("Customer.ProfileUpdated", "Customer", dto.UserId.ToString(), $"Updated profile details for: {customer.Name}", null, "Success");
+
+                // Check for Status Changes & Notify
+                if (oldActive != customer.Isactive)
+                {
+                    string status = customer.Isactive ? "Activated" : "Deactivated";
+                    string reason = customer.Isactive ? "Account has been reactivated by administrator." : "Account has been deactivated by administrator.";
+                    await _emailManager.SendAccountStatusEmail(user.Email, customer.Name, status, reason);
+                }
+
+                if (oldVerified != customer.IsVerified)
+                {
+                    string status = customer.IsVerified ? "Verified" : "Unverified";
+                    string reason = customer.IsVerified ? "Your documents have been verified." : "Your verification status has been revoked.";
+                     await _emailManager.SendDocumentVerificationEmail(user.Email, customer.Name, "Account Documents", status, reason, "");
+                }
             }
         }
 
-        public async Task<bool> ResetPassword(int customerId, string newPassword)
+        public async Task<bool> ResetPassword(int customerId)
         {
             var customer = await _customerRepository.GetByIdAsync(customerId);
             if (customer == null) return false;
             var user = await _userManager.FindByIdAsync(customer.aspNetUserId);
             if (user == null) return false;
+            
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var newPassword = $"RentCar{new Random().Next(100000, 999999)}!";
+            
             var result = await _userManager.ResetPasswordAsync(user, token, newPassword);
+            
+            if (result.Succeeded)
+            {
+                 // 📨 Send Email with New Password
+                 await _emailManager.SendAdminResetPasswordEmail(user.Email, newPassword, customer.Name);
+                 await _auditLogManager.LogEventAsync("Customer.PasswordReset", "Customer", customerId.ToString(), "Admin reset customer password", null, "Success");
+            }
+            
             return result.Succeeded;
         }
 

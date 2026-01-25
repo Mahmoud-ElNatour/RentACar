@@ -73,6 +73,8 @@ builder.Services.AddScoped<IBlacklistRepository, BlacklistRepository>();
 builder.Services.AddScoped<IPromocodeRepository, PromocodeRepository>();
 builder.Services.AddScoped<IPaymentMethodRepository, PaymentMethodRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+builder.Services.AddScoped<IEmailTemplateRepository, EmailTemplateRepository>();
+builder.Services.AddScoped<IEmailDraftRepository, EmailDraftRepository>();
 builder.Services.AddHttpClient<IEmailService, MailjetEmailService>();
 builder.Services.AddHttpClient<RentACar.Application.Services.IStripePaymentService, RentACar.Application.Services.StripePaymentService>(client =>
 {
@@ -93,12 +95,25 @@ builder.Services.AddScoped<BookingManager>();
 builder.Services.AddScoped<PaymentManager>();
 builder.Services.AddScoped<EmailManager>();
 builder.Services.AddScoped<AuditLogManager>();
+builder.Services.AddScoped<EmailTemplateManager>();
+builder.Services.AddScoped<EmailDraftManager>();
+builder.Services.AddScoped<DistributionListManager>();
+builder.Services.AddScoped<RecipientResolverService>();
+builder.Services.AddScoped<EmailProviderSettingsManager>();
+builder.Services.AddScoped<SenderIdentityManager>();
+builder.Services.AddScoped<EmailFeatureConfigManager>();
+builder.Services.AddScoped<EmailRoutingService>();
+builder.Services.AddScoped<NotificationProcessingService>();
+builder.Services.AddScoped<EmailLogManager>();
 
 // // ✅ HTTPS redirection
 // builder.Services.AddHttpsRedirection(options =>
 // {
 //     options.HttpsPort = 7192;
 // });
+
+// ✅ Register Hosted Services
+builder.Services.AddHostedService<RentACar.Web.Services.NotificationBackgroundService>();
 
 var app = builder.Build();
 
@@ -129,6 +144,10 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapControllerRoute(
+    name: "areas",
+    pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
 
 app.MapControllerRoute(
     name: "default",

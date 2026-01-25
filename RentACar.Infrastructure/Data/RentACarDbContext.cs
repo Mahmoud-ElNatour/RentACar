@@ -39,6 +39,15 @@ public partial class RentACarDbContext : DbContext
     public virtual DbSet<PaymentMethod> PaymentMethods { get; set; }
     public virtual DbSet<Promocode> Promocodes { get; set; }
     public virtual DbSet<AuditLog> AuditLogs { get; set; }
+    public virtual DbSet<DistributionList> DistributionLists { get; set; }
+    public virtual DbSet<DistributionListMember> DistributionListMembers { get; set; }
+    public virtual DbSet<DistributionListRule> DistributionListRules { get; set; }
+    public virtual DbSet<EmailDraft> EmailDrafts { get; set; }
+    public virtual DbSet<EmailTemplate> EmailTemplates { get; set; }
+    public virtual DbSet<NotificationSettings> NotificationSettings { get; set; }
+    public virtual DbSet<EmailLog> EmailLogs { get; set; }
+    public virtual DbSet<NotificationLog> NotificationLogs { get; set; }
+    public virtual DbSet<SenderIdentity> SenderIdentities { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -141,6 +150,66 @@ public partial class RentACarDbContext : DbContext
                 .HasConstraintName("FK_Payments_Bookings");
         });
 
+
+        modelBuilder.Entity<DistributionList>(entity =>
+        {
+            entity.HasIndex(e => e.Name).IsUnique();
+        });
+
+        modelBuilder.Entity<DistributionListMember>(entity =>
+        {
+            entity.HasIndex(e => new { e.DistributionListId, e.Email }).IsUnique();
+        });
+
+        modelBuilder.Entity<EmailTemplate>(entity =>
+        {
+            entity.HasIndex(e => e.TemplateKey).IsUnique();
+        });
+
+        // Foreign Key Configurations for User Content
+        modelBuilder.Entity<EmailDraft>()
+            .HasOne(d => d.CreatedByUser)
+            .WithMany()
+            .HasForeignKey(d => d.CreatedByUserId)
+            .OnDelete(DeleteBehavior.Cascade); // Drafts are personal, delete if user deleted
+
+        modelBuilder.Entity<DistributionList>()
+            .HasOne(d => d.CreatedByUser)
+            .WithMany()
+            .HasForeignKey(d => d.CreatedByUserId)
+            .OnDelete(DeleteBehavior.ClientSetNull); // Shared resource, keep list if user deleted
+
+        modelBuilder.Entity<DistributionList>()
+            .HasOne(d => d.UpdatedByUser)
+            .WithMany()
+            .HasForeignKey(d => d.UpdatedByUserId)
+            .OnDelete(DeleteBehavior.ClientSetNull);
+
+        modelBuilder.Entity<DistributionListMember>()
+            .HasOne(d => d.AddedByUser)
+            .WithMany()
+            .HasForeignKey(d => d.AddedByUserId)
+            .OnDelete(DeleteBehavior.ClientSetNull);
+
+        modelBuilder.Entity<EmailTemplate>()
+            .HasOne(d => d.UpdatedByUser)
+            .WithMany()
+            .HasForeignKey(d => d.UpdatedByUserId)
+            .OnDelete(DeleteBehavior.ClientSetNull);
+
+        // Logs - Preserve History
+        modelBuilder.Entity<EmailLog>()
+            .HasOne(d => d.CreatedByUser)
+            .WithMany()
+            .HasForeignKey(d => d.CreatedByUserId)
+            .OnDelete(DeleteBehavior.ClientSetNull);
+
+        modelBuilder.Entity<AuditLog>()
+            .HasOne(d => d.User)
+            .WithMany()
+            .HasForeignKey(d => d.UserId)
+            .OnDelete(DeleteBehavior.ClientSetNull);
+
         OnModelCreatingPartial(modelBuilder);
     }
 
@@ -183,9 +252,12 @@ public partial class RentACarDbContext : DbContext
             if (entry.Entity is AuditLog || entry.State == EntityState.Detached || entry.State == EntityState.Unchanged)
                 continue;
 
+            var userId = user?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
             var auditEntry = new AuditLog
             {
                 Timestamp = DateTime.UtcNow,
+                UserId = userId,
                 ActorName = userName,
                 ActorRole = userRole,
                 IpAddress = ipAddress,

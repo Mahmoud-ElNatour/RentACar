@@ -1,66 +1,216 @@
 @{
     ViewData["Title"] = "Control Panel";
     Layout = "_Layout";
+    ViewData["BodyClass"] = "dark bg-background-dark";
 }
 
-<link rel="stylesheet" href="~/css/control-panel.css" />
+<style>
+    .gold-glow-hover:hover {
+        box-shadow: 0 0 20px rgba(242, 185, 13, 0.2);
+        border-color: #d4af37 !important;
+    }
+    /* Ensure the background matches the dark theme */
+    .cp-bg {
+        background-color: #050505;
+    }
+</style>
 
-
-<div class="container-fluid d-flex justify-content-center align-items-center mt-2 " style="min-height: 100vh;">
-    <div class="panel-container p-5">
-        <h2 class="panel-title">Control Panel</h2>
-        <div class="panel-actions">
-            <a asp-controller="Car" asp-action="Index" class="panel-action">
-                <i class="fas fa-car"></i>
-                <div>Manage Cars</div>
-            </a>
-            <a asp-controller="Category" asp-action="Index" class="panel-action">
-                <i class="fas fa-tags"></i>
-                <div>Manage Categories</div>
-            </a>
-            <a asp-controller="Blacklist" asp-action="Index" class="panel-action">
-                <i class="fas fa-ban"></i>
-                <div>Blacklists</div>
-            </a>
-            <a asp-controller="Customer" asp-action="Index" class="panel-action">
-                <i class="fas fa-users"></i>
-                <div>Customers</div>
-            </a>
-            <a asp-controller="Employee" asp-action="Index" class="panel-action">
-                <i class="fas fa-user-tie"></i>
-                <div>Employees</div>
-            </a>
-            @if (User.IsInRole("Admin"))
-            {
-                <a href="/ControlPanel/ChangeRole" class="panel-action">
-                    <i class="fas fa-user-shield"></i>
-                    <div>Change Role</div>
-                </a>
-            }
-            <a asp-controller="PromoCode" asp-action="Index" class="panel-action">
-                <i class="fas fa-gift"></i>
-                <div>Promo Codes</div>
-            </a>
-            <a asp-controller="CreditCard" asp-action="Index" class="panel-action">
-                <i class="fas fa-credit-card"></i>
-                <div>Credit Cards</div>
-            </a>
-
-            <a asp-controller="PaymentMethod" asp-action="Index" class="panel-action">
-                <i class="fas fa-money-check-alt"></i>
-                <div>Payment Methods</div>
-            </a>
-
-            <a asp-controller="Payment" asp-action="Index" class="panel-action">
-                <i class="fas fa-file-invoice-dollar"></i>
-                <div>Payments</div>
-            </a>
-
-            <a asp-controller="Booking" asp-action="Index" class="panel-action">
-                <i class="fas fa-calendar-check"></i>
-                <div>Bookings</div>
-            </a>
-
+<div class="cp-bg font-display text-zinc-100 min-h-screen">
+    <div class="layout-container flex h-full grow flex-col">
+        <!-- Header Section -->
+        <div class="w-full border-b border-white/5 bg-black/40 backdrop-blur-md sticky top-0 z-20">
+            <div class="max-w-[1200px] mx-auto px-6 py-6">
+                <div class="flex flex-col items-center justify-center">
+                    <div class="flex items-center gap-3 mb-2">
+                        <span class="material-symbols-outlined text-[#d4af37] text-2xl">settings</span>
+                        <h1 class="text-xl font-bold tracking-[0.25em] uppercase text-zinc-100">Control Panel - Management</h1>
+                    </div>
+                    <div class="h-0.5 w-20 bg-gradient-to-r from-transparent via-[#d4af37] to-transparent opacity-60"></div>
+                </div>
+            </div>
         </div>
+
+        <main class="max-w-[1200px] mx-auto px-6 py-10 w-full">
+            <div class="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                <!-- Manage Cars -->
+                <div class="group bg-[#121214] border border-white/5 p-5 md:p-8 rounded-xl flex flex-col h-full transition-all duration-300 gold-glow-hover relative overflow-hidden">
+                    <div class="absolute -right-4 -top-4 text-[#d4af37]/5 group-hover:text-[#d4af37]/10 transition-colors">
+                        <span class="material-symbols-outlined text-[100px] md:text-[120px] select-none">directions_car</span>
+                    </div>
+                    <div class="bg-[#d4af37]/10 w-12 h-12 md:w-14 md:h-14 rounded-lg flex items-center justify-center mb-6 border border-[#d4af37]/20">
+                        <span class="material-symbols-outlined text-[#d4af37] text-2xl md:text-3xl">directions_car</span>
+                    </div>
+                    <h3 class="text-lg md:text-xl font-bold text-white mb-2">Manage Cars</h3>
+                    <p class="text-zinc-400 text-xs md:text-sm leading-relaxed mb-8">Maintain the vehicle fleet, update details, and manage availability.</p>
+                    <a asp-controller="Car" asp-action="Index" class="mt-auto w-full group/btn relative flex items-center justify-center gap-3 py-3 px-6 rounded-xl border border-[#d4af37]/20 bg-white/[0.02] transition-all duration-300 hover:border-[#d4af37]/50 hover:bg-[#d4af37]/5 no-underline">
+                        <span class="text-[10px] md:text-[11px] font-black uppercase tracking-[0.25em] text-[#d4af37]">Manage</span>
+                        <span class="material-symbols-outlined text-[18px] text-[#d4af37] transition-transform duration-300 group-hover/btn:translate-x-1">arrow_right_alt</span>
+                    </a>
+                </div>
+
+                <!-- Manage Categories -->
+                <div class="group bg-[#121214] border border-white/5 p-5 md:p-8 rounded-xl flex flex-col h-full transition-all duration-300 gold-glow-hover relative overflow-hidden">
+                    <div class="absolute -right-4 -top-4 text-[#d4af37]/5 group-hover:text-[#d4af37]/10 transition-colors">
+                        <span class="material-symbols-outlined text-[100px] md:text-[120px] select-none">category</span>
+                    </div>
+                    <div class="bg-[#d4af37]/10 w-12 h-12 md:w-14 md:h-14 rounded-lg flex items-center justify-center mb-6 border border-[#d4af37]/20">
+                        <span class="material-symbols-outlined text-[#d4af37] text-2xl md:text-3xl">category</span>
+                    </div>
+                    <h3 class="text-lg md:text-xl font-bold text-white mb-2">Categories</h3>
+                    <p class="text-zinc-400 text-xs md:text-sm leading-relaxed mb-8">Organize vehicles into classes, tiers, and service categories.</p>
+                    <a asp-controller="Category" asp-action="Index" class="mt-auto w-full group/btn relative flex items-center justify-center gap-3 py-3 px-6 rounded-xl border border-[#d4af37]/20 bg-white/[0.02] transition-all duration-300 hover:border-[#d4af37]/50 hover:bg-[#d4af37]/5 no-underline">
+                        <span class="text-[10px] md:text-[11px] font-black uppercase tracking-[0.25em] text-[#d4af37]">Manage</span>
+                        <span class="material-symbols-outlined text-[18px] text-[#d4af37] transition-transform duration-300 group-hover/btn:translate-x-1">arrow_right_alt</span>
+                    </a>
+                </div>
+
+                <!-- Blacklists -->
+                <div class="group bg-[#121214] border border-white/5 p-5 md:p-8 rounded-xl flex flex-col h-full transition-all duration-300 gold-glow-hover relative overflow-hidden">
+                    <div class="absolute -right-4 -top-4 text-[#d4af37]/5 group-hover:text-[#d4af37]/10 transition-colors">
+                        <span class="material-symbols-outlined text-[100px] md:text-[120px] select-none">block</span>
+                    </div>
+                    <div class="bg-[#d4af37]/10 w-12 h-12 md:w-14 md:h-14 rounded-lg flex items-center justify-center mb-6 border border-[#d4af37]/20">
+                        <span class="material-symbols-outlined text-[#d4af37] text-2xl md:text-3xl">block</span>
+                    </div>
+                    <h3 class="text-lg md:text-xl font-bold text-white mb-2">Blacklists</h3>
+                    <p class="text-zinc-400 text-xs md:text-sm leading-relaxed mb-8">Restrict access for problematic users and monitor violations.</p>
+                    <a asp-controller="Blacklist" asp-action="Index" class="mt-auto w-full group/btn relative flex items-center justify-center gap-3 py-3 px-6 rounded-xl border border-[#d4af37]/20 bg-white/[0.02] transition-all duration-300 hover:border-[#d4af37]/50 hover:bg-[#d4af37]/5 no-underline">
+                        <span class="text-[10px] md:text-[11px] font-black uppercase tracking-[0.25em] text-[#d4af37]">Manage</span>
+                        <span class="material-symbols-outlined text-[18px] text-[#d4af37] transition-transform duration-300 group-hover/btn:translate-x-1">arrow_right_alt</span>
+                    </a>
+                </div>
+
+                <!-- Customers -->
+                <div class="group bg-[#121214] border border-white/5 p-5 md:p-8 rounded-xl flex flex-col h-full transition-all duration-300 gold-glow-hover relative overflow-hidden">
+                    <div class="absolute -right-4 -top-4 text-[#d4af37]/5 group-hover:text-[#d4af37]/10 transition-colors">
+                        <span class="material-symbols-outlined text-[100px] md:text-[120px] select-none">group</span>
+                    </div>
+                    <div class="bg-[#d4af37]/10 w-12 h-12 md:w-14 md:h-14 rounded-lg flex items-center justify-center mb-6 border border-[#d4af37]/20">
+                        <span class="material-symbols-outlined text-[#d4af37] text-2xl md:text-3xl">group</span>
+                    </div>
+                    <h3 class="text-lg md:text-xl font-bold text-white mb-2">Customers</h3>
+                    <p class="text-zinc-400 text-xs md:text-sm leading-relaxed mb-8">View client profiles, history, and verification documents.</p>
+                    <a asp-controller="Customer" asp-action="Index" class="mt-auto w-full group/btn relative flex items-center justify-center gap-3 py-3 px-6 rounded-xl border border-[#d4af37]/20 bg-white/[0.02] transition-all duration-300 hover:border-[#d4af37]/50 hover:bg-[#d4af37]/5 no-underline">
+                        <span class="text-[10px] md:text-[11px] font-black uppercase tracking-[0.25em] text-[#d4af37]">Manage</span>
+                        <span class="material-symbols-outlined text-[18px] text-[#d4af37] transition-transform duration-300 group-hover/btn:translate-x-1">arrow_right_alt</span>
+                    </a>
+                </div>
+
+                <!-- Employees -->
+                <div class="group bg-[#121214] border border-white/5 p-5 md:p-8 rounded-xl flex flex-col h-full transition-all duration-300 gold-glow-hover relative overflow-hidden">
+                    <div class="absolute -right-4 -top-4 text-[#d4af37]/5 group-hover:text-[#d4af37]/10 transition-colors">
+                        <span class="material-symbols-outlined text-[100px] md:text-[120px] select-none">badge</span>
+                    </div>
+                    <div class="bg-[#d4af37]/10 w-12 h-12 md:w-14 md:h-14 rounded-lg flex items-center justify-center mb-6 border border-[#d4af37]/20">
+                        <span class="material-symbols-outlined text-[#d4af37] text-2xl md:text-3xl">badge</span>
+                    </div>
+                    <h3 class="text-lg md:text-xl font-bold text-white mb-2">Employees</h3>
+                    <p class="text-zinc-400 text-xs md:text-sm leading-relaxed mb-8">Manage staff accounts, permissions, and internal roles.</p>
+                    <a asp-controller="Employee" asp-action="Index" class="mt-auto w-full group/btn relative flex items-center justify-center gap-3 py-3 px-6 rounded-xl border border-[#d4af37]/20 bg-white/[0.02] transition-all duration-300 hover:border-[#d4af37]/50 hover:bg-[#d4af37]/5 no-underline">
+                        <span class="text-[10px] md:text-[11px] font-black uppercase tracking-[0.25em] text-[#d4af37]">Manage</span>
+                        <span class="material-symbols-outlined text-[18px] text-[#d4af37] transition-transform duration-300 group-hover/btn:translate-x-1">arrow_right_alt</span>
+                    </a>
+                </div>
+
+                @if (User.IsInRole("Admin"))
+                {
+                    <!-- Change Role -->
+                    <div class="group bg-[#121214] border border-white/5 p-5 md:p-8 rounded-xl flex flex-col h-full transition-all duration-300 gold-glow-hover relative overflow-hidden">
+                        <div class="absolute -right-4 -top-4 text-[#d4af37]/5 group-hover:text-[#d4af37]/10 transition-colors">
+                            <span class="material-symbols-outlined text-[100px] md:text-[120px] select-none">admin_panel_settings</span>
+                        </div>
+                        <div class="bg-[#d4af37]/10 w-12 h-12 md:w-14 md:h-14 rounded-lg flex items-center justify-center mb-6 border border-[#d4af37]/20">
+                            <span class="material-symbols-outlined text-[#d4af37] text-2xl md:text-3xl">admin_panel_settings</span>
+                        </div>
+                        <h3 class="text-lg md:text-xl font-bold text-white mb-2">Change Role</h3>
+                        <p class="text-zinc-400 text-xs md:text-sm leading-relaxed mb-8">Elevate or adjust user privilege levels within the system.</p>
+                        <a href="/ControlPanel/ChangeRole" class="mt-auto w-full group/btn relative flex items-center justify-center gap-3 py-3 px-6 rounded-xl border border-[#d4af37]/20 bg-white/[0.02] transition-all duration-300 hover:border-[#d4af37]/50 hover:bg-[#d4af37]/5 no-underline">
+                            <span class="text-[10px] md:text-[11px] font-black uppercase tracking-[0.25em] text-[#d4af37]">Manage</span>
+                            <span class="material-symbols-outlined text-[18px] text-[#d4af37] transition-transform duration-300 group-hover/btn:translate-x-1">arrow_right_alt</span>
+                        </a>
+                    </div>
+                }
+
+                <!-- Promo Codes -->
+                <div class="group bg-[#121214] border border-white/5 p-5 md:p-8 rounded-xl flex flex-col h-full transition-all duration-300 gold-glow-hover relative overflow-hidden">
+                    <div class="absolute -right-4 -top-4 text-[#d4af37]/5 group-hover:text-[#d4af37]/10 transition-colors">
+                        <span class="material-symbols-outlined text-[100px] md:text-[120px] select-none">confirmation_number</span>
+                    </div>
+                    <div class="bg-[#d4af37]/10 w-12 h-12 md:w-14 md:h-14 rounded-lg flex items-center justify-center mb-6 border border-[#d4af37]/20">
+                        <span class="material-symbols-outlined text-[#d4af37] text-2xl md:text-3xl">confirmation_number</span>
+                    </div>
+                    <h3 class="text-lg md:text-xl font-bold text-white mb-2">Promo Codes</h3>
+                    <p class="text-zinc-400 text-xs md:text-sm leading-relaxed mb-8">Create and manage marketing discounts and seasonal offers.</p>
+                    <a asp-controller="PromoCode" asp-action="Index" class="mt-auto w-full group/btn relative flex items-center justify-center gap-3 py-3 px-6 rounded-xl border border-[#d4af37]/20 bg-white/[0.02] transition-all duration-300 hover:border-[#d4af37]/50 hover:bg-[#d4af37]/5 no-underline">
+                        <span class="text-[10px] md:text-[11px] font-black uppercase tracking-[0.25em] text-[#d4af37]">Manage</span>
+                        <span class="material-symbols-outlined text-[18px] text-[#d4af37] transition-transform duration-300 group-hover/btn:translate-x-1">arrow_right_alt</span>
+                    </a>
+                </div>
+
+                <!-- Credit Cards -->
+                <div class="group bg-[#121214] border border-white/5 p-5 md:p-8 rounded-xl flex flex-col h-full transition-all duration-300 gold-glow-hover relative overflow-hidden">
+                    <div class="absolute -right-4 -top-4 text-[#d4af37]/5 group-hover:text-[#d4af37]/10 transition-colors">
+                        <span class="material-symbols-outlined text-[100px] md:text-[120px] select-none">credit_card</span>
+                    </div>
+                    <div class="bg-[#d4af37]/10 w-12 h-12 md:w-14 md:h-14 rounded-lg flex items-center justify-center mb-6 border border-[#d4af37]/20">
+                        <span class="material-symbols-outlined text-[#d4af37] text-2xl md:text-3xl">credit_card</span>
+                    </div>
+                    <h3 class="text-lg md:text-xl font-bold text-white mb-2">Credit Cards</h3>
+                    <p class="text-zinc-400 text-xs md:text-sm leading-relaxed mb-8">Monitor payment card registrations and security status.</p>
+                    <a asp-controller="CreditCard" asp-action="Index" class="mt-auto w-full group/btn relative flex items-center justify-center gap-3 py-3 px-6 rounded-xl border border-[#d4af37]/20 bg-white/[0.02] transition-all duration-300 hover:border-[#d4af37]/50 hover:bg-[#d4af37]/5 no-underline">
+                        <span class="text-[10px] md:text-[11px] font-black uppercase tracking-[0.25em] text-[#d4af37]">Manage</span>
+                        <span class="material-symbols-outlined text-[18px] text-[#d4af37] transition-transform duration-300 group-hover/btn:translate-x-1">arrow_right_alt</span>
+                    </a>
+                </div>
+
+                <!-- Payment Methods -->
+                <div class="group bg-[#121214] border border-white/5 p-5 md:p-8 rounded-xl flex flex-col h-full transition-all duration-300 gold-glow-hover relative overflow-hidden">
+                    <div class="absolute -right-4 -top-4 text-[#d4af37]/5 group-hover:text-[#d4af37]/10 transition-colors">
+                        <span class="material-symbols-outlined text-[100px] md:text-[120px] select-none">account_balance_wallet</span>
+                    </div>
+                    <div class="bg-[#d4af37]/10 w-12 h-12 md:w-14 md:h-14 rounded-lg flex items-center justify-center mb-6 border border-[#d4af37]/20">
+                        <span class="material-symbols-outlined text-[#d4af37] text-2xl md:text-3xl">account_balance_wallet</span>
+                    </div>
+                    <h3 class="text-lg md:text-xl font-bold text-white mb-2">Payment Methods</h3>
+                    <p class="text-zinc-400 text-xs md:text-sm leading-relaxed mb-8">Configure supported gateways and billing options.</p>
+                    <a asp-controller="PaymentMethod" asp-action="Index" class="mt-auto w-full group/btn relative flex items-center justify-center gap-3 py-3 px-6 rounded-xl border border-[#d4af37]/20 bg-white/[0.02] transition-all duration-300 hover:border-[#d4af37]/50 hover:bg-[#d4af37]/5 no-underline">
+                        <span class="text-[10px] md:text-[11px] font-black uppercase tracking-[0.25em] text-[#d4af37]">Manage</span>
+                        <span class="material-symbols-outlined text-[18px] text-[#d4af37] transition-transform duration-300 group-hover/btn:translate-x-1">arrow_right_alt</span>
+                    </a>
+                </div>
+
+                <!-- Payments -->
+                <div class="group bg-[#121214] border border-white/5 p-5 md:p-8 rounded-xl flex flex-col h-full transition-all duration-300 gold-glow-hover relative overflow-hidden">
+                    <div class="absolute -right-4 -top-4 text-[#d4af37]/5 group-hover:text-[#d4af37]/10 transition-colors">
+                        <span class="material-symbols-outlined text-[100px] md:text-[120px] select-none">payments</span>
+                    </div>
+                    <div class="bg-[#d4af37]/10 w-12 h-12 md:w-14 md:h-14 rounded-lg flex items-center justify-center mb-6 border border-[#d4af37]/20">
+                        <span class="material-symbols-outlined text-[#d4af37] text-2xl md:text-3xl">payments</span>
+                    </div>
+                    <h3 class="text-lg md:text-xl font-bold text-white mb-2">Payments</h3>
+                    <p class="text-zinc-400 text-xs md:text-sm leading-relaxed mb-8">Track transaction logs, invoices, and financial reports.</p>
+                    <a asp-controller="Payment" asp-action="Index" class="mt-auto w-full group/btn relative flex items-center justify-center gap-3 py-3 px-6 rounded-xl border border-[#d4af37]/20 bg-white/[0.02] transition-all duration-300 hover:border-[#d4af37]/50 hover:bg-[#d4af37]/5 no-underline">
+                        <span class="text-[10px] md:text-[11px] font-black uppercase tracking-[0.25em] text-[#d4af37]">Manage</span>
+                        <span class="material-symbols-outlined text-[18px] text-[#d4af37] transition-transform duration-300 group-hover/btn:translate-x-1">arrow_right_alt</span>
+                    </a>
+                </div>
+
+                <!-- Bookings -->
+                <div class="group bg-[#121214] border border-white/5 p-5 md:p-8 rounded-xl flex flex-col h-full transition-all duration-300 gold-glow-hover relative overflow-hidden">
+                    <div class="absolute -right-4 -top-4 text-[#d4af37]/5 group-hover:text-[#d4af37]/10 transition-colors">
+                        <span class="material-symbols-outlined text-[100px] md:text-[120px] select-none">book_online</span>
+                    </div>
+                    <div class="bg-[#d4af37]/10 w-12 h-12 md:w-14 md:h-14 rounded-lg flex items-center justify-center mb-6 border border-[#d4af37]/20">
+                        <span class="material-symbols-outlined text-[#d4af37] text-2xl md:text-3xl">book_online</span>
+                    </div>
+                    <h3 class="text-lg md:text-xl font-bold text-white mb-2">Bookings</h3>
+                    <p class="text-zinc-400 text-xs md:text-sm leading-relaxed mb-8">Review rental requests, active contracts, and returns.</p>
+                    <a asp-controller="Booking" asp-action="Index" class="mt-auto w-full group/btn relative flex items-center justify-center gap-3 py-3 px-6 rounded-xl border border-[#d4af37]/20 bg-white/[0.02] transition-all duration-300 hover:border-[#d4af37]/50 hover:bg-[#d4af37]/5 no-underline">
+                        <span class="text-[10px] md:text-[11px] font-black uppercase tracking-[0.25em] text-[#d4af37]">Manage</span>
+                        <span class="material-symbols-outlined text-[18px] text-[#d4af37] transition-transform duration-300 group-hover/btn:translate-x-1">arrow_right_alt</span>
+                    </a>
+                </div>
+            </div>
+        </main>
     </div>
 </div>

@@ -79,7 +79,7 @@
                             <p class="mb-1">Plate #: @car.PlateNumber</p>
                             <p class="mb-1">Price/Day: @(car.PricePerDay?.ToString("F2") ?? "N/A") $</p>
                             <p class="mb-3">Category: @(string.IsNullOrEmpty(car.CategoryName) ? "N/A" : car.CategoryName)</p>
-                            @if (User.Identity.IsAuthenticated)
+                            @if (User.Identity?.IsAuthenticated == true)
                             {
                                 <a asp-controller="Booking" asp-action="Add" asp-route-carId="@car.CarId" class="btn btn-book @(car.IsAvailable ? "" : "unavailable")">Book</a>
                             }

@@ -1,0 +1,89 @@
+@model RentACar.Core.Entities.NotificationLog
+
+<div class="flex flex-col h-full bg-[#121214] text-zinc-300">
+    <!-- Header -->
+    <div class="flex items-center justify-between p-6 border-b border-white/5 bg-[#050505]/50">
+        <div class="flex items-center gap-3">
+             <div class="p-2 bg-[#f2b90d]/10 rounded border border-[#f2b90d]/20">
+                 <span class="material-symbols-outlined text-[#f2b90d]">receipt_long</span>
+             </div>
+             <div>
+                 <h3 class="text-sm font-bold text-white uppercase tracking-widest">Notification Log</h3>
+                 <p class="text-[10px] text-zinc-500 font-mono">ID: #@Model.Id</p>
+             </div>
+        </div>
+        <button onclick="closeLogDetails()" class="text-zinc-500 hover:text-white transition-colors bg-white/5 hover:bg-white/10 p-2 rounded-lg">
+            <span class="material-symbols-outlined">close</span>
+        </button>
+    </div>
+
+    <!-- Body -->
+    <div class="p-8 space-y-6 overflow-y-auto custom-scrollbar">
+        <!-- Main Stats -->
+        <div class="grid grid-cols-2 gap-4">
+             <div class="p-4 bg-[#050505] rounded-xl border border-white/5">
+                 <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-1">Status</p>
+                 @if (Model.Result == "Success") {
+                    <span class="inline-flex items-center gap-2 text-green-400 font-bold text-sm">
+                        <span class="h-2 w-2 rounded-full bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.5)]"></span> Success
+                    </span>
+                 } else if (Model.Result == "Failed") {
+                    <span class="inline-flex items-center gap-2 text-red-500 font-bold text-sm">
+                        <span class="h-2 w-2 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]"></span> Failed
+                    </span>
+                 } else {
+                    <span class="font-bold text-sm text-zinc-400">@Model.Result</span>
+                 }
+             </div>
+             <div class="p-4 bg-[#050505] rounded-xl border border-white/5">
+                 <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-1">Time</p>
+                 <p class="text-white font-mono text-sm">@Model.CreatedAt.ToString("MMM dd, yyyy HH:mm:ss")</p>
+             </div>
+        </div>
+
+        <!-- Details Grid -->
+        <div class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                     <p class="text-zinc-500 text-xs font-bold uppercase tracking-wider mb-2">Event Configuration</p>
+                     <div class="space-y-3">
+                         <div class="flex flex-col">
+                             <span class="text-[11px] text-zinc-600">Event Type</span>
+                             <span class="text-zinc-300 font-medium">@Model.EventType</span>
+                         </div>
+                         <div class="flex flex-col">
+                             <span class="text-[11px] text-zinc-600">Target</span>
+                             <span class="text-[#f2b90d] font-mono text-xs">@Model.TargetType #@Model.TargetId</span>
+                         </div>
+                     </div>
+                </div>
+                <div>
+                     <p class="text-zinc-500 text-xs font-bold uppercase tracking-wider mb-2">Delivery Info</p>
+                     <div class="space-y-3">
+                         <div class="flex flex-col">
+                             <span class="text-[11px] text-zinc-600">Recipient</span>
+                             <span class="text-white font-medium break-all">@Model.RecipientEmail</span>
+                         </div>
+                         <div class="flex flex-col">
+                             <span class="text-[11px] text-zinc-600">Actor</span>
+                             <span class="text-zinc-400">@Model.Actor</span>
+                         </div>
+                     </div>
+                </div>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.Details))
+        {
+            <div class="mt-4">
+                <p class="text-zinc-500 text-xs font-bold uppercase tracking-wider mb-2">System Output / Error</p>
+                <div class="bg-black/40 border border-white/5 rounded-lg p-4 font-mono text-xs text-zinc-400 whitespace-pre-wrap max-h-40 overflow-y-auto custom-scrollbar">@Model.Details</div>
+            </div>
+        }
+    </div>
+
+    <!-- Footer -->
+    <div class="p-6 border-t border-white/5 bg-[#050505]/30 flex justify-end">
+        <button onclick="closeLogDetails()" class="px-6 py-2.5 rounded-xl border border-white/10 hover:bg-white/5 text-zinc-300 text-xs font-bold uppercase tracking-wider transition-all">Close Viewer</button>
+    </div>
+</div>

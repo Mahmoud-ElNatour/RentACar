@@ -102,6 +102,7 @@
             },
         }
     </script>
+    @await RenderSectionAsync("Styles", required: false)
     @* <link rel="stylesheet" href="~/css/index-style.css" asp-append-version="true" /> *@
     @* <link rel="stylesheet" href="~/RentACar.Web.styles.css" asp-append-version="true" /> *@
 </head>
@@ -136,6 +137,9 @@
                         {
                             <li class="nav-item">
                                 <a class="nav-link text-light" asp-controller="ControlPanel" asp-action="Index">Control Panel</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-light" asp-controller="EmailServices" asp-action="EmailServicesHub">Email Services Hub</a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link text-light" asp-controller="Reports" asp-action="Index">Reports</a>

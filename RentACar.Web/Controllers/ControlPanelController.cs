@@ -40,6 +40,7 @@ namespace RentACar.Web.Controllers
         }
 
 
+
         [HttpPost("ChangeRole")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> ChangeRole([FromBody] ChangeRoleDTO model)

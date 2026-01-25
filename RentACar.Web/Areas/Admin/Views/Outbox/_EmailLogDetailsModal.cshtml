@@ -1,0 +1,113 @@
+@model RentACar.Core.Entities.EmailLog
+
+<div class="flex flex-col h-full bg-[#121214] text-zinc-300">
+    <!-- Header -->
+    <div class="flex items-center justify-between p-6 border-b border-white/5 bg-[#050505]/50">
+        <div class="flex items-center gap-3">
+             <div class="p-2 bg-[#f2b90d]/10 rounded border border-[#f2b90d]/20">
+                 <span class="material-symbols-outlined text-[#f2b90d]">mail</span>
+             </div>
+             <div>
+                 <h3 class="text-sm font-bold text-white uppercase tracking-widest">Email Log</h3>
+                 <p class="text-[10px] text-zinc-500 font-mono">ID: #@Model.Id</p>
+             </div>
+        </div>
+        <button onclick="closeLogDetails()" class="text-zinc-500 hover:text-white transition-colors bg-white/5 hover:bg-white/10 p-2 rounded-lg">
+            <span class="material-symbols-outlined">close</span>
+        </button>
+    </div>
+
+    <!-- Body -->
+    <div class="p-8 space-y-6 overflow-y-auto custom-scrollbar">
+        <!-- Main Stats -->
+        <div class="grid grid-cols-2 gap-4">
+             <div class="p-4 bg-[#050505] rounded-xl border border-white/5">
+                 <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-1">Status</p>
+                 @if (Model.Status == "Sent") {
+                    <span class="inline-flex items-center gap-2 text-green-400 font-bold text-sm">
+                        <span class="h-2 w-2 rounded-full bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.5)]"></span> Sent
+                    </span>
+                 } else if (Model.Status == "Failed") {
+                    <span class="inline-flex items-center gap-2 text-red-500 font-bold text-sm">
+                        <span class="h-2 w-2 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]"></span> Failed
+                    </span>
+                 } else {
+                    <span class="inline-flex items-center gap-2 text-blue-400 font-bold text-sm">
+                        <span class="h-2 w-2 rounded-full bg-blue-400"></span> @Model.Status
+                    </span>
+                 }
+             </div>
+             <div class="p-4 bg-[#050505] rounded-xl border border-white/5">
+                 <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-1">Sent Time</p>
+                 <p class="text-white font-mono text-sm">@(Model.SentAt?.ToString("MMM dd, yyyy HH:mm") ?? "-")</p>
+             </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.LastError))
+        {
+            <div class="p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
+                <div class="flex items-center gap-2 text-red-500 mb-2">
+                    <span class="material-symbols-outlined text-lg">error</span>
+                    <span class="text-xs font-bold uppercase tracking-wider">Delivery Error</span>
+                </div>
+                <p class="text-xs text-red-400 font-mono">@Model.LastError</p>
+            </div>
+        }
+
+        <!-- Meta Grid -->
+        <div class="space-y-4">
+             <div class="grid grid-cols-1 gap-4">
+                 <div class="p-4 bg-[#050505] rounded-xl border border-white/5 space-y-3">
+                     <div class="grid grid-cols-[80px_1fr] items-center">
+                         <span class="text-[11px] text-zinc-600 font-bold uppercase">Subject</span>
+                         <span class="text-white font-medium">@Model.Subject</span>
+                     </div>
+                     <div class="grid grid-cols-[80px_1fr] items-center">
+                         <span class="text-[11px] text-zinc-600 font-bold uppercase">To</span>
+                         <span class="text-zinc-300 font-mono text-xs break-all">@Model.RecipientsRaw</span>
+                     </div>
+                     <div class="grid grid-cols-[80px_1fr] items-center">
+                         <span class="text-[11px] text-zinc-600 font-bold uppercase">Type</span>
+                         <span class="text-blue-400 font-bold text-xs">@Model.EmailType</span>
+                     </div>
+                     <div class="grid grid-cols-[80px_1fr] items-center">
+                         <span class="text-[11px] text-zinc-600 font-bold uppercase">Attempts</span>
+                         <span class="text-zinc-400 text-xs">@Model.Attempts</span>
+                     </div>
+                 </div>
+             </div>
+        </div>
+
+        <!-- HTML Preview -->
+        <div>
+            <div class="flex items-center justify-between mb-2">
+                 <p class="text-zinc-500 text-xs font-bold uppercase tracking-wider">Email Content Preview</p>
+                 <span class="text-[10px] text-zinc-700">HTML Render</span>
+            </div>
+            <div class="bg-white rounded-xl overflow-hidden shadow-inner h-[400px] w-full border border-zinc-800">
+                <div class="h-full w-full overflow-y-auto text-black p-4 font-sans text-sm">
+                    @Html.Raw(Model.Body)
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="p-6 border-t border-white/5 bg-[#050505]/30 flex justify-between items-center">
+        <div>
+             <p class="text-[10px] text-zinc-600">Created by: @(Model.CreatedByUser?.UserName ?? "System")</p>
+        </div>
+        <div class="flex gap-3">
+            <button onclick="closeLogDetails()" class="px-6 py-2.5 rounded-xl border border-white/10 hover:bg-white/5 text-zinc-300 text-xs font-bold uppercase tracking-wider transition-all">Close</button>
+            @if (Model.Status == "Failed")
+            {
+                <form asp-action="Retry" asp-controller="Outbox" asp-area="Admin" asp-route-id="@Model.Id" method="post" class="inline-block" onsubmit="return confirm('Retry sending this email?');">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="px-6 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-white text-xs font-bold uppercase tracking-wider transition-all shadow-lg shadow-red-500/20 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-sm">refresh</span> Retry
+                    </button>
+                </form>
+            }
+        </div>
+    </div>
+</div>

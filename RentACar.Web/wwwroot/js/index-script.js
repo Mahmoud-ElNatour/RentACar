@@ -13,6 +13,9 @@ document.addEventListener('DOMContentLoaded', function () {
 // Navbar functionality
 function initNavbar() {
     const navbar = document.getElementById('mainNavbar');
+    
+    // Only proceed if navbar exists
+    if (!navbar) return;
 
     // Handle navbar background on scroll
     window.addEventListener('scroll', function () {
