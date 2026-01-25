@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
+using RentACar.Application.Managers; // Added
 
 namespace RentACar.Web.Areas.Identity.Pages.Account.Manage
 {
@@ -17,15 +18,18 @@ namespace RentACar.Web.Areas.Identity.Pages.Account.Manage
         private readonly UserManager<IdentityUser> _userManager;
         private readonly SignInManager<IdentityUser> _signInManager;
         private readonly ILogger<ChangePasswordModel> _logger;
+        private readonly EmailManager _emailManager; // Added
 
         public ChangePasswordModel(
             UserManager<IdentityUser> userManager,
             SignInManager<IdentityUser> signInManager,
-            ILogger<ChangePasswordModel> logger)
+            ILogger<ChangePasswordModel> logger,
+            EmailManager emailManager) // Added
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _logger = logger;
+            _emailManager = emailManager;
         }
 
         /// <summary>
@@ -119,6 +123,10 @@ namespace RentACar.Web.Areas.Identity.Pages.Account.Manage
 
             await _signInManager.RefreshSignInAsync(user);
             _logger.LogInformation("User changed their password successfully.");
+            
+            // 📨 Notify User
+            await _emailManager.SendPasswordChangedNotification(user.Email, user.UserName);
+            
             StatusMessage = "Your password has been changed.";
 
             return RedirectToPage();

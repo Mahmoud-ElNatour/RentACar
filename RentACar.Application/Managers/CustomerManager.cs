@@ -329,6 +329,9 @@ namespace RentACar.Application.Managers
                     await _userManager.UpdateAsync(user);
                 }
 
+                var oldActive = customer.Isactive;
+                var oldVerified = customer.IsVerified;
+
                 customer.Name = dto.Name;
                 customer.Address = dto.Address;
                 customer.IsVerified = dto.IsVerified;
@@ -336,17 +339,43 @@ namespace RentACar.Application.Managers
 
                 await _customerRepository.UpdateAsync(customer);
                 await _auditLogManager.LogEventAsync("Customer.ProfileUpdated", "Customer", dto.UserId.ToString(), $"Updated profile details for: {customer.Name}", null, "Success");
+
+                // Check for Status Changes & Notify
+                if (oldActive != customer.Isactive)
+                {
+                    string status = customer.Isactive ? "Activated" : "Deactivated";
+                    string reason = customer.Isactive ? "Account has been reactivated by administrator." : "Account has been deactivated by administrator.";
+                    await _emailManager.SendAccountStatusEmail(user.Email, customer.Name, status, reason);
+                }
+
+                if (oldVerified != customer.IsVerified)
+                {
+                    string status = customer.IsVerified ? "Verified" : "Unverified";
+                    string reason = customer.IsVerified ? "Your documents have been verified." : "Your verification status has been revoked.";
+                     await _emailManager.SendDocumentVerificationEmail(user.Email, customer.Name, "Account Documents", status, reason, "");
+                }
             }
         }
 
-        public async Task<bool> ResetPassword(int customerId, string newPassword)
+        public async Task<bool> ResetPassword(int customerId)
         {
             var customer = await _customerRepository.GetByIdAsync(customerId);
             if (customer == null) return false;
             var user = await _userManager.FindByIdAsync(customer.aspNetUserId);
             if (user == null) return false;
+            
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var newPassword = $"RentCar{new Random().Next(100000, 999999)}!";
+            
             var result = await _userManager.ResetPasswordAsync(user, token, newPassword);
+            
+            if (result.Succeeded)
+            {
+                 // 📨 Send Email with New Password
+                 await _emailManager.SendAdminResetPasswordEmail(user.Email, newPassword, customer.Name);
+                 await _auditLogManager.LogEventAsync("Customer.PasswordReset", "Customer", customerId.ToString(), "Admin reset customer password", null, "Success");
+            }
+            
             return result.Succeeded;
         }
 

@@ -54,6 +54,10 @@ namespace RentACar.Application.Managers
 
             _logger.LogInformation("Promocode added with id {Id}", addedEntity.PromocodeId);
             await _auditLogManager.LogAsync("Create", "Promocode", addedEntity.PromocodeId.ToString(), $"Added promocode: {promocodeDto.Name} ({promocodeDto.DiscountPercentage}%)");
+            
+            var emails = await _employeeManager.GetActiveEmployeeEmailsAsync();
+            await _emailManager.SendPromocodeUpdateEmail(emails, addedEntity, "Create", "New Promocode", "System/Admin");
+
             return _mapper.Map<PromocodeDto>(addedEntity);
         }
 
@@ -109,18 +113,24 @@ namespace RentACar.Application.Managers
                 return null; // Or throw InvalidOperationException
             }
 
+            var oldIsActive = existingPromocode.IsActive;
+            
             _mapper.Map(promocodeDto, existingPromocode);
             await _promocodeRepository.UpdateAsync(existingPromocode);
-            await _promocodeRepository.UpdateAsync(existingPromocode);
-            _logger.LogInformation("Promocode {Id} updated", promocodeDto.PromocodeId);
-            await _auditLogManager.LogAsync("Update", "Promocode", promocodeDto.PromocodeId.ToString(), $"Updated promocode: {promocodeDto.Name}");
-            await _promocodeRepository.UpdateAsync(existingPromocode);
+            
             _logger.LogInformation("Promocode {Id} updated", promocodeDto.PromocodeId);
             await _auditLogManager.LogAsync("Update", "Promocode", promocodeDto.PromocodeId.ToString(), $"Updated promocode: {promocodeDto.Name}");
             
+            // Determine reason
+            string reason = "General Update";
+            if (oldIsActive != existingPromocode.IsActive)
+            {
+                reason = existingPromocode.IsActive ? "Activated" : "Deactivated";
+            }
+
             // 📨 Send internal notification
             var emails = await _employeeManager.GetActiveEmployeeEmailsAsync();
-            await _emailManager.SendPromocodeUpdateEmail(emails, existingPromocode, "Update", "General Update", "System/Admin");
+            await _emailManager.SendPromocodeUpdateEmail(emails, existingPromocode, "Update", reason, "System/Admin");
             
             return _mapper.Map<PromocodeDto>(existingPromocode);
         }

@@ -69,6 +69,9 @@ namespace RentACar.Application.Managers
 
             _logger.LogInformation("Category added with id {Id}", categoryEntity.CategoryId);
             await _auditLogManager.LogAsync("Create", "Category", categoryEntity.CategoryId.ToString(), $"Added category: {categoryDto.Name}");
+            var emails = await _employeeManager.GetActiveEmployeeEmailsAsync();
+            await _emailManager.SendCategoryUpdateEmail(emails, categoryEntity, "Create", "New Category", "Created", "System/Admin");
+
             return _mapper.Map<CategoryDto>(categoryEntity);
         }
 

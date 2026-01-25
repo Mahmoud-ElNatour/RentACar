@@ -62,7 +62,11 @@ namespace RentACar.Application.Managers
 
             await _auditLogManager.LogAsync("Create", "Car", carEntity.CarId.ToString(), $"Added new car: {carEntity.ModelName} ({carEntity.ModelYear}) - {carEntity.PlateNumber}");
 
-            // 5. Map the created entity back to a DTO and return it
+            // 5. Send Car Update Email (Create)
+            var emails = await _employeeManager.GetActiveEmployeeEmailsAsync();
+            await _emailManager.SendCarUpdateEmail(emails, carEntity, "Create", "New Car", "N/A", "Created", "System/Admin");
+
+            // 6. Map the created entity back to a DTO and return it
             return _mapper.Map<CarDto>(carEntity);
         }
 

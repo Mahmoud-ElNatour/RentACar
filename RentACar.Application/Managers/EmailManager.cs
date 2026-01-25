@@ -478,6 +478,38 @@ namespace RentACar.Application.Managers
             return await SendTemplatedEmailAsync(email, "VerifyEmail", "AUTH-VERIFY-LINK", placeholders, "Confirm Your Email", fallback, "Verify Email Address");
         }
 
+        // 12. ADMIN RESET PASSWORD -> AdminResetPassword
+        public async Task SendAdminResetPasswordEmail(string email, string newPassword, string name = "User")
+        {
+            var placeholders = new Dictionary<string, string>
+            {
+                { "CustomerName", name },
+                { "NewPassword", newPassword },
+                { "LoginUrl", "/Identity/Account/Login" },
+                { "Year", DateTime.UtcNow.Year.ToString() }
+            };
+
+            string fallback = $@"<h2>Password Reset</h2><p>Your password has been reset by an administrator.</p><p><strong>New Password:</strong> {newPassword}</p><p>Please change this password after logging in.</p>";
+            fallback = EmailTemplates.GetStandardTemplate(fallback, "Security Update");
+
+            await SendTemplatedEmailAsync(email, "AdminResetPassword", "ADMIN-RESET-PWD", placeholders, "Your Password Has Been Reset", fallback, "Admin Reset Password");
+        }
+
+        // 13. PASSWORD CHANGED -> PasswordChanged
+        public async Task SendPasswordChangedNotification(string email, string name = "User")
+        {
+            var placeholders = new Dictionary<string, string>
+            {
+                { "CustomerName", name },
+                { "Year", DateTime.UtcNow.Year.ToString() }
+            };
+
+            string fallback = $@"<h2>Security Alert</h2><p>Your password was recently changed.</p><p>If this wasn't you, please contact support immediately.</p>";
+            fallback = EmailTemplates.GetStandardTemplate(fallback, "Security Alert");
+
+            await SendTemplatedEmailAsync(email, "PasswordChanged", "AUTH-PWD-CHANGE", placeholders, "Your Password Was Changed", fallback, "Password Changed Notification");
+        }
+
         public async Task SendRecoveryCodesEmailAsync(string email, IEnumerable<string> codes, string name = "User")
         {
             var codesList = string.Join(" ", codes.Select(c => $"<span style='padding:5px; margin:2px; background:#333; color:#d4af37;'>{c}</span>"));

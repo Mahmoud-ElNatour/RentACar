@@ -180,7 +180,7 @@ namespace RentACar.Web.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> ResetPassword(int id)
         {
-            var success = await _employeeManager.ResetPassword(id, "E@e123456");
+            var success = await _employeeManager.ResetPassword(id);
             if (!success) return NotFound();
             return NoContent();
         }

@@ -223,7 +223,7 @@ namespace RentACar.Web.Controllers
         [HttpPost("{id}/reset-password")]
         public async Task<IActionResult> ResetPassword(int id)
         {
-            var success = await _customerManager.ResetPassword(id, "C@c123456");
+            var success = await _customerManager.ResetPassword(id);
             if (!success) return NotFound();
             return NoContent();
         }
