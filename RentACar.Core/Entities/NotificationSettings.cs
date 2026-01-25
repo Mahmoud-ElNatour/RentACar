@@ -28,20 +28,20 @@ namespace RentACar.Core.Entities
         public int PaymentReminderInitialDelayHours { get; set; } = 6; // Start checking after 6 hours
         public int PaymentReminderIntervalHours { get; set; } = 6; // Repeat every 6 hours
         public int PaymentReminderMaxDurationHours { get; set; } = 48; // Stop after 48 hours
-        public string PaymentReminderStatusCsv { get; set; } = "Pending";
+        public string? PaymentReminderStatusCsv { get; set; } = "Pending";
 
         // --- Pickup Reminder Config ---
         public bool PickupReminderEnabled { get; set; } = true;
-        public string PickupReminderScheduleHoursCsv { get; set; } = "24,1"; // Alerts at 24h before and 1h before
+        public string? PickupReminderScheduleHoursCsv { get; set; } = "24,1"; // Alerts at 24h before and 1h before
 
         // --- Return Reminder Config ---
         public bool ReturnReminderEnabled { get; set; } = true;
-        public string ReturnReminderScheduleHoursCsv { get; set; } = "24,2"; // Alerts at 24h before and 2h before
+        public string? ReturnReminderScheduleHoursCsv { get; set; } = "24,2"; // Alerts at 24h before and 2h before
 
         // --- Promo Expiry Config ---
         public bool PromoExpiryEnabled { get; set; } = true;
         public int PromoExpiryDaysBefore { get; set; } = 1; // Notify 1 day before
-        public string PromoExpiryCheckFrequency { get; set; } = "Daily";
+        public string? PromoExpiryCheckFrequency { get; set; } = "Daily";
         public bool PromoExpiryAutoDeactivate { get; set; } = true;
 
 

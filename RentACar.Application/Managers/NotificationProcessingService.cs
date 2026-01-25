@@ -55,13 +55,13 @@ namespace RentACar.Application.Managers
             existing.PaymentReminderInitialDelayHours = newSettings.PaymentReminderInitialDelayHours;
             existing.PaymentReminderIntervalHours = newSettings.PaymentReminderIntervalHours;
             existing.PaymentReminderMaxDurationHours = newSettings.PaymentReminderMaxDurationHours;
-            existing.PaymentReminderStatusCsv = newSettings.PaymentReminderStatusCsv;
+            existing.PaymentReminderStatusCsv = newSettings.PaymentReminderStatusCsv ?? "Pending";
 
             existing.PickupReminderEnabled = newSettings.PickupReminderEnabled;
-            existing.PickupReminderScheduleHoursCsv = newSettings.PickupReminderScheduleHoursCsv;
+            existing.PickupReminderScheduleHoursCsv = newSettings.PickupReminderScheduleHoursCsv ?? "24,1";
 
             existing.ReturnReminderEnabled = newSettings.ReturnReminderEnabled;
-            existing.ReturnReminderScheduleHoursCsv = newSettings.ReturnReminderScheduleHoursCsv;
+            existing.ReturnReminderScheduleHoursCsv = newSettings.ReturnReminderScheduleHoursCsv ?? "24,2";
 
             existing.PromoExpiryEnabled = newSettings.PromoExpiryEnabled;
             existing.PromoExpiryDaysBefore = newSettings.PromoExpiryDaysBefore;
