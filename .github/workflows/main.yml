@@ -57,6 +57,13 @@ jobs:
         shell: powershell
         run: dotnet publish .\RentACar.Web\RentACar.Web.csproj -c Release -o "${{ env.PUBLISH_PATH }}" --no-build
 
+      - name: Apply Database Migrations
+        shell: powershell
+        run: |
+          dotnet tool install --global dotnet-ef --ignore-failed-sources
+          dotnet ef database update --project .\RentACar.Infrastructure\RentACar.Infrastructure.csproj --startup-project .\RentACar.Web\RentACar.Web.csproj --context ApplicationDbContext --no-build
+          dotnet ef database update --project .\RentACar.Infrastructure\RentACar.Infrastructure.csproj --startup-project .\RentACar.Web\RentACar.Web.csproj --context RentACarDbContext --no-build
+
       - name: Deploy to IIS
         shell: powershell
         run: |

@@ -9,11 +9,11 @@ using RentACar.Infrastructure.Data;
 
 #nullable disable
 
-namespace RentACar.Infrastructure.Migrations.ApplicationDb
+namespace RentACar.Infrastructure.Migrations
 {
-    [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260123215727_EmailConfigCenterFinalize")]
-    partial class EmailConfigCenterFinalize
+    [DbContext(typeof(RentACarDbContext))]
+    [Migration("20260125164330_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -35,178 +35,10 @@ namespace RentACar.Infrastructure.Migrations.ApplicationDb
 
                     b.HasKey("RoleId", "UserId");
 
-                    b.HasIndex("UserId");
-
                     b.ToTable("AspNetRoleAspNetUser");
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("ConcurrencyStamp")
-                        .IsConcurrencyToken()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Name")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<string>("NormalizedName")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("NormalizedName")
-                        .IsUnique()
-                        .HasDatabaseName("RoleNameIndex")
-                        .HasFilter("[NormalizedName] IS NOT NULL");
-
-                    b.ToTable("AspNetRoles", (string)null);
-                });
-
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("ClaimType")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ClaimValue")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("RoleId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("RoleId");
-
-                    b.ToTable("AspNetRoleClaims", (string)null);
-                });
-
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUser", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<int>("AccessFailedCount")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ConcurrencyStamp")
-                        .IsConcurrencyToken()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Email")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<bool>("EmailConfirmed")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("LockoutEnabled")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTimeOffset?>("LockoutEnd")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("NormalizedEmail")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<string>("NormalizedUserName")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<string>("PasswordHash")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PhoneNumber")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("PhoneNumberConfirmed")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("SecurityStamp")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("TwoFactorEnabled")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("UserName")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("NormalizedEmail")
-                        .HasDatabaseName("EmailIndex");
-
-                    b.HasIndex("NormalizedUserName")
-                        .IsUnique()
-                        .HasDatabaseName("UserNameIndex")
-                        .HasFilter("[NormalizedUserName] IS NOT NULL");
-
-                    b.ToTable("AspNetUsers", (string)null);
-                });
-
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("ClaimType")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ClaimValue")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("AspNetUserClaims", (string)null);
-                });
-
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
-                {
-                    b.Property<string>("LoginProvider")
-                        .HasMaxLength(128)
-                        .HasColumnType("nvarchar(128)");
-
-                    b.Property<string>("ProviderKey")
-                        .HasMaxLength(128)
-                        .HasColumnType("nvarchar(128)");
-
-                    b.Property<string>("ProviderDisplayName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("LoginProvider", "ProviderKey");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("AspNetUserLogins", (string)null);
-                });
-
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
+            modelBuilder.Entity("AspNetUserRole", b =>
                 {
                     b.Property<string>("UserId")
                         .HasColumnType("nvarchar(450)");
@@ -219,27 +51,6 @@ namespace RentACar.Infrastructure.Migrations.ApplicationDb
                     b.HasIndex("RoleId");
 
                     b.ToTable("AspNetUserRoles", (string)null);
-                });
-
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
-                {
-                    b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("LoginProvider")
-                        .HasMaxLength(128)
-                        .HasColumnType("nvarchar(128)");
-
-                    b.Property<string>("Name")
-                        .HasMaxLength(128)
-                        .HasColumnType("nvarchar(128)");
-
-                    b.Property<string>("Value")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("UserId", "LoginProvider", "Name");
-
-                    b.ToTable("AspNetUserTokens", (string)null);
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.AspNetRole", b =>
@@ -260,7 +71,7 @@ namespace RentACar.Infrastructure.Migrations.ApplicationDb
 
                     b.HasKey("Id");
 
-                    b.ToTable("AspNetRole");
+                    b.ToTable("AspNetRoles");
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.AspNetRoleClaim", b =>
@@ -286,7 +97,7 @@ namespace RentACar.Infrastructure.Migrations.ApplicationDb
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("AspNetRoleClaim");
+                    b.ToTable("AspNetRoleClaims");
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.AspNetUser", b =>
@@ -342,7 +153,7 @@ namespace RentACar.Infrastructure.Migrations.ApplicationDb
 
                     b.HasKey("Id");
 
-                    b.ToTable("AspNetUser");
+                    b.ToTable("AspNetUsers");
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.AspNetUserClaim", b =>
@@ -368,7 +179,7 @@ namespace RentACar.Infrastructure.Migrations.ApplicationDb
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("AspNetUserClaim");
+                    b.ToTable("AspNetUserClaims");
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.AspNetUserLogin", b =>
@@ -393,7 +204,7 @@ namespace RentACar.Infrastructure.Migrations.ApplicationDb
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("AspNetUserLogin");
+                    b.ToTable("AspNetUserLogins");
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.AspNetUserToken", b =>
@@ -414,7 +225,103 @@ namespace RentACar.Infrastructure.Migrations.ApplicationDb
 
                     b.HasKey("UserId", "LoginProvider", "Name");
 
-                    b.ToTable("AspNetUserToken");
+                    b.ToTable("AspNetUserTokens");
+                });
+
+            modelBuilder.Entity("RentACar.Core.Entities.AuditLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("ActorName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("ActorRole")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("CorrelationId")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("DetailsJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Device")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Entity")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("EntityId")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("FailureReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("NewValuesJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("OldValuesJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Outcome")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Summary")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TargetId")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("TargetType")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserAgent")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AuditLogs");
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.BlackList", b =>
@@ -443,7 +350,8 @@ namespace RentACar.Infrastructure.Migrations.ApplicationDb
                         .HasColumnType("nvarchar(450)")
                         .HasColumnName("userID");
 
-                    b.HasKey("BlacklistId");
+                    b.HasKey("BlacklistId")
+                        .HasName("PK_BlackList_1");
 
                     b.HasIndex("EmployeeDoneBlacklistId");
 
@@ -483,7 +391,9 @@ namespace RentACar.Infrastructure.Migrations.ApplicationDb
                         .HasColumnName("enddate");
 
                     b.Property<bool?>("IsBookedByEmployee")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
+                        .HasDefaultValue(false)
                         .HasColumnName("isBookedByEmployee");
 
                     b.Property<DateTime?>("LastPaymentReminderSentAt")
@@ -524,7 +434,7 @@ namespace RentACar.Infrastructure.Migrations.ApplicationDb
 
                     b.HasIndex("PromocodeId");
 
-                    b.ToTable("Booking");
+                    b.ToTable("Bookings");
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.Car", b =>
@@ -577,7 +487,7 @@ namespace RentACar.Infrastructure.Migrations.ApplicationDb
 
                     b.HasIndex("CategoryId");
 
-                    b.ToTable("Car");
+                    b.ToTable("Cars");
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.Category", b =>
@@ -604,7 +514,7 @@ namespace RentACar.Infrastructure.Migrations.ApplicationDb
 
                     b.HasKey("CategoryId");
 
-                    b.ToTable("Category");
+                    b.ToTable("Categories");
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.CreditCard", b =>
@@ -619,8 +529,9 @@ namespace RentACar.Infrastructure.Migrations.ApplicationDb
                     b.Property<string>("CardHolderName")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
-                        .HasColumnName("cardHolderName");
+                        .HasColumnType("nchar(50)")
+                        .HasColumnName("cardHolderName")
+                        .IsFixedLength();
 
                     b.Property<string>("CardNumber")
                         .IsRequired()
@@ -632,14 +543,16 @@ namespace RentACar.Infrastructure.Migrations.ApplicationDb
                     b.Property<string>("Cvv")
                         .IsRequired()
                         .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)")
-                        .HasColumnName("cvv");
+                        .HasColumnType("nchar(10)")
+                        .HasColumnName("cvv")
+                        .IsFixedLength();
 
                     b.Property<DateOnly>("ExpiryDate")
                         .HasColumnType("date")
                         .HasColumnName("expiryDate");
 
-                    b.HasKey("CreditCardId");
+                    b.HasKey("CreditCardId")
+                        .HasName("PK_CreditCard_1");
 
                     b.ToTable("CreditCard");
                 });
@@ -669,7 +582,9 @@ namespace RentACar.Infrastructure.Migrations.ApplicationDb
                         .HasColumnName("isVerified");
 
                     b.Property<bool>("Isactive")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
+                        .HasDefaultValue(true)
                         .HasColumnName("isactive");
 
                     b.Property<string>("Name")
@@ -692,12 +607,13 @@ namespace RentACar.Infrastructure.Migrations.ApplicationDb
                         .HasColumnType("nvarchar(450)")
                         .HasColumnName("aspNetUserId");
 
-                    b.HasKey("UserId");
+                    b.HasKey("UserId")
+                        .HasName("PK_Customers_1");
 
                     b.HasIndex("aspNetUserId")
                         .IsUnique();
 
-                    b.ToTable("Customer");
+                    b.ToTable("Customers");
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.CustomerCreditCard", b =>
@@ -751,6 +667,9 @@ namespace RentACar.Infrastructure.Migrations.ApplicationDb
 
                     b.HasIndex("CreatedByUserId");
 
+                    b.HasIndex("Name")
+                        .IsUnique();
+
                     b.HasIndex("UpdatedByUserId");
 
                     b.ToTable("DistributionLists");
@@ -793,7 +712,8 @@ namespace RentACar.Infrastructure.Migrations.ApplicationDb
 
                     b.HasIndex("AddedByUserId");
 
-                    b.HasIndex("DistributionListId");
+                    b.HasIndex("DistributionListId", "Email")
+                        .IsUnique();
 
                     b.ToTable("DistributionListMembers");
                 });
@@ -882,55 +802,6 @@ namespace RentACar.Infrastructure.Migrations.ApplicationDb
                     b.ToTable("EmailDrafts");
                 });
 
-            modelBuilder.Entity("RentACar.Core.Entities.EmailFeatureConfig", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Category")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("Enabled")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("FeatureKey")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("FeatureName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Notes")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ReplyToOverride")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("SenderIdentityId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("TemplateKey")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UpdatedByUserId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SenderIdentityId");
-
-                    b.ToTable("EmailFeatureConfigs");
-                });
-
             modelBuilder.Entity("RentACar.Core.Entities.EmailLog", b =>
                 {
                     b.Property<int>("Id")
@@ -986,49 +857,6 @@ namespace RentACar.Infrastructure.Migrations.ApplicationDb
                     b.ToTable("EmailLogs");
                 });
 
-            modelBuilder.Entity("RentACar.Core.Entities.EmailProviderSettings", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("DefaultReplyToEmail")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ProviderType")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("RateLimitPerMinute")
-                        .HasColumnType("int");
-
-                    b.Property<int>("RetryCount")
-                        .HasColumnType("int");
-
-                    b.Property<int>("RetryDelayMinutes")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("SandboxModeEnabled")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("SenderDomain")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UpdatedByUserId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UpdatedByUserId");
-
-                    b.ToTable("EmailProviderSettings");
-                });
-
             modelBuilder.Entity("RentACar.Core.Entities.EmailTemplate", b =>
                 {
                     b.Property<int>("Id")
@@ -1069,6 +897,9 @@ namespace RentACar.Infrastructure.Migrations.ApplicationDb
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TemplateKey")
+                        .IsUnique();
 
                     b.HasIndex("UpdatedByUserId");
 
@@ -1112,7 +943,7 @@ namespace RentACar.Infrastructure.Migrations.ApplicationDb
 
                     b.HasIndex("aspNetUserId");
 
-                    b.ToTable("Employee");
+                    b.ToTable("Employees");
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.NotificationLog", b =>
@@ -1170,19 +1001,7 @@ namespace RentACar.Infrastructure.Migrations.ApplicationDb
                     b.Property<bool>("AllNotificationEmailsEnabled")
                         .HasColumnType("bit");
 
-                    b.Property<int?>("CarUpdateEmployeesListId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("CategoryUpdateEmployeesListId")
-                        .HasColumnType("int");
-
                     b.Property<int>("CheckIntervalMinutes")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("DocsReminderEmployeesListId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("EmployeesDefaultListId")
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("LastRunAt")
@@ -1203,49 +1022,38 @@ namespace RentACar.Infrastructure.Migrations.ApplicationDb
                     b.Property<DateTime?>("NextRunAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("PaymentReminderDelayHours")
-                        .HasColumnType("int");
-
                     b.Property<bool>("PaymentReminderEnabled")
                         .HasColumnType("bit");
 
-                    b.Property<int?>("PaymentReminderMaxSends")
+                    b.Property<int>("PaymentReminderInitialDelayHours")
                         .HasColumnType("int");
 
-                    b.Property<int?>("PaymentReminderRepeatEveryHours")
+                    b.Property<int>("PaymentReminderIntervalHours")
                         .HasColumnType("int");
 
-                    b.Property<bool>("PaymentReminderSendOnceOnly")
-                        .HasColumnType("bit");
+                    b.Property<int>("PaymentReminderMaxDurationHours")
+                        .HasColumnType("int");
 
                     b.Property<string>("PaymentReminderStatusCsv")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("PickupReminderEnabled")
                         .HasColumnType("bit");
 
-                    b.Property<int>("PickupReminderHoursBefore")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("PickupReminderSendOnceOnly")
-                        .HasColumnType("bit");
+                    b.Property<string>("PickupReminderScheduleHoursCsv")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("PromoExpiryAutoDeactivate")
                         .HasColumnType("bit");
 
                     b.Property<string>("PromoExpiryCheckFrequency")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("PromoExpiryEmployeesListId")
+                    b.Property<int>("PromoExpiryDaysBefore")
                         .HasColumnType("int");
 
                     b.Property<bool>("PromoExpiryEnabled")
                         .HasColumnType("bit");
-
-                    b.Property<int?>("PromocodeUpdateEmployeesListId")
-                        .HasColumnType("int");
 
                     b.Property<bool>("ReminderProcessingEnabled")
                         .HasColumnType("bit");
@@ -1256,11 +1064,8 @@ namespace RentACar.Infrastructure.Migrations.ApplicationDb
                     b.Property<bool>("ReturnReminderEnabled")
                         .HasColumnType("bit");
 
-                    b.Property<int>("ReturnReminderHoursBefore")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("ReturnReminderSendOnceOnly")
-                        .HasColumnType("bit");
+                    b.Property<string>("ReturnReminderScheduleHoursCsv")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -1335,7 +1140,30 @@ namespace RentACar.Infrastructure.Migrations.ApplicationDb
                     b.HasIndex("BookingId")
                         .IsUnique();
 
-                    b.ToTable("Payment");
+                    b.ToTable("Payments");
+                });
+
+            modelBuilder.Entity("RentACar.Core.Entities.PaymentMethod", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("PaymentMethodName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasColumnName("paymentMethodName");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PaymentMethods");
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.Promocode", b =>
@@ -1374,7 +1202,7 @@ namespace RentACar.Infrastructure.Migrations.ApplicationDb
 
                     b.HasKey("PromocodeId");
 
-                    b.ToTable("Promocode");
+                    b.ToTable("Promocodes");
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.SenderIdentity", b =>
@@ -1428,83 +1256,7 @@ namespace RentACar.Infrastructure.Migrations.ApplicationDb
                     b.ToTable("SenderIdentities");
                 });
 
-            modelBuilder.Entity("RentACar.Core.Entities.ServiceRunItem", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Error")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("EventType")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("RecipientEmail")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Result")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("ServiceRunRecordId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("TargetId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("TargetType")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ServiceRunRecordId");
-
-                    b.ToTable("ServiceRunItems");
-                });
-
-            modelBuilder.Entity("RentACar.Core.Entities.ServiceRunRecord", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("FailedCount")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ProcessedCount")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("RunAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("SentCount")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Summary")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("TriggeredBy")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("ServiceRunRecords");
-                });
-
-            modelBuilder.Entity("AspNetRoleAspNetUser", b =>
+            modelBuilder.Entity("AspNetUserRole", b =>
                 {
                     b.HasOne("RentACar.Core.Entities.AspNetRole", null)
                         .WithMany()
@@ -1513,57 +1265,6 @@ namespace RentACar.Infrastructure.Migrations.ApplicationDb
                         .IsRequired();
 
                     b.HasOne("RentACar.Core.Entities.AspNetUser", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
-                {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
-                        .WithMany()
-                        .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
-                {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
-                {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
-                {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
-                        .WithMany()
-                        .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
-                {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1614,19 +1315,28 @@ namespace RentACar.Infrastructure.Migrations.ApplicationDb
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("RentACar.Core.Entities.AuditLog", b =>
+                {
+                    b.HasOne("RentACar.Core.Entities.AspNetUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("RentACar.Core.Entities.BlackList", b =>
                 {
                     b.HasOne("RentACar.Core.Entities.Employee", "EmployeeDoneBlacklist")
                         .WithMany("BlackLists")
                         .HasForeignKey("EmployeeDoneBlacklistId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK_BlackList_Employees");
 
                     b.HasOne("RentACar.Core.Entities.AspNetUser", "User")
                         .WithMany("BlackLists")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK_BlackList_AspNetUsers1");
 
                     b.Navigation("EmployeeDoneBlacklist");
 
@@ -1638,22 +1348,24 @@ namespace RentACar.Infrastructure.Migrations.ApplicationDb
                     b.HasOne("RentACar.Core.Entities.Car", "Car")
                         .WithMany("Bookings")
                         .HasForeignKey("CarId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK_Bookings_Cars1");
 
                     b.HasOne("RentACar.Core.Entities.Customer", "Customer")
                         .WithMany("Bookings")
                         .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK_Bookings_Customers1");
 
                     b.HasOne("RentACar.Core.Entities.Employee", "Employeebooker")
                         .WithMany("Bookings")
-                        .HasForeignKey("EmployeebookerId");
+                        .HasForeignKey("EmployeebookerId")
+                        .HasConstraintName("FK_Bookings_Employees");
 
                     b.HasOne("RentACar.Core.Entities.Promocode", "Promocode")
                         .WithMany("Bookings")
-                        .HasForeignKey("PromocodeId");
+                        .HasForeignKey("PromocodeId")
+                        .HasConstraintName("FK_Bookings_Promocodes1");
 
                     b.Navigation("Car");
 
@@ -1668,7 +1380,8 @@ namespace RentACar.Infrastructure.Migrations.ApplicationDb
                 {
                     b.HasOne("RentACar.Core.Entities.Category", "Category")
                         .WithMany("Cars")
-                        .HasForeignKey("CategoryId");
+                        .HasForeignKey("CategoryId")
+                        .HasConstraintName("FK_Cars_Categories1");
 
                     b.Navigation("Category");
                 });
@@ -1678,8 +1391,8 @@ namespace RentACar.Infrastructure.Migrations.ApplicationDb
                     b.HasOne("RentACar.Core.Entities.AspNetUser", "User")
                         .WithOne("Customer")
                         .HasForeignKey("RentACar.Core.Entities.Customer", "aspNetUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK_Customers_AspNetUsers");
 
                     b.Navigation("User");
                 });
@@ -1689,14 +1402,14 @@ namespace RentACar.Infrastructure.Migrations.ApplicationDb
                     b.HasOne("RentACar.Core.Entities.CreditCard", "CreditCard")
                         .WithMany("CustomerCreditCards")
                         .HasForeignKey("CreditCardId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK_CustomerCreditCard_CreditCard");
 
                     b.HasOne("RentACar.Core.Entities.Customer", "User")
                         .WithMany("CustomerCreditCards")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK_CustomerCreditCard_Customers");
 
                     b.Navigation("CreditCard");
 
@@ -1757,15 +1470,6 @@ namespace RentACar.Infrastructure.Migrations.ApplicationDb
                     b.Navigation("CreatedByUser");
                 });
 
-            modelBuilder.Entity("RentACar.Core.Entities.EmailFeatureConfig", b =>
-                {
-                    b.HasOne("RentACar.Core.Entities.SenderIdentity", "SenderIdentity")
-                        .WithMany()
-                        .HasForeignKey("SenderIdentityId");
-
-                    b.Navigation("SenderIdentity");
-                });
-
             modelBuilder.Entity("RentACar.Core.Entities.EmailLog", b =>
                 {
                     b.HasOne("RentACar.Core.Entities.AspNetUser", "CreatedByUser")
@@ -1773,15 +1477,6 @@ namespace RentACar.Infrastructure.Migrations.ApplicationDb
                         .HasForeignKey("CreatedByUserId");
 
                     b.Navigation("CreatedByUser");
-                });
-
-            modelBuilder.Entity("RentACar.Core.Entities.EmailProviderSettings", b =>
-                {
-                    b.HasOne("RentACar.Core.Entities.AspNetUser", "UpdatedByUser")
-                        .WithMany()
-                        .HasForeignKey("UpdatedByUserId");
-
-                    b.Navigation("UpdatedByUser");
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.EmailTemplate", b =>
@@ -1819,7 +1514,8 @@ namespace RentACar.Infrastructure.Migrations.ApplicationDb
                         .WithOne("Payment")
                         .HasForeignKey("RentACar.Core.Entities.Payment", "BookingId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK_Payments_Bookings");
 
                     b.Navigation("Booking");
                 });
@@ -1837,17 +1533,6 @@ namespace RentACar.Infrastructure.Migrations.ApplicationDb
                     b.Navigation("CreatedByUser");
 
                     b.Navigation("UpdatedByUser");
-                });
-
-            modelBuilder.Entity("RentACar.Core.Entities.ServiceRunItem", b =>
-                {
-                    b.HasOne("RentACar.Core.Entities.ServiceRunRecord", "ServiceRunRecord")
-                        .WithMany("RunItems")
-                        .HasForeignKey("ServiceRunRecordId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ServiceRunRecord");
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.AspNetRole", b =>
@@ -1914,11 +1599,6 @@ namespace RentACar.Infrastructure.Migrations.ApplicationDb
             modelBuilder.Entity("RentACar.Core.Entities.Promocode", b =>
                 {
                     b.Navigation("Bookings");
-                });
-
-            modelBuilder.Entity("RentACar.Core.Entities.ServiceRunRecord", b =>
-                {
-                    b.Navigation("RunItems");
                 });
 #pragma warning restore 612, 618
         }

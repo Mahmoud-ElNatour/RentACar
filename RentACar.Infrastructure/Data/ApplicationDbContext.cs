@@ -33,6 +33,7 @@ namespace RentACar.Infrastructure.Data
             // This is required because attributes were removed from the entity class
             builder.Entity<CustomerCreditCard>()
                 .HasKey(c => new { c.UserId, c.CreditCardId });
+
         }
     }
 }

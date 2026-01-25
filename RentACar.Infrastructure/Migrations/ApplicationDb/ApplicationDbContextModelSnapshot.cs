@@ -1167,19 +1167,7 @@ namespace RentACar.Infrastructure.Migrations.ApplicationDb
                     b.Property<bool>("AllNotificationEmailsEnabled")
                         .HasColumnType("bit");
 
-                    b.Property<int?>("CarUpdateEmployeesListId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("CategoryUpdateEmployeesListId")
-                        .HasColumnType("int");
-
                     b.Property<int>("CheckIntervalMinutes")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("DocsReminderEmployeesListId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("EmployeesDefaultListId")
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("LastRunAt")
@@ -1200,49 +1188,38 @@ namespace RentACar.Infrastructure.Migrations.ApplicationDb
                     b.Property<DateTime?>("NextRunAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("PaymentReminderDelayHours")
-                        .HasColumnType("int");
-
                     b.Property<bool>("PaymentReminderEnabled")
                         .HasColumnType("bit");
 
-                    b.Property<int?>("PaymentReminderMaxSends")
+                    b.Property<int>("PaymentReminderInitialDelayHours")
                         .HasColumnType("int");
 
-                    b.Property<int?>("PaymentReminderRepeatEveryHours")
+                    b.Property<int>("PaymentReminderIntervalHours")
                         .HasColumnType("int");
 
-                    b.Property<bool>("PaymentReminderSendOnceOnly")
-                        .HasColumnType("bit");
+                    b.Property<int>("PaymentReminderMaxDurationHours")
+                        .HasColumnType("int");
 
                     b.Property<string>("PaymentReminderStatusCsv")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("PickupReminderEnabled")
                         .HasColumnType("bit");
 
-                    b.Property<int>("PickupReminderHoursBefore")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("PickupReminderSendOnceOnly")
-                        .HasColumnType("bit");
+                    b.Property<string>("PickupReminderScheduleHoursCsv")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("PromoExpiryAutoDeactivate")
                         .HasColumnType("bit");
 
                     b.Property<string>("PromoExpiryCheckFrequency")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("PromoExpiryEmployeesListId")
+                    b.Property<int>("PromoExpiryDaysBefore")
                         .HasColumnType("int");
 
                     b.Property<bool>("PromoExpiryEnabled")
                         .HasColumnType("bit");
-
-                    b.Property<int?>("PromocodeUpdateEmployeesListId")
-                        .HasColumnType("int");
 
                     b.Property<bool>("ReminderProcessingEnabled")
                         .HasColumnType("bit");
@@ -1253,11 +1230,8 @@ namespace RentACar.Infrastructure.Migrations.ApplicationDb
                     b.Property<bool>("ReturnReminderEnabled")
                         .HasColumnType("bit");
 
-                    b.Property<int>("ReturnReminderHoursBefore")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("ReturnReminderSendOnceOnly")
-                        .HasColumnType("bit");
+                    b.Property<string>("ReturnReminderScheduleHoursCsv")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
