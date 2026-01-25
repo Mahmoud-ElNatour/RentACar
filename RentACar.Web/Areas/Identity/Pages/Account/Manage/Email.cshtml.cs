@@ -19,16 +19,16 @@ namespace RentACar.Web.Areas.Identity.Pages.Account.Manage
     {
         private readonly UserManager<IdentityUser> _userManager;
         private readonly SignInManager<IdentityUser> _signInManager;
-        private readonly IEmailSender _emailSender;
+        private readonly RentACar.Application.Managers.EmailManager _emailManager;
 
         public EmailModel(
             UserManager<IdentityUser> userManager,
             SignInManager<IdentityUser> signInManager,
-            IEmailSender emailSender)
+            RentACar.Application.Managers.EmailManager emailManager)
         {
             _userManager = userManager;
             _signInManager = signInManager;
-            _emailSender = emailSender;
+            _emailManager = emailManager;
         }
 
         /// <summary>
@@ -123,10 +123,8 @@ namespace RentACar.Web.Areas.Identity.Pages.Account.Manage
                     pageHandler: null,
                     values: new { area = "Identity", userId = userId, email = Input.NewEmail, code = code },
                     protocol: Request.Scheme);
-                await _emailSender.SendEmailAsync(
-                    Input.NewEmail,
-                    "Confirm your email",
-                    $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+                
+                await _emailManager.SendConfirmationEmailAsync(Input.NewEmail, HtmlEncoder.Default.Encode(callbackUrl), user.UserName);
 
                 StatusMessage = "Confirmation link to change email sent. Please check your email.";
                 return RedirectToPage();
@@ -159,10 +157,8 @@ namespace RentACar.Web.Areas.Identity.Pages.Account.Manage
                 pageHandler: null,
                 values: new { area = "Identity", userId = userId, code = code },
                 protocol: Request.Scheme);
-            await _emailSender.SendEmailAsync(
-                email,
-                "Confirm your email",
-                $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+            
+            await _emailManager.SendConfirmationEmailAsync(email, HtmlEncoder.Default.Encode(callbackUrl), user.UserName);
 
             StatusMessage = "Verification email sent. Please check your email.";
             return RedirectToPage();

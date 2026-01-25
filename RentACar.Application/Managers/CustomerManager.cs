@@ -210,6 +210,13 @@ namespace RentACar.Application.Managers
             {
                 customer.Isactive = isActive;
                 await _customerRepository.UpdateAsync(customer);
+                
+                // 📨 Send Account Status Email
+                var user = await _userManager.FindByIdAsync(customer.aspNetUserId);
+                if (user != null && !string.IsNullOrEmpty(user.Email)) {
+                     var status = isActive ? "Activated" : "Deactivated";
+                     await _emailManager.SendAccountStatusEmail(user.Email, customer.Name, status, "Administrative Action");
+                }
             }
         }
         public async Task UpdateCustomerAddress(int customerId, string newAddress)

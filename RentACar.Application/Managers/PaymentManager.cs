@@ -631,6 +631,30 @@ namespace RentACar.Application.Managers
                     await _emailManager.SendPaymentCancelledEmail(custUser.Email, booking.Customer.Name, payment.Amount);
             }
             
+            
+            return true;
+        }
+
+        public async Task<bool> MarkPaymentFailedAsync(int paymentId, string failureReason)
+        {
+            var payment = await _paymentRepository.GetByIdAsync(paymentId);
+            if (payment == null) return false;
+
+            if (string.Equals(payment.Status, "Failed", StringComparison.OrdinalIgnoreCase)) return true;
+
+            payment.Status = "Failed";
+            await _paymentRepository.UpdateAsync(payment);
+
+            // 📨 Send Payment Failed Email
+            var booking = await _bookingRepository.GetByIdAsync(payment.BookingId);
+            if (booking != null && booking.Customer != null)
+            {
+                 var custUser = await _userManager.FindByIdAsync(booking.Customer.aspNetUserId);
+                 if (custUser != null)
+                    await _emailManager.SendPaymentFailedEmail(custUser.Email, booking.Customer.Name, booking.BookingId, payment.Amount);
+            }
+            
+            await _auditLogManager.LogEventAsync("PaymentFailed", "Payment", paymentId.ToString(), $"Payment failed: {failureReason}", null, "Failed");
             return true;
         }
 

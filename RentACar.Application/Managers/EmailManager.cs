@@ -42,28 +42,30 @@ namespace RentACar.Application.Managers
             string subject = fallbackSubject;
             string body = fallbackBody;
             string templateUsed = defaultTemplateKey;
+            string? fromEmail = null;
+            string? fromName = null;
 
             try
             {
-                // 1. Resolve effective Template Key from Feature Config
-                // Check if featureKey exists in config
-                // We use tracking=false for performance
+                // 1. Resolve effective Template & Sender from Feature Config
                 var featureConfig = await _appDbContext.EmailFeatureConfigs
+                    .Include(f => f.SenderIdentity)
                     .AsNoTracking()
                     .FirstOrDefaultAsync(f => f.FeatureKey == featureKey);
 
-                if (featureConfig != null && !string.IsNullOrEmpty(featureConfig.TemplateKey))
+                if (featureConfig != null)
                 {
-                    templateUsed = featureConfig.TemplateKey;
-                    
-                    // Optional: Check if Feature is Enabled?
-                    if (!featureConfig.Enabled)
+                    if (!featureConfig.Enabled) return false; // Feature disabled
+
+                    // Resolve Template
+                    if (!string.IsNullOrEmpty(featureConfig.TemplateKey))
+                        templateUsed = featureConfig.TemplateKey;
+
+                    // Resolve Sender
+                    if (featureConfig.SenderIdentity != null && featureConfig.SenderIdentity.IsActive)
                     {
-                        // Feature disabled via config. logic: Do we stop sending?
-                        // User requirements usually imply "Turn off notification". 
-                        // If so, return false or true(skipped).
-                        // Assuming return false (not sent).
-                        return false; 
+                        fromEmail = featureConfig.SenderIdentity.FromEmail;
+                        fromName = featureConfig.SenderIdentity.DisplayName;
                     }
                 }
 
@@ -82,11 +84,6 @@ namespace RentACar.Application.Managers
                         if (body.Contains(key)) body = body.Replace(key, kvp.Value);
                     }
                 }
-                else
-                {
-                    // Fallback to defaults provided in args
-                    // Maybe log that template was missing
-                }
             }
             catch (Exception ex)
             {
@@ -94,10 +91,10 @@ namespace RentACar.Application.Managers
                 // Log warning
             }
 
-            return await SendEmailSafeAsync(recipient, subject, body, emailType, null, null, templateUsed);
+            return await SendEmailSafeAsync(recipient, subject, body, emailType, null, null, templateUsed, fromEmail, fromName);
         }
 
-        private async Task<bool> SendEmailSafeAsync(string recipient, string subject, string message, string emailType, Dictionary<string, byte[]> attachments = null, string userId = null, string templateKey = "")
+        private async Task<bool> SendEmailSafeAsync(string recipient, string subject, string message, string emailType, Dictionary<string, byte[]> attachments = null, string userId = null, string templateKey = "", string? fromEmail = null, string? fromName = null)
         {
             if (string.IsNullOrEmpty(recipient)) return false;
             
@@ -117,12 +114,12 @@ namespace RentACar.Application.Managers
 
             try
             {   
-                await _emailService.SendEmailAsync(recipient, subject ?? "", message ?? "", attachments);
+                await _emailService.SendEmailAsync(recipient, subject ?? "", message ?? "", attachments, fromEmail, fromName);
                 
                 emailLog.Status = "Sent";
                 emailLog.SentAt = DateTime.UtcNow;
                 
-                await _auditLogManager.LogEventAsync("EmailSent", "Notification", recipient, $"Sent {emailType} to {recipient}", status: "Success");
+                await _auditLogManager.LogEventAsync("EmailSent", "Notification", recipient, $"Sent {emailType} to {recipient} (From: {fromEmail ?? "Default"})", status: "Success");
             }
             catch (Exception ex)
             {
@@ -139,8 +136,7 @@ namespace RentACar.Application.Managers
             }
             catch (Exception ex)
             {
-               // Silent fail on log save to not crash app? Or rethrow?
-               // throw new InvalidOperationException($"Log Error: {ex.Message}", ex);
+               // Silent fail on log save
             }
 
             return emailLog.Status == "Sent";
@@ -402,14 +398,35 @@ namespace RentACar.Application.Managers
             var user = await _userManager.FindByIdAsync(customer.aspNetUserId);
             if (user != null && !string.IsNullOrEmpty(user.Email))
             {
-                 // Unverified Reminder feature could be mapped to "UnverifiedDocsReminderInternal" or separate?
-                 // Using Generic "Action Required" for now
-                 var subject = "Action Required: Verify Your RentACar Account";
-                 var bodyContent = $"<h2>Verify Account</h2><p>Hello {customer.Name}, please verify.</p>";
-                 var message = EmailTemplates.GetStandardTemplate(bodyContent, "Action Required");
-                 return await SendEmailSafeAsync(user.Email, subject, message, "Unverified Reminder");
+                 var placeholders = new Dictionary<string, string>
+                 {
+                     { "CustomerName", customer.Name },
+                     { "Year", DateTime.UtcNow.Year.ToString() }
+                 };
+
+                 string fallback = $"<h2>Verify Account</h2><p>Hello {customer.Name}, please upload your documents to verify your account.</p>";
+                 fallback = EmailTemplates.GetStandardTemplate(fallback, "Action Required");
+
+                 // Feature Key: UnverifiedDocsReminder
+                 return await SendTemplatedEmailAsync(user.Email, "UnverifiedDocsReminder", "REM-UNVERIFIED-DOCS", placeholders, "Action Required: Verify Account", fallback, "Unverified Reminder");
             }
             return false;
+        }
+
+        public async Task SendPaymentFailedEmail(string email, string customerName, int bookingId, decimal amount)
+        {
+            var placeholders = new Dictionary<string, string>
+            {
+                { "CustomerName", customerName },
+                { "BookingId", bookingId.ToString() },
+                { "Amount", $"{amount:C}" },
+                { "Year", DateTime.UtcNow.Year.ToString() }
+            };
+
+            string fallback = $"<h2>Payment Failed</h2><p>Transaction for {amount:C} failed.</p>";
+            fallback = EmailTemplates.GetStandardTemplate(fallback, "Payment Failed");
+
+            await SendTemplatedEmailAsync(email, "PaymentFailed", "PAY-FAILED", placeholders, "Payment Failed", fallback, "Payment Failed");
         }
         
         // 9. OTP -> Otp2FA
