@@ -65,6 +65,11 @@ jobs:
 
       - name: Apply Database Migrations
         shell: powershell
+        env:
+          # The Runner Service often cannot see System Environment Variables.
+          # We explicitly inject the connection string here.
+          # REPLACE '${{ secrets.PROD_CONNECTION_STRING }}' with your actual connection string if you don't have secrets set up.
+          ConnectionStrings__DefaultConnection: ${{ secrets.PROD_CONNECTION_STRING }}
         run: |
           # Install dotnet-ef locally (avoids global tool downgrade issues + PATH problems)
           $toolPath = Join-Path $env:RUNNER_TEMP "dotnet-tools"
