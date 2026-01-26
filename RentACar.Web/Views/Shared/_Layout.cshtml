@@ -116,7 +116,8 @@
                 },
             },
         }
-
+    </script>
+    <script>
         function toggleUserDropdown() {
             const dropdown = document.getElementById('user-dropdown-menu');
             if (dropdown.style.display === 'none' || dropdown.classList.contains('hidden')) {
@@ -143,6 +144,11 @@
             const backdrop = document.getElementById('sidebarBackdrop');
             const body = document.body;
             
+            if (!sidebar || !backdrop) {
+                console.error('Sidebar elements not found');
+                return;
+            }
+
             if (sidebar.classList.contains('-translate-x-full')) {
                 // Open
                 sidebar.classList.remove('-translate-x-full');
