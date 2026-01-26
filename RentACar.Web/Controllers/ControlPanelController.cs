@@ -113,15 +113,16 @@ namespace RentACar.Web.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> RoleStats()
         {
-            var adminCount = await _context.AspNetRoles.Where(r => r.Name == "Admin").Select(r => r.Users.Count()).FirstOrDefaultAsync();
-            var employeeCount = await _context.AspNetRoles.Where(r => r.Name == "Employee").Select(r => r.Users.Count()).FirstOrDefaultAsync();
-            var customerCount = await _context.AspNetRoles.Where(r => r.Name == "Customer").Select(r => r.Users.Count()).FirstOrDefaultAsync();
+            var stats = await _context.AspNetRoles
+                .Where(r => r.Name == "Admin" || r.Name == "Employee" || r.Name == "Customer")
+                .Select(r => new { r.Name, Count = r.Users.Count() })
+                .ToDictionaryAsync(x => x.Name, x => x.Count);
 
             return Ok(new
             {
-                AdminCount = adminCount,
-                EmployeeCount = employeeCount,
-                CustomerCount = customerCount
+                AdminCount = stats.ContainsKey("Admin") ? stats["Admin"] : 0,
+                EmployeeCount = stats.ContainsKey("Employee") ? stats["Employee"] : 0,
+                CustomerCount = stats.ContainsKey("Customer") ? stats["Customer"] : 0
             });
         }
 
