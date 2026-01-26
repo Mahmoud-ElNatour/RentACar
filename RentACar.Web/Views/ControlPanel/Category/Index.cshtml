@@ -4,37 +4,7 @@
     ViewData["BodyClass"] = "bg-background-dark text-white font-display overflow-x-hidden";
 }
 
-<script id="tailwind-config">
-    tailwind.config = {
-        important: true, /* FORCE OVERRIDE OF BOOTSTRAP STYLES */
-        blocklist: ['collapse'],
-        corePlugins: {
-            preflight: false,
-        },
-        darkMode: "class",
-        theme: {
-            extend: {
-                colors: {
-                    "primary": "#edbc1d",
-                    "background-dark": "#0a0a0a", // Almost black
-                    "surface-dark": "#171717", // Dark neutral gray for cards
-                    "surface-accent": "#262626", // Lighter neutral gray for borders/inputs
-                    // Footer & Brand Colors (Inherited from Layout)
-                    "gold": "#f2b90d",
-                    "gold-light": "#fce186", 
-                    "gold-hover": "#d9a60c",
-                    "footer-bg": "#0a0a0a",
-                    "footer-surface": "#171717",
-                    "footer-border": "#f2b90d33",
-                },
-                fontFamily: {
-                    "display": ["Manrope", "sans-serif"]
-                },
-                borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
-            },
-        },
-    }
-</script>
+
 
 <style>
     ::-webkit-scrollbar {

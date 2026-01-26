@@ -83,6 +83,7 @@
     </style>
     <script id="tailwind-config">
         tailwind.config = {
+            important: true, /* FORCE OVERRIDE OF BOOTSTRAP STYLES */
             darkMode: "class",
             theme: {
                 extend: {
@@ -92,8 +93,14 @@
                         "background-light": "#f8f7f6",
                         "background-dark": "#0a0c0e",
                         "surface-dark": "#16181a",
+                        "surface-dark-lighter": "#202225",
                         "border-dark": "#2a2d30",
                         
+                        // Merged from pages
+                        "surface-accent": "#262626",
+                        "card-dark": "#121212",
+                        "text-muted": "#888888",
+
                         // Legacy mappings to keep footer/other components working if they use these
                         "gold": "#d4af35",
                         "gold-light": "#fce186",
