@@ -1,201 +1,376 @@
 @{
-    ViewData["Title"] = "Payments";
-    Layout = "_Layout";
+    ViewData["Title"] = "Payment Management";
     ViewData["BodyClass"] = "bg-background-dark";
 }
-<link rel="stylesheet" href="~/css/employees.css" />
-@await Html.PartialAsync("_PopupNotifications")
-    <div class="booking-container container">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <a href="../ControlPanel" class="btn btn-outline-warning rounded-circle d-inline-flex align-items-center justify-content-center" style="width:40px;height:40px" title="Back">
-                <i class="fas fa-arrow-left"></i>
-            </a>
-            <h2 class="flex-grow-1 text-center m-0">Manage Payments</h2>
-            <div style="width:40px;"></div>
-        </div>
-        <div class="text-end mb-3">
-            <a href="/Payment/Add" class="btn btn-primary"><i class="fas fa-plus me-1"></i>Add Payment</a>
-        </div>
-        <div class="mb-3">
-            <input type="text" id="tableSearch" class="form-control" placeholder="Search table..." />
-        </div>
-        <div class="table-responsive">
-            <table id="paymentsTable" class="table table-striped table-dark align-middle">
-                <thead>
-                    <tr>
-                        <th onclick="sortTable(0)" style="cursor:pointer">ID <i class="fas fa-sort"></i></th>
-                        <th onclick="sortTable(1)" style="cursor:pointer">Booking <i class="fas fa-sort"></i></th>
-                        <th onclick="sortTable(2)" style="cursor:pointer">Customer <i class="fas fa-sort"></i></th>
-                        <th onclick="sortTable(3)" style="cursor:pointer">Subtotal <i class="fas fa-sort"></i></th>
-                        <th onclick="sortTable(4)" style="cursor:pointer">Promo Code <i class="fas fa-sort"></i></th>
-                        <th onclick="sortTable(5)" style="cursor:pointer">Discount % <i class="fas fa-sort"></i></th>
-                        <th onclick="sortTable(6)" style="cursor:pointer">Total <i class="fas fa-sort"></i></th>
-                        <th onclick="sortTable(7)" style="cursor:pointer">Amount <i class="fas fa-sort"></i></th>
-                        <th onclick="sortTable(8)" style="cursor:pointer">Date <i class="fas fa-sort"></i></th>
-                        <th onclick="sortTable(9)" style="cursor:pointer">Method <i class="fas fa-sort"></i></th>
-                        <th onclick="sortTable(10)" style="cursor:pointer">Status <i class="fas fa-sort"></i></th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="paymentRows"></tbody>
-            </table>
-        </div>
+
+<!-- Content Header (Custom to match design, not extending _Layout header) -->
+<div class="flex flex-col md:flex-row flex-wrap justify-between gap-6 mb-8 items-start md:items-center p-4 md:px-10 md:py-8 max-w-[1440px] mx-auto w-full">
+    <div class="flex flex-col gap-2">
+        <h1 class="text-white text-3xl md:text-4xl font-black tracking-tight flex items-center gap-3">
+            <span class="material-symbols-outlined text-gold text-4xl">payments</span>
+            Payment Management
+        </h1>
+        <p class="text-gray-400 text-base">Manage and track all rental payments, refunds, and invoices.</p>
+    </div>
+    <button onclick="loadModal('/Payment/Add')" class="flex items-center gap-2 bg-gold hover:bg-gold-hover transition-colors text-black px-6 py-3 rounded-lg font-bold shadow-lg shadow-gold/10">
+        <span class="material-symbols-outlined text-[20px]">add_circle</span>
+        <span>Add Payment</span>
+    </button>
+</div>
+
+<div class="px-4 md:px-10 pb-8 max-w-[1440px] mx-auto w-full">
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8" id="statsGrid">
+        <!-- Stats will be injected via JS -->
+         <div class="bg-surface-dark rounded-xl p-5 border border-border-dark flex flex-col gap-1 animate-pulse">
+             <div class="h-4 bg-white/10 rounded w-1/2 mb-2"></div>
+             <div class="h-8 bg-white/10 rounded w-3/4"></div>
+         </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-surface-dark rounded-xl border border-border-dark p-4 mb-6 shadow-xl">
+        <div class="flex flex-col lg:flex-row gap-4 items-end">
+            <label class="flex flex-col w-full lg:flex-[2]">
+                <span class="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Search</span>
+                <div class="relative">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-gray-500">search</span>
+                    <input id="tableSearch" onchange="resetAndLoad()" class="w-full bg-[#0a0a0a] border border-border-dark rounded-lg py-3 pl-12 pr-4 text-white placeholder-gray-600 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all" placeholder="Search by ID, Booking, Customer..." type="text"/>
+                </div>
+            </label>
+            <div class="flex gap-2 w-full lg:flex-[2]">
+                <label class="flex flex-col w-full">
+                    <span class="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">From</span>
+                    <input id="dateFrom" type="date" onchange="resetAndLoad()" class="w-full bg-[#0a0a0a] border border-border-dark rounded-lg py-3 px-4 text-white focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all"/>
+                </label>
+                <label class="flex flex-col w-full">
+                    <span class="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">To</span>
+                    <input id="dateTo" type="date" onchange="resetAndLoad()" class="w-full bg-[#0a0a0a] border border-border-dark rounded-lg py-3 px-4 text-white focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all"/>
+                </label>
+            </div>
+            <label class="flex flex-col w-full lg:flex-1">
+                <span class="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Status</span>
+                <div class="relative">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-gray-500">filter_list</span>
+                    <select id="statusFilter" onchange="resetAndLoad()" class="w-full bg-[#0a0a0a] border border-border-dark rounded-lg py-3 pl-12 pr-4 text-white placeholder-gray-600 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold appearance-none cursor-pointer">
+                        <option value="">All Statuses</option>
+                        <option value="Paid">Paid</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Failed">Failed</option>
+                        <option value="Refunded">Refunded</option>
+                    </select>
+                    <span class="absolute right-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-gray-500 pointer-events-none">expand_more</span>
+                </div>
+            </label>
+            <button onclick="exportTable()" class="w-full lg:w-auto bg-white/5 hover:bg-white/10 text-white border border-border-dark px-6 py-3 rounded-lg font-bold transition-colors flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined">download</span>
+                Export
+            </button>
         </div>
     </div>
-    <div id="modalPlaceholder"></div>
 
+    <!-- Table -->
+    <div class="bg-surface-dark rounded-xl border border-border-dark overflow-hidden flex flex-col flex-1 shadow-2xl relative min-h-[400px]">
+        <div class="overflow-x-auto">
+            <table class="w-full whitespace-nowrap text-left border-collapse">
+                <thead>
+                    <tr class="bg-[#1a1a1a] border-b border-gold/20">
+                        <th class="px-6 py-4 text-xs font-bold text-gold uppercase tracking-wider cursor-pointer hover:bg-white/5" onclick="setSort('paymentId')">ID <i id="sort-paymentId" class="fas fa-sort float-end"></i></th>
+                        <th class="px-6 py-4 text-xs font-bold text-gold uppercase tracking-wider cursor-pointer hover:bg-white/5" onclick="setSort('paymentDate')">Date <i id="sort-paymentDate" class="fas fa-sort float-end"></i></th>
+                        <th class="px-6 py-4 text-xs font-bold text-gold uppercase tracking-wider cursor-pointer hover:bg-white/5" onclick="setSort('bookingId')">Booking <i id="sort-bookingId" class="fas fa-sort float-end"></i></th>
+                        <th class="px-6 py-4 text-xs font-bold text-gold uppercase tracking-wider cursor-pointer hover:bg-white/5" onclick="setSort('customerName')">Customer <i id="sort-customerName" class="fas fa-sort float-end"></i></th>
+                        <th class="px-6 py-4 text-xs font-bold text-gold uppercase tracking-wider text-right">Subtotal</th>
+                        <th class="px-6 py-4 text-xs font-bold text-gold uppercase tracking-wider">Promo</th>
+                        <th class="px-6 py-4 text-xs font-bold text-gold uppercase tracking-wider text-right" onclick="setSort('amount')">Total <i id="sort-amount" class="fas fa-sort float-end"></i></th>
+                        <th class="px-6 py-4 text-xs font-bold text-gold uppercase tracking-wider">Method</th>
+                        <th class="px-6 py-4 text-xs font-bold text-gold uppercase tracking-wider" onclick="setSort('status')">Status <i id="sort-status" class="fas fa-sort float-end"></i></th>
+                        <th class="px-6 py-4 text-xs font-bold text-gold uppercase tracking-wider text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="paymentRows" class="divide-y divide-border-dark text-sm text-gray-300">
+                    <tr class="animate-pulse">
+                         <td colspan="10" class="p-8 text-center text-gray-500">Loading payments...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        <div class="border-t border-border-dark bg-[#1a1a1a] p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <span class="text-sm text-gray-400" id="showingText">Showing 0 payments</span>
+            <div class="flex gap-2">
+                 <button id="prevBtn" onclick="changePage(-1)" class="px-3 py-1 text-sm border border-border-dark rounded bg-[#0a0a0a] text-gray-400 hover:text-white hover:border-gold transition-colors disabled:opacity-50">Previous</button>
+                 <span id="pageIndicator" class="px-3 py-1 text-sm bg-gold text-black rounded font-bold">1</span>
+                 <button id="nextBtn" onclick="changePage(1)" class="px-3 py-1 text-sm border border-border-dark rounded bg-[#0a0a0a] text-gray-400 hover:text-white hover:border-gold transition-colors disabled:opacity-50">Next</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="modalPlaceholder"></div>
+
+@section Scripts {
     <script>
-        function formatAmount(value) {
-            if (value === null || value === undefined) {
-                return '-';
-            }
-            const number = Number(value);
-            if (Number.isNaN(number)) {
-                return value;
-            }
-            return number.toFixed(2);
-        }
+        // State
+        let currentPage = 1;
+        const pageSize = 10;
+        let totalPages = 1;
+        let sortColumn = 'paymentId';
+        let sortDirection = 'desc';
 
-        function formatPercentage(value) {
-            if (value === null || value === undefined) {
-                return '-';
-            }
-            const number = Number(value);
-            if (Number.isNaN(number)) {
-                return value;
-            }
-            return `${number.toFixed(2)}%`;
-        }
-
-        let currentData = []; // Store data for sorting
-
-        document.addEventListener('DOMContentLoaded', async () => {
-             // Search functionality
-            document.getElementById('tableSearch').addEventListener('keyup', function () {
-                const value = this.value.toLowerCase();
-                document.querySelectorAll('#paymentRows tr').forEach(tr => {
-                    tr.style.display = tr.textContent.toLowerCase().includes(value) ? '' : 'none';
-                });
-            });
-
-            await loadPayments();
+        document.addEventListener('DOMContentLoaded', () => {
+             loadPageData();
         });
 
-        async function loadPayments() {
-            const tbody = document.getElementById('paymentRows');
-            try {
-                const res = await fetch('/api/Payment');
-                if (!res.ok) throw new Error(await res.text());
-                currentData = await res.json();
-                renderTable(currentData);
-            } catch (error) {
-                console.error(error);
-                if (window.showPopup) window.showPopup('Failed to load payments.', 'error');
+        function resetAndLoad() {
+            currentPage = 1;
+            loadPageData();
+        }
+
+        function changePage(delta) {
+            const newPage = currentPage + delta;
+            if (newPage >= 1 && newPage <= totalPages) {
+                currentPage = newPage;
+                loadTableData(); // Only reload table on page change
             }
+        }
+
+        function setSort(col) {
+            if (sortColumn === col) {
+                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortColumn = col;
+                sortDirection = 'asc';
+            }
+            // Update icons
+            document.querySelectorAll('.fas.fa-sort').forEach(i => i.className = 'fas fa-sort float-end text-gray-600');
+            const icon = document.getElementById(`sort-${col}`);
+            if(icon) icon.className = `fas fa-sort-${sortDirection === 'asc' ? 'up' : 'down'} float-end text-gold`;
+
+            loadTableData(); // Only reload table on sort
+        }
+
+        function loadPageData() {
+            // Load both in parallel
+            loadTableData();
+            loadStatsData();
+        }
+
+        function getFilterQuery() {
+            const search = document.getElementById('tableSearch').value;
+            const status = document.getElementById('statusFilter').value;
+            const start = document.getElementById('dateFrom').value;
+            const end = document.getElementById('dateTo').value;
+
+            return new URLSearchParams({
+                page: currentPage,
+                pageSize: pageSize,
+                searchTerm: search,
+                status: status,
+                startDate: start,
+                endDate: end,
+                sortColumn: sortColumn,
+                sortDirection: sortDirection
+            });
+        }
+
+        async function loadTableData() {
+            const tbody = document.getElementById('paymentRows');
+            // Show loading state if needed, or keep existing rows until replacement
+            // tbody.innerHTML = `<tr class="animate-pulse"><td colspan="10" class="p-8 text-center text-gray-500">Loading...</td></tr>`; 
+            
+            try {
+                const qs = getFilterQuery();
+                const res = await fetch(`/api/Payment?${qs}`);
+                if(!res.ok) throw new Error("Failed to load");
+                const data = await res.json();
+                
+                renderTable(data.items);
+                
+                // Update Pagination UI
+                totalPages = data.totalPages;
+                document.getElementById('showingText').innerText = `Showing page ${currentPage} of ${totalPages} (${data.totalCount} total)`;
+                document.getElementById('pageIndicator').innerText = currentPage;
+                document.getElementById('prevBtn').disabled = currentPage <= 1;
+                document.getElementById('nextBtn').disabled = currentPage >= totalPages;
+
+            } catch(e) {
+                console.error(e);
+                tbody.innerHTML = `<tr><td colspan="10" class="p-8 text-center text-red-500">Failed to load data.</td></tr>`;
+            }
+        }
+
+        async function loadStatsData() {
+             // Optional: Add loading state to stats cards if desired
+             try {
+                const qs = getFilterQuery();
+                const res = await fetch(`/api/Payment/Stats?${qs}`);
+                if(!res.ok) throw new Error("Failed to load stats");
+                const stats = await res.json();
+                renderStats(stats);
+             } catch(e) {
+                 console.error("Stats failed", e);
+             }
+        }
+
+        function renderStats(stats) {
+            if(!stats) return;
+            const grid = document.getElementById('statsGrid');
+            grid.innerHTML = `
+                <div class="bg-surface-dark rounded-xl p-5 border border-border-dark flex flex-col gap-1 group hover:border-gold/50 transition-colors">
+                    <div class="flex justify-between items-start mb-2">
+                        <p class="text-gray-400 text-sm font-medium">Total Revenue</p>
+                        <span class="material-symbols-outlined text-gold group-hover:scale-110 transition-transform">payments</span>
+                    </div>
+                    <p class="text-white text-3xl font-bold">$${formatMoney(stats.totalRevenue)}</p>
+                     <div class="text-xs text-gray-500 mt-1">Lifetime earnings</div>
+                </div>
+                <div class="bg-surface-dark rounded-xl p-5 border border-border-dark flex flex-col gap-1 group hover:border-gold/50 transition-colors">
+                    <div class="flex justify-between items-start mb-2">
+                        <p class="text-gray-400 text-sm font-medium">Pending</p>
+                        <span class="material-symbols-outlined text-gold group-hover:scale-110 transition-transform">pending_actions</span>
+                    </div>
+                    <p class="text-white text-3xl font-bold">$${formatMoney(stats.pendingAmount)}</p>
+                    <div class="flex items-center gap-1 text-xs mt-1">
+                        <span class="text-yellow-500 font-bold">${stats.pendingCount} payments</span>
+                        <span class="text-gray-500">awaiting</span>
+                    </div>
+                </div>
+                <div class="bg-surface-dark rounded-xl p-5 border border-border-dark flex flex-col gap-1 group hover:border-gold/50 transition-colors">
+                    <div class="flex justify-between items-start mb-2">
+                        <p class="text-gray-400 text-sm font-medium">Successful</p>
+                        <span class="material-symbols-outlined text-gold group-hover:scale-110 transition-transform">check_circle</span>
+                    </div>
+                    <p class="text-white text-3xl font-bold">${stats.successCount}</p>
+                    <div class="text-xs text-gray-500 mt-1">${((stats.successCount/stats.totalCount)*100 || 0).toFixed(1)}% success rate</div>
+                </div>
+                <div class="bg-surface-dark rounded-xl p-5 border border-border-dark flex flex-col gap-1 group hover:border-gold/50 transition-colors">
+                    <div class="flex justify-between items-start mb-2">
+                        <p class="text-gray-400 text-sm font-medium">Refunds</p>
+                        <span class="material-symbols-outlined text-gold group-hover:scale-110 transition-transform">keyboard_return</span>
+                    </div>
+                    <p class="text-white text-3xl font-bold">$${formatMoney(stats.refundAmount)}</p>
+                    <div class="text-xs text-gray-500 mt-1">Processed refunds</div>
+                </div>
+            `;
         }
 
         function renderTable(data) {
-             const tbody = document.getElementById('paymentRows');
-             tbody.innerHTML = '';
-             data.forEach(payment => {
-                const customerParts = [];
-                if (payment.customerName) customerParts.push(payment.customerName);
-                if (payment.customerUsername) customerParts.push(`(${payment.customerUsername})`);
-                const customerDisplay = customerParts.join(' ') || '-';
-                const row = document.createElement('tr');
-                row.innerHTML =
-                    `<td>${payment.paymentId}</td>` +
-                    `<td>#${payment.bookingId}</td>` +
-                    `<td>${customerDisplay}</td>` +
-                    `<td>${formatAmount(payment.bookingSubtotal)}</td>` +
-                    `<td>${payment.promocodeName ?? '-'}</td>` +
-                    `<td>${formatPercentage(payment.promocodeDiscountPercentage)}</td>` +
-                    `<td>${formatAmount(payment.bookingTotal)}</td>` +
-                    `<td>${formatAmount(payment.amount)}</td>` +
-                    `<td>${payment.paymentDate ?? ''}</td>` +
-                    `<td class='text-capitalize'>${payment.paymentMethodName ?? ''}</td>` +
-                    `<td class='text-capitalize'>${payment.status ?? ''}</td>` +
-                    `<td>` +
-                    `<a href='/Payment/Details/${payment.paymentId}' class='text-info me-2' title='View details'><i class='fas fa-eye'></i></a>` +
-                    `<a href='/Payment/Edit/${payment.paymentId}' class='text-warning me-2' title='Edit payment'><i class='fas fa-pencil-alt'></i></a>` +
-                    `<a href='#' class='text-success me-2' onclick='applyPromoCode(${payment.paymentId}); return false;' title='Apply Promocode'><i class='fas fa-tags'></i></a>` +
-                    `<a href='#' class='text-light' onclick='printReceipt(${payment.paymentId}); return false;' title='Print Receipt'><i class='fas fa-print'></i></a>` +
-                    `</td>`;
-                tbody.appendChild(row);
-            });
-        }
-
-        // Sorting
-        let sortDirection = {}; // Store direction per column
-        function sortTable(n) {
-            const table = document.getElementById("paymentsTable");
-            let rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
-            switching = true;
-            dir = sortDirection[n] === 'asc' ? 'desc' : 'asc'; 
-            sortDirection[n] = dir;
-
-            while (switching) {
-                switching = false;
-                rows = table.rows;
-                // loop starts from 1 (skip header)
-                for (i = 1; i < (rows.length - 1); i++) {
-                    shouldSwitch = false;
-                    x = rows[i].getElementsByTagName("TD")[n];
-                    y = rows[i + 1].getElementsByTagName("TD")[n];
-                    
-                    let xContent = x.innerHTML.toLowerCase();
-                    let yContent = y.innerHTML.toLowerCase();
-                    
-                    // Basic number detection (remove currency symbols etc if needed)
-                    // But simpler to just string compare for now unless explicit requirement
-                    if (!isNaN(parseFloat(xContent)) && !isNaN(parseFloat(yContent))) {
-                         if (dir == "asc") {
-                            if (parseFloat(xContent) > parseFloat(yContent)) {
-                                shouldSwitch = true;
-                                break;
-                            }
-                        } else if (dir == "desc") {
-                            if (parseFloat(xContent) < parseFloat(yContent)) {
-                                shouldSwitch = true;
-                                break;
-                            }
-                        }
-                    } else {
-                        if (dir == "asc") {
-                            if (xContent > yContent) {
-                                shouldSwitch = true;
-                                break;
-                            }
-                        } else if (dir == "desc") {
-                            if (xContent < yContent) {
-                                shouldSwitch = true;
-                                break;
-                            }
-                        }
-                    }
-                }
-                if (shouldSwitch) {
-                    rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
-                    switching = true;
-                    switchcount++;
-                }
+            const tbody = document.getElementById('paymentRows');
+            if(!data || data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="10" class="p-8 text-center text-gray-500">No payments found matching your filters.</td></tr>`;
+                return;
             }
+
+            tbody.innerHTML = data.map(p => `
+                <tr class="hover:bg-white/5 transition-colors group border-b border-border-dark last:border-0">
+                    <td class="px-6 py-4 font-mono text-white">#${p.paymentId}</td>
+                    <td class="px-6 py-4 text-gray-400">${formatDate(p.paymentDate)}</td>
+                    <td class="px-6 py-4 text-gray-400">#${p.bookingId}</td>
+                    <td class="px-6 py-4">
+                        <div class="flex flex-col">
+                            <span class="text-sm font-medium text-white">${p.customerName || 'Unknown'}</span>
+                            <span class="text-xs text-gray-500">${p.customerUsername || ''}</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-right text-gray-400">$${formatMoney(p.bookingSubtotal)}</td>
+                    <td class="px-6 py-4">
+                        ${p.promocodeName ? `<span class="px-2 py-0.5 rounded bg-green-500/10 text-green-500 text-xs font-bold border border-green-500/20">${p.promocodeName} (-${p.promocodeDiscountPercentage}%)</span>` : '<span class="text-gray-600">-</span>'}
+                    </td>
+                    <td class="px-6 py-4 text-right font-bold text-gold">$${formatMoney(p.amount)}</td>
+                    <td class="px-6 py-4">
+                        ${getMethodBadge(p.paymentMethodName)}
+                    </td>
+                    <td class="px-6 py-4">
+                        ${getStatusBadge(p.status)}
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        <div class="flex justify-end gap-1">
+                            <button onclick="loadModal('/Payment/Details/${p.paymentId}')" class="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors" title="View Details">
+                                <span class="material-symbols-outlined text-[20px]">visibility</span>
+                            </button>
+                            ${p.status !== 'Paid' && p.status !== 'Refunded' ? `
+                            <button onclick="loadModal('/Payment/Edit/${p.paymentId}')" class="p-2 text-gold hover:text-gold-hover hover:bg-gold/10 rounded-lg transition-colors" title="Edit">
+                                <span class="material-symbols-outlined text-[20px]">edit</span>
+                            </button>
+                            <button onclick="loadModal('/Payment/ApplyPromocode/${p.paymentId}')" class="p-2 text-green-500 hover:text-green-400 hover:bg-green-500/10 rounded-lg transition-colors" title="Apply Discount">
+                                <span class="material-symbols-outlined text-[20px]">percent</span>
+                            </button>
+                            ` : ''}
+                            <button onclick="window.open('/Payment/Receipt/${p.paymentId}', '_blank', 'width=500,height=700')" class="p-2 text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 rounded-lg transition-colors" title="Print Receipt">
+                                <span class="material-symbols-outlined text-[20px]">print</span>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
         }
 
+        // Helpers
+        function formatMoney(amount) {
+            return (amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+        function formatDate(dateStr) {
+            if(!dateStr) return '-';
+            return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+        // Updated Color Logic for Method
+        function getMethodBadge(method) {
+            method = (method||"").toLowerCase();
+            let color = "text-gray-400 border-gray-500/20 bg-gray-500/10";
+            let icon = "attach_money";
+
+            if(method.includes("card")) {
+                color = "text-blue-400 border-blue-400/20 bg-blue-400/10";
+                icon = "credit_card";
+            }
+            else if(method.includes("cash")) {
+                color = "text-green-400 border-green-400/20 bg-green-400/10";
+                icon = "payments";
+            }
+            else if(method.includes("bank")) {
+                color = "text-purple-400 border-purple-400/20 bg-purple-400/10";
+                icon = "account_balance";
+            }
+             else if(method.includes("stripe")) {
+                color = "text-indigo-400 border-indigo-400/20 bg-indigo-400/10";
+                icon = "add_card";
+            }
+
+            return `
+             <div class="flex items-center gap-2 ${color} px-3 py-1 rounded-full border w-fit">
+                 <span class="material-symbols-outlined text-sm">${icon}</span>
+                 <span class="capitalize text-xs font-bold">${method || '-'}</span>
+            </div>`;
+        }
+        function getStatusBadge(status) {
+            status = status || "Unknown";
+            const classes = {
+                'Paid': 'bg-green-500/10 text-green-500 border-green-500/20',
+                'Done': 'bg-green-500/10 text-green-500 border-green-500/20',
+                'Pending': 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20',
+                'Failed': 'bg-red-500/10 text-red-500 border-red-500/20',
+                'Refunded': 'bg-purple-500/10 text-purple-500 border-purple-500/20',
+                'Unpaid': 'bg-gray-500/10 text-gray-500 border-gray-500/20',
+                'Cancelled': 'bg-red-900/20 text-red-400 border-red-900/40'
+            };
+            const cls = classes[status] || 'bg-gray-500/10 text-gray-500 border-gray-500/20';
+            return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border ${cls}">${status}</span>`;
+        }
+        
         async function loadModal(url) {
-            try {
+             try {
                 const res = await fetch(url);
                 if (!res.ok) throw new Error('Failed to load modal');
                 const html = await res.text();
                 const placeholder = document.getElementById('modalPlaceholder');
-                placeholder.innerHTML = html;
+                 placeholder.innerHTML = `<div class="modal fade" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-lg text-left">${html}</div></div>`;
                 
                 // Execute scripts in partial
                 placeholder.querySelectorAll('script').forEach(scr => {
                     const s = document.createElement('script');
                     s.textContent = scr.textContent;
                     document.body.appendChild(s);
-                    document.body.removeChild(s);
                 });
 
                 const modalEl = placeholder.querySelector('.modal');
@@ -203,18 +378,42 @@
                 modal.show();
             } catch (e) {
                 console.error(e);
-                if (window.showPopup) showPopup('Failed to load dialog.', 'error');
+                alert('Failed to load dialog.');
             }
         }
-
-        function applyPromoCode(id) {
-            loadModal(`/api/Payment/ApplyPromocode/${id}`);
+        
+        function exportTable() {
+             const rows = [
+                ["ID", "Date", "Booking", "Customer", "Subtotal", "Promo", "Total", "Method", "Status"]
+            ];
+             // Let's fetch all for export
+             const qs = new URLSearchParams({
+                page: 1,
+                pageSize: 10000,
+                searchTerm: document.getElementById('tableSearch').value,
+                status: document.getElementById('statusFilter').value,
+                startDate: document.getElementById('dateFrom').value,
+                endDate: document.getElementById('dateTo').value,
+                sortColumn: sortColumn,
+                sortDirection: sortDirection
+             });
+             
+             fetch(`/api/Payment?${qs}`)
+                .then(r => r.json())
+                .then(data => {
+                    data.items.forEach(p => {
+                        rows.push([p.paymentId, p.paymentDate, p.bookingId, p.customerName, p.bookingSubtotal, p.promocodeName || "", p.amount, p.paymentMethodName, p.status]);
+                    });
+                    let csvContent = "data:text/csv;charset=utf-8," + rows.map(e => e.join(",")).join("\n");
+                    const encodedUri = encodeURI(csvContent);
+                    const link = document.createElement("a");
+                    link.setAttribute("href", encodedUri);
+                    link.setAttribute("download", "payments_export.csv");
+                    document.body.appendChild(link);
+                    link.click();
+                    link.remove();
+                });
         }
 
-        function printReceipt(id) {
-            // Open Details page in new window with print param
-             const url = `/Payment/Details/${id}?print=true`;
-             const win = window.open(url, '_blank', 'width=800,height=800');
-        }
     </script>
-
+}

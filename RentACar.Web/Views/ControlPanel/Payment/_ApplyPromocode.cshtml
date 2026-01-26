@@ -1,78 +1,80 @@
-@using RentACar.Application.DTOs
-@{
-    var activePromocodes = ViewBag.ActivePromocodes as List<PromocodeDto>;
-    var paymentId = ViewBag.PaymentId;
-}
-
-<div class="modal fade" id="applyPromocodeModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content custom-modal">
-            <div class="modal-header">
-                <h5 class="modal-title">Apply Promocode</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<div class="modal-content bg-surface-dark border border-border-dark shadow-2xl rounded-2xl overflow-hidden font-display">
+    <div class="modal-header border-b border-border-dark bg-black/50 p-6 flex justify-between items-center">
+        <div class="flex items-center gap-3">
+            <div class="h-10 w-10 flex items-center justify-center rounded-lg bg-green-500/10 text-green-500 border border-green-500/20">
+                 <span class="material-symbols-outlined">local_offer</span>
             </div>
-            <form id="applyPromocodeForm">
-                <div class="modal-body">
-                    <input type="hidden" name="paymentId" value="@paymentId" />
-                    <div class="mb-3">
-                        <label class="form-label">Select Promocode</label>
-                        <select name="promocodeId" class="form-select" required>
-                            <option value="" disabled selected>Select a promocode...</option>
-                            @if (activePromocodes != null)
-                            {
-                                foreach (var promo in activePromocodes)
-                                {
-                                    <option value="@promo.PromocodeId">@promo.Name - @promo.DiscountPercentage%</option>
-                                }
-                            }
-                        </select>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-primary">Apply</button>
-                </div>
-            </form>
-            <script>
-                document.getElementById('applyPromocodeForm').addEventListener('submit', async function (e) {
-                    e.preventDefault();
-                    const form = e.target;
-                    const paymentId = form.paymentId.value;
-                    const promocodeId = form.promocodeId.value;
-
-                    // Create FormData
-                    const formData = new FormData();
-                    formData.append('promocodeId', promocodeId);
-
-                    try {
-                        const response = await fetch(`/api/Payment/ApplyPromocode/${paymentId}`, {
-                            method: 'POST',
-                            body: formData
-                        });
-
-                        if (!response.ok) {
-                            const message = await response.text();
-                            // If user has a generic showPopup function
-                            if (window.showPopup) showPopup(message || 'Failed to apply promocode.', 'error');
-                            else alert(message || 'Failed to apply promocode.');
-                            return;
+            <div>
+                <h5 class="text-lg font-bold text-white m-0">Apply Promo Code</h5>
+                <p class="text-sm text-gray-400 m-0">Payment ID: <span class="text-white font-mono">#@ViewBag.PaymentId</span></p>
+            </div>
+        </div>
+        <button type="button" class="text-gray-400 hover:text-white transition-colors" data-bs-dismiss="modal" aria-label="Close">
+            <span class="material-symbols-outlined">close</span>
+        </button>
+    </div>
+    
+    <div class="modal-body p-6">
+        <div class="space-y-4">
+            <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider">Select Promotion</label>
+            <div class="relative">
+                <select id="promoSelect" class="w-full bg-[#0a0a0a] border border-border-dark rounded-lg py-3 px-4 text-white focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 appearance-none cursor-pointer">
+                    <option value="">-- Select a Promocode --</option>
+                    @if (ViewBag.ActivePromocodes != null)
+                    {
+                        foreach (var promo in ViewBag.ActivePromocodes)
+                        {
+                            <option value="@promo.PromocodeId">@promo.Name - @promo.Description</option>
                         }
-
-                        // Success
-                        bootstrap.Modal.getInstance(document.getElementById('applyPromocodeModal')).hide();
-                        if (window.showPopup) showPopup('Promocode applied successfully.', 'success');
-                        
-                        // Reload table if function exists, or reload page
-                        // The Index page loads data via fetch, we might need a way to refresh it.
-                        // For now we can reload page or call the load function if accessible.
-                         setTimeout(() => location.reload(), 1000);
-
-                    } catch (err) {
-                        console.error(err);
-                         if (window.showPopup) showPopup('Unable to apply promocode right now.', 'error');
                     }
-                });
-            </script>
+                </select>
+                <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">
+                    <span class="material-symbols-outlined">expand_more</span>
+                </div>
+            </div>
+            <p class="text-xs text-gray-500">Only active promotions associated with your account are shown.</p>
         </div>
     </div>
+
+    <div class="modal-footer border-t border-border-dark bg-black/50 p-4 flex justify-between">
+        <button type="button" class="px-5 py-2.5 rounded-lg border border-white/10 text-gray-300 font-medium hover:bg-white/5 transition-colors" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" onclick="submitPromo(this)" class="px-5 py-2.5 rounded-lg bg-green-600 text-white font-bold hover:bg-green-500 transition-colors shadow-lg shadow-green-600/20 flex items-center gap-2">
+            <span class="material-symbols-outlined text-lg">check_circle</span> Apply Code
+        </button>
+    </div>
 </div>
+
+<script>
+    async function submitPromo(btn) {
+        const promoId = document.getElementById('promoSelect').value;
+        const paymentId = @ViewBag.PaymentId;
+
+        if (!promoId) {
+            alert('Please select a promocode');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('promocodeId', promoId);
+
+        try {
+            const res = await fetch(`/api/Payment/ApplyPromocode/${paymentId}`, {
+                method: 'POST',
+                body: formData
+            });
+
+            if (res.ok) {
+                const modalEl = btn.closest('.modal');
+                const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                modal.hide();
+                loadPageData(); // Refresh list to show change
+                // success toast if possible
+            } else {
+                alert('Failed to apply promo');
+            }
+        } catch (e) {
+            console.error(e);
+            alert('Error');
+        }
+    }
+</script>

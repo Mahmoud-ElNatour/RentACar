@@ -2,7 +2,9 @@
 @{
     ViewData["Title"] = "Add Payment";
     Layout = null;
-    var paymentDateValue = Model.PaymentDate.ToDateTime(TimeOnly.MinValue).ToString("yyyy-MM-dd");
+    ViewData["Title"] = "Add Payment";
+    Layout = null;
+    var paymentDateValue = Model?.PaymentDate.ToDateTime(TimeOnly.MinValue).ToString("yyyy-MM-dd") ?? DateTime.Now.ToString("yyyy-MM-dd");
 }
 <!DOCTYPE html>
 <html lang="en">

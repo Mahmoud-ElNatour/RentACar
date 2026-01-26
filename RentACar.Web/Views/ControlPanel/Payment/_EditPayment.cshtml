@@ -1,0 +1,109 @@
+@model RentACar.Application.DTOs.PaymentDto
+
+<div class="modal-content bg-surface-dark border border-border-dark shadow-2xl rounded-2xl overflow-hidden font-display">
+    <div class="modal-header border-b border-border-dark bg-black/50 p-6 flex justify-between items-center">
+        <div class="flex items-center gap-3">
+            <div class="h-10 w-10 flex items-center justify-center rounded-lg bg-gold/10 text-gold border border-gold/20">
+                 <span class="material-symbols-outlined">edit</span>
+            </div>
+            <div>
+                <h5 class="text-lg font-bold text-white m-0">Edit Payment</h5>
+                <p class="text-sm text-gray-400 m-0">ID: <span class="text-gold font-mono">#@Model.PaymentId</span></p>
+            </div>
+        </div>
+        <button type="button" class="text-gray-400 hover:text-white transition-colors" data-bs-dismiss="modal" aria-label="Close">
+            <span class="material-symbols-outlined">close</span>
+        </button>
+    </div>
+    <form id="editPaymentForm" onsubmit="submitEditPayment(event)">
+        <div class="modal-body p-6 space-y-6">
+            <input type="hidden" asp-for="PaymentId" />
+            <input type="hidden" asp-for="BookingId" />
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Amount -->
+                <div class="space-y-2">
+                    <label asp-for="Amount" class="block text-xs font-bold text-gray-400 uppercase tracking-wider">Amount ($)</label>
+                    <div class="relative">
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                        <input asp-for="Amount" type="number" step="0.01" class="w-full bg-[#0a0a0a] border border-border-dark rounded-lg py-3 pl-8 pr-4 text-white focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all" />
+                    </div>
+                </div>
+
+                <!-- Date -->
+                <div class="space-y-2">
+                    <label asp-for="PaymentDate" class="block text-xs font-bold text-gray-400 uppercase tracking-wider">Date</label>
+                    <input asp-for="PaymentDate" type="date" class="w-full bg-[#0a0a0a] border border-border-dark rounded-lg py-3 px-4 text-white focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all" />
+                </div>
+
+                <!-- Status -->
+                <div class="space-y-2">
+                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider">Status</label>
+                    <select asp-for="Status" class="w-full bg-[#0a0a0a] border border-border-dark rounded-lg py-3 px-4 text-white focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold appearance-none cursor-pointer">
+                        <option value="Pending">Pending</option>
+                        <option value="Paid">Paid</option>
+                        <option value="Failed">Failed</option>
+                        <option value="Refunded">Refunded</option>
+                    </select>
+                </div>
+
+                <!-- Method -->
+                @* Assuming PaymentMethodId dropdown comes from ViewBag or similar, but for now simple input or static logic *@
+                <div class="space-y-2">
+                    <label asp-for="PaymentMethodId" class="block text-xs font-bold text-gray-400 uppercase tracking-wider">Payment Method ID</label>
+                    <input asp-for="PaymentMethodId" type="number" class="w-full bg-[#0a0a0a] border border-border-dark rounded-lg py-3 px-4 text-white focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all" />
+                    <p class="text-[10px] text-gray-500">*Use valid ID from Payment Methods</p>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer border-t border-border-dark bg-black/50 p-4 flex justify-between">
+            <button type="button" class="px-5 py-2.5 rounded-lg border border-white/10 text-gray-300 font-medium hover:bg-white/5 transition-colors" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="px-5 py-2.5 rounded-lg bg-gold text-black font-bold hover:bg-gold-hover transition-colors shadow-lg shadow-gold/20 flex items-center gap-2">
+                <span class="material-symbols-outlined text-lg">save</span> Save Changes
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+    async function submitEditPayment(e) {
+        e.preventDefault();
+        const form = e.target;
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+        // Convert types
+        data.PaymentId = parseInt(data.PaymentId);
+        data.BookingId = parseInt(data.BookingId);
+        data.Amount = parseFloat(data.Amount);
+        data.PaymentMethodId = parseInt(data.PaymentMethodId);
+
+        const btn = form.querySelector('button[type="submit"]');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = 'Saving...';
+        btn.disabled = true;
+
+        try {
+            const res = await fetch(`/api/Payment/${data.PaymentId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (res.ok) {
+                // Refresh table and close modal
+                const modal = bootstrap.Modal.getInstance(form.closest('.modal'));
+                modal.hide();
+                loadPayments(); // Caller function
+                // Optional: Show toast
+            } else {
+                alert('Failed to update payment');
+            }
+        } catch (error) {
+            console.error(error);
+            alert('Error updating payment');
+        } finally {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    }
+</script>

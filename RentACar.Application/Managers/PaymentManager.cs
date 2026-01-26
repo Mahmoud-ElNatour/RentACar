@@ -21,6 +21,7 @@ namespace RentACar.Application.Managers
         private readonly IBookingRepository _bookingRepository;
         private readonly ICreditCardRepository _creditCardRepository;
         private readonly IPaymentMethodRepository _paymentMethodRepository;
+        private readonly IPromocodeRepository _promocodeRepository; // Added
         private readonly UserManager<IdentityUser> _userManager;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly Services.IStripePaymentService _stripePaymentService;
@@ -34,6 +35,7 @@ namespace RentACar.Application.Managers
             IBookingRepository bookingRepository,
             ICreditCardRepository creditCardRepository,
             IPaymentMethodRepository paymentMethodRepository,
+            IPromocodeRepository promocodeRepository, // Added
             UserManager<IdentityUser> userManager,
             IHttpContextAccessor httpContextAccessor,
             Services.IStripePaymentService stripePaymentService,
@@ -46,6 +48,7 @@ namespace RentACar.Application.Managers
             _bookingRepository = bookingRepository;
             _creditCardRepository = creditCardRepository;
             _paymentMethodRepository = paymentMethodRepository;
+            _promocodeRepository = promocodeRepository; // Added
             _userManager = userManager;
             _httpContextAccessor = httpContextAccessor;
             _stripePaymentService = stripePaymentService;
@@ -329,41 +332,144 @@ namespace RentACar.Application.Managers
             return _mapper.Map<List<PaymentDto>>(payments);
         }
 
-        public async Task<IEnumerable<PaymentListDto>> GetAllPaymentsForListAsync()
+        public async Task<PaymentResultDto> GetPaymentsAsync(PaymentFilterDto filter)
         {
-            // Project directly to DTO to avoid fetching included Car images
-            var query = _paymentRepository.Query()
+            // Base query for Counting (No Includes)
+            var query = _paymentRepository.Query().AsNoTracking();
+
+            query = ApplyFilters(query, filter);
+
+            var totalCount = await query.CountAsync();
+
+            // items query (With Includes)
+            // We need to re-apply filters to the include-heavy query, or attach includes to the filtered query?
+            // Attaching includes to an existing query is possible.
+            // But ApplyFilters might have added Where clauses.
+            // The cleanest way is to add Includes to the ALREADY FILTERED query?
+            // No, Includes should be added before specific selects, but EF Core allows adding Include after Where.
+            // Let's add Includes now.
+            
+            var listQuery = query
                 .Include(p => p.Booking).ThenInclude(b => b.Customer).ThenInclude(c => c.User)
                 .Include(p => p.Booking).ThenInclude(b => b.Car)
-                .Include(p => p.Booking).ThenInclude(b => b.Promocode)
-                .AsNoTracking();
+                .Include(p => p.Booking).ThenInclude(b => b.Promocode);
 
-            var payments = await query.Select(p => new PaymentListDto
+            // 3. Sorting
+            // Re-assign listQuery for sorting
+            IQueryable<Payment> sortedQuery = listQuery;
+            if (!string.IsNullOrWhiteSpace(filter.SortColumn))
             {
-                PaymentId = p.PaymentId,
-                BookingId = p.BookingId,
-                CustomerId = p.Booking != null ? p.Booking.CustomerId : 0, // Fallback if null, though Booking should exist
-                CustomerName = p.Booking != null && p.Booking.Customer != null ? p.Booking.Customer.Name : null,
-                CustomerUsername = p.Booking != null && p.Booking.Customer != null && p.Booking.Customer.User != null ? p.Booking.Customer.User.UserName : null,
-                
-                CarModel = p.Booking != null && p.Booking.Car != null ? p.Booking.Car.ModelName : null,
-                CarPlate = p.Booking != null && p.Booking.Car != null ? p.Booking.Car.PlateNumber : null,
-                
-                Amount = p.Amount,
-                PaymentDate = p.PaymentDate,
-                PaymentMethodName = p.PaymentMethod,
-                Status = p.Status,
-                PaymentProvider = p.PaymentProvider,
-                
-                BookingStatus = p.Booking != null ? p.Booking.BookingStatus : null,
-                BookingTotal = p.Booking != null ? p.Booking.TotalPrice : null,
-                BookingSubtotal = p.Booking != null ? p.Booking.Subtotal : null,
-                
-                PromocodeName = p.Booking != null && p.Booking.Promocode != null ? p.Booking.Promocode.Name : null,
-                PromocodeDiscountPercentage = p.Booking != null && p.Booking.Promocode != null ? p.Booking.Promocode.DiscountPercentage : null
-            }).ToListAsync();
+                bool asc = filter.SortDirection?.ToLower() == "asc";
+                switch (filter.SortColumn.ToLower())
+                {
+                    case "paymentid": sortedQuery = asc ? sortedQuery.OrderBy(p => p.PaymentId) : sortedQuery.OrderByDescending(p => p.PaymentId); break;
+                    case "bookingid": sortedQuery = asc ? sortedQuery.OrderBy(p => p.BookingId) : sortedQuery.OrderByDescending(p => p.BookingId); break;
+                    case "amount": sortedQuery = asc ? sortedQuery.OrderBy(p => p.Amount) : sortedQuery.OrderByDescending(p => p.Amount); break;
+                    case "paymentdate": sortedQuery = asc ? sortedQuery.OrderBy(p => p.PaymentDate) : sortedQuery.OrderByDescending(p => p.PaymentDate); break;
+                    case "status": sortedQuery = asc ? sortedQuery.OrderBy(p => p.Status) : sortedQuery.OrderByDescending(p => p.Status); break;
+                    case "customername": 
+                        sortedQuery = asc 
+                            ? sortedQuery.OrderBy(p => p.Booking != null && p.Booking.Customer != null ? p.Booking.Customer.Name : "") 
+                            : sortedQuery.OrderByDescending(p => p.Booking != null && p.Booking.Customer != null ? p.Booking.Customer.Name : ""); 
+                        break;
+                    default: sortedQuery = sortedQuery.OrderByDescending(p => p.PaymentId); break;
+                }
+            }
+            else
+            {
+                sortedQuery = sortedQuery.OrderByDescending(p => p.PaymentId);
+            }
 
-            return payments;
+            // 4. Pagination
+            var items = await sortedQuery
+                .Skip((filter.Page - 1) * filter.PageSize)
+                .Take(filter.PageSize)
+                .Select(p => new PaymentListDto
+                {
+                    PaymentId = p.PaymentId,
+                    BookingId = p.BookingId,
+                    CustomerId = p.Booking != null ? p.Booking.CustomerId : 0,
+                    CustomerName = p.Booking != null && p.Booking.Customer != null ? p.Booking.Customer.Name : null,
+                    CustomerUsername = p.Booking != null && p.Booking.Customer != null && p.Booking.Customer.User != null ? p.Booking.Customer.User.UserName : null,
+                    CarModel = p.Booking != null && p.Booking.Car != null ? p.Booking.Car.ModelName : null,
+                    CarPlate = p.Booking != null && p.Booking.Car != null ? p.Booking.Car.PlateNumber : null,
+                    Amount = p.Amount,
+                    PaymentDate = p.PaymentDate,
+                    PaymentMethodName = p.PaymentMethod,
+                    Status = p.Status,
+                    PaymentProvider = p.PaymentProvider,
+                    BookingStatus = p.Booking != null ? p.Booking.BookingStatus : null,
+                    BookingTotal = p.Booking != null ? p.Booking.TotalPrice : null,
+                    BookingSubtotal = p.Booking != null ? p.Booking.Subtotal : null,
+                    PromocodeName = p.Booking != null && p.Booking.Promocode != null ? p.Booking.Promocode.Name : null,
+                    PromocodeDiscountPercentage = p.Booking != null && p.Booking.Promocode != null ? p.Booking.Promocode.DiscountPercentage : null
+                })
+                .ToListAsync();
+
+            return new PaymentResultDto
+            {
+                Items = items,
+                TotalCount = totalCount,
+                TotalPages = (int)Math.Ceiling(totalCount / (double)filter.PageSize),
+                Stats = null // Stats separate
+            };
+        }
+
+        public async Task<PaymentStatsDto> GetPaymentStatsAsync(PaymentFilterDto filter)
+        {
+             var query = _paymentRepository.Query().AsNoTracking();
+             query = ApplyFilters(query, filter);
+
+            var statsGroup = await query
+                .GroupBy(p => p.Status)
+                .Select(g => new { Status = g.Key, Count = g.Count(), Sum = g.Sum(p => p.Amount) })
+                .ToListAsync();
+
+            return new PaymentStatsDto
+            {
+                TotalRevenue = statsGroup.Where(x => string.Equals(x.Status, "Paid", StringComparison.OrdinalIgnoreCase) || string.Equals(x.Status, "Done", StringComparison.OrdinalIgnoreCase)).Sum(x => x.Sum),
+                PendingAmount = statsGroup.Where(x => string.Equals(x.Status, "Pending", StringComparison.OrdinalIgnoreCase) || string.Equals(x.Status, "Unpaid", StringComparison.OrdinalIgnoreCase)).Sum(x => x.Sum),
+                PendingCount = statsGroup.Where(x => string.Equals(x.Status, "Pending", StringComparison.OrdinalIgnoreCase) || string.Equals(x.Status, "Unpaid", StringComparison.OrdinalIgnoreCase)).Sum(x => x.Count),
+                SuccessCount = statsGroup.Where(x => string.Equals(x.Status, "Paid", StringComparison.OrdinalIgnoreCase) || string.Equals(x.Status, "Done", StringComparison.OrdinalIgnoreCase)).Sum(x => x.Count),
+                RefundAmount = statsGroup.Where(x => string.Equals(x.Status, "Refunded", StringComparison.OrdinalIgnoreCase)).Sum(x => x.Sum),
+                TotalCount = statsGroup.Sum(x => x.Count)
+            };
+        }
+
+        private IQueryable<Payment> ApplyFilters(IQueryable<Payment> query, PaymentFilterDto filter)
+        {
+            if (!string.IsNullOrWhiteSpace(filter.SearchTerm))
+            {
+                var term = filter.SearchTerm.ToLower();
+                query = query.Where(p => 
+                    p.PaymentId.ToString().Contains(term) ||
+                    p.BookingId.ToString().Contains(term) ||
+                    (p.Booking != null && p.Booking.Customer != null && p.Booking.Customer.Name.ToLower().Contains(term))
+                );
+            }
+
+            if (!string.IsNullOrWhiteSpace(filter.Status))
+            {
+                if (filter.Status.Equals("Paid", StringComparison.OrdinalIgnoreCase))
+                {
+                    query = query.Where(p => p.Status == "Paid" || p.Status == "Done");
+                }
+                else
+                {
+                    query = query.Where(p => p.Status == filter.Status);
+                }
+            }
+
+            if (filter.StartDate.HasValue)
+            {
+                query = query.Where(p => p.PaymentDate >= filter.StartDate.Value);
+            }
+
+            if (filter.EndDate.HasValue)
+            {
+                query = query.Where(p => p.PaymentDate <= filter.EndDate.Value);
+            }
+            return query;
         }
 
         public async Task<List<PaymentDetailsDto>> GetAllPaymentsWithDetailsAsync()
@@ -692,6 +798,44 @@ namespace RentACar.Application.Managers
             }
             
             await _auditLogManager.LogEventAsync("PaymentFailed", "Payment", paymentId.ToString(), $"Payment failed: {failureReason}", null, "Failed");
+            return true;
+        }
+
+        public async Task<bool> ApplyPromocodeToPaymentAsync(int paymentId, int promocodeId)
+        {
+            var payment = await _paymentRepository.GetByIdAsync(paymentId);
+            if (payment == null) return false;
+
+            var booking = await _bookingRepository.GetByIdAsync(payment.BookingId);
+            if (booking == null) return false;
+
+            var promo = await _promocodeRepository.GetByIdAsync(promocodeId);
+            if (promo == null || !promo.IsActive) return false;
+
+            // Validate date
+            if (promo.ValidUntil.HasValue && promo.ValidUntil.Value < DateOnly.FromDateTime(DateTime.UtcNow))
+            {
+                return false;
+            }
+
+            // Apply to booking
+            booking.PromocodeId = promocodeId;
+            
+            // Recalculate Total
+            decimal subtotal = booking.Subtotal ?? 0m;
+            decimal discount = subtotal * (promo.DiscountPercentage / 100m);
+            booking.TotalPrice = subtotal - discount;
+            
+            await _bookingRepository.UpdateAsync(booking);
+
+            // Update Payment Amount
+            payment.Amount = booking.TotalPrice;
+            await _paymentRepository.UpdateAsync(payment);
+            
+            // UsageCount not in entity, skipping
+
+            await _auditLogManager.LogEventAsync("Payment.PromocodeApplied", "Payment", paymentId.ToString(), $"Applied promo {promo.Name} ({promo.DiscountPercentage}%) to booking {booking.BookingId}", null, "Success");
+
             return true;
         }
 

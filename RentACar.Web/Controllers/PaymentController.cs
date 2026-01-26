@@ -52,7 +52,7 @@ namespace RentACar.Web.Controllers
                 return NotFound();
             }
 
-            return View("~/Views/ControlPanel/Payment/Edit.cshtml", payment);
+            return PartialView("~/Views/ControlPanel/Payment/_EditPayment.cshtml", payment);
         }
 
         [HttpGet("~/Payment/Details/{id}")]
@@ -65,14 +65,32 @@ namespace RentACar.Web.Controllers
                 return NotFound();
             }
 
-            return View("~/Views/ControlPanel/Payment/Details.cshtml", payment);
+            return PartialView("~/Views/ControlPanel/Payment/_ViewPayment.cshtml", payment);
+        }
+
+        [HttpGet("~/Payment/Receipt/{id}")]
+        [ApiExplorerSettings(IgnoreApi = true)]
+        public async Task<IActionResult> Receipt(int id)
+        {
+            var payment = await _paymentManager.GetPaymentDetailsByIdAsync(id);
+            if (payment == null) return NotFound();
+
+            return View("~/Views/ControlPanel/Payment/Receipt.cshtml", payment);
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<PaymentListDto>>> Get()
+        [HttpGet]
+        public async Task<ActionResult<PaymentResultDto>> Get([FromQuery] PaymentFilterDto filter)
         {
-            var payments = await _paymentManager.GetAllPaymentsForListAsync();
-            return Ok(payments);
+            var result = await _paymentManager.GetPaymentsAsync(filter);
+            return Ok(result);
+        }
+
+        [HttpGet("Stats")]
+        public async Task<ActionResult<PaymentStatsDto>> GetStats([FromQuery] PaymentFilterDto filter)
+        {
+            var stats = await _paymentManager.GetPaymentStatsAsync(filter);
+            return Ok(stats);
         }
 
         [HttpGet("{id}")]
@@ -122,43 +140,56 @@ namespace RentACar.Web.Controllers
             return NoContent();
         }
 
-        [HttpGet("ApplyPromocode/{id}")]
+        [HttpGet("~/Payment/ApplyPromocode/{id}")]
         [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> ApplyPromocodeView(int id)
         {
-            var payment = await _paymentManager.GetPaymentDetailsByIdAsync(id);
-            if (payment == null) return NotFound();
+            try
+            {
+                var payment = await _paymentManager.GetPaymentDetailsByIdAsync(id);
+                if (payment == null) return NotFound();
 
-            // Get current user ID to fetch visible promocodes
-            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
-            var allPromos = await _promocodeManager.GetAllPromocodesAsync(userId);
-            // Filter only active ones for the dropdown
-            var activePromos = allPromos.Where(p => p.IsActive).ToList();
+                var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+                IEnumerable<PromocodeDto> allPromos = new List<PromocodeDto>();
+                try
+                {
+                    allPromos = await _promocodeManager.GetAllPromocodesAsync(userId);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to load promocodes");
+                    // Continue with empty list
+                }
 
-            ViewBag.PaymentId = id;
-            var model = new PromocodeDto(); // Using PromocodeDto as model for key selection, or just Vie
-                                            // Better to pass a ViewModel, but for speed I'll use ViewBag for the list and an empty DTO or similar.
-                                            // Actually, the partial probably expects a specific model?
-                                            // User said: "_applypromocode, contains form which have dropdown list contains all the names of the active promocodes ... and submit button"
+                var activePromos = allPromos.Where(p => p.IsActive).ToList();
 
-            ViewBag.ActivePromocodes = activePromos;
-            return PartialView("~/Views/ControlPanel/Payment/_ApplyPromocode.cshtml");
+                ViewBag.PaymentId = id;
+                ViewBag.ActivePromocodes = activePromos;
+                return PartialView("~/Views/ControlPanel/Payment/_ApplyPromocode.cshtml");
+            }
+            catch (Exception ex)
+            {
+                 _logger.LogError(ex, "Error in ApplyPromocodeView");
+                 return StatusCode(500, "Internal Server Error");
+            }
         }
 
         [HttpPost("ApplyPromocode/{id}")]
         public async Task<IActionResult> ApplyPromocode(int id, [FromForm] int promocodeId)
         {
-
-
             try
             {
-
-                // Fetch payment to verify existencece
-                var payment = await _paymentManager.GetPaymentDetailsByIdAsync(id);
-                if (payment == null) return NotFound();
-
-                var promo = await _promocodeManager.GetPromocodeByIdAsync(promocodeId);
-                return Ok(new { message = "Promocode applied successfully (Simulation)" });
+                // Fetch payment to verify (Manager validation checks exists, but we can double check or just call)
+                var success = await _paymentManager.ApplyPromocodeToPaymentAsync(id, promocodeId);
+                
+                if (success)
+                {
+                    return Ok(new { message = "Promocode applied successfully" });
+                }
+                else
+                {
+                     return BadRequest("Failed to apply promocode (Invalid code or payment not found).");
+                }
             }
             catch (Exception ex)
             {
