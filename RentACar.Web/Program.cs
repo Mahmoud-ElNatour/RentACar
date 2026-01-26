@@ -49,7 +49,8 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
-    .AddDefaultTokenProviders();
+    .AddDefaultTokenProviders()
+    .AddClaimsPrincipalFactory<RentACar.Web.Security.CustomUserClaimsPrincipalFactory>();
 
 builder.Services.Configure<DataProtectionTokenProviderOptions>(options =>
 {

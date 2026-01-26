@@ -1,7 +1,6 @@
 @using Microsoft.AspNetCore.Identity
 @inject SignInManager<IdentityUser> SignInManager
 @inject UserManager<IdentityUser> UserManager
-@inject RentACar.Infrastructure.Data.RentACarDbContext Context
 
 @{
     var role = "Guest";
@@ -10,28 +9,20 @@
     
     if (SignInManager.IsSignedIn(User))
     {
-        var user = await UserManager.GetUserAsync(User);
-        if (user != null)
+        // Try to get role from claims
+        var roleClaim = User.FindFirst(System.Security.Claims.ClaimTypes.Role);
+        if (roleClaim != null)
         {
-            var roles = await UserManager.GetRolesAsync(user);
-            role = roles.FirstOrDefault() ?? "User";
-            
-            // Fetch real name
-            displayName = User.Identity?.Name;
-            var userId = UserManager.GetUserId(User);
-            if (User.IsInRole("Customer"))
-            {
-                 var customer = Context.Customers.FirstOrDefault(c => c.aspNetUserId == userId);
-                 if (customer != null) displayName = customer.Name;
-            }
-            else if (User.IsInRole("Employee") || User.IsInRole("Admin"))
-            {
-                 var employee = Context.Employees.FirstOrDefault(e => e.aspNetUserId == userId);
-                 if (employee != null) displayName = employee.Name;
-            }
-            
-            avatarUrl = $"https://ui-avatars.com/api/?name={displayName ?? "User"}&background=d4af35&color=14120b";
+            role = roleClaim.Value;
         }
+        else
+        {
+           // Fallback if no role claim found but signed in
+           role = "User";
+        }
+
+        displayName = User.FindFirst("display_name")?.Value ?? User.Identity?.Name ?? "User";
+        avatarUrl = $"https://ui-avatars.com/api/?name={displayName}&background=d4af35&color=14120b";
     }
 }
 

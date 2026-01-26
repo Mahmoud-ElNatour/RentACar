@@ -1,23 +1,8 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @inject SignInManager<IdentityUser> SignInManager
 @inject UserManager<IdentityUser> UserManager
-@inject RentACar.Infrastructure.Data.RentACarDbContext Context
 @{
-    var displayName = User.Identity?.Name;
-    if (SignInManager.IsSignedIn(User))
-    {
-        var userId = UserManager.GetUserId(User);
-        if (User.IsInRole("Customer"))
-        {
-             var customer = Context.Customers.FirstOrDefault(c => c.aspNetUserId == userId);
-             if (customer != null) displayName = customer.Name;
-        }
-        else if (User.IsInRole("Employee") || User.IsInRole("Admin"))
-        {
-             var employee = Context.Employees.FirstOrDefault(e => e.aspNetUserId == userId);
-             if (employee != null) displayName = employee.Name;
-        }
-    }
+    var displayName = User.FindFirst("display_name")?.Value ?? User.Identity?.Name ?? "User";
 }
 <!DOCTYPE html>
 <html lang="en">
