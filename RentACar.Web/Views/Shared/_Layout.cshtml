@@ -204,7 +204,7 @@
     @* <link rel="stylesheet" href="~/css/index-style.css" asp-append-version="true" /> *@
     @* <link rel="stylesheet" href="~/RentACar.Web.styles.css" asp-append-version="true" /> *@
 </head>
-<body class="d-flex flex-column min-vh-100 @ViewData["BodyClass"]">
+<body class="d-flex flex-column min-vh-100 bg-background-dark text-white font-display transition-colors duration-300 @ViewData["BodyClass"]">
     @await Html.PartialAsync("_Sidebar")
     @await Html.PartialAsync("_PopupNotifications")
     <header class="relative z-50 w-full border-b border-[1px] border-border-dark bg-surface-dark/95 backdrop-blur-sm">
