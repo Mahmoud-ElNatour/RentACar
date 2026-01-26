@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Identity;
 using RentACar.Application.DTOs;
 using RentACar.Core.Entities;
 using RentACar.Core.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using AspNetUser = RentACar.Application.DTOs.AspNetUser;
 
@@ -253,15 +254,20 @@ namespace RentACar.Application.Managers
 
         public async Task<CustomerDTO?> GetCustomerByEmail(string email)
         {
-            var customer = await _customerRepository.GetAllAsync();
-            var customerDto = _mapper.Map<List<CustomerDTO>>(customer);
-            return customerDto.Find(c => c.Email == email);
+            var customer = await _customerRepository.Query()
+                .Include(c => c.User)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.User.Email == email);
+            return _mapper.Map<CustomerDTO>(customer);
         }
+
         public async Task<CustomerDTO?> GetCustomerByUsername(string username)
         {
-            var customer = await _customerRepository.GetAllAsync();
-            var customerDto = _mapper.Map<List<CustomerDTO>>(customer);
-            return customerDto.Find(c => c.username == username);
+             var customer = await _customerRepository.Query()
+                .Include(c => c.User)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.User.UserName == username);
+            return _mapper.Map<CustomerDTO>(customer);
         }
 
 
@@ -418,10 +424,44 @@ namespace RentACar.Application.Managers
                 await _customerRepository.UpdateAsync(customer);
             }
         }
-        public async Task<List<CustomerListDto>> GetAllCustomersForListAsync()
+        public async Task<IEnumerable<CustomerListDto>> GetAllCustomersForListAsync(string? search, bool? verified, bool? active)
         {
-            var customers = await _customerRepository.GetAllAsync();
-            return _mapper.Map<List<CustomerListDto>>(customers);
+            var query = _customerRepository.Query()
+                .Include(c => c.User)
+                .AsNoTracking()
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                search = search.Trim().ToLower();
+                // We can't use .ToLower() translation in some providers properly if mixed, but usually fine in SQL
+                // Better to use Case-insensitive collation or simple contains
+                query = query.Where(c => c.Name.Contains(search) || c.User.Email.Contains(search) || c.UserId.ToString() == search);
+            }
+
+            if (verified.HasValue)
+            {
+                query = query.Where(c => c.IsVerified == verified.Value);
+            }
+
+            if (active.HasValue)
+            {
+                query = query.Where(c => c.Isactive == active.Value);
+            }
+
+            // Project directly to ListDto to avoid fetching BLOBs (Images)
+            return await query.Select(c => new CustomerListDto
+            {
+                UserId = c.UserId,
+                Name = c.Name,
+                aspNetUserId = c.aspNetUserId,
+                IsVerified = c.IsVerified,
+                Isactive = c.Isactive,
+                Address = c.Address,
+                Email = c.User.Email,
+                IsEmailConfirmed = c.User.EmailConfirmed,
+                PhoneNumber = c.User.PhoneNumber
+            }).ToListAsync();
         }
     }
 
@@ -438,8 +478,6 @@ namespace RentACar.Application.Managers
                 
             CreateMap<Customer, CustomerListDto>()
                 .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.User.Email))
-                .ForMember(dest => dest.username, opt => opt.MapFrom(src => src.User.UserName))
-                .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.User.PhoneNumber))
                 .ForMember(dest => dest.IsEmailConfirmed, opt => opt.MapFrom(src => src.User.EmailConfirmed));
         }
     }

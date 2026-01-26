@@ -329,6 +329,43 @@ namespace RentACar.Application.Managers
             return _mapper.Map<List<PaymentDto>>(payments);
         }
 
+        public async Task<IEnumerable<PaymentListDto>> GetAllPaymentsForListAsync()
+        {
+            // Project directly to DTO to avoid fetching included Car images
+            var query = _paymentRepository.Query()
+                .Include(p => p.Booking).ThenInclude(b => b.Customer).ThenInclude(c => c.User)
+                .Include(p => p.Booking).ThenInclude(b => b.Car)
+                .Include(p => p.Booking).ThenInclude(b => b.Promocode)
+                .AsNoTracking();
+
+            var payments = await query.Select(p => new PaymentListDto
+            {
+                PaymentId = p.PaymentId,
+                BookingId = p.BookingId,
+                CustomerId = p.Booking != null ? p.Booking.CustomerId : 0, // Fallback if null, though Booking should exist
+                CustomerName = p.Booking != null && p.Booking.Customer != null ? p.Booking.Customer.Name : null,
+                CustomerUsername = p.Booking != null && p.Booking.Customer != null && p.Booking.Customer.User != null ? p.Booking.Customer.User.UserName : null,
+                
+                CarModel = p.Booking != null && p.Booking.Car != null ? p.Booking.Car.ModelName : null,
+                CarPlate = p.Booking != null && p.Booking.Car != null ? p.Booking.Car.PlateNumber : null,
+                
+                Amount = p.Amount,
+                PaymentDate = p.PaymentDate,
+                PaymentMethodName = p.PaymentMethod,
+                Status = p.Status,
+                PaymentProvider = p.PaymentProvider,
+                
+                BookingStatus = p.Booking != null ? p.Booking.BookingStatus : null,
+                BookingTotal = p.Booking != null ? p.Booking.TotalPrice : null,
+                BookingSubtotal = p.Booking != null ? p.Booking.Subtotal : null,
+                
+                PromocodeName = p.Booking != null && p.Booking.Promocode != null ? p.Booking.Promocode.Name : null,
+                PromocodeDiscountPercentage = p.Booking != null && p.Booking.Promocode != null ? p.Booking.Promocode.DiscountPercentage : null
+            }).ToListAsync();
+
+            return payments;
+        }
+
         public async Task<List<PaymentDetailsDto>> GetAllPaymentsWithDetailsAsync()
         {
             var payments = await _paymentRepository.GetAllWithDetailsAsync();

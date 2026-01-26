@@ -18,6 +18,11 @@ namespace RentACar.Infrastructure.Data.Repository.Base
             _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
         }
 
+        public IQueryable<T> Query()
+        {
+            return _dbContext.Set<T>();
+        }
+
         public async Task<IReadOnlyList<T>> GetAllAsync()
         {
             return await _dbContext.Set<T>().ToListAsync();

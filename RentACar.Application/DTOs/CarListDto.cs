@@ -20,6 +20,11 @@ namespace RentACar.Application.DTOs
 
         public int? CategoryId { get; set; }
 
+        // Only include the base64 string if it's small, OR preferably exclude it entirely 
+        // and let the frontend load via /api/Car/Image/{id}
+        // Ideally we ONLY serve metadata here.
+        // public byte[]? CarImage { get; set; } // EXCLUDED for performance
+
         public string? CategoryName { get; set; }
     }
 }

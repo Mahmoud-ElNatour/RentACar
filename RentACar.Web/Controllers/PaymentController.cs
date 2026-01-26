@@ -69,9 +69,9 @@ namespace RentACar.Web.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<PaymentDetailsDto>>> Get()
+        public async Task<ActionResult<IEnumerable<PaymentListDto>>> Get()
         {
-            var payments = await _paymentManager.GetAllPaymentsWithDetailsAsync();
+            var payments = await _paymentManager.GetAllPaymentsForListAsync();
             return Ok(payments);
         }
 

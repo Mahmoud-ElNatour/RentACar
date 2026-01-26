@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using RentACar.Application.DTOs;
 using RentACar.Core.Entities;
 using RentACar.Core.Repositories;
+using Microsoft.EntityFrameworkCore;
 
 namespace RentACar.Application.Managers
 {
@@ -337,6 +338,77 @@ namespace RentACar.Application.Managers
             var booking = await _bookingRepository.GetBookingByIdAsync(bookingId);
             return _mapper.Map<BookingDto>(booking);
         }
+        public async Task<IEnumerable<BookingListDto>> GetAllBookingsForListAsync()
+        {
+            // 1. Fetch Bookings (Projected)
+            var query = _bookingRepository.Query()
+                .Include(b => b.Customer).ThenInclude(c => c.User)
+                .Include(b => b.Car).ThenInclude(c => c.Category)
+                .Include(b => b.Promocode)
+                .Include(b => b.Employeebooker)
+                .AsNoTracking();
+
+            var bookings = await query.Select(b => new BookingListDto
+            {
+                BookingId = b.BookingId,
+                CustomerId = b.CustomerId,
+                CustomerName = b.Customer != null ? b.Customer.Name : null,
+                CustomerUsername = b.Customer != null && b.Customer.User != null ? b.Customer.User.UserName : null,
+                CustomerEmail = b.Customer != null && b.Customer.User != null ? b.Customer.User.Email : null,
+                
+                CarId = b.CarId,
+                CarModel = b.Car != null ? b.Car.ModelName : null,
+                CarPlate = b.Car != null ? b.Car.PlateNumber : null,
+                
+                EmployeebookerId = b.EmployeebookerId,
+                EmployeeName = b.Employeebooker != null ? b.Employeebooker.Name : null,
+                
+                Subtotal = b.Subtotal,
+                TotalPrice = b.TotalPrice,
+                
+                PromocodeId = b.PromocodeId,
+                PromocodeName = b.Promocode != null ? b.Promocode.Name : null,
+                PromocodeDiscount = b.Promocode != null ? b.Promocode.DiscountPercentage : null,
+                
+                Startdate = b.Startdate.ToString(),
+                Enddate = b.Enddate.ToString(),
+                BookingStatus = b.BookingStatus
+            }).ToListAsync();
+
+            if (!bookings.Any())
+                return bookings;
+
+            // 2. Fetch Payments (Batch)
+            var bookingIds = bookings.Select(b => b.BookingId).ToList();
+            
+            // Chunking to avoid SQL limit if necessary, but assuming reasonable count for now.
+            var payments = await _paymentRepository.Query()
+                .Where(p => bookingIds.Contains(p.BookingId))
+                .Select(p => new { p.BookingId, p.PaymentId, p.Amount, p.Status, p.PaymentDate })
+                .AsNoTracking()
+                .ToListAsync();
+
+            // 3. Join In-Memory
+            foreach (var b in bookings)
+            {
+                var bookingPayments = payments.Where(p => p.BookingId == b.BookingId).ToList();
+                if (bookingPayments.Any())
+                {
+                    // Logic from Controller: OrderByDescending(PaymentDate).ThenByDescending(PaymentId).FirstOrDefault()
+                    var latest = bookingPayments
+                        .OrderByDescending(p => p.PaymentDate)
+                        .ThenByDescending(p => p.PaymentId)
+                        .First();
+
+                    b.PaymentId = latest.PaymentId;
+                    b.PaymentAmount = latest.Amount;
+                    b.PaymentStatus = latest.Status;
+                }
+            }
+
+            return bookings;
+        }
+
         public async Task<List<BookingDto>> GetAllBookingsAsync()
         {
             var bookings = await _bookingRepository.GetAllAsync();

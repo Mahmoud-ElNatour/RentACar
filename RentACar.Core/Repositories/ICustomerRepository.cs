@@ -10,6 +10,7 @@ namespace RentACar.Core.Repositories
         Task<Customer?> GetByIdAsync(int id);
         Task<List<Customer>> GetAllAsync();
         Task<List<Customer>> FindByNameAsync(string name);
+        IQueryable<Customer> Query();
         Task AddAsync(Customer customer);
         Task UpdateAsync(Customer customer);
         Task DeleteAsync(int id);

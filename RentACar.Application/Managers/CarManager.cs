@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using RentACar.Application.DTOs;
 using RentACar.Core.Entities;
 using RentACar.Core.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using AspNetUser = RentACar.Core.Entities.AspNetUser;
 
@@ -173,6 +174,40 @@ namespace RentACar.Application.Managers
         {
             var cars = await _carRepository.SearchByFilterAsync(modelName, modelYear, categoryId, isAvailable);
             return _mapper.Map<List<CarListDto>>(cars);
+        }
+
+        public async Task<IEnumerable<CarListDto>> GetAllCarsForListAsync(string? name, int? categoryId, bool? available)
+        {
+            var query = _carRepository.Query().AsNoTracking().AsQueryable();
+
+            if (!string.IsNullOrEmpty(name))
+            {
+                query = query.Where(c => c.ModelName.Contains(name) || c.PlateNumber.Contains(name));
+            }
+
+            if (categoryId.HasValue)
+            {
+                query = query.Where(c => c.CategoryId == categoryId.Value);
+            }
+
+            if (available.HasValue)
+            {
+                query = query.Where(c => c.IsAvailable == available.Value);
+            }
+
+            // Project to DTO directly to avoid fetching Blob columns (CarImage)
+            return await query.Select(c => new CarListDto
+            {
+                CarId = c.CarId,
+                PlateNumber = c.PlateNumber,
+                ModelName = c.ModelName,
+                ModelYear = c.ModelYear,
+                Color = c.Color,
+                PricePerDay = c.PricePerDay,
+                IsAvailable = c.IsAvailable,
+                CategoryId = c.CategoryId,
+                CategoryName = c.Category != null ? c.Category.Name : null
+            }).ToListAsync();
         }
     }
 

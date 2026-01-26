@@ -83,12 +83,13 @@ namespace RentACar.Web.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "Admin,Employee")]
         public async Task<ActionResult<IEnumerable<CarListDto>>> Get([FromQuery] string? name, [FromQuery] int? categoryId, [FromQuery] bool? available)
         {
             _logger.LogInformation("📥 [Get] Querying cars - Name: {Name}, CategoryId: {CategoryId}, Available: {Available}", name, categoryId, available);
-            var carDtos = await _carManager.SearchCarsForListAsync(name, null, categoryId, available);
-            _logger.LogInformation("📦 [Get] Retrieved {Count} cars", carDtos.Count);
-            return Ok(carDtos);
+            var cars = await _carManager.GetAllCarsForListAsync(name, categoryId, available);
+            _logger.LogInformation("📦 [Get] Retrieved {Count} cars", cars.Count());
+            return Ok(cars);
         }
 
         [HttpGet("Image/{id}")]
