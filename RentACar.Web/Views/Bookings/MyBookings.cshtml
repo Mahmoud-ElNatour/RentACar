@@ -121,10 +121,10 @@
                                    target="_blank">
                                     Ticket
                                 </a>
-                                    ${(
-                                        (b.employeeId && b.employeeId > 0) || 
-                                        (new Date(b.enddate) <= new Date() || (b.bookingStatus && b.bookingStatus.toLowerCase() === 'returned'))
-                                      ) ? `
+                                    ${
+                                        (new Date(b.enddate) <= new Date() ||
+                                         (b.bookingStatus && b.bookingStatus.toLowerCase() === 'returned'))
+                                      ? `
                                     <button class="btn btn-warning btn-sm"
                                             onclick="showRatingPopup(${b.bookingId})">
                                         <i class="fas fa-star"></i> Rate
