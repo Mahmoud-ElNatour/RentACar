@@ -10,7 +10,7 @@
     ViewData["Title"] = "Add Booking";
     Layout = null;
     var user = await UserManager.GetUserAsync(User);
-    var isCustomer = await UserManager.IsInRoleAsync(user, "Customer");
+    var isCustomer = user != null && await UserManager.IsInRoleAsync(user, "Customer");
     var carIdParam = Context.Request.Query["carId"].ToString();
     if (string.IsNullOrEmpty(carIdParam) && ViewBag.CarId != null)
     {

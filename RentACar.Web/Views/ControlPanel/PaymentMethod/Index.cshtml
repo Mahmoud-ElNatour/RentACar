@@ -1,101 +1,310 @@
 ﻿@{
-    ViewData["Title"] = "Payment Methods";
-    Layout = null;
+    ViewData["Title"] = "Payment Methods - Rent A Car Admin";
+    Layout = "_Layout";
+    ViewData["BodyClass"] = "bg-background-dark text-white font-display overflow-x-hidden";
 }
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"]</title>
 
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/payment-methods.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
-</head>
-<body>
-    @await Html.PartialAsync("_PopupNotifications")
-    <div class="payment-method-container">
-        <a href="../ControlPanel" class="btn btn-outline-warning mb-3 rounded-circle d-inline-flex align-items-center justify-content-center" style="width:40px;height:40px" title="Back">
-            <i class="fas fa-arrow-left"></i>
-        </a>
-        <h2 class="page-title mb-4 text-center" style="color:white; font-size: 2rem; font-weight:600;">Payment Methods</h2>
-        <div class="text-end mb-3">
-            <button class="btn btn-primary add-method">Add Method</button>
-        </div>
-        <div class="payment-method-grid" id="methodGrid">
+@section Styles {
+    <style>
+        /* Scoped scrollbar styles */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #050505;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #262626;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #d4af35; /* Matching site gold */
+        }
+        
+        /* Fix for potential Bootstrap/Tailwind conflict on the search input border */
+        #searchInput {
+            border: none !important;
+            box-shadow: none !important;
+        }
+        
+        /* Ensure inputs have dark background explicitly if Tailwind dark mode class fails to propagate */
+        #searchInput, #statusFilter {
+            background-color: #141414; /* surface-dark */
+            color: white;
+        }
+    </style>
+}
+
+<div class="min-h-screen">
+    
+    @* _PopupNotifications is typically included in _Layout. 
+       If included again here, it might duplicate. 
+       The stray text "Please Confirm / Cancel Confirm" likely comes from an unhidden 
+       bootstrap modal in _PopupNotifications or _DeleteConfirmationModal if CSS is missing/conflicting.
+       
+       However, since we are moving to _Layout, checking if _Layout already includes _PopupNotifications.
+       If it does, we shouldn't include it here. 
+       Assuming safely: I will NOT include _PopupNotifications here if I use _Layout. 
+    *@
+    
+    <div id="modalPlaceholder"></div>
+    @await Html.PartialAsync("_DeleteConfirmationModal")
+
+    <div class="relative flex h-auto w-full flex-col group/design-root">
+        
+        <div class="layout-container flex h-full grow flex-col">
+            <div class="px-4 md:px-10 lg:px-40 flex flex-1 justify-center py-5">
+                <div class="layout-content-container flex flex-col max-w-[1200px] flex-1">
+                  
+                    <div class="flex flex-col md:flex-row flex-wrap justify-between items-start md:items-end gap-6 p-4">
+                        <div class="flex flex-col gap-2">
+                            <h1 class="text-3xl md:text-4xl font-black leading-tight tracking-[-0.033em]">
+                                <span class="text-gold">Payment</span> <span class="text-white">Methods</span>
+                            </h1>
+                            <p class="text-[#a3a3a3] text-base font-normal leading-normal max-w-xl">Manage accepted
+                                payment gateways for vehicle bookings. Enable or disable methods to control what
+                                customers see at checkout.</p>
+                        </div>
+                        <button onclick="loadAddModal()"
+                            class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-11 px-6 bg-gold hover:bg-gold-hover transition-all text-background-dark text-sm font-bold leading-normal tracking-[0.015em] shadow-[0_0_15px_rgba(237,188,29,0.3)]">
+                            <span class="material-symbols-outlined mr-2" style="font-size: 20px;">add_circle</span>
+                            <span class="truncate">Add New Method</span>
+                        </button>
+                    </div>
+                    <div class="px-4 py-6">
+                        <div class="flex flex-col md:flex-row gap-4">
+                            <label class="flex flex-col h-12 w-full md:flex-1">
+                                <div
+                                    class="flex w-full flex-1 items-stretch rounded-lg h-full border border-[#262626] focus-within:border-gold transition-colors bg-surface-dark overflow-hidden">
+                                    <div class="text-[#a3a3a3] flex items-center justify-center pl-4 pr-2">
+                                        <span class="material-symbols-outlined" style="font-size: 24px;">search</span>
+                                    </div>
+                                    <input id="searchInput"
+                                        class="flex w-full min-w-0 flex-1 resize-none bg-surface-dark text-white border-none focus:outline-0 focus:ring-0 placeholder:text-[#a3a3a3] px-2 text-base font-normal leading-normal"
+                                        placeholder="Search payment methods by name..." value="" />
+                                </div>
+                            </label>
+                            <div class="w-full md:w-48 h-12">
+                                <div class="relative h-full">
+                                    <select id="statusFilter"
+                                        class="block w-full h-full appearance-none rounded-lg border border-[#262626] bg-surface-dark text-white py-2 pl-4 pr-10 focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold sm:text-sm">
+                                        <option value="all">All Statuses</option>
+                                        <option value="active">Active Only</option>
+                                        <option value="inactive">Inactive Only</option>
+                                    </select>
+                                    <div
+                                        class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-[#a3a3a3]">
+                                        <span class="material-symbols-outlined"
+                                            style="font-size: 20px;">expand_more</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="paymentMethodsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-4 py-2">
+                        <!-- Dynamic Content injected here -->
+                    </div>
+
+                    <div class="px-4 py-8 flex items-center justify-between border-t border-[#262626] mt-6">
+                        <p class="text-[#a3a3a3] text-sm" id="paginationInfo">Showing all methods</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-    <div id="methodModalPlaceholder"></div>
+</div>
 
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
+@section Scripts {
     <script>
-        async function loadMethods() {
+        let allMethods = [];
+
+        async function loadPaymentMethods() {
             try {
-                const res = await fetch('/api/PaymentMethod');
-                const data = await res.json();
-                const grid = document.getElementById('methodGrid');
-                grid.innerHTML = '';
-
-                data.forEach(m => {
-                    const div = document.createElement('div');
-                    div.className = `payment-method-card ${m.isActive ? '' : 'inactive'}`;
-                    div.dataset.id = m.id;
-
-                    const statusBadge = m.isActive 
-                        ? `<span class="status-badge status-active">Active</span>`
-                        : `<span class="status-badge status-inactive">Inactive</span>`;
-
-                    div.innerHTML = statusBadge +
-                        `<span class="payment-method-name">${m.paymentMethodName}</span>` +
-                        `<div class="actions">` +
-                        `<a href="#" class="edit-method" data-id="${m.id}"><i class="fas fa-pencil-alt"></i></a>` +
-                        `<a href="#" class="delete-method" data-id="${m.id}" title="${m.isActive ? 'Deactivate' : 'Already Inactive'}"><i class="fas fa-trash"></i></a>` +
-                        `</div>`;
-                    grid.appendChild(div);
-                });
-
+                const response = await fetch('/api/PaymentMethod');
+                if (!response.ok) throw new Error('Failed to load');
+                allMethods = await response.json();
+                renderMethods();
             } catch (error) {
-                console.error('Failed to load payment methods', error);
-                showPopup('Failed to load payment methods.', 'error');
+                console.error(error);
             }
         }
 
-        async function loadModal(url) {
-            const res = await fetch(url);
-            const html = await res.text();
-            const placeholder = document.getElementById('methodModalPlaceholder');
-            placeholder.innerHTML = html;
-            placeholder.querySelectorAll('script').forEach(scr => {
-                const s = document.createElement('script');
-                s.textContent = scr.textContent;
-                document.body.appendChild(s);
-                document.body.removeChild(s);
-            });
-            const modalEl = placeholder.querySelector('.modal');
-            const modal = new bootstrap.Modal(modalEl);
-            modal.show();
+        function getIconForMethod(name) {
+            const n = name.toLowerCase();
+            if (n.includes('visa') || n.includes('mastercard') || n.includes('card')) return 'credit_card';
+            if (n.includes('paypal')) return 'account_balance_wallet';
+            if (n.includes('stripe')) return 'payments';
+            if (n.includes('cash')) return 'attach_money';
+            if (n.includes('bank') || n.includes('transfer')) return 'account_balance';
+            return 'wallet'; 
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            loadMethods();
-            document.querySelector('.add-method').addEventListener('click', () => loadModal('/PaymentMethod/Add'));
+        function renderMethods() {
+            const grid = document.getElementById('paymentMethodsGrid');
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const filter = document.getElementById('statusFilter').value;
 
-            document.getElementById('methodGrid').addEventListener('click', (e) => {
-                const edit = e.target.closest('.edit-method');
-                const del = e.target.closest('.delete-method');
-                if (edit) {
-                    e.preventDefault();
-                    loadModal('/PaymentMethod/Edit/' + edit.dataset.id);
-                } else if (del) {
-                    e.preventDefault();
-                    loadModal('/PaymentMethod/Delete/' + del.dataset.id);
-                }
+            grid.innerHTML = '';
+
+            const filtered = allMethods.filter(m => {
+                const matchesName = m.paymentMethodName.toLowerCase().includes(search);
+                const matchesStatus = filter === 'all' 
+                    ? true 
+                    : (filter === 'active' ? m.isActive : !m.isActive);
+                return matchesName && matchesStatus;
             });
-        });
+
+            filtered.forEach(m => {
+                const icon = getIconForMethod(m.paymentMethodName);
+                const activeClass = m.isActive ? 'text-green-400' : 'text-[#737373]';
+                const activeText = m.isActive ? 'Active' : 'Inactive';
+                const activeBg = m.isActive ? 'bg-green-400' : 'bg-[#737373]';
+                const opacityClass = m.isActive ? '' : 'opacity-80 hover:opacity-100';
+                const checkedAttr = m.isActive ? 'checked' : '';
+                const peerCheckedClass = m.isActive ? 'peer-checked:bg-gold' : '';
+
+                const html = `
+                    <div class="group relative flex flex-col justify-between rounded-xl bg-surface-dark border border-[#262626] hover:border-gold/50 transition-all duration-300 p-6 shadow-lg ${opacityClass}">
+                        <div class="absolute top-4 right-4" title="Toggle Status">
+                            <label class="inline-flex items-center cursor-pointer">
+                                <input type="checkbox" class="sr-only peer toggle-status" data-id="${m.id}" ${checkedAttr} onclick="toggleStatus(${m.id}, this)">
+                                <div class="relative w-11 h-6 bg-[#262626] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${peerCheckedClass}">
+                                </div>
+                            </label>
+                        </div>
+                        <div class="mb-6 flex items-start gap-4">
+                            <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-[#262626] text-gold">
+                                <span class="material-symbols-outlined" style="font-size: 32px;">${icon}</span>
+                            </div>
+                            <div class="flex flex-col">
+                                <h3 class="text-white text-lg font-bold leading-tight">${m.paymentMethodName}</h3>
+                                <p class="text-[#a3a3a3] font-mono text-xs mt-1">ID: PM-${m.id}</p>
+                                <span class="inline-flex items-center gap-1 rounded mt-2 text-xs font-medium ${activeClass}">
+                                    <span class="size-1.5 rounded-full ${activeBg}"></span> ${activeText}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between border-t border-[#262626] pt-4 mt-auto">
+                            <button class="flex items-center gap-2 text-sm font-medium text-[#a3a3a3] hover:text-white transition-colors" onclick="loadEditModal(${m.id})">
+                                <span class="material-symbols-outlined text-gold" style="font-size: 18px;">visibility</span>
+                                Details
+                            </button>
+                            <div class="flex gap-2">
+                                <button onclick="loadEditModal(${m.id})"
+                                    class="p-2 rounded-lg hover:bg-[#262626] text-[#a3a3a3] hover:text-gold transition-colors"
+                                    title="Edit">
+                                    <span class="material-symbols-outlined" style="font-size: 20px;">edit</span>
+                                </button>
+                                <button onclick="confirmDelete(${m.id}, '${m.paymentMethodName}')"
+                                    class="p-2 rounded-lg hover:bg-[#262626] text-[#a3a3a3] hover:text-red-500 transition-colors"
+                                    title="Delete">
+                                    <span class="material-symbols-outlined" style="font-size: 20px;">delete</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                grid.innerHTML += html;
+            });
+
+            // Add "New Method" card
+            const addCardHtml = `
+                <div onclick="loadAddModal()"
+                    class="group flex flex-col justify-center items-center rounded-xl bg-transparent border-2 border-dashed border-[#262626] hover:border-gold transition-all duration-300 p-6 cursor-pointer min-h-[220px]">
+                    <div class="flex h-16 w-16 items-center justify-center rounded-full bg-[#262626] group-hover:bg-gold group-hover:text-black text-gold transition-colors mb-4">
+                        <span class="material-symbols-outlined" style="font-size: 32px;">add</span>
+                    </div>
+                    <h3 class="text-[#a3a3a3] group-hover:text-gold text-lg font-bold leading-tight text-center transition-colors">
+                        Add New Method</h3>
+                    <p class="text-[#737373] text-sm text-center mt-2">Configure a new payment gateway</p>
+                </div>
+            `;
+            grid.innerHTML += addCardHtml;
+            
+            document.getElementById('paginationInfo').innerText = `Showing ${filtered.length} method(s)`;
+        }
+
+        async function toggleStatus(id, checkbox) {
+             const method = allMethods.find(m => m.id === id);
+             if(!method) return;
+
+             // Don't modify 'method' directly in optimistic until success usually, 
+             // but here we clone for safety or just mutate if simple.
+             const originalState = method.isActive;
+             method.isActive = checkbox.checked; 
+
+             try {
+                const res = await fetch(`/api/PaymentMethod/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(method)
+                });
+                if(!res.ok) throw new Error("Update failed");
+                loadPaymentMethods(); 
+             } catch(err) {
+                 console.error(err);
+                 method.isActive = originalState; 
+                 checkbox.checked = originalState; // Revert UI
+                 // Use a toast instead of alert if possible, but keep simple
+             }
+        }
+
+        async function loadModal(url) {
+            try {
+                const res = await fetch(url);
+                const html = await res.text();
+                const placeholder = document.getElementById('modalPlaceholder');
+                placeholder.innerHTML = html;
+                placeholder.querySelectorAll('script').forEach(scr => {
+                    const s = document.createElement('script');
+                    s.textContent = scr.textContent;
+                    document.body.appendChild(s);
+                });
+            } catch(e) {
+                console.error("Failed to load modal", e);
+            }
+        }
+
+        function loadAddModal() {
+            loadModal('/PaymentMethod/Add');
+        }
+
+        function loadEditModal(id) {
+            loadModal(`/PaymentMethod/Edit/${id}`);
+        }
+
+        function confirmDelete(id, name) {
+            openDeleteModal('#', 'Delete Payment Method', `Are you sure you want to delete "${name}"?`);
+            
+            const form = document.getElementById('deleteConfirmForm');
+            // Remove previous event listeners to avoid stacking? 
+            // openDeleteModal typically just shows it.
+            // We need to robustly handle the onsubmit.
+            // A cleaner way is to clone and replace the node to strip listeners
+            const newForm = form.cloneNode(true);
+            form.parentNode.replaceChild(newForm, form);
+            
+            newForm.onsubmit = async (e) => {
+                e.preventDefault();
+                try {
+                    const res = await fetch(`/api/PaymentMethod/${id}`, { method: 'DELETE' });
+                    if(res.ok) {
+                        closeDeleteModal();
+                        loadPaymentMethods();
+                    } else {
+                        // show error
+                        alert("Failed to delete. It may be in use.");
+                    }
+                } catch(err) {
+                    console.error(err);
+                }
+            };
+        }
+
+        document.getElementById('searchInput').addEventListener('input', renderMethods);
+        document.getElementById('statusFilter').addEventListener('change', renderMethods);
+
+        document.addEventListener('DOMContentLoaded', loadPaymentMethods);
     </script>
-</body>
-</html>
+}

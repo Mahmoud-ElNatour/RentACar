@@ -56,7 +56,27 @@ namespace RentACar.Web.Controllers
                 using var document = JsonDocument.Parse(payload);
                 var root = document.RootElement;
                 var eventType = root.GetProperty("type").GetString();
-                if (!string.Equals(eventType, "checkout.session.completed", StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(eventType, "checkout.session.completed", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(eventType, "payment_intent.succeeded", StringComparison.OrdinalIgnoreCase))
+                {
+                    // Success Handled below
+                }
+                else if (string.Equals(eventType, "payment_intent.payment_failed", StringComparison.OrdinalIgnoreCase) ||
+                         string.Equals(eventType, "checkout.session.async_payment_failed", StringComparison.OrdinalIgnoreCase))
+                {
+                    // Handle Failure
+                    var sessionObj = root.GetProperty("data").GetProperty("object");
+                    var meta = sessionObj.TryGetProperty("metadata", out var m) ? m : default;
+                    
+                    if (meta.ValueKind != JsonValueKind.Undefined && 
+                        meta.TryGetProperty("paymentId", out var pIdElem) && 
+                        int.TryParse(pIdElem.GetString(), out var pId))
+                    {
+                        await _paymentManager.MarkPaymentFailedAsync(pId, "Stripe Webhook Failure");
+                    }
+                    return Ok();
+                }
+                else
                 {
                     return Ok();
                 }

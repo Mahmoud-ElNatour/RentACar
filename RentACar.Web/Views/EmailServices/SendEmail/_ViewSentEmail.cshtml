@@ -1,0 +1,57 @@
+@model RentACar.Core.Entities.EmailLog
+
+<div class="flex flex-col h-full bg-surface-dark">
+    <!-- Header -->
+    <div class="px-6 py-5 border-b border-border-dark flex-shrink-0">
+        <div class="flex justify-between items-start gap-4">
+            <div class="flex-1 min-w-0">
+                <h3 class="text-white text-xl font-bold leading-tight mb-2 truncate">@Model.Subject</h3>
+                <div class="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs">
+                    <div class="flex items-center gap-2 text-zinc-400">
+                        <span class="material-symbols-outlined text-[16px]">schedule</span>
+                        <span>@Model.SentAt?.ToString("MMM dd, yyyy • HH:mm tt")</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-zinc-400">
+                        <span class="material-symbols-outlined text-[16px]">mail</span>
+                        <span>To: <span class="text-white font-medium select-all">@Model.RecipientsRaw</span></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex flex-col items-end gap-2 flex-shrink-0">
+                <span class="@(Model.Status == "Sent" ? "bg-green-500/10 text-green-500 border-green-500/20" : "bg-red-500/10 text-red-500 border-red-500/20") border px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-[14px]">@(Model.Status == "Sent" ? "check_circle" : "error")</span>
+                    @Model.Status
+                </span>
+                <span class="bg-white/5 text-zinc-500 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-widest border border-white/5">
+                    @(string.IsNullOrEmpty(Model.EmailType) ? "Email" : Model.EmailType)
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Body Content (Scrollable) -->
+    <div class="flex-1 overflow-y-auto custom-scrollbar p-6 bg-zinc-900/50">
+        <div class="bg-white rounded-xl shadow-lg border border-zinc-200 overflow-hidden min-h-[400px]">
+            <!-- Render HTML Body safely in an iframe or div. Since we trust our own content... div is easier but styles might bleed. 
+                 Ideally use a scoped style or shadow DOM. For simplicity, just a Div with text-black. -->
+            <div class="p-8 text-black email-contentProse prose-sm max-w-none">
+                @Html.Raw(Model.Body)
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="px-6 py-4 border-t border-border-dark flex justify-between items-center bg-background-black/50 flex-shrink-0">
+        <div class="flex items-center gap-2 text-zinc-500 text-[10px] uppercase tracking-widest">
+            <span>ID: #@Model.Id</span>
+            <span>•</span>
+            <span>Attempts: @Model.Attempts</span>
+        </div>
+        
+        <button type="button" onclick="closeSentEmailModal()" 
+                class="px-6 py-2 border border-white/10 hover:bg-white/5 rounded-lg text-zinc-400 hover:text-white text-xs font-bold uppercase tracking-widest transition-all">
+            Close
+        </button>
+    </div>
+</div>

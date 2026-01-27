@@ -43,7 +43,7 @@ namespace RentACar.Web.Controllers
         }
 
         [HttpGet("~/Category/Edit/{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Employee")]
         [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> EditForm(int id)
         {
@@ -118,7 +118,7 @@ namespace RentACar.Web.Controllers
         }
 
         [HttpPut("{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Employee")]
         public async Task<IActionResult> Update(int id, [FromForm] CategoryDto dto)
         {
             if (id != dto.CategoryId) return BadRequest();

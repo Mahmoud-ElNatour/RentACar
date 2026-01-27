@@ -1,0 +1,116 @@
+<section class="flex flex-col gap-4 mb-4">
+    <div class="flex items-center gap-2 px-1 mb-2">
+        <span class="material-symbols-outlined" style="color: #daad52;">auto_awesome</span>
+        <h2 class="text-xl font-bold" style="color: white;">Generate Distribution List</h2>
+    </div>
+    
+    <div class="row g-4">
+        <!-- Main Filter Card -->
+        <div class="col-lg-9">
+            <div class="card h-100" style="background-color: #1c1f26; border: 1px solid #2d323d; border-radius: 12px;">
+                <div class="card-body p-4">
+                    <div class="row g-4">
+                        <!-- Left Column: Inputs -->
+                        <div class="col-md-4 d-flex flex-column gap-3">
+                            <div>
+                                <label class="text-uppercase small fw-bold mb-2" style="color: #9ca3af;">List Name</label>
+                                <input id="gen-list-name" class="form-control" placeholder="e.g. Q4 Marketing Mix" type="text" style="background-color: #0f1114; border-color: #2d323d; color: white;"/>
+                            </div>
+                            
+                            <div>
+                                <p class="text-uppercase small fw-bold mb-2 pt-2" style="color: #9ca3af;">Target Group</p>
+                                <div class="d-flex flex-column gap-2">
+                                    <label class="d-flex align-items-center gap-3 p-2 rounded" style="border: 1px solid #2d323d; cursor: pointer; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='rgba(218, 173, 82, 0.05)'" onmouseout="this.style.backgroundColor='transparent'">
+                                        <input id="include-employees" class="form-check-input filter-checkbox" type="checkbox" style="background-color: #0f1114; border-color: #9ca3af;"/>
+                                        <span class="small fw-bold" style="color: white;">Employees</span>
+                                    </label>
+                                    <label class="d-flex align-items-center gap-3 p-2 rounded" style="border: 1px solid #2d323d; cursor: pointer; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='rgba(218, 173, 82, 0.05)'" onmouseout="this.style.backgroundColor='transparent'">
+                                        <input id="include-customers" class="form-check-input filter-checkbox" type="checkbox" style="background-color: #0f1114; border-color: #9ca3af;"/>
+                                        <span class="small fw-bold" style="color: white;">Customers</span>
+                                    </label>
+                                    <label class="d-flex align-items-center gap-3 p-2 rounded" style="border: 1px solid #2d323d; cursor: pointer; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='rgba(218, 173, 82, 0.05)'" onmouseout="this.style.backgroundColor='transparent'">
+                                        <input id="include-admins" class="form-check-input filter-checkbox" type="checkbox" style="background-color: #0f1114; border-color: #9ca3af;"/>
+                                        <span class="small fw-bold" style="color: white;">Admins</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Middle Column: Static Filters -->
+                        <div class="col-md-4 d-flex flex-column gap-3">
+                            <p class="text-uppercase small fw-bold mb-0" style="color: #9ca3af;">Safety &amp; Status Filters</p>
+                            <div class="d-flex flex-column gap-2">
+                                <label class="d-flex align-items-center gap-3 p-2">
+                                    <input checked  class="form-check-input" type="checkbox" style="background-color: #0f1114; border-color: #daad52; opacity: 0.6;"/>
+                                    <span class="small" style="color: #9ca3af;">Exclude blacklisted</span>
+                                </label>
+                                <label class="d-flex align-items-center gap-3 p-2">
+                                    <input checked  class="form-check-input" type="checkbox" style="background-color: #0f1114; border-color: #daad52; opacity: 0.6;"/>
+                                    <span class="small" style="color: #9ca3af;">Active only </span>
+                                </label>
+                                <label class="d-flex align-items-center gap-3 p-2">
+                                    <input class="form-check-input" type="checkbox"  style="background-color: #0f1114; border-color: #9ca3af; opacity: 0.5;"/>
+                                    <span class="small" style="color: #9ca3af;">Marketing opted-in</span>
+                                </label>
+                                <label class="d-flex align-items-center gap-3 p-2">
+                                    <input class="form-check-input" type="checkbox"  style="background-color: #0f1114; border-color: #9ca3af; opacity: 0.5;"/>
+                                    <span class="small" style="color: #9ca3af;">Verified emails only</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Right Column: Action & Stats -->
+                        <div class="col-md-4" style="border-left: 1px solid #2d323d;">
+                            <div class="ps-md-4 h-100 d-flex flex-column justify-content-between">
+                                <div>
+                                    <p class="text-uppercase small fw-bold mb-2" style="color: #9ca3af;">Estimated recipients</p>
+                                    <div class="d-flex align-items-baseline gap-2">
+                                        <p id="total-count" class="display-6 fw-bold mb-0" style="color: #daad52;">0</p>
+                                        <span class="small fw-medium" style="color: #9ca3af;">recipients</span>
+                                    </div>
+                                    <p id="breakdown-text" class="small mt-2" style="color: #9ca3af;">Select filters to calculate</p>
+                                </div>
+                                
+                                <div class="d-flex flex-column gap-2 mt-4">
+                                    <button onclick="createListFromFilters()" class="btn w-100 fw-bold d-flex align-items-center justify-content-center gap-2" style="background-color: #daad52; color: #0f1114; padding: 10px; border: none;">
+                                        <span class="material-symbols-outlined">save</span>
+                                        Create Distribution List
+                                    </button>
+                                    <button onclick="openPreviewModal(); return false;" type="button" class="btn w-100 fw-bold d-flex align-items-center justify-content-center gap-2" style="background-color: #2d323d; color: white; padding: 10px; border: 1px solid #3d424d;">
+                                        <span class="material-symbols-outlined">visibility</span>
+                                        Preview Recipients
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Info Card -->
+        <div class="col-lg-3">
+            <div class="card h-100 overflow-hidden position-relative" style="background-color: rgba(218, 173, 82, 0.1); border: 1px solid rgba(218, 173, 82, 0.3); border-radius: 12px;">
+                <div class="position-absolute" style="right: -20px; top: -20px; opacity: 0.1; color: #daad52;">
+                    <span class="material-symbols-outlined" style="font-size: 140px;">groups</span>
+                </div>
+                <div class="card-body p-4 d-flex flex-column justify-content-center position-relative z-1">
+                    <h3 class="h5 fw-bold mb-3" style="color: #daad52;">System Statistics</h3>
+                    <div class="d-flex flex-column gap-3">
+                         <div class="d-flex justify-content-between align-items-center">
+                            <span class="small fw-bold text-uppercase" style="color: #9ca3af;">Total Reach</span>
+                            <span class="fw-black h5 mb-0" style="color: white;">12.4k</span>
+                        </div>
+                        <div class="w-100 rounded-pill overflow-hidden" style="background-color: #2d323d; height: 6px;">
+                            <div class="h-100" style="background-color: #daad52; width: 75%;"></div>
+                        </div>
+                        <p class="small" style="color: #9ca3af; line-height: 1.6;">75% of your database is currently reachable via active distribution lists.</p>
+                    </div>
+                    <a class="small fw-bold d-flex align-items-center gap-1 mt-3" href="#" style="color: #daad52; text-decoration: none;">
+                        View reach analytics <span class="material-symbols-outlined" style="font-size: 16px;">arrow_forward</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

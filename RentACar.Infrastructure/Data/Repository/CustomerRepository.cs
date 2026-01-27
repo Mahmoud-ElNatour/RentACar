@@ -39,6 +39,11 @@ namespace RentACar.Infrastructure.Repositories
                                    .ToListAsync();
         }
 
+        public IQueryable<Customer> Query()
+        {
+            return _dbContext.Set<Customer>();
+        }
+
         public async Task AddAsync(Customer customer)
         {
             await _dbContext.Set<Customer>().AddAsync(customer);

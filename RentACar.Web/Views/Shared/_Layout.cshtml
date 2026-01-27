@@ -1,6 +1,9 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @inject SignInManager<IdentityUser> SignInManager
 @inject UserManager<IdentityUser> UserManager
+@{
+    var displayName = User.FindFirst("display_name")?.Value ?? User.Identity?.Name ?? "User";
+}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -65,122 +68,284 @@
     </style>
     <script id="tailwind-config">
         tailwind.config = {
-            /* important: true, -- removed to prevent global side effects */
-            blocklist: ['collapse'],
-            corePlugins: {
-                preflight: false,
-                visibility: false,
-            },
+            important: true, /* FORCE OVERRIDE OF BOOTSTRAP STYLES */
             darkMode: "class",
             theme: {
                 extend: {
                     colors: {
-                        "gold": "#f2b90d",
-                        "gold-light": "#fce186", 
+                        "primary": "#d4af35",
+                        "primary-dark": "#0a0c0e",
+                        "background-light": "#f8f7f6",
+                        "background-dark": "#0a0c0e",
+                        "surface-dark": "#16181a",
+                        "surface-dark-lighter": "#202225",
+                        "border-dark": "#2a2d30",
+                        
+                        // Merged from pages
+                        "surface-accent": "#262626",
+                        "card-dark": "#121212",
+                        "text-muted": "#888888",
+
+                        // Legacy mappings to keep footer/other components working if they use these
+                        "gold": "#d4af35",
+                        "gold-light": "#fce186",
                         "gold-hover": "#d9a60c",
-                        "brand": "#eec02b", // Renamed from primary to avoid Bootstrap conflict
-                        "background-light": "#f8f8f5",
-                        "background-dark": "#050505", // Updated to match user request
-                        "surface-dark": "#171717", // Existing surface
-                        "surface-dark-lighter": "#262626",
-                        "surface-accent": "#1a1a1a", // New design accent
-                        "text-body": "#d1d5db", // New design text body
-                        "text-secondary": "#b9b29d", // New design text secondary
+                        "brand": "#d4af35",
+                        "text-body": "#d1d5db", 
+                        "text-secondary": "#b9b29d",
                         "footer-bg": "#0a0a0a",
                         "footer-surface": "#171717",
-                        "footer-border": "#f2b90d33", 
+                        "footer-border": "#f2b90d33",
                     },
                     fontFamily: {
-                        "display": ["Manrope", "Plus Jakarta Sans", "sans-serif"], // Merged display fonts
-                        "body": ["Noto Sans", "sans-serif"], // New body font
+                         "display": ["Manrope", "sans-serif"],
+                         "body": ["Manrope", "sans-serif"],
                     },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
                     boxShadow: {
                         "glow": "0 0 20px rgba(212, 175, 55, 0.15)"
                     },
-                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
                 },
             },
         }
     </script>
+    <script>
+        function toggleUserDropdown() {
+            const dropdown = document.getElementById('user-dropdown-menu');
+            if (dropdown.style.display === 'none' || dropdown.classList.contains('hidden')) {
+                dropdown.style.display = 'block';
+                dropdown.classList.remove('hidden');
+                // Small delay to allow transition
+                setTimeout(() => {
+                    dropdown.classList.remove('opacity-0', 'scale-95');
+                    dropdown.classList.add('opacity-100', 'scale-100');
+                }, 10);
+            } else {
+                dropdown.classList.remove('opacity-100', 'scale-100');
+                dropdown.classList.add('opacity-0', 'scale-95');
+                setTimeout(() => {
+                    dropdown.style.display = 'none';
+                    dropdown.classList.add('hidden');
+                }, 200);
+            }
+        }
+
+        // Sidebar Toggle Logic
+        function toggleSidebar() {
+            const sidebar = document.getElementById('mainSidebar');
+            const backdrop = document.getElementById('sidebarBackdrop');
+            const body = document.body;
+            
+            if (!sidebar || !backdrop) {
+                console.error('Sidebar elements not found');
+                return;
+            }
+
+            if (sidebar.classList.contains('-translate-x-full')) {
+                // Open
+                sidebar.classList.remove('-translate-x-full');
+                backdrop.classList.remove('opacity-0', 'pointer-events-none');
+                body.style.overflow = 'hidden'; // Prevent background scrolling
+            } else {
+                // Close
+                sidebar.classList.add('-translate-x-full');
+                backdrop.classList.add('opacity-0', 'pointer-events-none');
+                body.style.overflow = '';
+            }
+        }
+
+        // Sidebar Dropdown Toggle
+        function toggleSidebarDropdown(menuId, arrowId) {
+            const menu = document.getElementById(menuId);
+            const arrow = document.getElementById(arrowId);
+            
+            if (menu.classList.contains('hidden')) {
+                menu.classList.remove('hidden');
+                arrow.style.transform = 'rotate(180deg)';
+            } else {
+                menu.classList.add('hidden');
+                arrow.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+
+            const dropdown = document.getElementById('user-dropdown-menu');
+            const button = document.getElementById('user-menu-button');
+            if (dropdown && button && !dropdown.contains(event.target) && !button.contains(event.target)) {
+                 if (!dropdown.classList.contains('hidden')) {
+                    dropdown.classList.remove('opacity-100', 'scale-100');
+                    dropdown.classList.add('opacity-0', 'scale-95');
+                    setTimeout(() => {
+                        dropdown.style.display = 'none';
+                        dropdown.classList.add('hidden');
+                    }, 200);
+                 }
+            }
+        });
+    </script>
+    @await RenderSectionAsync("Styles", required: false)
     @* <link rel="stylesheet" href="~/css/index-style.css" asp-append-version="true" /> *@
     @* <link rel="stylesheet" href="~/RentACar.Web.styles.css" asp-append-version="true" /> *@
 </head>
-<body class="d-flex flex-column min-vh-100 @ViewData["BodyClass"]">
+<body class="d-flex flex-column min-vh-100 bg-background-dark text-white font-display transition-colors duration-300 @ViewData["BodyClass"]">
     @await Html.PartialAsync("_Sidebar")
     @await Html.PartialAsync("_PopupNotifications")
-    <header>
-        <nav class="navbar navbar-expand-lg" style="background-color: #1f1f1f; padding: 1rem;">
-            <div class="container-fluid">
-                @if (SignInManager.IsSignedIn(User))
-                {
-                    <button class="btn btn-link text-warning p-0 me-3" onclick="toggleSidebar()" style="text-decoration: none;">
-                        <span class="material-symbols-outlined" style="font-size: 24px;">menu</span>
-                    </button>
-                }
-                <a class="navbar-brand text-warning fw-bold" asp-area="" asp-controller="Home" asp-action="Index">RentACar</a>
-                <button class="navbar-toggler bg-warning" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
-                    <i class="fas fa-bars fs-4"></i>
-                </button>
-                <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                        <li class="nav-item">
-                            <a class="nav-link text-light" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        @if (SignInManager.IsSignedIn(User))
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link text-light" asp-controller="Dashboard" asp-action="Index">Dashboard</a>
-                            </li>
-                        }
-                        @if (User.IsInRole("Admin") || User.IsInRole("Employee"))
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link text-light" asp-controller="ControlPanel" asp-action="Index">Control Panel</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-light" asp-controller="Reports" asp-action="Index">Reports</a>
-                            </li>
-                        }
-                        @if (User.IsInRole("Customer"))
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link text-light" asp-controller="Browse" asp-action="Index">Browse Cars</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-light" asp-controller="Bookings" asp-action="MyBookings">My Bookings</a>
-                            </li>
-                        }
-                    </ul>
-                    <ul class="navbar-nav ms-auto">
-                        @if (SignInManager.IsSignedIn(User))
-                        {
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle text-warning" href="#" role="button" data-bs-toggle="dropdown">
-                                    <i class="fa fa-user-circle me-1"></i>@User.Identity?.Name
-                                </a>
-                                <ul class="dropdown-menu dropdown-menu-end bg-dark">
-                                    <li><a class="dropdown-item text-light" asp-area="Identity" asp-page="/Account/Manage/Index">Profile</a></li>
-                                    <li>
-                                        <form method="post" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home")">
-                                            <button type="submit" class="dropdown-item text-light">Logout</button>
-                                        </form>
-                                    </li>
-                                </ul>
-                            </li>
-                        }
-                        else
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link text-warning" asp-area="Identity" asp-page="/Account/Register">Register</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-warning" asp-area="Identity" asp-page="/Account/Login">Login</a>
-                            </li>
-                        }
-                    </ul>
+    <header class="relative z-50 w-full border-b border-[1px] border-border-dark bg-surface-dark/95 backdrop-blur-sm">
+        <div class="px-4 sm:px-6 lg:px-8">
+            <div class="flex h-16 items-center justify-between">
+                <!-- Left Section: Toggle & Brand -->
+                <div class="flex items-center gap-4 lg:gap-8">
+                    <!-- Sidebar Toggle -->
+                    @if (SignInManager.IsSignedIn(User))
+                    {
+                        <button onclick="toggleSidebar()"
+                                class="group -m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-gray-400 hover:text-gold transition-colors duration-200"
+                                type="button">
+                            <span class="sr-only">Open sidebar</span>
+                            <span class="material-symbols-outlined text-3xl group-hover:scale-105 transition-transform">menu</span>
+                        </button>
+                    }
+                    else
+                    {
+                         <!-- Mobile Menu Toggle for Guests -->
+                         <button onclick="toggleSidebar()" class="lg:hidden group -m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-gray-400 hover:text-gold transition-colors duration-200"
+                                type="button"> 
+                            <span class="sr-only">Open menu</span>
+                            <span class="material-symbols-outlined text-3xl group-hover:scale-105 transition-transform">menu</span>
+                        </button>
+                    }
+
+                    <!-- Brand Logo -->
+                    <a asp-area="" asp-controller="Home" asp-action="Index" class="flex items-center gap-3 decoration-0 hover:no-underline">
+                        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-gold to-yellow-600 text-black shadow-[0_0_15px_rgba(212,175,53,0.3)]">
+                            <span class="material-symbols-outlined font-bold text-xl">directions_car</span>
+                        </div>
+                        <h1 class="hidden sm:block text-lg font-bold tracking-tight font-display">
+    <span class="text-white">Lebanon</span>
+    <span class="text-gold">Drive</span>
+</h1>
+
+                    </a>
+                </div>
+
+                <!-- Middle Section: Global Links (Desktop) -->
+                <nav class="hidden md:flex flex-1 justify-center px-8">
+                    <div class="flex items-center gap-1 bg-background-dark/50 rounded-full p-1">
+                         @if (User.IsInRole("Customer"))
+                         {
+                            <a asp-controller="Browse" asp-action="Index" 
+                               class="px-4 py-1.5 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 rounded-full transition-all duration-200 @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Browse" ? "text-gold bg-gold/10 border border-[1px] border-gold/20" : "")">
+                                Browse Cars
+                            </a>
+                            <a asp-controller="Bookings" asp-action="MyBookings"
+                               class="px-4 py-1.5 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 rounded-full transition-all duration-200 @(ViewContext.RouteData.Values["Action"]?.ToString() == "MyBookings" ? "text-gold bg-gold/10 border border-[1px] border-gold/20" : "")">
+                                My Bookings
+                            </a>
+                         }
+                         
+                         @if (SignInManager.IsSignedIn(User))
+                         {
+                            <a asp-controller="Dashboard" asp-action="Index"
+                               class="px-4 py-1.5 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 rounded-full transition-all duration-200 @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Dashboard" ? "text-gold bg-gold/10 border border-[1px] border-gold/20" : "")">
+                                Dashboard
+                            </a>
+                         }
+                         
+                         @if (User.IsInRole("Admin") || User.IsInRole("Employee"))
+                         {
+                            <a asp-controller="ControlPanel" asp-action="Index"
+                               class="px-4 py-1.5 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 rounded-full transition-all duration-200 @(ViewContext.RouteData.Values["Controller"]?.ToString() == "ControlPanel" ? "text-gold bg-gold/10 border border-[1px] border-gold/20" : "")">
+                                Control Panel
+                            </a>
+                            <a asp-controller="EmailServices" asp-action="EmailServicesHub"
+                               class="px-4 py-1.5 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 rounded-full transition-all duration-200 @(ViewContext.RouteData.Values["Controller"]?.ToString() == "EmailServices" ? "text-gold bg-gold/10 border border-[1px] border-gold/20" : "")">
+                                Email Hub
+                            </a>
+                            <a asp-controller="Reports" asp-action="Index"
+                               class="px-4 py-1.5 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 rounded-full transition-all duration-200 @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Reports" ? "text-gold bg-gold/10 border border-[1px] border-gold/20" : "")">
+                                Reports
+                            </a>
+                         }
+                    </div>
+                </nav>
+
+                <!-- Right Section: Actions & Profile -->
+                <div class="flex items-center gap-4 sm:gap-6">
+                    <!-- Notifications (Only if signed in) -->
+                    @if (SignInManager.IsSignedIn(User))
+                    {
+                        <button class="relative text-gray-400 hover:text-gold transition-colors group">
+                            <span class="material-symbols-outlined">notifications</span>
+                            <!-- Notification Badge -->
+                            <span class="absolute top-0.5 right-0.5 flex h-2 w-2">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-gold opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-2 w-2 bg-gold"></span>
+                            </span>
+                        </button>
+                    }
+
+                    <!-- Divider -->
+                    <div class="hidden sm:block h-6 w-px bg-border-dark"></div>
+
+                    <!-- User Profile Dropdown Trigger -->
+                    @if (SignInManager.IsSignedIn(User))
+                    {
+                        <div class="relative flex items-center">
+                            <button onclick="toggleUserDropdown()"
+                                    class="flex items-center gap-3 rounded-full focus:outline-none group"
+                                    type="button" aria-expanded="false" id="user-menu-button">
+                                <div class="relative">
+                                    <div class="h-9 w-9 overflow-hidden rounded-full border-2 border-gold/30 shadow-sm flex items-center justify-center bg-surface-dark">
+                                        <i class="fa fa-user text-gold"></i>
+                                    </div>
+                                    <div class="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-green-500 ring-2 ring-surface-dark"></div>
+                                </div>
+                                <div class="hidden text-left sm:block">
+                                    <p class="text-sm font-semibold text-white group-hover:text-gold transition-colors">
+                                        @displayName
+                                    </p>
+                                    @if(User.IsInRole("Admin")) { <p class="text-xs font-medium text-gold">Administrator</p> }
+                                    else if(User.IsInRole("Employee")) { <p class="text-xs font-medium text-blue-400">Employee</p> }
+                                    else { <p class="text-xs font-medium text-gray-500">Member</p> }
+                                </div>
+                                <span class="material-symbols-outlined text-gray-400 group-hover:text-white transition-colors hidden sm:block text-lg">expand_more</span>
+                            </button>
+                            
+                            <!-- Dropdown Menu (Custom Tailwind) -->
+                            <div id="user-dropdown-menu" class="hidden absolute right-0 top-full mt-2 w-56 origin-top-right rounded-xl bg-surface-dark shadow-2xl ring-1 ring-black ring-opacity-5 focus:outline-none z-50 transform transition-all duration-200 ease-out opacity-0 scale-95" 
+                                 style="display: none;"> <!-- Inline style for JS to remove, class for Tailwind -->
+                                <div class="p-1">
+                                    <a class="block px-4 py-2.5 text-sm text-gray-300 hover:bg-gold/10 hover:text-gold rounded-lg transition-colors flex items-center gap-3 group" asp-area="Identity" asp-page="/Account/Manage/Index">
+                                        <span class="material-symbols-outlined text-[20px] text-gray-400 group-hover:text-gold transition-colors">person</span> 
+                                        <span class="font-medium">Profile</span>
+                                    </a>
+                                    
+                                    <div class="h-px bg-border-dark my-1 mx-2"></div>
+                                    
+                                    <form method="post" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home")">
+                                        <button type="submit" class="w-full text-left block px-4 py-2.5 text-sm text-gray-300 hover:bg-red-500/10 hover:text-red-500 rounded-lg transition-colors flex items-center gap-3 group">
+                                            <span class="material-symbols-outlined text-[20px] text-gray-400 group-hover:text-red-500 transition-colors">logout</span> 
+                                            <span class="font-medium">Logout</span>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="flex items-center gap-3">
+                            <a asp-area="Identity" asp-page="/Account/Login" class="text-sm font-medium text-gray-300 hover:text-white transition-colors">Login</a>
+                            <a asp-area="Identity" asp-page="/Account/Register" class="px-4 py-2 text-sm font-bold text-black bg-gold rounded-lg hover:bg-yellow-500 transition-colors shadow-lg shadow-gold/20">
+                                Register
+                            </a>
+                        </div>
+                    }
                 </div>
             </div>
-        </nav>
+        </div>
     </header>
 
     <div class="container-fluid m-0 p-0">

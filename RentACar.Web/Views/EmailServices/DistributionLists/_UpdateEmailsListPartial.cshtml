@@ -1,0 +1,136 @@
+@model RentACar.Application.DTOs.DistributionListDto
+
+<section class="flex flex-col gap-4 mt-8 mb-4">
+    <div class="flex items-center gap-2 px-1 mb-2">
+        <span class="material-symbols-outlined" style="color: #daad52;">auto_awesome</span>
+        <h2 class="text-xl font-bold" style="color: white;">Auto-Update Members from Filters</h2>
+    </div>
+    
+    <div class="row g-4">
+        <!-- Main Filter Card -->
+        <div class="col-lg-9">
+            <div class="card h-100" style="background-color: #1c1f26; border: 1px solid #2d323d; border-radius: 12px;">
+                <div class="card-body p-4">
+                    <div class="row g-4">
+                        <!-- Left Column: Inputs -->
+                        <div class="col-md-4 d-flex flex-column gap-3">
+                            <div>
+                                <label class="text-uppercase small fw-bold mb-2" style="color: #9ca3af;">List Name</label>
+                                <input id="update-list-name" value="@Model.Name" disabled class="form-control" type="text" style="background-color: #0f1114; border-color: #2d323d; color: #9ca3af; cursor: not-allowed;"/>
+                                <input type="hidden" id="update-list-id" value="@Model.Id" />
+                            </div>
+                            
+                            <div>
+                                <p class="text-uppercase small fw-bold mb-2 pt-2" style="color: #9ca3af;">Target Group</p>
+                                <div class="d-flex flex-column gap-2">
+                                    <label class="d-flex align-items-center gap-3 p-2 rounded" style="border: 1px solid #2d323d; cursor: pointer; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='rgba(218, 173, 82, 0.05)'" onmouseout="this.style.backgroundColor='transparent'">
+                                        <input id="update-include-employees" class="form-check-input update-filter-checkbox" type="checkbox" style="background-color: #0f1114; border-color: #9ca3af;"/>
+                                        <span class="small fw-bold" style="color: white;">Employees</span>
+                                    </label>
+                                    <label class="d-flex align-items-center gap-3 p-2 rounded" style="border: 1px solid #2d323d; cursor: pointer; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='rgba(218, 173, 82, 0.05)'" onmouseout="this.style.backgroundColor='transparent'">
+                                        <input id="update-include-customers" class="form-check-input update-filter-checkbox" type="checkbox" style="background-color: #0f1114; border-color: #9ca3af;"/>
+                                        <span class="small fw-bold" style="color: white;">Customers</span>
+                                    </label>
+                                    <label class="d-flex align-items-center gap-3 p-2 rounded" style="border: 1px solid #2d323d; cursor: pointer; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='rgba(218, 173, 82, 0.05)'" onmouseout="this.style.backgroundColor='transparent'">
+                                        <input id="update-include-admins" class="form-check-input update-filter-checkbox" type="checkbox" style="background-color: #0f1114; border-color: #9ca3af;"/>
+                                        <span class="small fw-bold" style="color: white;">Admins</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Middle Column: Static Filters -->
+                        <div class="col-md-4 d-flex flex-column gap-3">
+                            <p class="text-uppercase small fw-bold mb-0" style="color: #9ca3af;">Safety &amp; Status Filters</p>
+                            <div class="d-flex flex-column gap-2">
+                                <label class="d-flex align-items-center gap-3 p-2 rounded" style="border: 1px solid #2d323d; cursor: pointer; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='rgba(218, 173, 82, 0.05)'" onmouseout="this.style.backgroundColor='transparent'">
+                                    <input id="update-exclude-blacklisted" class="form-check-input update-filter-checkbox" type="checkbox" checked style="background-color: #0f1114; border-color: #daad52;"/>
+                                    <span class="small" style="color: #9ca3af;">Exclude blacklisted</span>
+                                </label>
+                                <label class="d-flex align-items-center gap-3 p-2 rounded" style="border: 1px solid #2d323d; cursor: pointer; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='rgba(218, 173, 82, 0.05)'" onmouseout="this.style.backgroundColor='transparent'">
+                                    <input id="update-active-only" class="form-check-input update-filter-checkbox" type="checkbox" checked style="background-color: #0f1114; border-color: #daad52;"/>
+                                    <span class="small" style="color: #9ca3af;">Active only</span>
+                                </label>
+                                <label class="d-flex align-items-center gap-3 p-2 rounded" style="border: 1px solid #2d323d; cursor: pointer; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='rgba(218, 173, 82, 0.05)'" onmouseout="this.style.backgroundColor='transparent'">
+                                    <input id="update-marketing-optin" class="form-check-input update-filter-checkbox" type="checkbox" style="background-color: #0f1114; border-color: #daad52;"/>
+                                    <span class="small" style="color: #9ca3af;">Marketing opted-in</span>
+                                </label>
+                                <label class="d-flex align-items-center gap-3 p-2 rounded" style="border: 1px solid #2d323d; cursor: pointer; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='rgba(218, 173, 82, 0.05)'" onmouseout="this.style.backgroundColor='transparent'">
+                                    <input id="update-verified-only" class="form-check-input update-filter-checkbox" type="checkbox" style="background-color: #0f1114; border-color: #daad52;"/>
+                                    <span class="small" style="color: #9ca3af;">Verified emails only</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Right Column: Action & Stats -->
+                        <div class="col-md-4" style="border-left: 1px solid #2d323d;">
+                            <div class="ps-md-4 h-100 d-flex flex-column justify-content-between">
+                                <div>
+                                    <p class="text-uppercase small fw-bold mb-2" style="color: #9ca3af;">Estimated New Candidates</p>
+                                    <div class="d-flex align-items-baseline gap-2">
+                                        <p id="update-total-count" class="display-6 fw-bold mb-0" style="color: #daad52;">0</p>
+                                        <span class="small fw-medium" style="color: #9ca3af;">candidates found</span>
+                                    </div>
+                                    <p id="update-breakdown-text" class="small mt-2" style="color: #9ca3af;">Select filters to calculate</p>
+                                </div>
+                                
+                                <div class="d-flex flex-column gap-2 mt-4">
+                                    <button onclick="updateListFromFilters()" class="btn w-100 fw-bold d-flex align-items-center justify-content-center gap-2" style="background-color: #daad52; color: #0f1114; padding: 10px; border: none;">
+                                        <span class="material-symbols-outlined">update</span>
+                                        Update List Members
+                                    </button>
+                                    <button onclick="openUpdatePreviewModal(); return false;" type="button" class="btn w-100 fw-bold d-flex align-items-center justify-content-center gap-2" style="background-color: #2d323d; color: white; padding: 10px; border: 1px solid #3d424d;">
+                                        <span class="material-symbols-outlined">visibility</span>
+                                        Preview Candidates
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Info Card -->
+        <div class="col-lg-3">
+            <div class="card h-100 overflow-hidden position-relative" style="background-color: rgba(218, 173, 82, 0.1); border: 1px solid rgba(218, 173, 82, 0.3); border-radius: 12px;">
+                <div class="position-absolute" style="right: -20px; top: -20px; opacity: 0.1; color: #daad52;">
+                    <span class="material-symbols-outlined" style="font-size: 140px;">sync</span>
+                </div>
+                <div class="card-body p-4 d-flex flex-column justify-content-center position-relative z-1">
+                    <h3 class="h5 fw-bold mb-3" style="color: #daad52;">Smart Update</h3>
+                    <p class="small mb-4" style="color: #d1d5db; line-height: 1.6;">
+                        This feature scans the database for users matching your selected criteria.
+                    </p>
+                    <div class="d-flex flex-column gap-3">
+                        <div class="d-flex align-items-start gap-2 small" style="color: #d1d5db;">
+                            <span class="material-symbols-outlined" style="font-size: 18px; color: #daad52;">add_circle</span>
+                            <span><strong>Adds</strong> new matching users to the list.</span>
+                        </div>
+                        <div class="d-flex align-items-start gap-2 small" style="color: #d1d5db;">
+                            <span class="material-symbols-outlined" style="font-size: 18px; color: #9ca3af;">do_not_disturb_on</span>
+                            <span><strong>Does NOT remove</strong> existing manual members.</span>
+                        </div>
+                        <div class="d-flex align-items-start gap-2 small" style="color: #d1d5db;">
+                            <span class="material-symbols-outlined" style="font-size: 18px; color: #daad52;">check_circle</span>
+                            <span>Duplicates are automatically handled.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Update Preview Modal Container -->
+<div id="update-preview-modal-container" class="fixed-top w-100 h-100 d-none" style="z-index: 1055;">
+    <div class="position-absolute w-100 h-100 bg-secondary" style="opacity: 0.5; backdrop-filter: blur(4px);" onclick="closeUpdatePreviewModal()"></div>
+    <div class="position-relative w-100 h-100 d-flex align-items-center justify-content-center p-4">
+        <div id="update-preview-modal-content" class="bg-dark rounded-3 shadow-lg overflow-hidden position-relative" style="max-width: 900px; width: 100%; border: 1px solid #2d323d; max-height: 90vh; background-color: #1c1f26 !important;">
+             <!-- Content loaded via AJAX -->
+             <div class="p-5 d-flex justify-content-center">
+                 <span class="material-symbols-outlined animate-spin text-warning" style="font-size: 48px; argb(218, 173, 82);">progress_activity</span>
+             </div>
+        </div>
+    </div>
+</div>

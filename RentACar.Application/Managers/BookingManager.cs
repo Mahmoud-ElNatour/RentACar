@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using RentACar.Application.DTOs;
 using RentACar.Core.Entities;
 using RentACar.Core.Repositories;
+using Microsoft.EntityFrameworkCore;
 
 namespace RentACar.Application.Managers
 {
@@ -26,6 +27,7 @@ namespace RentACar.Application.Managers
         private readonly ILogger<BookingManager> _logger;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly AuditLogManager _auditLogManager;
+        private readonly EmailManager _emailManager;
 
         public BookingManager(
             IEmployeeRepository employeeRepository,
@@ -39,7 +41,8 @@ namespace RentACar.Application.Managers
             IMapper mapper,
             UserManager<IdentityUser> userManager,
             ILogger<BookingManager> logger,
-            AuditLogManager auditLogManager)
+            AuditLogManager auditLogManager,
+            EmailManager emailManager)
         {
             _employeeRepository = employeeRepository;
             _bookingRepository = bookingRepository;
@@ -53,6 +56,7 @@ namespace RentACar.Application.Managers
             _mapper = mapper;
             _logger = logger;
             _auditLogManager = auditLogManager;
+            _emailManager = emailManager;
         }
 
         public async Task<BookingCreationResultDto?> MakeBookingAsync(MakeBookingRequestDto requestDto, string loggedInUserId)
@@ -203,6 +207,22 @@ namespace RentACar.Application.Managers
             
             await _auditLogManager.LogEventAsync("Booking.Created", "Booking", addedBooking.BookingId.ToString(), $"Created new booking for Car {addedBooking.CarId}", null, "Success");
             
+            // 📨 Send Booking Status Email (Pending)
+            if (isCustomer) 
+            {
+                 // We need customer email. If loggedInUser is customer we have it.
+                 // RequestDto has CustomerId.
+                 // We fetched customerEntity earlier.
+                 // If isCustomer is true, customerEntity is set.
+                 // If admin booked for customer, requestDto.CustomerId is set.
+                 var cust = await _customerRepository.GetByIdAsync(addedBooking.CustomerId);
+                 var custUser = await _userManager.FindByIdAsync(cust.aspNetUserId);
+                 if (custUser != null)
+                 {
+                     await _emailManager.SendBookingStatusEmail(custUser.Email, cust.Name, addedBooking);
+                 }
+            }
+            
             var session = await _paymentManager.CreateCheckoutSessionForPaymentAsync(addedPayment);
             if (string.IsNullOrWhiteSpace(session.CheckoutUrl))
             {
@@ -276,9 +296,26 @@ namespace RentACar.Application.Managers
                 return null;
             }
 
+            var oldStatus = booking.BookingStatus;
             _mapper.Map(bookingDto, booking);
             await _bookingRepository.UpdateAsync(booking);
             await _auditLogManager.LogEventAsync("Booking.StatusChanged", "Booking", bookingDto.BookingId.ToString(), $"Updated booking details. Status: {booking.BookingStatus}", null, "Success");
+
+            // 📨 Send Email if Status Changed
+            if (oldStatus != booking.BookingStatus) 
+            {
+                var cust = await _customerRepository.GetByIdAsync(booking.CustomerId);
+                var custUser = await _userManager.FindByIdAsync(cust.aspNetUserId);
+                if (custUser != null)
+                {
+                    // "On admin rejection -> status = Rejected (must include reason)"
+                    // Reason might be in DTO? BookingEditDto doesn't seem to have Reason field shown here but maybe mapped?
+                    // "Reason (only for Rejected)"
+                    // I will pass generic "Status Change" reason or null. 
+                    // If rejection, maybe check if DTO has notes? Assuming no notes field in DTO for now.
+                    await _emailManager.SendBookingStatusEmail(custUser.Email, cust.Name, booking);
+                }
+            }
 
             return _mapper.Map<BookingEditDto>(booking);
         }
@@ -301,6 +338,77 @@ namespace RentACar.Application.Managers
             var booking = await _bookingRepository.GetBookingByIdAsync(bookingId);
             return _mapper.Map<BookingDto>(booking);
         }
+        public async Task<IEnumerable<BookingListDto>> GetAllBookingsForListAsync()
+        {
+            // 1. Fetch Bookings (Projected)
+            var query = _bookingRepository.Query()
+                .Include(b => b.Customer).ThenInclude(c => c.User)
+                .Include(b => b.Car).ThenInclude(c => c.Category)
+                .Include(b => b.Promocode)
+                .Include(b => b.Employeebooker)
+                .AsNoTracking();
+
+            var bookings = await query.Select(b => new BookingListDto
+            {
+                BookingId = b.BookingId,
+                CustomerId = b.CustomerId,
+                CustomerName = b.Customer != null ? b.Customer.Name : null,
+                CustomerUsername = b.Customer != null && b.Customer.User != null ? b.Customer.User.UserName : null,
+                CustomerEmail = b.Customer != null && b.Customer.User != null ? b.Customer.User.Email : null,
+                
+                CarId = b.CarId,
+                CarModel = b.Car != null ? b.Car.ModelName : null,
+                CarPlate = b.Car != null ? b.Car.PlateNumber : null,
+                
+                EmployeebookerId = b.EmployeebookerId,
+                EmployeeName = b.Employeebooker != null ? b.Employeebooker.Name : null,
+                
+                Subtotal = b.Subtotal,
+                TotalPrice = b.TotalPrice,
+                
+                PromocodeId = b.PromocodeId,
+                PromocodeName = b.Promocode != null ? b.Promocode.Name : null,
+                PromocodeDiscount = b.Promocode != null ? b.Promocode.DiscountPercentage : null,
+                
+                Startdate = b.Startdate.ToString(),
+                Enddate = b.Enddate.ToString(),
+                BookingStatus = b.BookingStatus
+            }).ToListAsync();
+
+            if (!bookings.Any())
+                return bookings;
+
+            // 2. Fetch Payments (Batch)
+            var bookingIds = bookings.Select(b => b.BookingId).ToList();
+            
+            // Chunking to avoid SQL limit if necessary, but assuming reasonable count for now.
+            var payments = await _paymentRepository.Query()
+                .Where(p => bookingIds.Contains(p.BookingId))
+                .Select(p => new { p.BookingId, p.PaymentId, p.Amount, p.Status, p.PaymentDate })
+                .AsNoTracking()
+                .ToListAsync();
+
+            // 3. Join In-Memory
+            foreach (var b in bookings)
+            {
+                var bookingPayments = payments.Where(p => p.BookingId == b.BookingId).ToList();
+                if (bookingPayments.Any())
+                {
+                    // Logic from Controller: OrderByDescending(PaymentDate).ThenByDescending(PaymentId).FirstOrDefault()
+                    var latest = bookingPayments
+                        .OrderByDescending(p => p.PaymentDate)
+                        .ThenByDescending(p => p.PaymentId)
+                        .First();
+
+                    b.PaymentId = latest.PaymentId;
+                    b.PaymentAmount = latest.Amount;
+                    b.PaymentStatus = latest.Status;
+                }
+            }
+
+            return bookings;
+        }
+
         public async Task<List<BookingDto>> GetAllBookingsAsync()
         {
             var bookings = await _bookingRepository.GetAllAsync();

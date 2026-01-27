@@ -1,0 +1,87 @@
+@model RentACar.Application.DTOs.DistributionListDto
+
+<div class="bg-white dark:bg-card-dark rounded-lg shadow-xl max-w-4xl mx-auto text-slate-900 dark:text-white flex flex-col max-h-[90vh]">
+    <div class="flex justify-between items-center p-6 border-b border-slate-200 dark:border-border-dark">
+        <div>
+            <h2 class="text-2xl font-bold dark:text-white text-slate-900">@Model.Name</h2>
+            <p class="text-slate-500 dark:text-[#c3b498]">Members List (@Model.Members.Count)</p>
+        </div>
+        <button onclick="closeModal()" class="text-slate-400 hover:text-primary transition-colors border-none bg-transparent cursor-pointer">
+            <span class="material-symbols-outlined">close</span>
+        </button>
+    </div>
+
+    <!-- Add Member Form -->
+    <div class="p-6 bg-slate-50 dark:bg-white/5 border-b border-slate-200 dark:border-border-dark">
+        <form asp-action="AddMember" asp-controller="DistributionLists" method="post" class="flex flex-col md:flex-row gap-4 items-end">
+            <input type="hidden" name="listId" value="@Model.Id" />
+            <div class="flex-1 w-full">
+                <label class="block text-xs font-bold uppercase text-slate-500 dark:text-[#c3b498] mb-1">Email Address</label>
+                <input type="email" name="email" required placeholder="user@example.com" class="w-full bg-white dark:bg-background-dark border border-slate-200 dark:border-border-dark rounded-lg text-sm px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary dark:text-white" />
+            </div>
+            <div class="w-full md:w-40">
+                <label class="block text-xs font-bold uppercase text-slate-500 dark:text-[#c3b498] mb-1">Label</label>
+                <input type="text" name="label" placeholder="e.g. Partner" class="w-full bg-white dark:bg-background-dark border border-slate-200 dark:border-border-dark rounded-lg text-sm px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary dark:text-white" />
+            </div>
+             <div class="w-full md:w-40">
+                <label class="block text-xs font-bold uppercase text-slate-500 dark:text-[#c3b498] mb-1">Type</label>
+                <select name="type" class="w-full bg-white dark:bg-background-dark border border-slate-200 dark:border-border-dark rounded-lg text-sm px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary dark:text-white">
+                    <option value="Other">Other</option>
+                    <option value="Employee">Employee</option>
+                    <option value="Customer">Customer</option>
+                    <option value="Admin">Admin</option>
+                </select>
+            </div>
+            <button type="submit" class="w-full md:w-auto px-6 py-2.5 bg-primary text-background-dark font-bold rounded-lg hover:brightness-110 transition-all border-none cursor-pointer whitespace-nowrap">
+                Add Member
+            </button>
+        </form>
+    </div>
+
+    <div class="overflow-y-auto p-0 flex-1">
+        <table class="w-full text-left border-collapse">
+            <thead class="bg-slate-50 dark:bg-white/5 border-b border-slate-200 dark:border-border-dark sticky top-0 z-10 backdrop-blur-md">
+                <tr>
+                    <th class="px-6 py-3 text-xs font-bold uppercase text-slate-500 dark:text-[#c3b498]">Email</th>
+                    <th class="px-6 py-3 text-xs font-bold uppercase text-slate-500 dark:text-[#c3b498]">Type</th>
+                    <th class="px-6 py-3 text-xs font-bold uppercase text-slate-500 dark:text-[#c3b498]">Label</th>
+                    <th class="px-6 py-3 text-xs font-bold uppercase text-slate-500 dark:text-[#c3b498]">Status</th>
+                    <th class="px-6 py-3 text-xs font-bold uppercase text-slate-500 dark:text-[#c3b498] text-right">Action</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 dark:divide-border-dark">
+                @foreach (var member in Model.Members)
+                {
+                    <tr class="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+                        <td class="px-6 py-3 text-sm dark:text-slate-200 text-slate-700">@member.Email</td>
+                        <td class="px-6 py-3 text-sm dark:text-slate-200 text-slate-700">@member.MemberType</td>
+                        <td class="px-6 py-3 text-sm dark:text-slate-200 text-slate-700">@member.Label</td>
+                        <td class="px-6 py-3 text-sm">
+                             @if(member.IsActive)
+                            {
+                                <span class="text-primary font-bold text-xs uppercase tracking-wider">Active</span>
+                            }
+                            else
+                            {
+                                <span class="text-red-500 font-bold text-xs uppercase tracking-wider">Inactive</span>
+                            }
+                        </td>
+                         <td class="px-6 py-3 text-sm text-right">
+                            <form asp-action="RemoveMember" asp-controller="DistributionLists" method="post" onsubmit="return confirm('Remove @member.Email from this list?');">
+                                <input type="hidden" name="memberId" value="@member.Id" />
+                                <input type="hidden" name="listId" value="@Model.Id" />
+                                <button type="submit" class="text-red-500 hover:text-red-600 hover:underline text-xs font-bold bg-transparent border-none cursor-pointer">REMOVE</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+                 @if(Model.Members.Count == 0)
+                {
+                    <tr>
+                        <td colspan="5" class="px-6 py-8 text-center text-slate-400 italic">No members in this list yet. Add one above.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

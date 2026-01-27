@@ -29,4 +29,7 @@
 
         [InverseProperty("Promocode")]
         public virtual ICollection<Booking> Bookings { get; set; } = new List<Booking>();
+
+        [Column("isExpiredNotificationSent")]
+        public bool IsExpiredNotificationSent { get; set; }
     }

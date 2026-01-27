@@ -100,23 +100,39 @@ namespace RentACar.Web.Controllers
             var recentActivities = new List<RecentActivityDto>();
 
             // 1. Recent Bookings (Last 5)
-            var recentBookings = await _dbContext.Bookings
-                .Include(b => b.Customer)
-                .Include(b => b.Car)
+            // 1. Recent Bookings (Last 5)
+            // Use local function or inline logic for Days calculation in query?
+            // EF Core 8 might support DateOnly subtraction difference in days. 
+            // b.Enddate and b.Startdate are DateOnly. 
+            // SQL standard: DATEDIFF(day, Start, End).
+            // EF Core translation for DateOnly subtract might work. 
+            // If not, we projected everything else.
+            // Let's safe bet: Project raw dates and calculate Description in memory, BUT avoid fetching the whole tree.
+            
+            var recentBookingsData = await _dbContext.Bookings
                 .OrderByDescending(b => b.BookingId)
                 .Take(5)
+                .Select(b => new 
+                {
+                    b.BookingId,
+                    CarModel = b.Car != null ? b.Car.ModelName : "Car",
+                    CarPlate = b.Car != null ? b.Car.PlateNumber : "Unknown",
+                    CustomerName = b.Customer != null ? b.Customer.Name : "Unknown",
+                    b.Startdate,
+                    b.Enddate
+                })
+                .AsNoTracking()
                 .ToListAsync();
 
-            foreach (var b in recentBookings)
+            foreach (var b in recentBookingsData)
             {
-                // Calculate days roughly
                 var days = b.Enddate.DayNumber - b.Startdate.DayNumber;
                 if (days < 1) days = 1;
 
                 recentActivities.Add(new RecentActivityDto
                 {
                     Title = $"New Booking #{b.BookingId}",
-                    Description = $"{b.Car?.ModelName ?? "Car"} ({b.Car?.PlateNumber ?? "Unknown"}) for {days} days. Customer: {b.Customer?.Name ?? "Unknown"}",
+                    Description = $"{b.CarModel} ({b.CarPlate}) for {days} days. Customer: {b.CustomerName}",
                     TimeAgo = b.Startdate.ToString("MMM dd"), 
                     Icon = "add_circle",
                     IconColorClass = "text-primary"
@@ -124,18 +140,25 @@ namespace RentACar.Web.Controllers
             }
 
             // 2. Recent Payments (Last 5)
-            var recentPayments = await _dbContext.Payments
-                .Include(p => p.Booking).ThenInclude(b => b.Customer)
+            var recentPaymentsData = await _dbContext.Payments
                 .OrderByDescending(p => p.PaymentId)
                 .Take(5)
+                .Select(p => new
+                {
+                    p.Amount,
+                    p.PaymentMethod,
+                    CustomerName = p.Booking != null && p.Booking.Customer != null ? p.Booking.Customer.Name : "Unknown",
+                    p.PaymentDate
+                })
+                .AsNoTracking()
                 .ToListAsync();
 
-            foreach (var p in recentPayments)
+            foreach (var p in recentPaymentsData)
             {
                 recentActivities.Add(new RecentActivityDto
                 {
                     Title = "Payment Received",
-                    Description = $"{p.Amount:C} via {p.PaymentMethod}. Customer: {p.Booking?.Customer?.Name ?? "Unknown"}",
+                    Description = $"{p.Amount:C} via {p.PaymentMethod}. Customer: {p.CustomerName}",
                     TimeAgo = p.PaymentDate.ToString("MMM dd"),
                     Icon = "payments",
                     IconColorClass = "text-blue-400"
@@ -207,14 +230,14 @@ namespace RentACar.Web.Controllers
             var employee = (await _employeeManager.GetAllEmployees()).FirstOrDefault(e => e.aspNetUserId == user.Id);
             if (employee == null) return RedirectToAction("Index", "Home");
 
-            var bookings = await _dbContext.Bookings
-                .Where(b => b.IsBookedByEmployee == true && b.EmployeebookerId == employee.EmployeeId)
-                .ToListAsync();
-            var monthCounts = bookings
+            var monthCountsData = await _dbContext.Bookings
+                .Where(b => b.IsBookedByEmployee == true && b.EmployeebookerId == employee.EmployeeId && b.Startdate.Year == DateTime.UtcNow.Year)
                 .GroupBy(b => b.Startdate.Month)
                 .Select(g => new { Month = g.Key, Count = g.Count() })
-                .ToList();
-            var months = Enumerable.Range(1, 12).Select(m => monthCounts.FirstOrDefault(x => x.Month == m)?.Count ?? 0).ToList();
+                .ToListAsync();
+            
+            var months = Enumerable.Range(1, 12).Select(m => monthCountsData.FirstOrDefault(x => x.Month == m)?.Count ?? 0).ToList();
+            var processedBookingsCount = await _dbContext.Bookings.CountAsync(b => b.IsBookedByEmployee == true && b.EmployeebookerId == employee.EmployeeId);
 
             var today = DateOnly.FromDateTime(DateTime.UtcNow);
             var activeBookingsSystemWide = await _dbContext.Bookings.CountAsync(b => b.Enddate >= today && b.Startdate <= today);
@@ -230,8 +253,6 @@ namespace RentACar.Web.Controllers
 
             // Fetch Recent Pending Bookings
             var recentPending = await _dbContext.Bookings
-                .Include(b => b.Customer)
-                .Include(b => b.Car)
                 .Where(b => b.BookingStatus == "Pending")
                 .OrderByDescending(b => b.BookingId)
                 .Take(5)
@@ -245,6 +266,7 @@ namespace RentACar.Web.Controllers
                     Status = "Pending",
                     StatusColorClass = "bg-yellow-500/10 text-yellow-500"
                 })
+                .AsNoTracking()
                 .ToListAsync();
 
             // Fetch Unverified Customers
@@ -264,7 +286,7 @@ namespace RentACar.Web.Controllers
 
             var model = new EmployeeDashboardViewModel
             {
-                ProcessedBookings = bookings.Count,
+                ProcessedBookings = processedBookingsCount,
                 TotalCars = (await _carManager.BrowseAllCarsAsync()).Count,
                 AvailableCars = (await _carManager.SearchCarsByFilterAsync(isAvailable: true)).Count,
                 UnverifiedCustomers = unverifiedCustomersCount,
@@ -285,20 +307,34 @@ namespace RentACar.Web.Controllers
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return RedirectToAction("Index", "Home");
-            var customer = (await _customerManager.GetAllCustomers()).FirstOrDefault(c => c.aspNetUserId == user.Id);
+            var customer = await _customerManager.GetCustomerByAspNetUserId(user.Id);
             if (customer == null) return RedirectToAction("Index", "Home");
 
             var bookings = await _dbContext.Bookings
                 .Where(b => b.CustomerId == customer.UserId)
-                .Include(b => b.Car)
-                .ThenInclude(c => c.Category)
+                .Select(b => new 
+                {
+                    b.BookingId,
+                    b.Startdate,
+                    b.Enddate,
+                    b.TotalPrice,
+                    b.Subtotal,
+                    b.BookingStatus,
+                    CarModel = b.Car != null ? b.Car.ModelName : "Unknown Car",
+                    CarId = b.Car != null ? b.Car.CarId : 0,
+                    CarYear = b.Car != null ? b.Car.ModelYear : 2023,
+                    CarCategory = b.Car != null && b.Car.Category != null ? b.Car.Category.Name : "Standard",
+                    CarPrice = b.Car != null ? b.Car.PricePerDay : 0
+                })
+                .AsNoTracking()
                 .ToListAsync();
+
             var upcoming = bookings.Count(b => b.Startdate.ToDateTime(TimeOnly.MinValue) > DateTime.UtcNow);
             var totalSpent = bookings.Sum(b => b.TotalPrice);
             var discountSavings = bookings.Sum(b => (b.Subtotal ?? b.TotalPrice) - b.TotalPrice);
 
             var bestCategory = bookings
-                .GroupBy(b => b.Car.Category?.Name)
+                .GroupBy(b => b.CarCategory)
                 .Select(g => new { Category = g.Key, Count = g.Count() })
                 .OrderByDescending(g => g.Count)
                 .FirstOrDefault()?.Category;
@@ -313,23 +349,14 @@ namespace RentACar.Web.Controllers
                 .OrderByDescending(b => b.BookingId)
                 .Take(5)
                 .Select(b => {
-                    string imgData = "";
-                    if (b.Car != null && b.Car.CarImage != null && b.Car.CarImage.Length > 0)
-                    {
-                        string base64 = Convert.ToBase64String(b.Car.CarImage);
-                        imgData = $"data:image/png;base64,{base64}";
-                    }
-                    else
-                    {
-                         // Placeholder
-                         imgData = $"https://ui-avatars.com/api/?name={(b.Car != null ? b.Car.ModelName : "Car")}&background=random";
-                    }
+                     // Use URL for lazy loading image
+                     string imgUrl = b.CarId > 0 ? $"/api/Car/Image/{b.CarId}" : $"https://ui-avatars.com/api/?name={b.CarModel}&background=random";
 
                     return new CustomerDashboardBookingDto
                     {
                         BookingId = b.BookingId,
-                        CarName = b.Car != null ? b.Car.ModelName : "Unknown Car",
-                        CarImage = imgData,
+                        CarName = b.CarModel,
+                        CarImage = imgUrl,
                         DateRange = $"{b.Startdate:MMM dd} - {b.Enddate:MMM dd}",
                         TotalPrice = b.TotalPrice,
                         Status = b.BookingStatus,
@@ -353,7 +380,7 @@ namespace RentACar.Web.Controllers
                 // User Details
                 CustomerName = customer.Name,
                 CustomerImageUrl = $"https://ui-avatars.com/api/?name={customer.Name}&background=d4af35&color=14120b",
-                IsGoldMember = totalSpent > 1000, // Simple logic for Gold Status
+                IsGoldMember = totalSpent > 1000, 
 
                 // Charts & Lists
                 MonthlyBookings = months,
@@ -368,55 +395,58 @@ namespace RentACar.Web.Controllers
 
             if (nextBooking != null)
             {
-                string nbImg = "";
-                if (nextBooking.Car != null && nextBooking.Car.CarImage != null && nextBooking.Car.CarImage.Length > 0)
-                {
-                    nbImg = $"data:image/png;base64,{Convert.ToBase64String(nextBooking.Car.CarImage)}";
-                }
-                else
-                {
-                    nbImg = $"https://ui-avatars.com/api/?name={(nextBooking.Car?.ModelName ?? "Car")}&background=random";
-                }
+                string nbImg = nextBooking.CarId > 0 ? $"/api/Car/Image/{nextBooking.CarId}" : $"https://ui-avatars.com/api/?name={nextBooking.CarModel}&background=random";
 
                 model.NextBooking = new CustomerDashboardBookingDto
                 {
                     BookingId = nextBooking.BookingId,
-                    CarName = nextBooking.Car?.ModelName ?? "Unknown Car",
+                    CarName = nextBooking.CarModel,
                     CarImage = nbImg,
                     DateRange = $"{nextBooking.Startdate:MMM dd} - {nextBooking.Enddate:MMM dd}",
                     TotalPrice = nextBooking.TotalPrice,
                     Status = nextBooking.BookingStatus,
-                    StatusColorClass = "text-gold-500", // Hero usually gold or white
+                    StatusColorClass = "text-gold-500", 
                     PickupDate = nextBooking.Startdate.ToDateTime(TimeOnly.MinValue),
                     ReturnDate = nextBooking.Enddate.ToDateTime(TimeOnly.MinValue),
-                    PickupLocation = "Beirut Airport", // Hardcoded for now or fetch from booking if available
+                    PickupLocation = "Beirut Airport", 
                     ReturnLocation = "Beirut Airport",
-                    CarYear = (nextBooking.Car?.ModelYear ?? 2023).ToString() + " Model",
-                    CarType = nextBooking.Car?.Category?.Name ?? "Premium"
+                    CarYear = nextBooking.CarYear.ToString() + " Model",
+                    CarType = nextBooking.CarCategory
                 };
             }
 
-            // 2. Car Categories (for Quick Book)
-            // Assuming Category is accessible via Car or directly. Since we don't have _categoryManager injected here and unsure of DbSet, use Cars.
+            // 2. Car Categories
             model.CarCategories = await _dbContext.Cars
                 .Where(c => c.Category != null)
-                .Select(c => c.Category.Name)
+                .Select(c => c.Category!.Name)
                 .Distinct()
                 .ToListAsync();
 
             // 3. Suggested Cars (Sidebar)
-            // Logic: 2 Available cars of BestCategory, excluding current bookings
-            var suggestedQuery = _dbContext.Cars.Include(c => c.Category).Where(c => c.IsAvailable);
+            // Need to project to avoid blob fetching here too.
+            // Logic: 2 Available cars of BestCategory
+            
+            var suggestedQuery = _dbContext.Cars.AsQueryable();
             if (!string.IsNullOrEmpty(bestCategory))
             {
-                suggestedQuery = suggestedQuery.Where(c => c.Category.Name == bestCategory);
+                 // Join or navigation check
+                 suggestedQuery = suggestedQuery.Where(c => c.Category != null && c.Category.Name == bestCategory);
             }
+            suggestedQuery = suggestedQuery.Where(c => c.IsAvailable);
             
-            var suggestedCars = await suggestedQuery.Take(2).ToListAsync();
+            var suggestedCars = await suggestedQuery
+                .Take(2)
+                .Select(c => new 
+                {
+                    c.CarId,
+                    c.ModelName,
+                    c.PricePerDay
+                })
+                .AsNoTracking()
+                .ToListAsync();
+
             model.SuggestedCars = suggestedCars.Select(c => {
-                 string cImg = "";
-                 if(c.CarImage != null && c.CarImage.Length > 0) cImg = $"data:image/png;base64,{Convert.ToBase64String(c.CarImage)}";
-                 else cImg = $"https://ui-avatars.com/api/?name={c.ModelName}&background=random";
+                 string cImg = $"/api/Car/Image/{c.CarId}";
 
                  return new CustomerDashboardSuggestedCarDto 
                  {
@@ -424,8 +454,8 @@ namespace RentACar.Web.Controllers
                      ModelName = c.ModelName,
                      PricePerDay = c.PricePerDay ?? 0,
                      ImageUrl = cImg,
-                     Transmission = "Automatic", // Default as property doesn't exist on entity
-                     FuelType = "Petrol" // Placeholder
+                     Transmission = "Automatic", 
+                     FuelType = "Petrol" 
                  };
             }).ToList();
 

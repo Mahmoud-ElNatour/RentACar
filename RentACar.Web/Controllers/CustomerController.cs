@@ -103,22 +103,10 @@ namespace RentACar.Web.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "Admin,Employee")]
         public async Task<ActionResult<IEnumerable<CustomerListDto>>> Get([FromQuery] string? search, [FromQuery] bool? verified, [FromQuery] bool? active)
         {
-            // Note: Since search is done in memory (Customers.Where...), we should ideally have a method in Manager that does filtering on DB or returns ListDto.
-            // But existing GetAllCustomers returns full DTOs.
-            // We need to use GetAllCustomersForListAsync but we lose the specific filtering logic if we don't move it to Manager or replicate it here.
-            // The existing code fetched ALL then filtered in memory. We can do the same with ListDto.
-            var customers = await _customerManager.GetAllCustomersForListAsync();
-            
-            if (!string.IsNullOrEmpty(search))
-            {
-                customers = customers.Where(c => (c.Name != null && c.Name.Contains(search, System.StringComparison.OrdinalIgnoreCase)) || c.UserId.ToString() == search).ToList();
-            }
-            if (verified.HasValue)
-                customers = customers.Where(c => c.IsVerified == verified.Value).ToList();
-            if (active.HasValue)
-                customers = customers.Where(c => c.Isactive == active.Value).ToList();
+            var customers = await _customerManager.GetAllCustomersForListAsync(search, verified, active);
             return Ok(customers);
         }
 
@@ -223,7 +211,7 @@ namespace RentACar.Web.Controllers
         [HttpPost("{id}/reset-password")]
         public async Task<IActionResult> ResetPassword(int id)
         {
-            var success = await _customerManager.ResetPassword(id, "C@c123456");
+            var success = await _customerManager.ResetPassword(id);
             if (!success) return NotFound();
             return NoContent();
         }
@@ -270,7 +258,7 @@ namespace RentACar.Web.Controllers
                 values: new { area = "Identity", userId = userId, code = code },
                 protocol: Request.Scheme);
 
-            await _emailManager.SendConfirmationEmailAsync(user.Email, callbackUrl, customer.Name);
+            await _emailManager.SendConfirmationEmailAsync(user.Email ?? string.Empty, callbackUrl, customer.Name);
 
             return Ok(new { message = "Confirmation email sent successfully." });
         }

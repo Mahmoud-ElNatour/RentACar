@@ -1,0 +1,551 @@
+@model List<RentACar.Application.DTOs.DistributionListDto>
+@{
+    ViewData["Title"] = "Distribution Lists Management";
+    ViewData["BodyClass"] = "bg-background-dark";
+}
+
+@section Styles {
+    <script>
+        // Enable dark mode IMMEDIATELY for Tailwind classes
+        document.documentElement.classList.add('dark');
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@400;500;700;900&family=Noto+Sans:wght@400;500;700&display=swap" rel="stylesheet"/>
+    <style>
+        /* CRITICAL: Aggressive Bootstrap Override - Must come after Bootstrap */
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        
+        /* Force dark backgrounds and override Bootstrap white backgrounds */
+        .distribution-lists-page {
+            font-family: 'Epilogue', sans-serif !important;
+            background-color: #13151b !important;
+            color: white !important;
+        }
+        
+        .distribution-lists-page .text-primary {
+            color: #daad52 !important;
+        }
+        
+        .distribution-lists-page .bg-primary {
+            background-color: #daad52 !important;
+            color: #13151b !important;
+        }
+        
+        .distribution-lists-page .border-primary {
+            border-color: #daad52 !important;
+        }
+        
+        /* Override ALL white backgrounds in cards */
+        .distribution-lists-page .bg-white,
+        .distribution-lists-page .rounded-xl.bg-white,
+        .distribution-lists-page div[class*="bg-white"] {
+            background-color: #1c1f26 !important;
+        }
+        
+        /* Card backgrounds */
+        .distribution-lists-page .p-6.rounded-xl,
+        .distribution-lists-page .rounded-xl.border,
+        .distribution-lists-page section .rounded-xl {
+            background-color: #1c1f26 !important;
+        }
+        
+        /* Table container */
+        .distribution-lists-page .overflow-x-auto,
+        .distribution-lists-page table {
+            background-color: #1c1f26 !important;
+        }
+        
+        /* Remove ALL button borders */
+        .distribution-lists-page button {
+            border: none !important;
+            outline: none !important;
+            box-shadow: none !important;
+        }
+        
+        /* Primary buttons */
+        .distribution-lists-page button[class*="bg-primary"] {
+            background-color: #daad52 !important;
+            color: #13151b !important;
+            border: none !important;
+        }
+        
+        /* Secondary buttons */
+        .distribution-lists-page button[class*="bg-slate"] {
+            background-color: #2d323d !important;
+            color: white !important;
+            border: none !important;
+        }
+        
+        /* Input fields */
+        .distribution-lists-page input:not([type="checkbox"]),
+        .distribution-lists-page select,
+        .distribution-lists-page textarea {
+            background-color: #13151b !important;
+            border-color: #2d323d !important;
+            color: white !important;
+        }
+        
+        .distribution-lists-page input::placeholder {
+            color: #c3b498 !important;
+        }
+        
+        /* Checkboxes */
+        .distribution-lists-page input[type="checkbox"]:checked {
+            background-color: #daad52 !important;
+            border-color: #daad52 !important;
+        }
+        
+        /* Label borders */
+        .distribution-lists-page label[class*="border"] {
+            border-color: #2d323d !important;
+            background-color: transparent !important;
+        }
+        
+        /* Stats card */
+        .distribution-lists-page .bg-primary\/10 {
+            background-color: rgba(218, 173, 82, 0.1) !important;
+        }
+        
+        /* Text colors override */
+        .distribution-lists-page .text-slate-900,
+        .distribution-lists-page .text-slate-700 {
+            color: white !important;
+        }
+        
+        /* Border colors */
+        .distribution-lists-page .border,
+        .distribution-lists-page [class*="border-slate"] {
+            border-color: #2d323d !important;
+        }
+        
+        /* Table header */
+        .distribution-lists-page thead {
+            background-color: rgba(255, 255, 255, 0.05) !important;
+        }
+        
+        /* Modal backgrounds */
+        .distribution-lists-page .bg-slate-50 {
+            background-color: rgba(255, 255, 255, 0.05) !important;
+        }
+        
+        /* Remove table row borders */
+        .distribution-lists-page tbody tr {
+            border: none !important;
+            border-bottom: none !important;
+        }
+        
+        .distribution-lists-page .divide-y > * {
+            border-top: none !important;
+        }
+        
+        /* Add alternating row colors for readability */
+        .distribution-lists-page tbody tr:nth-child(even) {
+            background-color: rgba(255, 255, 255, 0.02) !important;
+        }
+        
+        .distribution-lists-page tbody tr:hover {
+            background-color: rgba(218, 173, 82, 0.05) !important;
+        }
+    </style>
+}
+
+<div class="distribution-lists-page bg-background-dark text-white min-h-screen" style="background-color: #13151b; color: white; font-family: 'Epilogue', sans-serif;">
+    <!-- Main Content Section -->
+    <main class="flex-1 flex flex-col max-w-[1280px] w-full mx-auto px-4 md:px-10 py-8 gap-8" style="margin-top: 0; padding-top: 2rem;">
+
+            <div class="flex flex-wrap items-end justify-between gap-4">
+                <div class="flex flex-col gap-1">
+                    <p class="text-primary text-sm font-bold uppercase tracking-widest">Administration</p>
+                    <h1 class="text-3xl md:text-4xl font-black leading-tight tracking-[-0.033em]">Distribution Lists Management</h1>
+                    <p class="text-slate-500 dark:text-[#c3b498] text-base">Group and manage your communication channels for customers and staff.</p>
+                </div>
+                <button onclick="document.getElementById('gen-list-name').focus()" class="flex min-w-[180px] cursor-pointer items-center justify-center gap-2 rounded-lg h-12 px-6 bg-primary text-background-dark text-base font-bold shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all border-none">
+                    <span class="material-symbols-outlined font-bold">add</span>
+                    <span>New List</span>
+                </button>
+            </div>
+            
+            <!-- Generate List Section -->
+            @await Html.PartialAsync("~/Views/EmailServices/DistributionLists/_GenerateEmailsListPartial.cshtml")
+
+            <div class="flex flex-col gap-4">
+                <div class="flex items-center justify-between px-1">
+                    <h2 class="text-xl font-bold">Master Distribution Lists</h2>
+                    <div class="flex items-center gap-3">
+                        <div class="relative">
+                            <input class="bg-white dark:bg-card-dark border border-slate-200 dark:border-border-dark rounded-lg text-xs py-2 pl-8 focus:ring-primary focus:border-primary text-slate-900 dark:text-white" placeholder="Filter lists..." type="text"/>
+                            <span class="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-sm text-slate-400">filter_list</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-border-dark bg-white dark:bg-card-dark shadow-sm">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-200 dark:border-border-dark bg-slate-50/50 dark:bg-white/5">
+                                <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-[#c3b498]">List Name</th>
+                                <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-[#c3b498]">Total Emails</th>
+                                <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-[#c3b498]">Included Roles</th>
+                                <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-[#c3b498]">Status</th>
+                                <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-[#c3b498]">Last Updated</th>
+                                <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-primary text-center bg-primary/5 border-l border-primary/20">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 dark:divide-border-dark">
+                            @if(Model != null)
+                            {
+                                foreach(var item in Model)
+                                {
+                                    <tr class="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group">
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center gap-3">
+                                                <div class="size-9 rounded-lg bg-primary/20 flex items-center justify-center text-primary">
+                                                    <span class="material-symbols-outlined text-lg">campaign</span>
+                                                </div>
+                                                <div class="flex flex-col">
+                                                    <span class="font-bold text-sm">@item.Name</span>
+                                                    <span class="text-[10px] text-slate-400">@item.Description</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 font-medium text-sm">@item.MemberCount</td>
+                                        <td class="px-6 py-4">
+                                           @* Display roles tags with colors *@
+                                            <div class="flex flex-wrap gap-1.5">
+                                                @if (item.IncludedRoles.Count == 1)
+                                                {
+                                                    var role = item.IncludedRoles.First();
+                                                    if (role == "Customer")
+                                                    {
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase" style="background-color: rgba(34, 197, 94, 0.2); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3);">Customer</span>
+                                                    }
+                                                    else if (role == "Employee")
+                                                    {
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase" style="background-color: rgba(59, 130, 246, 0.2); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3);">Employee</span>
+                                                    }
+                                                    else if (role == "Admin")
+                                                    {
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase" style="background-color: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3);">Admin</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase text-gray-400">@role</span>
+                                                    }
+                                                }
+                                                else if (item.IncludedRoles.Count > 1)
+                                                {
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase" style="background-color: rgba(218, 173, 82, 0.2); color: #daad52; border: 1px solid rgba(218, 173, 82, 0.3);">Mixed</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold text-gray-500">Empty</span>
+                                                }
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            @if(item.IsActive)
+                                            {
+                                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border border-primary text-primary">
+                                                    <span class="size-1.5 rounded-full bg-primary animate-pulse"></span>
+                                                    Active
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border border-slate-400 text-slate-400">
+                                                    <span class="size-1.5 rounded-full bg-slate-400"></span>
+                                                    Inactive
+                                                </span>
+                                            }
+                                        </td>
+                                        <td class="px-6 py-4 text-sm text-slate-400">@(item.UpdatedAt?.ToString("MMM dd, yyyy") ?? "-")</td>
+                                        <td class="px-6 py-4 text-center bg-primary/5 border-l border-primary/20">
+                                            <div class="flex justify-center items-center gap-2">
+                                                <a href="@Url.Action("Details", "DistributionLists", new { id = item.Id })" class="flex items-center justify-center size-8 rounded-lg text-primary bg-primary/10 hover:bg-primary hover:text-background-dark transition-all no-underline" title="View List">
+                                                    <span class="material-symbols-outlined text-lg">visibility</span>
+                                                </a>
+                                                 <!-- Toggle Active - Now with confirmation -->
+                                                 <a href="#" onclick="openConfirmToggleModal(@item.Id); return false;" class="flex items-center justify-center size-8 rounded-lg text-primary bg-primary/10 hover:bg-primary hover:text-background-dark transition-all no-underline cursor-pointer" title="Toggle Status">
+                                                    <span class="material-symbols-outlined text-lg">power_settings_new</span>
+                                                </a>
+                                                <!-- Download Excel -->
+                                                <a href="@Url.Action("ExportToExcel", new { id = item.Id })" class="flex items-center justify-center size-8 rounded-lg text-primary bg-primary/10 hover:bg-primary hover:text-background-dark transition-all no-underline" title="Download Excel">
+                                                    <span class="material-symbols-outlined text-lg">download</span>
+                                                </a>
+                                                <!-- Delete - Now with confirmation -->
+                                                <a href="#" onclick="openConfirmDeleteModal(@item.Id); return false;" class="flex items-center justify-center size-8 rounded-lg text-primary bg-primary/10 hover:bg-red-500 hover:text-white transition-all no-underline cursor-pointer" title="Delete List">
+                                                    <span class="material-symbols-outlined text-lg">delete</span>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                     @if(Model == null || !Model.Any())
+                    {
+                        <div class="p-4 text-center text-slate-500">No distribution lists found. Create one above.</div>
+                    }
+                    <div class="flex flex-wrap items-center justify-between gap-4 px-6 py-4 border-t border-slate-100 dark:divide-border-dark bg-slate-50/50 dark:bg-white/5">
+                        <p class="text-sm text-slate-500 dark:text-[#c3b498]">Total @(Model?.Count ?? 0) Distribution Lists</p>
+                        <div class="flex gap-2">
+                            <button class="px-3 py-1.5 rounded border border-slate-200 dark:border-border-dark text-xs font-medium hover:bg-primary hover:text-background-dark transition-all text-slate-500 dark:text-white">Previous</button>
+                            <button class="px-3 py-1.5 rounded bg-primary text-background-dark text-xs font-bold border-none">1</button>
+                            <button class="px-3 py-1.5 rounded border border-slate-200 dark:border-border-dark text-xs font-medium hover:bg-primary hover:text-background-dark transition-all text-slate-500 dark:text-white">Next</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    </main>
+    
+    <!-- Modal Container -->
+    <div id="member-modal-container" class="fixed inset-0 z-[100] hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <!-- Background backdrop -->
+        <div class="fixed inset-0 bg-gray-500/75 backdrop-blur-sm transition-opacity" onclick="closeModal()"></div>
+
+        <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <div id="member-modal-content" class="relative transform overflow-hidden rounded-lg bg-white dark:bg-card-dark text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-4xl border border-slate-200 dark:border-border-dark">
+                     <!-- Content loaded via AJAX -->
+                     <div class="p-10 flex justify-center">
+                         <span class="material-symbols-outlined animate-spin text-primary text-4xl">progress_activity</span>
+                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal Container -->
+    <div id="confirm-modal-container" class="fixed inset-0 z-[100] hidden" aria-labelledby="confirm-modal-title" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-gray-500/75 backdrop-blur-sm transition-opacity" onclick="closeConfirmModal()"></div>
+        <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <div id="confirm-modal-content" class="relative transform overflow-hidden rounded-lg text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl">
+                     <!-- Content loaded via AJAX -->
+                     <div class="p-10 flex justify-center">
+                         <span class="material-symbols-outlined animate-spin text-primary text-4xl">progress_activity</span>
+                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Preview Modal Container -->
+    <div id="preview-modal-container" class="fixed inset-0 z-[100] hidden" aria-labelledby="preview-modal-title" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-gray-500/75 backdrop-blur-sm transition-opacity" onclick="closePreviewModal()"></div>
+        <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <div id="preview-modal-content" class="relative transform overflow-hidden rounded-lg text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-4xl">
+                     <!-- Content loaded via AJAX -->
+                     <div class="p-10 flex justify-center">
+                         <span class="material-symbols-outlined animate-spin text-primary text-4xl">progress_activity</span>
+                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+@section Scripts {
+    <script>
+        // Enable dark mode for Tailwind classes
+        document.documentElement.classList.add('dark');
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // 1. Filter functionality for the table
+            const filterInput = document.querySelector('input[placeholder="Filter lists..."]');
+            if (filterInput) {
+                filterInput.addEventListener('input', function(e) {
+                    const searchTerm = e.target.value.toLowerCase();
+                    const rows = document.querySelectorAll('tbody tr');
+                    
+                    rows.forEach(row => {
+                        const nameElem = row.querySelector('.font-bold.text-sm');
+                        const descElem = row.querySelector('.text-\\[10px\\].text-slate-400');
+                        
+                        if (nameElem && descElem) {
+                            const name = nameElem.textContent.toLowerCase();
+                            const desc = descElem.textContent.toLowerCase();
+                            
+                            if (name.includes(searchTerm) || desc.includes(searchTerm)) {
+                                row.style.display = '';
+                            } else {
+                                row.style.display = 'none';
+                            }
+                        }
+                    });
+                });
+            }
+            
+            // 2. Auto-Update Listeners
+            const filterCheckboxes = document.querySelectorAll('.filter-checkbox');
+            filterCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    updateEstimatedRecipients();
+                });
+            });
+            
+            // Initial calculation
+            updateEstimatedRecipients();
+        });
+
+        // --- GLOBAL FUNCTIONS ---
+
+        // Create List
+        function createListFromFilters() {
+            const name = document.getElementById('gen-list-name')?.value;
+            if (!name) {
+                alert('Please enter a list name');
+                return;
+            }
+
+            const rule = {
+                IncludeEmployees: document.getElementById('include-employees')?.checked || false,
+                IncludeCustomers: document.getElementById('include-customers')?.checked || false,
+                IncludeAdmins: document.getElementById('include-admins')?.checked || false
+            };
+            
+            fetch(`/DistributionLists/CreateFromGenerated?listName=${encodeURIComponent(name)}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(rule)
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Failed to create list');
+                return response.json();
+            })
+            .then(data => {
+                window.location.href = `/DistributionLists/Details/${data.listId}`;
+            })
+            .catch(err => {
+                console.error('Error creating list', err);
+                alert('Failed to create list: ' + err.message);
+            });
+        }
+
+        // Calculate Recipients
+        function updateEstimatedRecipients() {
+            const includeEmployees = document.getElementById('include-employees')?.checked || false;
+            const includeCustomers = document.getElementById('include-customers')?.checked || false;
+            const includeAdmins = document.getElementById('include-admins')?.checked || false;
+            
+            const rule = {
+                IncludeEmployees: includeEmployees,
+                IncludeCustomers: includeCustomers,
+                IncludeAdmins: includeAdmins
+            };
+            
+            fetch('/DistributionLists/CalculateEstimatedRecipients', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(rule)
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.json();
+            })
+            .then(data => {
+                const totalCountElem = document.getElementById('total-count');
+                if (totalCountElem) totalCountElem.textContent = data.totalCount || 0;
+                
+                const breakdownElem = document.getElementById('breakdown-text');
+                if (breakdownElem) breakdownElem.textContent = data.breakdown || "Select filters to calculate";
+            })
+            .catch(err => {
+                console.error('Failed to calculate recipients', err);
+                const breakdownElem = document.getElementById('breakdown-text');
+                if(breakdownElem) breakdownElem.textContent = "Error calculating recipients";
+            });
+        }
+        
+        // Member Modal
+        function openMemberModal(id) {
+            const container = document.getElementById('member-modal-container');
+            const content = document.getElementById('member-modal-content');
+            container.classList.remove('hidden');
+            
+            fetch(`/DistributionLists/GetListMembers/${id}`)
+                .then(response => response.text())
+                .then(html => content.innerHTML = html)
+                .catch(err => {
+                    console.error('Failed to load members', err);
+                    content.innerHTML = '<div class="p-6 text-red-500">Failed to load members</div>';
+                });
+        }
+
+        function closeModal() {
+            const container = document.getElementById('member-modal-container');
+            container.classList.add('hidden');
+            document.getElementById('member-modal-content').innerHTML = '<div class="p-10 flex justify-center"><span class="material-symbols-outlined animate-spin text-primary text-4xl">progress_activity</span></div>';
+        }
+
+        // Confirm Delete
+        function openConfirmDeleteModal(id) {
+            const container = document.getElementById('confirm-modal-container');
+            const content = document.getElementById('confirm-modal-content');
+            container.classList.remove('hidden');
+            
+            fetch(`/DistributionLists/ConfirmDelete/${id}`)
+                .then(response => response.text())
+                .then(html => content.innerHTML = html)
+                .catch(err => {
+                    console.error('Failed to load confirmation', err);
+                    content.innerHTML = '<div class="p-6 text-red-500">Failed to load confirmation</div>';
+                });
+        }
+
+        // Confirm Toggle
+        function openConfirmToggleModal(id) {
+            const container = document.getElementById('confirm-modal-container');
+            const content = document.getElementById('confirm-modal-content');
+            container.classList.remove('hidden');
+            
+            fetch(`/DistributionLists/ConfirmToggle/${id}`)
+                .then(response => response.text())
+                .then(html => content.innerHTML = html)
+                .catch(err => {
+                    console.error('Failed to load confirmation', err);
+                    content.innerHTML = '<div class="p-6 text-red-500">Failed to load confirmation</div>';
+                });
+        }
+
+        function closeConfirmModal() {
+            const container = document.getElementById('confirm-modal-container');
+            container.classList.add('hidden');
+            document.getElementById('confirm-modal-content').innerHTML = '<div class="p-10 flex justify-center"><span class="material-symbols-outlined animate-spin text-primary text-4xl">progress_activity</span></div>';
+        }
+
+        // Preview Modal
+        function openPreviewModal() {
+            const container = document.getElementById('preview-modal-container');
+            const content = document.getElementById('preview-modal-content');
+            container.classList.remove('hidden');
+            
+            const rule = {
+                IncludeEmployees: document.getElementById('include-employees')?.checked || false,
+                IncludeCustomers: document.getElementById('include-customers')?.checked || false,
+                IncludeAdmins: document.getElementById('include-admins')?.checked || false
+            };
+
+            fetch('/DistributionLists/PreviewRecipients', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(rule)
+            })
+            .then(response => response.text())
+            .then(html => content.innerHTML = html)
+            .catch(err => {
+                console.error('Failed to load preview', err);
+                content.innerHTML = '<div class="p-6 text-red-500">Failed to load preview</div>';
+            });
+        }
+
+        function closePreviewModal() {
+            const container = document.getElementById('preview-modal-container');
+            container.classList.add('hidden');
+            document.getElementById('preview-modal-content').innerHTML = '<div class="p-10 flex justify-center"><span class="material-symbols-outlined animate-spin text-primary text-4xl">progress_activity</span></div>';
+        }
+    </script>
+}

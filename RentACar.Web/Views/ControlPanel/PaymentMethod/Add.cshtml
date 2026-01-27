@@ -1,72 +1,122 @@
-﻿@model RentACar.Application.DTOs.PaymentMethodDto
-@{
-    ViewData["Title"] = "Add Payment Method";
+﻿@{
     Layout = null;
 }
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"]</title>
 
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/login-style.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
-</head>
-<body>
-    @await Html.PartialAsync("_PopupNotifications")
-    <div class="container1">
-        <div class="login-container">
-            <a href="/PaymentMethod" class="btn btn-outline-warning rounded-circle d-inline-flex align-items-center justify-content-center"
-               style="width: 40px; height: 40px;" title="Back">
-                <i class="fas fa-arrow-left"></i>
-            </a>
+<!-- Modal Backdrop & Container -->
+<div id="addMethodModal" class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex min-h-screen items-center justify-center p-4 text-center sm:p-0">
+        
+        <!-- Backdrop -->
+        <div class="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity" 
+             onclick="closeAddModal()"
+             aria-hidden="true"></div>
 
-            <div class="logo-text mt-3">
-                <i class="fas fa-money-check-alt fa-lg"></i>
-                <div>RentACar</div>
-            </div>
+        <!-- Panel -->
+        <div class="relative transform overflow-hidden rounded-xl bg-surface-dark border border-[#262626] text-left shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-all sm:my-8 sm:w-full sm:max-w-lg">
+            
+            <!-- decorative top line -->
+            <div class="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-gold to-transparent opacity-50"></div>
 
-            <h2 class="mt-4">Add Payment Method</h2>
-
-            <form id="addMethodForm" class="mt-3">
-                <div class="input mb-3">
-                    <input asp-for="PaymentMethodName" class="form-control" placeholder="Name" />
-                    <span asp-validation-for="PaymentMethodName" class="text-danger"></span>
+            <div class="px-6 py-6 pb-0">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-xl font-bold leading-6 text-white flex items-center gap-3" id="modal-title">
+                        <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-surface-darker border border-[#262626] text-gold">
+                             <span class="material-symbols-outlined text-[20px]">add_card</span>
+                        </span>
+                        Add Payment Method
+                    </h3>
+                    <button onclick="closeAddModal()" class="text-[#a3a3a3] hover:text-white transition-colors">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
                 </div>
 
-                <button type="submit" class="login-btn w-100">Save</button>
-            </form>
+                <form id="addMethodForm">
+                    <div class="space-y-4">
+                        <div>
+                            <label for="paymentMethodName" class="block text-sm font-medium leading-6 text-[#a3a3a3] mb-1">Method Name</label>
+                            <div class="relative rounded-md shadow-sm">
+                                <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                    <span class="material-symbols-outlined text-[#a3a3a3]" style="font-size: 20px;">badge</span>
+                                </div>
+                                <input type="text" name="paymentMethodName" id="paymentMethodName" required
+                                    class="block w-full rounded-lg border-0 py-2.5 pl-10 text-white bg-[#0a0a0a] ring-1 ring-inset ring-[#262626] placeholder:text-[#525252] focus:ring-2 focus:ring-inset focus:ring-gold sm:text-sm sm:leading-6 transition-all"
+                                    placeholder="e.g. MasterCard, Bitcoin">
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between p-3 rounded-lg bg-[#0a0a0a] border border-[#262626]">
+                            <div class="flex flex-col">
+                                <span class="text-sm font-medium text-white">Active Status</span>
+                                <span class="text-xs text-[#a3a3a3]">Enable this method immediately</span>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" name="isActive" id="isActive" class="sr-only peer" checked>
+                                <div class="w-11 h-6 bg-[#262626] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gold"></div>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-8 flex flex-row-reverse gap-3 pb-6">
+                        <button type="submit" 
+                            class="inline-flex w-full justify-center rounded-lg bg-gold px-3 py-2.5 text-sm font-bold text-background-dark shadow-sm hover:bg-gold-hover sm:w-auto transition-all">
+                            Create Method
+                        </button>
+                        <button type="button" onclick="closeAddModal()" 
+                            class="inline-flex w-full justify-center rounded-lg bg-transparent border border-[#262626] px-3 py-2.5 text-sm font-semibold text-[#a3a3a3] shadow-sm hover:bg-[#262626] hover:text-white sm:w-auto transition-all">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
+</div>
 
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    <script>
-        document.getElementById('addMethodForm').addEventListener('submit', async function (e) {
-            e.preventDefault();
+<script>
+    function closeAddModal() {
+        const modal = document.getElementById('addMethodModal');
+        if(modal) {
+            modal.remove();
+        }
+    }
 
-            const form = e.target;
-            const data = {
-                paymentMethodName: form.PaymentMethodName.value
-            };
+    document.getElementById('addMethodForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const name = document.getElementById('paymentMethodName').value;
+        const isActive = document.getElementById('isActive').checked;
 
+        const dto = {
+            paymentMethodName: name,
+            isActive: isActive
+        };
+
+        try {
             const res = await fetch('/api/PaymentMethod', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
+                body: JSON.stringify(dto)
             });
 
-            if (res.ok) {
-                showPopup('Payment method added successfully.', 'success');
-                setTimeout(() => { window.location.href = '/PaymentMethod'; }, 900);
+            if(res.ok) {
+                closeAddModal();
+                if(typeof loadPaymentMethods === 'function') {
+                    loadPaymentMethods();
+                } else {
+                    window.location.reload();
+                }
             } else {
-                showPopup('Failed to add payment method.', 'error');
+                alert("Failed to create. Check if name exists.");
             }
-        });
-    </script>
-</body>
-</html>
+        } catch(err) {
+            console.error(err);
+            alert("Error submitting form.");
+        }
+    });
+
+    // Auto focus name
+    setTimeout(() => {
+        const input = document.getElementById('paymentMethodName');
+        if(input) input.focus();
+    }, 100);
+</script>

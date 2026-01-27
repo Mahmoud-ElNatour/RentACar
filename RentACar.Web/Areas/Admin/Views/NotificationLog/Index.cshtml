@@ -1,0 +1,222 @@
+@model RentACar.Web.Areas.Admin.ViewModels.EmailServices.NotificationLogListVM
+
+@{
+    Layout = null; // Using standalone template as requested
+}
+
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Reminder Notification Log | Audit Center</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#f2b90d",
+                        "pure-black": "#050505",
+                        "card-dark": "#121214",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "1rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        @@layer base {
+            body {
+                font-family: 'Manrope', sans-serif;
+                @@apply bg-pure-black text-slate-100;
+            }
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 5px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #000000;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #f2b90d;
+            border-radius: 10px;
+        }
+        .glass-card {
+            background: rgba(20, 20, 20, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(212, 175, 53, 0.15);
+        }
+        .table-row-hover:hover {
+            background-color: rgba(40, 40, 40, 0.5);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+<main class="max-w-7xl mx-auto p-8 lg:p-12 space-y-10">
+<a href="/EmailServices/EmailServicesHub" class="flex items-center gap-2 text-slate-400 hover:text-white transition-colors">
+    <span class="material-symbols-outlined text-sm">arrow_back</span>
+    <span class="text-xs font-bold uppercase tracking-widest">Back to Hub</span>
+</a>
+
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+<div class="space-y-2">
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-primary text-xl">verified_user</span>
+<span class="text-xs font-bold text-primary uppercase tracking-[0.2em]">Execution Audit System</span>
+</div>
+<h1 class="text-white text-4xl font-extrabold leading-tight tracking-tight">Reminder Notification Log</h1>
+<p class="text-slate-400 text-lg max-w-2xl font-light">Comprehensive real-time audit trail for automated service notifications and communication flows.</p>
+</div>
+<div>
+<a href="@Url.Action("Export", new { eventType = Model.EventType, result = Model.Result, search = Model.SearchTerm })" class="flex items-center gap-2 bg-primary hover:bg-[#c19b2e] text-pure-black font-bold px-6 py-3 rounded-lg transition-all shadow-[0_0_20px_rgba(242,185,13,0.15)] active:scale-95">
+<span class="material-symbols-outlined text-xl">download</span>
+<span>Export Audit CSV</span>
+</a>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Stats (Placeholder or calculated) -->
+<div class="glass-card flex flex-col gap-3 rounded-2xl p-7">
+<div class="flex items-center justify-between">
+<p class="text-slate-400 text-xs font-bold uppercase tracking-widest">Total Logs</p>
+<span class="material-symbols-outlined text-slate-500 text-sm">schedule</span>
+</div>
+<div class="flex items-baseline gap-3">
+<p class="text-white text-4xl font-black">@Model.TotalCount</p>
+</div>
+</div>
+<!-- Add more stats if available in VM -->
+</div>
+
+<form method="get" class="flex flex-wrap items-center justify-between gap-4 p-5 bg-[#0a0a0a] rounded-xl border border-[#262626]">
+<div class="flex flex-wrap items-center gap-3">
+<span class="text-[10px] font-black text-slate-500 uppercase tracking-tighter mr-2">Filter Events</span>
+<button type="submit" name="eventType" value="" class="flex h-10 items-center gap-x-2 rounded-lg @(string.IsNullOrEmpty(Model.EventType) ? "bg-primary text-pure-black" : "bg-[#1a1a1a] border border-[#333] text-slate-200") font-bold px-4 text-xs transition-colors shadow-sm">
+                All Events
+</button>
+<button type="submit" name="eventType" value="PaymentReminder" class="flex h-10 items-center gap-x-2 rounded-lg @(Model.EventType == "PaymentReminder" ? "bg-primary text-pure-black" : "bg-[#1a1a1a] border border-[#333] text-slate-200") px-4 text-xs font-semibold hover:border-primary/50 transition-colors">
+                Payment
+</button>
+<button type="submit" name="eventType" value="PickupReminder" class="flex h-10 items-center gap-x-2 rounded-lg @(Model.EventType == "PickupReminder" ? "bg-primary text-pure-black" : "bg-[#1a1a1a] border border-[#333] text-slate-200") px-4 text-xs font-semibold hover:border-primary/50 transition-colors">
+                Pickup
+</button>
+<button type="submit" name="eventType" value="ReturnReminder" class="flex h-10 items-center gap-x-2 rounded-lg @(Model.EventType == "ReturnReminder" ? "bg-primary text-pure-black" : "bg-[#1a1a1a] border border-[#333] text-slate-200") px-4 text-xs font-semibold hover:border-primary/50 transition-colors">
+                Return
+</button>
+</div>
+<div class="relative w-full md:w-auto">
+<span class="absolute inset-y-0 left-0 flex items-center pl-3">
+<span class="material-symbols-outlined text-slate-500 text-xl">search</span>
+</span>
+<input name="search" value="@Model.SearchTerm" class="w-full md:w-64 bg-pure-black border border-[#333] rounded-lg py-2 pl-10 pr-4 text-sm focus:ring-1 focus:ring-primary focus:border-primary placeholder:text-slate-600" placeholder="Search target ID or recipient..." type="text"/>
+</div>
+</form>
+
+<div class="bg-[#0a0a0a] border border-[#262626] rounded-2xl overflow-hidden shadow-2xl">
+<div class="overflow-x-auto custom-scrollbar">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-[#111111] border-b border-[#262626]">
+<th class="px-8 py-5 text-[11px] font-black text-slate-500 uppercase tracking-[0.15em]">Date &amp; Time</th>
+<th class="px-8 py-5 text-[11px] font-black text-slate-500 uppercase tracking-[0.15em]">Event Type</th>
+<th class="px-8 py-5 text-[11px] font-black text-slate-500 uppercase tracking-[0.15em]">Target ID</th>
+<th class="px-8 py-5 text-[11px] font-black text-slate-500 uppercase tracking-[0.15em]">Recipient</th>
+<th class="px-8 py-5 text-[11px] font-black text-slate-500 uppercase tracking-[0.15em]">Result</th>
+<th class="px-8 py-5 text-[11px] font-black text-slate-500 uppercase tracking-[0.15em] text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-[#1a1a1a]">
+@foreach(var log in Model.Logs)
+{
+    var statusColor = log.Result == "Success" ? "primary" : (log.Result == "Failed" ? "red-500" : "slate-500");
+    var statusBg = log.Result == "Success" ? "primary/5" : (log.Result == "Failed" ? "red-500/10" : "slate-500/10");
+    var statusBorder = log.Result == "Success" ? "primary/20" : (log.Result == "Failed" ? "red-500/20" : "slate-500/20");
+    var rowClass = log.Result == "Failed" ? "bg-red-900/5" : "";
+
+    <tr class="table-row-hover transition-colors @rowClass">
+    <td class="px-8 py-5 whitespace-nowrap text-sm font-mono text-slate-400">@log.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss")</td>
+    <td class="px-8 py-5 whitespace-nowrap">
+    <div class="flex items-center gap-2.5">
+    <span class="material-symbols-outlined text-xl text-primary/80">notifications</span>
+    <span class="text-sm font-bold text-slate-100">@log.EventType</span>
+    </div>
+    </td>
+    <td class="px-8 py-5 whitespace-nowrap">
+    <span class="text-sm font-bold text-primary hover:brightness-125 cursor-pointer underline underline-offset-4 decoration-primary/30">@log.TargetId</span>
+    </td>
+    <td class="px-8 py-5 whitespace-nowrap text-sm text-slate-300">@log.RecipientEmail</td>
+    <td class="px-8 py-5 whitespace-nowrap">
+    <span class="inline-flex items-center px-3 py-1.5 rounded-full text-[10px] font-black @statusBg text-@statusColor border @statusBorder uppercase tracking-wider">
+    <span class="size-1.5 bg-@statusColor rounded-full mr-2 shadow-[0_0_8px_rgba(212,175,53,0.8)]"></span> @log.Result
+                                </span>
+    </td>
+    <td class="px-8 py-5 whitespace-nowrap text-right">
+    
+    <button class="p-2 text-slate-500 hover:text-primary hover:bg-white/5 rounded-lg transition-all" title="View Details" onclick="viewLogDetails(@log.Id)">
+    <span class="material-symbols-outlined text-xl">visibility</span>
+    </button>
+    </td>
+    </tr>
+}
+</tbody>
+</table>
+</div>
+<!-- Pagination -->
+<div class="flex items-center justify-between px-8 py-5 bg-[#0d0d0d] border-t border-[#262626]">
+<p class="text-xs text-slate-500 font-medium">Showing <span class="text-white font-bold">@((Model.Page - 1) * 20 + 1) - @Math.Min(Model.Page * 20, Model.TotalCount)</span> of @Model.TotalCount logs</p>
+<div class="flex items-center gap-2">
+    @if (Model.Page > 1) {
+        <a href="@Url.Action("Index", new { page = Model.Page - 1, eventType = Model.EventType, search = Model.SearchTerm })" class="w-10 h-10 flex items-center justify-center rounded-lg border border-[#333] text-slate-500 hover:text-white hover:border-slate-400 transition-all">
+        <span class="material-symbols-outlined text-lg">chevron_left</span>
+        </a>
+    }
+    <button class="w-10 h-10 flex items-center justify-center rounded-lg bg-primary text-pure-black font-black text-xs">@Model.Page</button>
+    @if (Model.Page < Model.TotalPages) {
+        <a href="@Url.Action("Index", new { page = Model.Page + 1, eventType = Model.EventType, search = Model.SearchTerm })" class="w-10 h-10 flex items-center justify-center rounded-lg border border-[#333] text-slate-500 hover:text-white hover:border-slate-400 transition-all">
+        <span class="material-symbols-outlined text-lg">chevron_right</span>
+        </a>
+    }
+</div>
+</div>
+</div>
+
+</div>
+
+<!-- Modal Placeholder -->
+<div class="fixed inset-0 z-50 hidden" id="logDetailsModal" aria-hidden="true">
+    <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="closeLogDetails()"></div>
+    <div class="absolute inset-0 flex items-center justify-center p-4 pointer-events-none">
+        <div class="bg-surface-dark border border-border-dark rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto pointer-events-auto shadow-2xl" id="logDetailsContent">
+        </div>
+    </div>
+</div>
+
+<script>
+    function viewLogDetails(id) {
+        fetch('/Admin/NotificationLog/Details/' + id)
+            .then(r => r.text())
+            .then(html => {
+                document.getElementById('logDetailsContent').innerHTML = html;
+                document.getElementById('logDetailsModal').classList.remove('hidden');
+            });
+    }
+    function closeLogDetails() {
+         document.getElementById('logDetailsModal').classList.add('hidden');
+    }
+</script>
+
+
+
+</body></html>

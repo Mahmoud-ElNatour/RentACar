@@ -1,0 +1,164 @@
+/* Distribution Lists Page - Aggressive Bootstrap Override */
+
+/* Force dark background throughout the page */
+.distribution-lists-page,
+.distribution-lists-page * {
+    box-sizing: border-box !important;
+}
+
+/* Override Bootstrap's white backgrounds */
+.distribution-lists-page .bg-white {
+    background-color: transparent !important;
+}
+
+.distribution-lists-page [class*="bg-card-dark"],
+.distribution-lists-page .rounded-xl.bg-white,
+.distribution-lists-page .bg-white.dark\:bg-card-dark {
+    background-color: #1c1f26 !important;
+}
+
+/* Card backgrounds */
+.distribution-lists-page .p-6.rounded-xl,
+.distribution-lists-page .rounded-xl.border {
+    background-color: #1c1f26 !important;
+}
+
+/* Table styling */
+.distribution-lists-page table {
+    background-color: transparent !important;
+    color: inherit !important;
+}
+
+.distribution-lists-page table th,
+.distribution-lists-page table td {
+    background-color: transparent !important;
+    color: inherit !important;
+    border-color: #2d323d !important;
+}
+
+.distribution-lists-page thead {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+.distribution-lists-page .overflow-x-auto {
+    background-color: #1c1f26 !important;
+}
+
+/* Remove ALL button borders */
+.distribution-lists-page button {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* Ensure primary buttons keep their styling */
+.distribution-lists-page button.bg-primary,
+.distribution-lists-page .bg-primary {
+    background-color: #daad52 !important;
+    color: #13151b !important;
+}
+
+/* Secondary button styling */
+.distribution-lists-page button.bg-slate-200,
+.distribution-lists-page .bg-slate-200 {
+    background-color: #2d323d !important;
+    color: white !important;
+}
+
+/* Input fields */
+.distribution-lists-page input,
+.distribution-lists-page select,
+.distribution-lists-page textarea {
+    background-color: #13151b !important;
+    border-color: #2d323d !important;
+    color: white !important;
+}
+
+.distribution-lists-page input::placeholder {
+    color: #c3b498 !important;
+}
+
+/* Checkbox styling */
+.distribution-lists-page input[type="checkbox"] {
+    background-color: transparent !important;
+    border-color: #9ca3af !important;
+}
+
+.distribution-lists-page input[type="checkbox"]:checked {
+    background-color: #daad52 !important;
+    border-color: #daad52 !important;
+}
+
+/* Label backgrounds for checkboxes */
+.distribution-lists-page label.border {
+    border-color: #2d323d !important;
+    background-color: transparent !important;
+}
+
+.distribution-lists-page label.border:hover {
+    background-color: rgba(218, 173, 82, 0.05) !important;
+}
+
+/* Override Bootstrap link styles */
+.distribution-lists-page a:not(.nav-link):not(.dropdown-item):not(.navbar-brand) {
+    color: inherit !important;
+    text-decoration: none !important;
+}
+
+/* Text colors */
+.distribution-lists-page .text-slate-900 {
+    color: white !important;
+}
+
+.distribution-lists-page .text-slate-700 {
+    color: #d1d5db !important;
+}
+
+.distribution-lists-page .text-slate-500 {
+    color: #9ca3af !important;
+}
+
+.distribution-lists-page .text-slate-400 {
+    color: #9ca3af !important;
+}
+
+/* Border colors */
+.distribution-lists-page .border,
+.distribution-lists-page [class*="border-"] {
+    border-color: #2d323d !important;
+}
+
+/* Gold border for special elements */
+.distribution-lists-page .border-primary {
+    border-color: #daad52 !important;
+}
+
+/* Ensure gold backgrounds stay gold */
+.distribution-lists-page .bg-primary\/10,
+.distribution-lists-page [class*="bg-primary"] {
+    background-color: rgba(218, 173, 82, 0.1) !important;
+}
+
+/* Modal backgrounds */
+.distribution-lists-page .bg-slate-50 {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Stats card background */
+.distribution-lists-page .bg-primary\/10.border-primary\/30 {
+    background-color: rgba(218, 173, 82, 0.1) !important;
+    border-color: rgba(218, 173, 82, 0.3) !important;
+}
+
+/* Remove Bootstrap form control styling */
+.distribution-lists-page .form-control,
+.distribution-lists-page .form-select {
+    background-color: #13151b !important;
+    border-color: #2d323d !important;
+    color: white !important;
+}
+
+/* Pagination buttons */
+.distribution-lists-page .bg-slate-50\/50 {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+}

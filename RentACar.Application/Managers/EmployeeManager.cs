@@ -22,8 +22,9 @@ namespace RentACar.Application.Managers
         private readonly ILogger<EmployeeManager> _logger;
         private readonly IBookingRepository _bookingRepository;
         private readonly AuditLogManager _auditLogManager;
+        private readonly EmailManager _emailManager;
 
-        public EmployeeManager(UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager, IEmployeeRepository employeeRepository, IBookingRepository bookingRepository, IMapper mapper, CustomerManager customerManager, ILogger<EmployeeManager> logger, AuditLogManager auditLogManager)
+        public EmployeeManager(UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager, IEmployeeRepository employeeRepository, IBookingRepository bookingRepository, IMapper mapper, CustomerManager customerManager, ILogger<EmployeeManager> logger, AuditLogManager auditLogManager, EmailManager emailManager)
         {
             _userManager = userManager;
             _roleManager = roleManager;
@@ -33,6 +34,7 @@ namespace RentACar.Application.Managers
             _logger = logger;
             _bookingRepository = bookingRepository;
             _auditLogManager = auditLogManager;
+            _emailManager = emailManager;
         }
 
         public async Task<EmployeeDto?> CreateEmployee(EmployeeCreateDTO createDto)
@@ -90,14 +92,24 @@ namespace RentACar.Application.Managers
             _logger.LogWarning("Failed to create employee for {Email}: {Message}", createDto.Email, errorMessage);
             throw new InvalidOperationException(errorMessage);
         }
-        public async Task<bool> ResetPassword(int EmployeeId, string newPassword)
+        public async Task<bool> ResetPassword(int EmployeeId)
         {
             var employee = await _employeeRepository.GetByIdAsync(EmployeeId);
             if (employee == null) return false;
             var user = await _userManager.FindByIdAsync(employee.aspNetUserId);
             if (user == null) return false;
+            
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var newPassword = $"RentCar{new Random().Next(100000, 999999)}!";
+            
             var result = await _userManager.ResetPasswordAsync(user, token, newPassword);
+            
+             if (result.Succeeded)
+            {
+                 await _emailManager.SendAdminResetPasswordEmail(user.Email, newPassword, employee.Name);
+                 await _auditLogManager.LogEventAsync("Employee.PasswordReset", "Employee", EmployeeId.ToString(), "Admin reset employee password", null, "Success");
+            }
+            
             return result.Succeeded;
         }
         public async Task<EmployeeDto?> GetEmployeeById(int id)
@@ -139,6 +151,8 @@ namespace RentACar.Application.Managers
                     await _userManager.UpdateAsync(user);
                 }
 
+                var oldActive = employeeEntity.IsActive;
+                
                 employeeEntity.Name = employeeDto.Name;
                 employeeEntity.Salary = employeeDto.Salary;
                 employeeEntity.Address = employeeDto.Address;
@@ -146,6 +160,13 @@ namespace RentACar.Application.Managers
 
                 await _employeeRepository.UpdateAsync(employeeEntity);
                 await _auditLogManager.LogAsync("Update", "Employee", employeeDto.EmployeeId.ToString(), $"Updated employee profile: {employeeDto.Name}");
+                
+                if (oldActive != employeeDto.IsActive)
+                {
+                    string status = employeeEntity.IsActive ? "Activated" : "Deactivated";
+                    string reason = employeeEntity.IsActive ? "Account activated." : "Account deactivated.";
+                    await _emailManager.SendAccountStatusEmail(user.Email, employeeEntity.Name, status, reason);
+                }
             }
             else
             {
@@ -332,6 +353,41 @@ namespace RentACar.Application.Managers
             return result;
         }
 
+
+        public async Task<List<string>> GetActiveEmployeeEmailsAsync()
+        {
+            var employees = await _employeeRepository.GetAllAsync();
+            var activeEmployees = employees.Where(e => e.IsActive).ToList();
+            var emails = new List<string>();
+
+            foreach (var emp in activeEmployees)
+            {
+                var user = await _userManager.FindByIdAsync(emp.aspNetUserId);
+                if (user != null && !string.IsNullOrEmpty(user.Email))
+                {
+                    emails.Add(user.Email);
+                }
+            }
+            return emails;
+        }
+
+        public async Task<List<string>> GetAdminEmailsAsync()
+        {
+            var employees = await _employeeRepository.GetAllAsync();
+            var emails = new List<string>();
+
+            foreach (var emp in employees)
+            {
+                if (!emp.IsActive) continue;
+                
+                var user = await _userManager.FindByIdAsync(emp.aspNetUserId);
+                if (user != null && await _userManager.IsInRoleAsync(user, "Admin") && !string.IsNullOrEmpty(user.Email))
+                {
+                    emails.Add(user.Email);
+                }
+            }
+            return emails;
+        }
     }
     public class EmployeeProfile : Profile
     {

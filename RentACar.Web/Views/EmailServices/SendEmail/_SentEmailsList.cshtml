@@ -1,0 +1,40 @@
+@model List<RentACar.Core.Entities.EmailLog>
+
+<div class="space-y-2 p-4">
+    @foreach (var email in Model)
+    {
+        <div class="p-4 rounded-xl bg-surface-dark border border-border-dark opacity-80 hover:opacity-100 transition-opacity group">
+            <div class="flex justify-between items-start mb-2">
+                <span class="@(email.Status == "Sent" ? "text-green-500" : "text-red-500") text-[10px] font-extrabold uppercase tracking-widest flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[14px]">@(email.Status == "Sent" ? "check_circle" : "error")</span>
+                    @email.Status
+                </span>
+                <span class="text-zinc-600 text-[9px]">@(email.SentAt?.ToString("MMM dd HH:mm") ?? "N/A")</span>
+            </div>
+            
+            <p class="text-zinc-300 text-xs font-bold truncate mb-1">@(string.IsNullOrEmpty(email.Subject) ? "No Subject" : email.Subject)</p>
+            <p class="text-zinc-500 text-[10px] line-clamp-1 italic mb-2">To: @email.RecipientsRaw</p>
+
+            <!-- Metadata hidden in data attributes for quick view if we want client side, 
+                 but for body content which can be large, we might fetch specific item or just embed it safely -->
+            
+             <button type="button" 
+                     onclick="viewSentEmail(@email.Id, 
+                         '@Html.Raw(System.Web.HttpUtility.JavaScriptStringEncode(email.Subject))', 
+                         '@Html.Raw(System.Web.HttpUtility.JavaScriptStringEncode(email.RecipientsRaw))',
+                         '@Html.Raw(System.Web.HttpUtility.JavaScriptStringEncode(email.Status))')"
+                     data-body-content="@System.Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(email.Body ?? ""))"
+                     class="w-full text-center text-[10px] text-zinc-500 hover:text-primary border border-white/5 hover:border-primary/20 rounded py-1.5 transition-all uppercase tracking-wider font-bold">
+                 View / Copy
+             </button>
+        </div>
+    }
+    
+    @if (!Model.Any())
+    {
+        <div class="text-center py-10 flex flex-col items-center justify-center text-zinc-500 gap-3">
+            <span class="material-symbols-outlined text-4xl opacity-20">inbox</span>
+            <span class="text-xs">No sent emails history</span>
+        </div>
+    }
+</div>

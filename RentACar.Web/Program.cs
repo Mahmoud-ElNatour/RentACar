@@ -49,7 +49,8 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
-    .AddDefaultTokenProviders();
+    .AddDefaultTokenProviders()
+    .AddClaimsPrincipalFactory<RentACar.Web.Security.CustomUserClaimsPrincipalFactory>();
 
 builder.Services.Configure<DataProtectionTokenProviderOptions>(options =>
 {
@@ -73,6 +74,8 @@ builder.Services.AddScoped<IBlacklistRepository, BlacklistRepository>();
 builder.Services.AddScoped<IPromocodeRepository, PromocodeRepository>();
 builder.Services.AddScoped<IPaymentMethodRepository, PaymentMethodRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+builder.Services.AddScoped<IEmailTemplateRepository, EmailTemplateRepository>();
+builder.Services.AddScoped<IEmailDraftRepository, EmailDraftRepository>();
 builder.Services.AddHttpClient<IEmailService, MailjetEmailService>();
 builder.Services.AddScoped<ICustomerRatingRepository, CustomerRatingRepository>();
     builder.Services.AddScoped<CustomerRatingManager>();
@@ -95,6 +98,16 @@ builder.Services.AddScoped<BookingManager>();
 builder.Services.AddScoped<PaymentManager>();
 builder.Services.AddScoped<EmailManager>();
 builder.Services.AddScoped<AuditLogManager>();
+builder.Services.AddScoped<EmailTemplateManager>();
+builder.Services.AddScoped<EmailDraftManager>();
+builder.Services.AddScoped<DistributionListManager>();
+builder.Services.AddScoped<RecipientResolverService>();
+builder.Services.AddScoped<EmailProviderSettingsManager>();
+builder.Services.AddScoped<SenderIdentityManager>();
+builder.Services.AddScoped<EmailFeatureConfigManager>();
+builder.Services.AddScoped<EmailRoutingService>();
+builder.Services.AddScoped<NotificationProcessingService>();
+builder.Services.AddScoped<EmailLogManager>();
 
 
 // // ✅ HTTPS redirection
@@ -102,6 +115,9 @@ builder.Services.AddScoped<AuditLogManager>();
 // {
 //     options.HttpsPort = 7192;
 // });
+
+// ✅ Register Hosted Services
+builder.Services.AddHostedService<RentACar.Web.Services.NotificationBackgroundService>();
 
 var app = builder.Build();
 
@@ -132,6 +148,10 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapControllerRoute(
+    name: "areas",
+    pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
 
 app.MapControllerRoute(
     name: "default",

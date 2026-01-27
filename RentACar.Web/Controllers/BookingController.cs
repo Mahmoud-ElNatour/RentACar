@@ -169,57 +169,10 @@ namespace RentACar.Web.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<object>>> Get()
+        public async Task<ActionResult<IEnumerable<BookingListDto>>> Get()
         {
-            var bookings = await _bookingManager.GetAllBookingsAsync();
-
-            var result = new List<object>(bookings.Count);
-            foreach (var b in bookings)
-            {
-                var customer = await _customerManager.GetCustomerById(b.CustomerId);
-                var car = await _carManager.GetCarByIdAsync(b.CarId);
-                var employee = b.EmployeebookerId.HasValue
-                    ? await _employeeManager.GetEmployeeById(b.EmployeebookerId.Value)
-                    : null;
-                var payments = await _paymentManager.GetPaymentsByBookingIdAsync(b.BookingId);
-                var payment = payments
-                    .OrderByDescending(p => p.PaymentDate)
-                    .ThenByDescending(p => p.PaymentId)
-                    .FirstOrDefault();
-                var promo = b.PromocodeId.HasValue
-                    ? await _promocodeManager.GetPromocodeByIdAsync(b.PromocodeId.Value)
-                    : null;
-
-
-                result.Add(new
-                {
-                    bookingId = b.BookingId,
-                    customerId = b.CustomerId,
-                    customerName = customer?.Name,
-                    customerUsername = customer?.username,
-                    customerEmail = customer?.Email,
-                    carId = b.CarId,
-                    carModel = car?.ModelName,
-                    carPlate = car?.PlateNumber,
-                    carYear = car?.ModelYear,
-                    carColor = car?.Color,
-                    carPricePerDay = car?.PricePerDay,
-                    employeebookerId = b.EmployeebookerId,
-                    employeeName = employee?.Name,
-                    paymentId = payment?.PaymentId,
-                    paymentAmount = payment?.Amount,
-                    subtotal = b.Subtotal,
-                    totalPrice = b.TotalPrice,
-                    promocodeId = b.PromocodeId,
-                    promocodeName = promo?.Name,
-                    promocodeDiscount = promo?.DiscountPercentage,
-                    startdate = b.Startdate.ToString("yyyy-MM-dd"),
-                    enddate = b.Enddate.ToString("yyyy-MM-dd"),
-                    bookingStatus = b.BookingStatus
-                });
-            }
-
-            return Ok(result);
+            var bookings = await _bookingManager.GetAllBookingsForListAsync();
+            return Ok(bookings);
         }
 
         [HttpPost("Pay")]
@@ -279,7 +232,7 @@ namespace RentACar.Web.Controllers
                 return BadRequest(ModelState);
             }
 
-            var userId = _userManager.GetUserId(User);
+            var userId = _userManager.GetUserId(User) ?? string.Empty;
             _logger.LogInformation("Creating booking by user {UserId} with data: {@Dto}", userId, dto);
 
             try

@@ -18,14 +18,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Optional diagnostics (helps confirm what the runner user can see)
-      - name: Check dotnet visible to runner
-        shell: powershell
-        run: |
-          where.exe dotnet
-          dotnet --info
-
-      # Install .NET to a writable folder (avoids C:\Program Files\dotnet permission issue)
+      # Install .NET 8 to a writable folder (avoids Program Files permission issues)
       - name: Setup .NET 8 (no admin)
         uses: actions/setup-dotnet@v4
         with:
@@ -33,11 +26,24 @@ jobs:
         env:
           DOTNET_INSTALL_DIR: ${{ runner.temp }}\dotnet
 
-      # Ensure the installed dotnet is on PATH for next steps (PowerShell 5.1 compatible)
+      # Put installed dotnet on PATH for all following steps
       - name: Add dotnet to PATH
         shell: powershell
         run: |
           Add-Content -Path $env:GITHUB_PATH -Value "${{ runner.temp }}\dotnet"
+
+      # (Optional but recommended) Ensure DOTNET_ROOT points to the installed SDK
+      - name: Set DOTNET_ROOT
+        shell: powershell
+        run: |
+          "DOTNET_ROOT=${{ runner.temp }}\dotnet" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      # Diagnostics (now dotnet should be visible)
+      - name: Check dotnet visible to runner
+        shell: powershell
+        run: |
+          where.exe dotnet
+          dotnet --info
 
       - name: Restore
         shell: powershell
@@ -47,7 +53,7 @@ jobs:
         shell: powershell
         run: dotnet build -c Release --no-restore
 
-      # Ensure publish folder exists (prevents publish failures on fresh machines / cleaned folders)
+      # Ensure publish folder exists
       - name: Ensure publish folder exists
         shell: powershell
         run: |
@@ -74,6 +80,8 @@ jobs:
           robocopy $publishPath $sitePath /MIR /R:2 /W:2 /NFL /NDL /NP
           $rc = $LASTEXITCODE
           if ($rc -ge 8) { throw "Robocopy failed with exit code $rc" }
+
+          # Reset robocopy exit code so the step doesn't fail
           $global:LASTEXITCODE = 0
 
           Remove-Item (Join-Path $sitePath "app_offline.htm") -ErrorAction SilentlyContinue

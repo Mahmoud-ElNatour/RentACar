@@ -1,0 +1,218 @@
+@model RentACar.Core.Entities.EmailTemplate
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Edit Template";
+    ViewData["BodyClass"] = "bg-background-dark";
+}
+
+@section Styles {
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"/>
+    <style>
+        .code-syntax-token { color: #f2b90d; font-weight: 600; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #121212; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #444; }
+    </style>
+}
+
+<form method="post" asp-action="Edit" asp-route-key="@Model.TemplateKey" id="editForm">
+    <input type="hidden" asp-for="TemplateKey" />
+    <input type="hidden" asp-for="Body" id="hiddenBody" />
+    @Html.AntiForgeryToken()
+
+    <header class="border-b border-white/10 bg-surface-dark px-6 py-4 flex items-center justify-between sticky top-0 z-50">
+        <div class="flex items-center gap-4">
+            <a href="@Url.Action("Index")" class="w-10 h-10 bg-gold flex items-center justify-center rounded-lg shadow-lg shadow-gold/20 hover:brightness-110 transition-all text-background-dark" style="text-decoration:none;">
+                <span class="material-icons-round">arrow_back</span>
+            </a>
+            <div>
+                <h1 class="text-xl font-bold tracking-tight text-white">
+                    Edit Template: <span class="text-gold">@Model.Name</span>
+                </h1>
+                <p class="text-xs text-text-secondary font-medium uppercase tracking-widest">Configuring System Automated Dispatch</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-6">
+            <div class="flex items-center gap-3 px-4 py-2 bg-black/40 rounded-full border border-white/10">
+                <span class="text-[10px] font-bold tracking-widest uppercase text-text-secondary">Status:</span>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input class="sr-only peer" type="checkbox" asp-for="IsActive" />
+                    <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all border-gray-600 peer-checked:bg-green-600"></div>
+                </label>
+                <span class="text-xs font-bold text-green-500">@(Model.IsActive ? "ACTIVE" : "INACTIVE")</span>
+            </div>
+            <div class="flex items-center gap-3">
+                <a href="@Url.Action("Index")" class="px-6 py-2.5 text-sm font-semibold rounded-lg hover:bg-white/5 transition-colors border border-transparent text-slate-300" style="text-decoration:none;">
+                    Discard
+                </a>
+                <button type="button" onclick="submitForm()" class="px-6 py-2.5 bg-gold hover:bg-gold-hover text-background-dark font-bold text-sm rounded-lg shadow-lg shadow-gold/20 transition-all transform active:scale-95 uppercase tracking-wider">
+                    Save Template
+                </button>
+            </div>
+        </div>
+    </header>
+    
+    <div class="max-w-[1600px] mx-auto p-6 grid grid-cols-12 gap-6 h-[calc(200vh-400px)]"> 
+        <!-- Adjusted height height for layout header/footer -->
+        
+        <!-- Left Column: Inputs & Editor -->
+        <div class="col-span-12 lg:col-span-7 flex flex-col gap-6 h-full">
+            <!-- Meta Data Section -->
+            <section class="bg-surface-dark border border-white/10 rounded-xl p-5 shrink-0">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase tracking-widest text-text-secondary mb-2">Template Name</label>
+                        <input class="w-full bg-black/40 border-white/10 rounded-lg px-4 py-2 text-sm focus:ring-gold focus:border-gold text-white transition-all" type="text" asp-for="Name" />
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase tracking-widest text-text-secondary mb-2">Template Key</label>
+                        <input class="w-full bg-black/40 border-white/10 rounded-lg px-4 py-2 text-sm font-mono text-gold/80 focus:ring-gold focus:border-gold transition-all" type="text" asp-for="TemplateKey" readonly />
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase tracking-widest text-text-secondary mb-2">Category</label>
+                        <select class="w-full bg-black/40 border-white/10 rounded-lg px-4 py-2 text-sm focus:ring-gold focus:border-gold text-white transition-all appearance-none" asp-for="Category">
+                            <option value="Customer">Customer</option>
+                            <option value="Employee">Employee</option>
+                            <option value="System">System</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-widest text-text-secondary mb-2">Email Subject</label>
+                    <input class="w-full bg-black/40 border-white/10 rounded-lg px-4 py-2 text-sm focus:ring-gold focus:border-gold text-white transition-all" type="text" asp-for="Subject" />
+                </div>
+            </section>
+
+            <!-- Editor Section -->
+            <section class="bg-surface-dark border border-white/10 rounded-xl flex flex-col grow overflow-hidden shadow-2xl ">
+                <div class="px-4 py-2 border-b border-white/10 flex items-center justify-between bg-black/20 shrink-0">
+                    <div class="flex items-center gap-2">
+                        <span class="material-icons-round text-blue-400 text-sm">code</span>
+                        <span class="text-[10px] font-bold uppercase tracking-widest text-text-secondary">Rich HTML Editor</span>
+                    </div>
+                    <div class="flex items-center gap-1.5 opacity-50">
+                        <div class="w-2.5 h-2.5 rounded-full bg-red-500/30"></div>
+                        <div class="w-2.5 h-2.5 rounded-full bg-amber-500/30"></div>
+                        <div class="w-2.5 h-2.5 rounded-full bg-green-500/30"></div>
+                    </div>
+                </div>
+                <div class="flex-1 relative" id="editor-container">
+                    <!-- Monaco Editor will be rendered here -->
+                </div>
+            </section>
+        </div>
+
+        <!-- Right Column: Tokens & Preview -->
+        <div class="col-span-12 lg:col-span-5 flex flex-col gap-6 h-full">
+            <!-- Tokens -->
+            <section class="bg-surface-dark border border-white/10 rounded-xl p-5 shrink-0">
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="material-icons-round text-gold text-lg">token</span>
+                    <h2 class="text-[10px] font-bold uppercase tracking-widest text-text-secondary">Available Tokens</h2>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <button type="button" onclick="insertToken('{{CustomerName}}')" class="group flex items-center justify-between px-3 py-2 rounded-lg border border-white/10 bg-black/20 hover:border-gold/50 transition-all text-left">
+                        <code class="text-xs font-mono text-slate-300">{{CustomerName}}</code>
+                    </button>
+                    <button type="button" onclick="insertToken('{{BookingRef}}')" class="group flex items-center justify-between px-3 py-2 rounded-lg border border-white/10 bg-black/20 hover:border-gold/50 transition-all text-left">
+                        <code class="text-xs font-mono text-slate-300">{{BookingRef}}</code>
+                    </button>
+                     <button type="button" onclick="insertToken('{{VehicleModel}}')" class="group flex items-center justify-between px-3 py-2 rounded-lg border border-white/10 bg-black/20 hover:border-gold/50 transition-all text-left">
+                        <code class="text-xs font-mono text-slate-300">{{VehicleModel}}</code>
+                    </button>
+                     <button type="button" onclick="insertToken('{{PickupDate}}')" class="group flex items-center justify-between px-3 py-2 rounded-lg border border-white/10 bg-black/20 hover:border-gold/50 transition-all text-left">
+                        <code class="text-xs font-mono text-slate-300">{{PickupDate}}</code>
+                    </button>
+                     <button type="button" onclick="insertToken('{{TotalAmount}}')" class="group flex items-center justify-between px-3 py-2 rounded-lg border border-white/10 bg-black/20 hover:border-gold/50 transition-all text-left">
+                        <code class="text-xs font-mono text-slate-300">{{TotalAmount}}</code>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Preview -->
+            <section class="bg-surface-dark border border-white/10 rounded-xl flex flex-col grow overflow-hidden shadow-2xl">
+                <div class="px-4 py-2 border-b border-white/10 flex items-center justify-between bg-black/20 shrink-0">
+                     <div class="flex items-center gap-2">
+                        <span class="material-icons-round text-emerald-400 text-sm">preview</span>
+                        <span class="text-[10px] font-bold uppercase tracking-widest text-text-secondary">Live Rendering</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <span class="material-icons-round text-slate-500 text-xs">desktop_windows</span>
+                        <span class="material-icons-round text-slate-500 text-xs">smartphone</span>
+                    </div>
+                </div>
+                <div class="flex-1 bg-white relative">
+                    <iframe id="previewFields" class="w-full h-full border-0 absolute inset-0"></iframe>
+                </div>
+            </section>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.0/min/vs/loader.min.js"></script>
+    <script>
+        require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.0/min/vs' } });
+
+        var editor;
+        var initialContent = `@Html.Raw(Model.Body?.Replace("`", "\\`") ?? "")`;
+
+        require(['vs/editor/editor.main'], function () {
+            editor = monaco.editor.create(document.getElementById('editor-container'), {
+                value: initialContent,
+                language: 'html',
+                theme: 'vs-dark',
+                automaticLayout: true,
+                minimap: { enabled: false },
+                fontSize: 14,
+                fontFamily: 'JetBrains Mono, monospace',
+                padding: { top: 20, bottom: 20 },
+                scrollBeyondLastLine: false,
+                renderLineHighlight: 'all',
+                lineNumbers: 'on',
+            });
+
+            updatePreview();
+
+            editor.onDidChangeModelContent(function (e) {
+                updatePreview();
+            });
+        });
+
+        function updatePreview() {
+            var content = editor.getValue();
+            
+            content = content.replace(/{{CustomerName}}/g, "Alexander Pierce");
+            content = content.replace(/{{BookingRef}}/g, "LFM-2023-881");
+            content = content.replace(/{{VehicleModel}}/g, "Range Rover Autobiography");
+            content = content.replace(/{{PickupDate}}/g, "Nov 12, 2023");
+            content = content.replace(/{{TotalAmount}}/g, "$2,450.00");
+            content = content.replace(/{{InvoiceId}}/g, "INV-999001");
+
+            var iframe = document.getElementById('previewFields');
+            var doc = iframe.contentWindow.document;
+            doc.open();
+            doc.write(content);
+            doc.close();
+        }
+
+        function insertToken(token) {
+            if (editor) {
+                var position = editor.getPosition();
+                editor.executeEdits("", [{
+                    range: new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column),
+                    text: token
+                }]);
+                editor.focus();
+            }
+        }
+
+        function submitForm() {
+            if (editor) {
+                document.getElementById('hiddenBody').value = editor.getValue();
+            }
+            document.getElementById('editForm').submit();
+        }
+    </script>
+}

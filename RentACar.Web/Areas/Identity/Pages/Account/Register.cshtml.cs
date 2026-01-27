@@ -39,38 +39,38 @@ namespace RentACar.Web.Areas.Identity.Pages.Account
         {
             [Required]
             [Display(Name = "Full Name")]
-            public string FullName { get; set; }
+            public string FullName { get; set; } = default!;
 
             [Required]
             [EmailAddress]
-            public string Email { get; set; }
+            public string Email { get; set; } = default!;
 
             [Required]
             [Phone]
-            public string PhoneNumber { get; set; }
+            public string PhoneNumber { get; set; } = default!;
 
             [Required]
-            public string Address { get; set; }
+            public string Address { get; set; } = default!;
 
             [Required]
             [DataType(DataType.Password)]
-            public string Password { get; set; }
+            public string Password { get; set; } = default!;
 
             [DataType(DataType.Password)]
             [Compare("Password", ErrorMessage = "The password and confirmation do not match.")]
-            public string ConfirmPassword { get; set; }
+            public string ConfirmPassword { get; set; } = default!;
 
             [Required]
-            public IFormFile DrivingLicenseFront { get; set; }
+            public IFormFile DrivingLicenseFront { get; set; } = default!;
 
             [Required]
-            public IFormFile DrivingLicenseBack { get; set; }
+            public IFormFile DrivingLicenseBack { get; set; } = default!;
 
             [Required]
-            public IFormFile NationalIdFront { get; set; }
+            public IFormFile NationalIdFront { get; set; } = default!;
 
             [Required]
-            public IFormFile NationalIdBack { get; set; }
+            public IFormFile NationalIdBack { get; set; } = default!;
         }
 
         public async Task<IActionResult> OnPostAsync()
