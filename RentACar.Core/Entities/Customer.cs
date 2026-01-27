@@ -4,10 +4,13 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
+
 namespace RentACar.Core.Entities;
 
 public partial class Customer
 {
+    private ICollection<CustomerRating> customerRatings = new List<CustomerRating>();
+
     [Key]
     [Column("userID")]
     public int UserId { get; set; } = 0!;
@@ -50,4 +53,8 @@ public partial class Customer
     [ForeignKey("aspNetUserId")]
     [InverseProperty("Customer")]
     public virtual AspNetUser User { get; set; } = null!;
+
+    [InverseProperty("Customer")]
+    public virtual ICollection<CustomerRating> CustomerRatings { get => customerRatings; set => customerRatings = value; }
+
 }

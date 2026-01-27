@@ -74,6 +74,8 @@ builder.Services.AddScoped<IPromocodeRepository, PromocodeRepository>();
 builder.Services.AddScoped<IPaymentMethodRepository, PaymentMethodRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddHttpClient<IEmailService, MailjetEmailService>();
+builder.Services.AddScoped<ICustomerRatingRepository, CustomerRatingRepository>();
+    builder.Services.AddScoped<CustomerRatingManager>();
 builder.Services.AddHttpClient<RentACar.Application.Services.IStripePaymentService, RentACar.Application.Services.StripePaymentService>(client =>
 {
     client.BaseAddress = new Uri("https://api.stripe.com/");
@@ -93,6 +95,7 @@ builder.Services.AddScoped<BookingManager>();
 builder.Services.AddScoped<PaymentManager>();
 builder.Services.AddScoped<EmailManager>();
 builder.Services.AddScoped<AuditLogManager>();
+
 
 // // ✅ HTTPS redirection
 // builder.Services.AddHttpsRedirection(options =>

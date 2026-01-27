@@ -31,4 +31,9 @@
     <ProjectReference Include="..\RentACar.Infrastructure\RentACar.Infrastructure.csproj" />
   </ItemGroup>
 
+
+  <ItemGroup>
+    <Folder Include="Views\ControlPanel\CustomerRating\" />
+  </ItemGroup>
+
 </Project>

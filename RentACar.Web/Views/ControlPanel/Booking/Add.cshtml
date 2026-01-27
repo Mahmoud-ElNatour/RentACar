@@ -65,7 +65,9 @@
             <div class="mb-3">
                 <label class="form-label">End Date</label>
                 <input type="date" class="form-control" id="Enddate" name="Enddate" value="@endValue" required />
-            </div>@{
+            </div>
+         
+            @{
             var methods = await PaymentMethodManager.GetAllActivePaymentMethodsAsync();
             }
             <div class="mb-3">

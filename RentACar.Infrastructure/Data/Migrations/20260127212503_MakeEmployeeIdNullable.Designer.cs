@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RentACar.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using RentACar.Infrastructure.Data;
 namespace RentACar.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(RentACarDbContext))]
-    partial class RentACarDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260127212503_MakeEmployeeIdNullable")]
+    partial class MakeEmployeeIdNullable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -624,13 +627,13 @@ namespace RentACar.Infrastructure.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RatingId"));
 
-                    b.Property<int>("BookingId")
-                        .HasColumnType("int")
-                        .HasColumnName("bookingID");
-
                     b.Property<int>("CustomerId")
                         .HasColumnType("int")
                         .HasColumnName("customerID");
+
+                    b.Property<int?>("EmployeeId")
+                        .HasColumnType("int")
+                        .HasColumnName("employeeID");
 
                     b.Property<string>("Feedback")
                         .HasColumnType("nvarchar(max)")
@@ -646,9 +649,9 @@ namespace RentACar.Infrastructure.Data.Migrations
 
                     b.HasKey("RatingId");
 
-                    b.HasIndex("BookingId");
-
                     b.HasIndex("CustomerId");
+
+                    b.HasIndex("EmployeeId");
 
                     b.ToTable("CustomerRatings");
                 });
@@ -967,21 +970,19 @@ namespace RentACar.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("RentACar.Core.Entities.CustomerRating", b =>
                 {
-                    b.HasOne("RentACar.Core.Entities.Booking", "Booking")
-                        .WithMany()
-                        .HasForeignKey("BookingId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("RentACar.Core.Entities.Customer", "Customer")
                         .WithMany("CustomerRatings")
                         .HasForeignKey("CustomerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Booking");
+                    b.HasOne("RentACar.Core.Entities.Employee", "Employee")
+                        .WithMany("CustomerRatings")
+                        .HasForeignKey("EmployeeId");
 
                     b.Navigation("Customer");
+
+                    b.Navigation("Employee");
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.Employee", b =>
@@ -1061,6 +1062,8 @@ namespace RentACar.Infrastructure.Data.Migrations
                     b.Navigation("BlackLists");
 
                     b.Navigation("Bookings");
+
+                    b.Navigation("CustomerRatings");
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.Promocode", b =>

@@ -74,7 +74,9 @@ namespace RentACar.Web.Controllers
                     paymentStatus = latestPayment?.Status,
                     startdate = b.Startdate.ToString("yyyy-MM-dd"),
                     enddate = b.Enddate.ToString("yyyy-MM-dd"),
-                    totalPrice = b.TotalPrice
+                    totalPrice = b.TotalPrice,
+                    employeeId = b.EmployeebookerId,
+                    bookingStatus = b.BookingStatus
                 });
             }
             return Ok(result);

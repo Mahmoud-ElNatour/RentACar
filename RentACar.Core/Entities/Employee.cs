@@ -38,4 +38,6 @@ public partial class Employee
 
     [InverseProperty("Employeebooker")]
     public virtual ICollection<Booking> Bookings { get; set; } = new List<Booking>();
+
+
 }
