@@ -87,7 +87,6 @@
 
     function showRatingPopup(bookingId) {
         document.getElementById('ratingBookingId').value = bookingId || '';
-        document.getElementById('ratingEmployeeId').value = ''; // Clear just in case, though unused now
 
         const ratingModal = new bootstrap.Modal(document.getElementById('ratingModal'));
         ratingModal.show();
