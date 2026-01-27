@@ -39,6 +39,7 @@ public partial class RentACarDbContext : DbContext
     public virtual DbSet<PaymentMethod> PaymentMethods { get; set; }
     public virtual DbSet<Promocode> Promocodes { get; set; }
     public virtual DbSet<AuditLog> AuditLogs { get; set; }
+    public virtual DbSet<CustomerRating> CustomerRatings { get; set; }
     public virtual DbSet<DistributionList> DistributionLists { get; set; }
     public virtual DbSet<DistributionListMember> DistributionListMembers { get; set; }
     public virtual DbSet<DistributionListRule> DistributionListRules { get; set; }

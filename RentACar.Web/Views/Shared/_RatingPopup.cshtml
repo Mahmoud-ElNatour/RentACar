@@ -1,0 +1,196 @@
+﻿<!-- Rating Popup Modal -->
+<div class="modal fade" id="ratingModal" tabindex="-1" aria-labelledby="ratingModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title w-100 text-center" id="ratingModalLabel">Rate Your Experience</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center px-4">
+                <!-- Star Rating -->
+                <div class="rating-stars mb-4" id="starRating">
+                    <i class="fas fa-star star" data-rating="1"></i>
+                    <i class="fas fa-star star" data-rating="2"></i>
+                    <i class="fas fa-star star" data-rating="3"></i>
+                    <i class="fas fa-star star" data-rating="4"></i>
+                    <i class="fas fa-star star" data-rating="5"></i>
+                </div>
+
+                <!-- Feedback Textarea -->
+                <div class="mb-3 text-start">
+                    <label for="feedbackText" class="form-label">Please provide your feedback</label>
+                    <textarea class="form-control" id="feedbackText" rows="4" placeholder="Tell us about your experience..." maxlength="500"></textarea>
+                    <div class="text-end">
+                        <small class="text-muted"><span id="charCount">0</span>/500</small>
+                    </div>
+                </div>
+
+                <!-- Hidden fields for booking/employee data -->
+                <input type="hidden" id="ratingBookingId" value="" />
+                <input type="hidden" id="ratingEmployeeId" value="" />
+            </div>
+            <div class="modal-footer border-0 justify-content-center">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> Close
+                </button>
+                <button type="button" class="btn btn-success" id="sendRatingBtn">
+                    <i class="fas fa-paper-plane"></i> Send
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success Message Modal -->
+<div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-body text-center py-4">
+                <div class="mb-3">
+                    <i class="fas fa-check-circle text-success" style="font-size: 48px;"></i>
+                </div>
+                <h5>Your feedback is sent!</h5>
+                <p class="mb-0">Thank you for your rating.</p>
+            </div>
+            <div class="modal-footer border-0 justify-content-center">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .rating-stars {
+        font-size: 48px;
+        cursor: pointer;
+    }
+
+        .rating-stars .star {
+            color: #ddd;
+            transition: all 0.2s ease;
+            margin: 0 5px;
+        }
+
+            .rating-stars .star:hover,
+            .rating-stars .star.active {
+                color: #ffc107;
+                transform: scale(1.1);
+            }
+
+            .rating-stars .star.filled {
+                color: #ffc107;
+            }
+</style>
+
+<script>
+    let selectedRating = 0;
+
+    function showRatingPopup(bookingId) {
+        document.getElementById('ratingBookingId').value = bookingId || '';
+
+        const ratingModal = new bootstrap.Modal(document.getElementById('ratingModal'));
+        ratingModal.show();
+        resetRatingForm();
+    }
+
+    function resetRatingForm() {
+        selectedRating = 0;
+        document.getElementById('feedbackText').value = '';
+        document.getElementById('charCount').textContent = '0';
+        document.querySelectorAll('.star').forEach(star => {
+            star.classList.remove('filled', 'active');
+        });
+    }
+
+    // Star rating functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const stars = document.querySelectorAll('.star');
+        const feedbackText = document.getElementById('feedbackText');
+        const charCount = document.getElementById('charCount');
+        const sendBtn = document.getElementById('sendRatingBtn');
+
+        // Star click event
+        stars.forEach(star => {
+            star.addEventListener('click', function() {
+                selectedRating = parseInt(this.getAttribute('data-rating'));
+                updateStars(selectedRating);
+            });
+
+            // Hover effect
+            star.addEventListener('mouseenter', function() {
+                const rating = parseInt(this.getAttribute('data-rating'));
+                updateStars(rating, true);
+            });
+        });
+
+        // Remove hover effect
+        document.getElementById('starRating').addEventListener('mouseleave', function() {
+            updateStars(selectedRating);
+        });
+
+        // Character counter
+        feedbackText.addEventListener('input', function() {
+            charCount.textContent = this.value.length;
+        });
+
+        // Send button
+        sendBtn.addEventListener('click', async function() {
+            if (selectedRating === 0) {
+                alert('Please select a star rating');
+                return;
+            }
+
+            const feedback = feedbackText.value.trim();
+            const bookingIdValue = document.getElementById('ratingBookingId').value;
+            
+            // Prepare data to send to API
+            const ratingData = {
+                bookingId: parseInt(bookingIdValue),
+                stars: parseInt(selectedRating),
+                feedback: feedback || ""
+            };
+
+            console.log('Sending rating data:', ratingData); // Debug log
+
+            try {
+                const response = await fetch('/api/Ratings', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(ratingData)
+                });
+
+                if (response.ok) {
+                    // Close rating modal
+                    bootstrap.Modal.getInstance(document.getElementById('ratingModal')).hide();
+
+                    // Show success modal
+                    const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+                    successModal.show();
+
+                    // Auto close success modal after 2 seconds
+                    setTimeout(() => {
+                        successModal.hide();
+                    }, 2000);
+                } else {
+                    const errorText = await response.text();
+                    alert('Failed to submit rating: ' + errorText);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+            }
+        });
+    });
+
+    function updateStars(rating, isHover = false) {
+        const stars = document.querySelectorAll('.star');
+        stars.forEach((star, index) => {
+            star.classList.remove('filled', 'active');
+            if (index < rating) {
+                star.classList.add(isHover ? 'active' : 'filled');
+            }
+        });
+    }
+</script>

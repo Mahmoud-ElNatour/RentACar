@@ -50,12 +50,15 @@
         </div>
     </div>
 </div>
+@await Html.PartialAsync("_RatingPopup")
 @section Scripts{
     <script>
         let selectedBookingId = null;
         let selectedAmount = null;
         let paymentMethods = [];
         let payModal;
+
+      
 
         async function loadPaymentMethods() {
             const res = await fetch('/api/PaymentMethod/active');
@@ -118,6 +121,15 @@
                                    target="_blank">
                                     Ticket
                                 </a>
+                                    ${
+                                        (new Date(b.enddate) <= new Date() ||
+                                         (b.bookingStatus && b.bookingStatus.toLowerCase() === 'returned'))
+                                      ? `
+                                    <button class="btn btn-warning btn-sm"
+                                            onclick="showRatingPopup(${b.bookingId})">
+                                        <i class="fas fa-star"></i> Rate
+                                    </button>
+                                    ` : ''}
                             </td>`;
 
                 tbody.appendChild(tr);
