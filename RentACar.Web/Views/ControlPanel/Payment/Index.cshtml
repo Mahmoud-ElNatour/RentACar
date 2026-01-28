@@ -150,10 +150,10 @@
             loadTableData(); // Only reload table on sort
         }
 
-        function loadPageData() {
-            // Load both in parallel
-            loadTableData();
-            loadStatsData();
+        async function loadPageData() {
+            // Load table first for immediate feedback, stats after 300ms delay
+            await loadTableData();
+            setTimeout(loadStatsData, 300);
         }
 
         function getFilterQuery() {

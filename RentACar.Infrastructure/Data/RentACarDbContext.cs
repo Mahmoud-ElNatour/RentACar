@@ -80,6 +80,35 @@ public partial class RentACarDbContext : DbContext
                 .HasConstraintName("FK_BlackList_AspNetUsers1");
         });
 
+        modelBuilder.Entity<Payment>(entity =>
+        {
+            entity.HasOne(d => d.Booking)
+                .WithOne(b => b.Payment)
+                .HasForeignKey<Payment>(p => p.BookingId)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_Payments_Bookings");
+
+            // Indexes for Performance
+            entity.HasIndex(e => e.Status).HasDatabaseName("IX_Payments_Status");
+            entity.HasIndex(e => e.PaymentDate).HasDatabaseName("IX_Payments_PaymentDate");
+            entity.HasIndex(e => e.BookingId).HasDatabaseName("IX_Payments_BookingId"); // often automatic for FK, but ensuring it
+            entity.HasIndex(e => new { e.Status, e.PaymentDate }).HasDatabaseName("IX_Payments_Status_PaymentDate");
+        });
+
+        modelBuilder.Entity<Customer>(entity =>
+        {
+            entity.HasKey(e => e.UserId).HasName("PK_Customers_1");
+            entity.Property(e => e.Isactive).HasDefaultValue(true);
+            entity.HasOne(d => d.User).WithOne(p => p.Customer)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Customers_AspNetUsers");
+
+            // Indexes for Performance
+            entity.HasIndex(e => e.Name).HasDatabaseName("IX_Customers_Name");
+            entity.HasIndex(e => e.aspNetUserId).HasDatabaseName("IX_Customers_AspNetUserId");
+        });
+
         modelBuilder.Entity<Booking>(entity =>
         {
             entity.Property(e => e.IsBookedByEmployee).HasDefaultValue(false);
@@ -97,6 +126,9 @@ public partial class RentACarDbContext : DbContext
 
              entity.HasOne(d => d.Promocode).WithMany(p => p.Bookings)
                 .HasConstraintName("FK_Bookings_Promocodes1");
+
+            // Indexes for Performance
+            entity.HasIndex(e => e.CustomerId).HasDatabaseName("IX_Bookings_CustomerId");
         });
 
         modelBuilder.Entity<Car>(entity =>
@@ -111,17 +143,6 @@ public partial class RentACarDbContext : DbContext
 
             entity.Property(e => e.CardHolderName).IsFixedLength();
             entity.Property(e => e.Cvv).IsFixedLength();
-        });
-
-        modelBuilder.Entity<Customer>(entity =>
-        {
-            entity.HasKey(e => e.UserId).HasName("PK_Customers_1");
-
-            entity.Property(e => e.Isactive).HasDefaultValue(true);
-
-            entity.HasOne(d => d.User).WithOne(p => p.Customer)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Customers_AspNetUsers");
         });
 
         modelBuilder.Entity<CustomerCreditCard>(entity =>
@@ -140,17 +161,6 @@ public partial class RentACarDbContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_CustomerCreditCard_CreditCard");
         });
-
-        modelBuilder.Entity<Payment>(entity =>
-        {
-            entity.HasOne(d => d.Booking)
-                .WithOne(b => b.Payment)
-                .HasForeignKey<Payment>(p => p.BookingId)
-                .IsRequired()
-                .OnDelete(DeleteBehavior.Cascade)
-                .HasConstraintName("FK_Payments_Bookings");
-        });
-
 
         modelBuilder.Entity<DistributionList>(entity =>
         {
