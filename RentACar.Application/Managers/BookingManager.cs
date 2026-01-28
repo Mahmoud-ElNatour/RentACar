@@ -207,55 +207,21 @@ namespace RentACar.Application.Managers
                 DriverId = requestDto.HasDriver ? assignedDriverId : null,
                 DriverDailyFee = requestDto.HasDriver ? driverDailyFee : null,
                 PickupAddress = requestDto.PickupAddress,
+                PickupLocationLabel = requestDto.PickupLocationName,
                 PickupDateTime = requestDto.PickupDateTime
             };
 
             var requestLat = requestDto.PickupLatitude;
             var requestLng = requestDto.PickupLongitude;
 
-            if (requestDto.HasDriver)
+            if (!requestLat.HasValue || !requestLng.HasValue)
             {
-                if (requestLat.HasValue && requestLng.HasValue)
-                {
-                    booking.PickupLatitude = requestLat;
-                    booking.PickupLongitude = requestLng;
-                }
-                else if (!string.IsNullOrWhiteSpace(booking.PickupAddress))
-                {
-                    var coords = await _geocodingService.GeocodeAsync(booking.PickupAddress);
-                    if (coords == null)
-                    {
-                        _logger.LogWarning("Geocoding failed for pickup address: {Address}", booking.PickupAddress);
-                        throw new InvalidOperationException("GEOCODING_FAILED");
-                    }
+                _logger.LogWarning("Pickup pin missing for booking request.");
+                throw new InvalidOperationException("MISSING_PICKUP_PIN");
+            }
 
-                    booking.PickupLatitude = coords.Value.lat;
-                    booking.PickupLongitude = coords.Value.lng;
-                }
-                else
-                {
-                    _logger.LogWarning("Pickup location missing for chauffeur booking.");
-                    throw new InvalidOperationException("GEOCODING_FAILED");
-                }
-            }
-            else if (requestLat.HasValue && requestLng.HasValue)
-            {
-                booking.PickupLatitude = requestLat;
-                booking.PickupLongitude = requestLng;
-            }
-            else if (!string.IsNullOrWhiteSpace(booking.PickupAddress))
-            {
-                var coords = await _geocodingService.GeocodeAsync(booking.PickupAddress);
-                if (coords != null)
-                {
-                    booking.PickupLatitude = coords.Value.lat;
-                    booking.PickupLongitude = coords.Value.lng;
-                }
-                else
-                {
-                    _logger.LogWarning("Geocoding skipped for pickup address: {Address}", booking.PickupAddress);
-                }
-            }
+            booking.PickupLatitude = requestLat;
+            booking.PickupLongitude = requestLng;
 
 
             // Save booking first to generate BookingId
@@ -418,6 +384,28 @@ namespace RentACar.Application.Managers
         {
             var bookings = await _bookingRepository.GetBookingsByCustomerIdAsync(customerId);
             return _mapper.Map<List<BookingDto>>(bookings);
+        }
+
+        public async Task<bool> UpdateBookingStatusAsync(int bookingId, string status)
+        {
+            var booking = await _bookingRepository.GetBookingByIdAsync(bookingId);
+            if (booking == null)
+            {
+                return false;
+            }
+
+            booking.BookingStatus = status;
+            await _bookingRepository.UpdateAsync(booking);
+
+            await _auditLogManager.LogEventAsync(
+                "Booking.StatusChanged",
+                "Booking",
+                bookingId.ToString(),
+                $"Driver updated status to {status} at {DateTime.UtcNow:O}",
+                null,
+                "Success");
+
+            return true;
         }
 
         public async Task<List<BookingDto>> GetBookingsByEmployeeIdAsync(int employeeId)

@@ -38,6 +38,12 @@ namespace RentACar.Application.DTOs
         [StringLength(200)]
         public string? PickupAddress { get; set; }
 
+        [StringLength(200)]
+        public string? PickupLocationName { get; set; }
+
+        [StringLength(200)]
+        public string? PickupLocationLabel { get; set; }
+
         public DateTime? PickupDateTime { get; set; }
 
         // ✅ ADD THESE (for Google Maps & tracking)
@@ -76,6 +82,12 @@ namespace RentACar.Application.DTOs
 
         [StringLength(200)]
         public string? PickupAddress { get; set; }
+
+        [StringLength(200)]
+        public string? PickupLocationName { get; set; }
+
+        [StringLength(200)]
+        public string? PickupLocationLabel { get; set; }
 
         public DateTime? PickupDateTime { get; set; }
 

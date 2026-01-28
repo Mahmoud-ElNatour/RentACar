@@ -304,6 +304,10 @@ namespace RentACar.Web.Controllers
             {
                 return UnprocessableEntity("Pickup address couldn't be located. Please provide a more specific address or pin the location on the map.");
             }
+            catch (InvalidOperationException ex) when (ex.Message == "MISSING_PICKUP_PIN")
+            {
+                return UnprocessableEntity("Please drop a pickup pin.");
+            }
 
             catch (Exception ex)
             {
