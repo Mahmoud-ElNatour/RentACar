@@ -1,0 +1,356 @@
+﻿@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - RentACar.Web</title>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+    <!-- jQuery + jQuery UI (must load before any feature script) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+
+    <!-- Site CSS -->
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/AdminDashboard.css" asp-append-version="true" />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&amp;family=Noto+Sans:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="~/css/footer.css" asp-append-version="true" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <style>
+        /* Scoped CSS Overrides to fix Bootstrap conflicts on new dark pages only */
+        
+        /* Fix Links: Remove blue color and underline (Excluding Navbar) */
+        body.bg-background-dark a:not(.nav-link):not(.dropdown-item):not(.navbar-brand),
+        body[class*="bg-[#050505]"] a:not(.nav-link):not(.dropdown-item):not(.navbar-brand) {
+            text-decoration: none !important;
+            /* color: inherit !important; */
+        }
+
+        /* Fix TOC styling specifically */
+        body.bg-background-dark .toc-item,
+        body[class*="bg-[#050505]"] .toc-item {
+            color: #b9b29d !important;
+            text-decoration: none !important;
+        }
+        body.bg-background-dark .toc-item:hover,
+        body.bg-background-dark .toc-item.active,
+        body[class*="bg-[#050505]"] .toc-item:hover,
+        body[class*="bg-[#050505]"] .toc-item.active {
+            color: #ffffff !important;
+        }
+        
+        /* Fix Borders: Bootstrap .border adds a white border.  */
+        body.bg-background-dark .border,
+        body[class*="bg-[#050505]"] .border {
+            border-color: #262626 !important;
+            border-style: solid !important;
+            border-width: 1px !important;
+        }
+
+        /* Fix Box Sizing if Bootstrap is messing with it */
+        body.bg-background-dark *,
+        body[class*="bg-[#050505]"] * {
+             box-sizing: border-box;
+        }
+    </style>
+    <script id="tailwind-config">
+        tailwind.config = {
+            /* important: true, -- removed to prevent global side effects */
+            blocklist: ['collapse'],
+            corePlugins: {
+                preflight: false,
+                visibility: false,
+            },
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "gold": "#f2b90d",
+                        "gold-light": "#fce186", 
+                        "gold-hover": "#d9a60c",
+                        "brand": "#eec02b", // Renamed from primary to avoid Bootstrap conflict
+                        "background-light": "#f8f8f5",
+                        "background-dark": "#050505", // Updated to match user request
+                        "surface-dark": "#171717", // Existing surface
+                        "surface-dark-lighter": "#262626",
+                        "surface-accent": "#1a1a1a", // New design accent
+                        "text-body": "#d1d5db", // New design text body
+                        "text-secondary": "#b9b29d", // New design text secondary
+                        "footer-bg": "#0a0a0a",
+                        "footer-surface": "#171717",
+                        "footer-border": "#f2b90d33", 
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "Plus Jakarta Sans", "sans-serif"], // Merged display fonts
+                        "body": ["Noto Sans", "sans-serif"], // New body font
+                    },
+                    boxShadow: {
+                        "glow": "0 0 20px rgba(212, 175, 55, 0.15)"
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+    @* <link rel="stylesheet" href="~/css/index-style.css" asp-append-version="true" /> *@
+    @* <link rel="stylesheet" href="~/RentACar.Web.styles.css" asp-append-version="true" /> *@
+</head>
+<body class="d-flex flex-column min-vh-100 @ViewData["BodyClass"]">
+    @await Html.PartialAsync("_Sidebar")
+    @await Html.PartialAsync("_PopupNotifications")
+    <header>
+        <nav class="navbar navbar-expand-lg" style="background-color: #1f1f1f; padding: 1rem;">
+            <div class="container-fluid">
+                @if (SignInManager.IsSignedIn(User))
+                {
+                    <button class="btn btn-link text-warning p-0 me-3" onclick="toggleSidebar()" style="text-decoration: none;">
+                        <span class="material-symbols-outlined" style="font-size: 24px;">menu</span>
+                    </button>
+                }
+                <a class="navbar-brand text-warning fw-bold" asp-area="" asp-controller="Home" asp-action="Index">RentACar</a>
+                <button class="navbar-toggler bg-warning" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
+                    <i class="fas fa-bars fs-4"></i>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item">
+                            <a class="nav-link text-light" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                        </li>
+                        @if (SignInManager.IsSignedIn(User))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-light" asp-controller="Dashboard" asp-action="Index">Dashboard</a>
+                            </li>
+                        }
+                        @if (User.IsInRole("Admin") || User.IsInRole("Employee"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-light" asp-controller="ControlPanel" asp-action="Index">Control Panel</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-light" asp-controller="Reports" asp-action="Index">Reports</a>
+                            </li>
+                        }
+                        @if (User.IsInRole("Customer"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-light" asp-controller="Browse" asp-action="Index">Browse Cars</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-light" asp-controller="Bookings" asp-action="MyBookings">My Bookings</a>
+                            </li>
+                        }
+                        @if (User.IsInRole("Driver"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-light" asp-controller="DriverPortal" asp-action="Dashboard">Driver Dashboard</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-light" asp-controller="DriverPortal" asp-action="Schedule">Schedule</a>
+                            </li>
+                        }
+                    </ul>
+                    <ul class="navbar-nav ms-auto">
+                        @if (SignInManager.IsSignedIn(User))
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle text-warning" href="#" role="button" data-bs-toggle="dropdown">
+                                    <i class="fa fa-user-circle me-1"></i>@User.Identity?.Name
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end bg-dark">
+                                    <li><a class="dropdown-item text-light" asp-area="Identity" asp-page="/Account/Manage/Index">Profile</a></li>
+                                    <li>
+                                        <form method="post" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home")">
+                                            <button type="submit" class="dropdown-item text-light">Logout</button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-warning" asp-area="Identity" asp-page="/Account/Register">Register</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-warning" asp-area="Identity" asp-page="/Account/Login">Login</a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container-fluid m-0 p-0">
+        <main role="main" class="m-0 p-0 flex-grow-1">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="bg-footer-bg text-gray-400 border-t border-footer-border relative overflow-hidden font-display">
+        <div class="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-gold/60 to-transparent"></div>
+        <div class="absolute top-0 left-1/4 w-96 h-96 bg-gold/5 rounded-full blur-3xl -translate-y-1/2 pointer-events-none"></div>
+        <div class="layout-container px-6 pt-16 pb-8 md:px-12 lg:px-20 xl:px-32 max-w-7xl mx-auto relative z-10">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-12  mb-16 border-b border-white/5 pb-12">
+                <div class="lg:col-span-5 flex flex-col gap-6">
+                    <div class="flex items-center gap-2.5">
+                        <div class="h-10 w-10 rounded-xl bg-gradient-to-br from-gold/20 to-gold/5 border border-gold/20 flex items-center justify-center shadow-glow">
+                            <span class="material-symbols-outlined text-gold text-2xl">directions_car</span>
+                        </div>
+                        <span class="text-2xl font-bold text-white tracking-tight">RentCar<span class="text-gold">LB</span></span>
+                    </div>
+                    <p class="text-[15px] leading-relaxed text-gray-400 font-medium">
+                        RentCarLB is your premier choice for car rentals in Lebanon, offering a diverse fleet and exceptional service for a seamless journey. Experience Lebanon with the freedom of premium mobility.
+                    </p>
+                    <div class="flex gap-3 pt-2">
+                        <a aria-label="Facebook" class="h-10 w-10 flex items-center justify-center rounded-lg bg-footer-surface hover:bg-gold hover:text-footer-bg transition-all duration-300 group text-gold" href="#">
+                            <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"></path></svg>
+                        </a>
+                        <a aria-label="Instagram" class="h-10 w-10 flex items-center justify-center rounded-lg bg-footer-surface hover:bg-gold hover:text-footer-bg transition-all duration-300 group text-gold" href="#">
+                            <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.069-4.85.069-3.204 0-3.584-.012-4.849-.069-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"></path></svg>
+                        </a>
+                        <a aria-label="Twitter" class="h-10 w-10 flex items-center justify-center rounded-lg bg-footer-surface hover:bg-gold hover:text-footer-bg transition-all duration-300 group text-gold" href="#">
+                            <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg>
+                        </a>
+                    </div>
+                </div>
+                <div class="lg:col-span-7 lg:pl-10 flex flex-col justify-center h-full">
+                    <div class="flex flex-col gap-6 p-8 rounded-2xl bg-white/5 relative group overflow-hidden items-start">
+                        <div class="absolute inset-0 bg-gradient-to-br from-gold/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                        <div class="w-full relative z-10 flex flex-col md:flex-row gap-6 md:items-end">
+                            <div class="flex-1">
+                                <h3 class="text-white font-bold text-xl mb-2">Subscribe for Updates</h3>
+                                <p class="text-[15px] text-gray-400">Get the latest news and special offers directly in your inbox.</p>
+                            </div>
+                            <form class="flex-1 w-full flex flex-col sm:flex-row gap-2">
+                                <input class="w-full rounded-lg bg-black/40 border border-white/10 text-white placeholder-gray-500 focus:ring-1 focus:ring-gold focus:border-gold px-4 py-3 text-sm transition-all outline-none" placeholder="Email address" type="email" />
+                                <button class="px-6 py-3 rounded-lg bg-gold text-footer-bg font-bold text-sm hover:bg-gold-hover hover:scale-105 active:scale-95 transition-all whitespace-nowrap shadow-lg shadow-gold/20" type="button">
+                                    Subscribe
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+                <div class="flex flex-col gap-5">
+                    <h3 class="text-gold font-bold text-lg mb-2 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-xl">contact_support</span> Contact Us
+                    </h3>
+                    <div class="flex flex-col gap-4">
+                        <div class="flex items-center gap-3.5 text-gray-400 hover:text-white transition-colors group">
+                            <div class="w-6 flex justify-center">
+                                <span class="material-symbols-outlined text-gold group-hover:scale-110 transition-transform text-[20px]">mail</span>
+                            </div>
+                            <a class="text-sm font-medium hover:underline decoration-gold decoration-1 underline-offset-4 text-gold" href="mailto:support@rentacar.com">support@rentacar.com</a>
+                        </div>
+                        <div class="flex items-center gap-3.5 text-gray-400 hover:text-white transition-colors group">
+                            <div class="w-6 flex justify-center">
+                                <span class="material-symbols-outlined text-gold group-hover:scale-110 transition-transform text-[20px]">call</span>
+                            </div>
+                            <span class="text-sm font-medium">+961 1 234 567</span>
+                        </div>
+                        <div class="flex items-center gap-3.5 text-gray-400 hover:text-white transition-colors group">
+                            <div class="w-6 flex justify-center">
+                                <span class="material-symbols-outlined text-gold group-hover:scale-110 transition-transform text-[20px]">schedule</span>
+                            </div>
+                            <span class="text-sm font-medium">Mon - Sat: 9 AM - 6 PM</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex flex-col gap-5">
+                    <h3 class="text-gold font-bold text-lg mb-2 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-xl">map</span> Our Locations
+                    </h3>
+                    <div class="flex flex-col gap-4">
+                        <div class="flex items-start gap-3.5 text-gray-400 hover:text-white transition-colors group">
+                            <div class="w-6 flex justify-center mt-0.5">
+                                <span class="material-symbols-outlined text-gold group-hover:scale-110 transition-transform text-[20px]">location_on</span>
+                            </div>
+                            <span class="text-sm font-medium">Beirut – Hamra St.</span>
+                        </div>
+                        <div class="flex items-start gap-3.5 text-gray-400 hover:text-white transition-colors group">
+                            <div class="w-6 flex justify-center mt-0.5">
+                                <span class="material-symbols-outlined text-gold group-hover:scale-110 transition-transform text-[20px]">location_on</span>
+                            </div>
+                            <span class="text-sm font-medium">Saida – Coastal Rd</span>
+                        </div>
+                        <div class="flex items-start gap-3.5 text-gray-400 hover:text-white transition-colors group">
+                            <div class="w-6 flex justify-center mt-0.5">
+                                <span class="material-symbols-outlined text-gold group-hover:scale-110 transition-transform text-[20px]">location_on</span>
+                            </div>
+                            <span class="text-sm font-medium">Tripoli – Tall St.</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex flex-col gap-5">
+                    <h3 class="text-gold font-bold text-lg mb-2 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-xl">info</span> Information
+                    </h3>
+                    <div class="flex flex-col gap-4">
+                        <a class="flex items-center gap-3.5 text-gray-400 hover:text-white transition-colors group" asp-controller="Home" asp-action="About">
+                            <div class="w-6 flex justify-center">
+                                <span class="material-symbols-outlined text-gold group-hover:scale-110 transition-transform text-[20px]">business</span>
+                            </div>
+                            <span class="text-sm font-medium hover:underline decoration-gold decoration-1 underline-offset-4">About Us</span>
+                        </a>
+                        <a class="flex items-center gap-3.5 text-gray-400 hover:text-white transition-colors group" asp-controller="Home" asp-action="Terms">
+                            <div class="w-6 flex justify-center">
+                                <span class="material-symbols-outlined text-gold group-hover:scale-110 transition-transform text-[20px]">gavel</span>
+                            </div>
+                            <span class="text-sm font-medium hover:underline decoration-gold decoration-1 underline-offset-4">Terms & Conditions</span>
+                        </a>
+                        <a class="flex items-center gap-3.5 text-gray-400 hover:text-white transition-colors group" asp-controller="Home" asp-action="Privacy">
+                            <div class="w-6 flex justify-center">
+                                <span class="material-symbols-outlined text-gold group-hover:scale-110 transition-transform text-[20px]">shield</span>
+                            </div>
+                            <span class="text-sm font-medium hover:underline decoration-gold decoration-1 underline-offset-4">Privacy Policy</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="h-px w-full bg-white/10 mb-8"></div>
+            <div class="flex flex-col-reverse md:flex-row items-center justify-between gap-6">
+                <div class="flex flex-col gap-1 text-sm text-gray-500 text-center md:text-left">
+                    <p class="font-medium text-white/90">Powered by <span class="text-white font-bold">AppDev USAL Team</span></p>
+                    <p>© 2025 RentACar. All rights reserved.</p>
+                </div>
+                <div class="flex items-center gap-3 opacity-80 hover:opacity-100 transition-opacity grayscale hover:grayscale-0">
+                    <div class="h-7 px-2 rounded bg-white/10 border border-white/10 flex items-center justify-center min-w-[40px]" title="Visa">
+                        <span class="text-[12px] font-bold text-white italic tracking-tighter font-serif">VISA</span>
+                    </div>
+                    <div class="h-7 px-2 rounded bg-white/10 border border-white/10 flex items-center justify-center min-w-[40px]" title="Mastercard">
+                        <div class="flex -space-x-1.5">
+                            <div class="w-3 h-3 rounded-full bg-white/90"></div>
+                            <div class="w-3 h-3 rounded-full bg-white/50"></div>
+                        </div>
+                    </div>
+                    <div class="h-7 px-2 rounded bg-white/10 border border-white/10 flex items-center justify-center min-w-[40px]" title="American Express">
+                        <span class="text-[8px] font-bold text-blue-200 tracking-tighter uppercase leading-none text-center">AM<br />EX</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS bundle -->
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Site scripts -->
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/index-script.js" asp-append-version="true"></script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

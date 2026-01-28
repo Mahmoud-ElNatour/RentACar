@@ -1,0 +1,77 @@
+﻿body {
+    background: var(--primary-dark);
+    color: var(--text-primary);
+    font-family: 'Poppins', sans-serif;
+}
+
+.hero {
+    background: linear-gradient(135deg, var(--accent-gold), var(--accent-gold-hover));
+    color: var(--primary-dark);
+    text-align: center;
+    padding: 100px 20px;
+}
+
+.hero-content h1 {
+    font-size: 48px;
+    margin-bottom: 10px;
+}
+
+.hero-content p {
+    font-size: 20px;
+    margin-bottom: 20px;
+}
+
+.hero-content a {
+    margin: 10px;
+}
+
+.featured-cars {
+    padding: 60px 20px;
+    text-align: center;
+}
+
+.car-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.car-card {
+    background: var(--secondary-dark);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    text-align: center;
+}
+
+    .car-card img {
+        width: 100%;
+        border-radius: var(--border-radius);
+        margin-bottom: 10px;
+    }
+
+.benefits {
+    padding: 60px 20px;
+}
+
+.benefits-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+}
+
+.benefit-item {
+    background: var(--secondary-dark);
+    padding: 20px;
+    border-radius: var(--border-radius);
+    width: 250px;
+    text-align: center;
+}
+
+.footer {
+    text-align: center;
+    padding: 20px;
+    background: var(--secondary-dark);
+    margin-top: 40px;
+}

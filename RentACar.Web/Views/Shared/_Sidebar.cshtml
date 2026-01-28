@@ -1,0 +1,155 @@
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+
+@if (SignInManager.IsSignedIn(User))
+{
+    var user = await UserManager.GetUserAsync(User);
+    var roles = await UserManager.GetRolesAsync(user);
+    var role = roles.FirstOrDefault() ?? "User";
+
+    <!-- Backdrop -->
+    <div id="sidebarBackdrop" class="sidebar-backdrop" onclick="toggleSidebar()"></div>
+
+    <!-- Sidebar -->
+    <aside id="mainSidebar" class="main-sidebar">
+        <!-- Brand -->
+        <div class="sidebar-brand">
+            <div class="sidebar-brand-icon">
+                <span class="material-symbols-outlined" style="font-weight: bold;">directions_car</span>
+            </div>
+            <div class="sidebar-brand-text">
+                <h1>Prestige Rent</h1>
+                <p>@role Panel</p>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="sidebar-nav">
+            <!-- Common Links -->
+            <a href="/Dashboard" class="sidebar-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Dashboard" ? "active" : "")">
+                <span class="material-symbols-outlined">dashboard</span>
+                <span>Dashboard</span>
+            </a>
+            
+            <a href="/" class="sidebar-link">
+                <span class="material-symbols-outlined">home</span>
+                <span>Home</span>
+            </a>
+
+            <!-- Admin & Employee Links -->
+            @if (User.IsInRole("Admin") || User.IsInRole("Employee"))
+            {
+                <div class="sidebar-item-group">
+                    <div class="sidebar-link" style="justify-content: space-between; padding-right: 0.5rem;">
+                        <a href="/ControlPanel" style="display: flex; align-items: center; gap: 0.75rem; flex: 1; text-decoration: none; color: inherit;">
+                            <span class="material-symbols-outlined">settings</span>
+                            <span>Control Panel</span>
+                        </a>
+                        <button onclick="toggleSidebarDropdown('controlPanelMenu', 'cpArrow')" style="background: none; border: none; color: inherit; cursor: pointer; padding: 0.25rem;">
+                            <span id="cpArrow" class="material-symbols-outlined" style="font-size: 1rem; transition: transform 0.2s;">expand_more</span>
+                        </button>
+                    </div>
+                    
+                    <div id="controlPanelMenu" class="sidebar-dropdown-menu">
+                        <a href="/Blacklist" class="sidebar-sublink">
+                            <span class="material-symbols-outlined text-[18px]">block</span>
+                            <span>Blacklist</span>
+                        </a>
+                        <a href="/Booking" class="sidebar-sublink">
+                            <span class="material-symbols-outlined text-[18px]">book_online</span>
+                            <span>Bookings</span>
+                        </a>
+                        <a href="/Car" class="sidebar-sublink">
+                            <span class="material-symbols-outlined text-[18px]">directions_car</span>
+                            <span>Cars</span>
+                        </a>
+                        <a href="/Category" class="sidebar-sublink">
+                            <span class="material-symbols-outlined text-[18px]">category</span>
+                            <span>Categories</span>
+                        </a>
+                        <a href="/CreditCard" class="sidebar-sublink">
+                            <span class="material-symbols-outlined text-[18px]">credit_card</span>
+                            <span>Credit Cards</span>
+                        </a>
+                        <a href="/Customer" class="sidebar-sublink">
+                            <span class="material-symbols-outlined text-[18px]">group</span>
+                            <span>Customers</span>
+                        </a>
+                        <a href="/Employee" class="sidebar-sublink">
+                            <span class="material-symbols-outlined text-[18px]">badge</span>
+                            <span>Employees</span>
+                        </a>
+                        <a href="/Payment" class="sidebar-sublink">
+                            <span class="material-symbols-outlined text-[18px]">payments</span>
+                            <span>Financials</span>
+                        </a>
+                        <a href="/PaymentMethod" class="sidebar-sublink">
+                            <span class="material-symbols-outlined text-[18px]">account_balance_wallet</span>
+                            <span>Payment Methods</span>
+                        </a>
+                        <a href="/Promocode" class="sidebar-sublink">
+                            <span class="material-symbols-outlined text-[18px]">local_offer</span>
+                            <span>Promocodes</span>
+                        </a>
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <a href="/ControlPanel/ChangeRole" class="sidebar-sublink">
+                                <span class="material-symbols-outlined text-[18px]">admin_panel_settings</span>
+                                <span>Change Role</span>
+                            </a>
+                        }
+                    </div>
+                </div>
+
+                <a href="/Reports" class="sidebar-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Reports" ? "active" : "")">
+                    <span class="material-symbols-outlined">bar_chart</span>
+                    <span>Reports</span>
+                </a>
+            }
+
+            @if (User.IsInRole("Driver"))
+            {
+                <div class="sidebar-item-group">
+                    <div class="sidebar-link" style="justify-content: space-between; padding-right: 0.5rem;">
+                        <a href="/DriverPortal/Dashboard" style="display: flex; align-items: center; gap: 0.75rem; flex: 1; text-decoration: none; color: inherit;">
+                            <span class="material-symbols-outlined">badge</span>
+                            <span>Driver Portal</span>
+                        </a>
+                        <button onclick="toggleSidebarDropdown('driverMenu', 'driverArrow')" style="background: none; border: none; color: inherit; cursor: pointer; padding: 0.25rem;">
+                            <span id="driverArrow" class="material-symbols-outlined" style="font-size: 1rem; transition: transform 0.2s;">expand_more</span>
+                        </button>
+                    </div>
+                    <div id="driverMenu" class="sidebar-dropdown-menu">
+                        <a href="/DriverPortal/Dashboard" class="sidebar-sublink">
+                            <span class="material-symbols-outlined text-[18px]">dashboard</span>
+                            <span>Dashboard</span>
+                        </a>
+                        <a href="/DriverPortal/Schedule" class="sidebar-sublink">
+                            <span class="material-symbols-outlined text-[18px]">calendar_today</span>
+                            <span>Schedule</span>
+                        </a>
+                        <a href="#" class="sidebar-sublink">
+                            <span class="material-symbols-outlined text-[18px]">history</span>
+                            <span>History</span>
+                        </a>
+                    </div>
+                </div>
+            }
+
+            <a href="/Identity/Account/Manage" class="sidebar-link">
+                <span class="material-symbols-outlined">person</span>
+                <span>Profile</span>
+            </a>
+        </nav>
+
+        <!-- User Profile (Bottom) -->
+        <div class="sidebar-user">
+            <div class="sidebar-avatar" style="background-image: url('https://ui-avatars.com/api/?name=@(User.Identity?.Name ?? "User")&background=d4af35&color=14120b');"></div>
+            <div class="sidebar-user-info">
+                <p class="sidebar-user-name">@User.Identity?.Name</p>
+                <p class="sidebar-user-role">@role</p>
+            </div>
+        </div>
+    </aside>
+}

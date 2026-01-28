@@ -1,0 +1,212 @@
+/* Custom scrollbar for webkit */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #0c0b08;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #332f22;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #d4af35;
+}
+
+/* Global Sidebar Styles */
+.sidebar-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1040;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.sidebar-backdrop.show {
+    display: block;
+    opacity: 1;
+}
+
+.main-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 280px;
+    height: 100vh;
+    background-color: #14120b;
+    /* Matched Darkened Background */
+    border-right: 1px solid #332f22;
+    z-index: 1050;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-in-out;
+    display: flex;
+    flex-direction: column;
+    padding: 1.5rem;
+    font-family: 'Manrope', sans-serif;
+}
+
+.main-sidebar.open {
+    transform: translateX(0);
+}
+
+/* Desktop Visibility rule removed - handled locally in Employee.cshtml */
+
+.sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+}
+
+.sidebar-brand-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 9999px;
+    background: linear-gradient(135deg, #d4af35, #8c7322);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #201d12;
+}
+
+.sidebar-brand-text h1 {
+    color: white;
+    font-size: 1.125rem;
+    font-weight: 700;
+    line-height: 1;
+    margin: 0;
+}
+
+.sidebar-brand-text p {
+    color: rgba(212, 175, 53, 0.8);
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 0.25rem;
+    margin-bottom: 0;
+}
+
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: 0.75rem;
+    transition: all 0.2s;
+    text-decoration: none;
+    color: #c3b998;
+    border: 1px solid transparent;
+}
+
+.sidebar-link:hover,
+.sidebar-link.active {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: white;
+}
+
+.sidebar-link.active {
+    background-color: rgba(212, 175, 53, 0.1);
+    border-color: rgba(212, 175, 53, 0.2);
+}
+
+.sidebar-link .material-symbols-outlined {
+    font-size: 1.25rem;
+}
+
+.sidebar-link.active .material-symbols-outlined {
+    color: #d4af35;
+}
+
+/* Control Panel Dropdown */
+.sidebar-dropdown-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    background: none;
+    border: none;
+    padding: 0;
+    color: inherit;
+    cursor: pointer;
+}
+
+.sidebar-dropdown-menu {
+    display: none;
+    flex-direction: column;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 0.75rem;
+    margin-top: 0.25rem;
+    overflow: hidden;
+}
+
+.sidebar-dropdown-menu.show {
+    display: flex;
+}
+
+.sidebar-sublink {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 1rem 0.5rem 3rem;
+    text-decoration: none;
+    color: #c3b998;
+    font-size: 0.85rem;
+    transition: color 0.2s;
+}
+
+.sidebar-sublink:hover {
+    color: white;
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.sidebar-user {
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    border-radius: 0.75rem;
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.sidebar-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 9999px;
+    background-size: cover;
+    background-position: center;
+    border: 2px solid rgba(212, 175, 53, 0.3);
+}
+
+.sidebar-user-info p {
+    margin: 0;
+    line-height: 1.2;
+}
+
+.sidebar-user-name {
+    color: white;
+    font-size: 0.875rem;
+    font-weight: 700;
+}
+
+.sidebar-user-role {
+    color: #c3b998;
+    font-size: 0.75rem;
+}

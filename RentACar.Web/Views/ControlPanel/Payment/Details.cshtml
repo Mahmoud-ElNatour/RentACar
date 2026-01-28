@@ -1,0 +1,75 @@
+@model RentACar.Application.DTOs.PaymentDetailsDto
+@{
+    ViewData["Title"] = "Payment Details";
+    Layout = null;
+    decimal? discountAmount = Model.BookingDiscountAmount;
+    if (!discountAmount.HasValue && Model.BookingSubtotal.HasValue && Model.BookingTotal.HasValue)
+    {
+        discountAmount = Model.BookingSubtotal.Value - Model.BookingTotal.Value;
+    }
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/login-style.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
+    <style>
+        @@media print {
+            .no-print { display: none !important; }
+            .bg-dark { background-color: white !important; color: black !important; }
+            body { background-color: white !important; }
+        }
+    </style>
+</head>
+<body>
+    @await Html.PartialAsync("_PopupNotifications")
+    <div class="container1">
+        <div class="login-container text-start">
+            <a href="/Payment" class="btn btn-outline-warning rounded-circle d-inline-flex align-items-center justify-content-center no-print" style="width: 40px; height: 40px;" title="Back">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <div class="logo-text mt-3">
+                <i class="fas fa-file-invoice-dollar fa-lg"></i>
+                <div>RentACar</div>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mt-4">
+                <h2 class="m-0">Payment #@Model.PaymentId</h2>
+                <button onclick="window.print()" class="btn btn-light no-print" title="Print Receipt"><i class="fas fa-print"></i> Print</button>
+            </div>
+            <div class="mt-3 bg-dark text-white p-3 rounded">
+                <h5 class="text-warning">Payment Info</h5>
+                <p class="mb-1"><strong>Booking:</strong> #@Model.BookingId</p>
+                <p class="mb-1"><strong>Customer:</strong> @Model.CustomerName @if (!string.IsNullOrEmpty(Model.CustomerUsername)){<text>(@Model.CustomerUsername)</text>}</p>
+                <p class="mb-1"><strong>Amount:</strong> @Model.Amount.ToString("F2")</p>
+                <p class="mb-1"><strong>Date:</strong> @Model.PaymentDate.ToString("yyyy-MM-dd")</p>
+                <p class="mb-1"><strong>Method:</strong> @Model.PaymentMethodName</p>
+                <p class="mb-3"><strong>Status:</strong> @Model.Status</p>
+                <h5 class="text-warning">Booking Summary</h5>
+                <p class="mb-1"><strong>Status:</strong> @Model.BookingStatus</p>
+                <p class="mb-1"><strong>Subtotal:</strong> @(Model.BookingSubtotal?.ToString("F2") ?? "-")</p>
+                <p class="mb-1"><strong>Promo Code:</strong> @(string.IsNullOrWhiteSpace(Model.PromocodeName) ? "-" : Model.PromocodeName)</p>
+                <p class="mb-1"><strong>Discount (%):</strong> @(Model.PromocodeDiscountPercentage.HasValue ? Model.PromocodeDiscountPercentage.Value.ToString("F2") + "%" : "-")</p>
+                <p class="mb-1"><strong>Discount Amount:</strong> @(discountAmount.HasValue ? discountAmount.Value.ToString("F2") : "-")</p>
+                <p class="mb-1"><strong>Total:</strong> @(Model.BookingTotal?.ToString("F2") ?? "-")</p>
+                <p class="mb-1"><strong>Car:</strong> @Model.CarModel @if (!string.IsNullOrEmpty(Model.CarPlateNumber)){<text>(@Model.CarPlateNumber)</text>}</p>
+            </div>
+        </div>
+    </div>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            if (params.has('print')) {
+                window.print();
+            }
+        });
+    </script>
+</body>
+</html>

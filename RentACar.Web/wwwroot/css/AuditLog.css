@@ -1,0 +1,616 @@
+/* CSS Polyfill for Audit Log Page (simulating Tailwind Utilities) */
+
+:root {
+    --text-primary: var(--accent-yellow, #ffcc00);
+    --bg-surface-dark: #141414;
+    --bg-surface-dark-lighter: #1e1e1e;
+    --bg-page-dark: #000000;
+    /* Deep black for page background */
+}
+
+/* Colors */
+body {
+    background-color: #000000 !important;
+}
+
+.bg-page-dark {
+    background-color: var(--bg-page-dark) !important;
+}
+
+.text-primary {
+    color: var(--text-primary) !important;
+}
+
+.text-primary\/70 {
+    color: rgba(255, 204, 0, 0.7) !important;
+}
+
+.text-primary\/40 {
+    color: rgba(255, 204, 0, 0.4) !important;
+}
+
+.text-primary\/60 {
+    color: rgba(255, 204, 0, 0.6) !important;
+}
+
+.bg-primary {
+    background-color: var(--text-primary) !important;
+}
+
+.hover\:bg-primary\/90:hover {
+    background-color: rgba(255, 204, 0, 0.9) !important;
+}
+
+.bg-primary\/10 {
+    background-color: rgba(255, 204, 0, 0.1) !important;
+}
+
+.hover\:bg-primary\/10:hover {
+    background-color: rgba(255, 204, 0, 0.1) !important;
+}
+
+.bg-surface-dark {
+    background-color: var(--bg-surface-dark) !important;
+}
+
+.bg-surface-dark-lighter {
+    background-color: var(--bg-surface-dark-lighter) !important;
+}
+
+.text-background-dark {
+    color: #141414 !important;
+}
+
+.text-white {
+    color: #ffffff !important;
+}
+
+.text-white\/80 {
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.text-white\/70 {
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.text-white\/60 {
+    color: rgba(255, 255, 255, 0.6) !important;
+}
+
+.text-white\/50 {
+    color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.text-white\/40 {
+    color: rgba(255, 255, 255, 0.4) !important;
+}
+
+.text-white\/30 {
+    color: rgba(255, 255, 255, 0.3) !important;
+}
+
+.text-white\/5 {
+    color: rgba(255, 255, 255, 0.05) !important;
+}
+
+.text-gray-400 {
+    color: #9ca3af !important;
+}
+
+.border-primary\/10 {
+    border-color: rgba(255, 204, 0, 0.1) !important;
+}
+
+.hover\:border-primary\/30:hover {
+    border-color: rgba(255, 204, 0, 0.3) !important;
+}
+
+.focus-within\:border-primary\/50:focus-within {
+    border-color: rgba(255, 204, 0, 0.5) !important;
+}
+
+.focus\:border-primary\/50:focus {
+    border-color: rgba(255, 204, 0, 0.5) !important;
+}
+
+.ring-white\/10 {
+    --tw-ring-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.hover\:bg-white\/5:hover {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+.hover\:bg-white\/\[0\.02\]:hover {
+    background-color: rgba(255, 255, 255, 0.02) !important;
+}
+
+/* Layout & Flexbox */
+.flex {
+    display: flex !important;
+}
+
+.flex-col {
+    flex-direction: column !important;
+}
+
+.flex-row {
+    flex-direction: row !important;
+}
+
+.flex-wrap {
+    flex-wrap: wrap !important;
+}
+
+.flex-1 {
+    flex: 1 1 0% !important;
+}
+
+.grow {
+    flex-grow: 1 !important;
+}
+
+.shrink-0 {
+    flex-shrink: 0 !important;
+}
+
+.items-center {
+    align-items: center !important;
+}
+
+.items-start {
+    align-items: flex-start !important;
+}
+
+.items-stretch {
+    align-items: stretch !important;
+}
+
+.justify-center {
+    justify-content: center !important;
+}
+
+.justify-between {
+    justify-content: space-between !important;
+}
+
+.justify-start {
+    justify-content: flex-start !important;
+}
+
+.justify-end {
+    justify-content: flex-end !important;
+}
+
+.gap-1\.5 {
+    gap: 0.375rem !important;
+}
+
+.gap-2 {
+    gap: 0.5rem !important;
+}
+
+.gap-3 {
+    gap: 0.75rem !important;
+}
+
+.gap-4 {
+    gap: 1rem !important;
+}
+
+.gap-6 {
+    gap: 1.5rem !important;
+}
+
+.w-full {
+    width: 100% !important;
+}
+
+.h-full {
+    height: 100% !important;
+}
+
+.h-10 {
+    height: 2.5rem !important;
+}
+
+.h-8 {
+    height: 2rem !important;
+}
+
+.w-8 {
+    width: 2rem !important;
+}
+
+/* Spacing */
+.p-4 {
+    padding: 1rem !important;
+}
+
+.px-4 {
+    padding-left: 1rem;
+    padding-right: 1rem !important;
+}
+
+.py-2 {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem !important;
+}
+
+.py-4 {
+    padding-top: 1rem;
+    padding-bottom: 1rem !important;
+}
+
+.py-6 {
+    padding-top: 1.5rem;
+    padding-bottom: 1.5rem !important;
+}
+
+.px-6 {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem !important;
+}
+
+.pl-3 {
+    padding-left: 0.75rem !important;
+}
+
+.pl-4 {
+    padding-left: 1rem !important;
+}
+
+.pr-8 {
+    padding-right: 2rem !important;
+}
+
+.mb-2 {
+    margin-bottom: 0.5rem !important;
+}
+
+.mb-4 {
+    margin-bottom: 1rem !important;
+}
+
+.mb-6 {
+    margin-bottom: 1.5rem !important;
+}
+
+/* Grid */
+.grid {
+    display: grid !important;
+}
+
+.grid-cols-1 {
+    grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+}
+
+@media (min-width: 1024px) {
+    .lg\:grid-cols-12 {
+        grid-template-columns: repeat(12, minmax(0, 1fr)) !important;
+    }
+
+    .lg\:col-span-4 {
+        grid-column: span 4 / span 4 !important;
+    }
+
+    .lg\:col-span-8 {
+        grid-column: span 8 / span 8 !important;
+    }
+
+    .lg\:justify-end {
+        justify-content: flex-end !important;
+    }
+}
+
+/* Appearance */
+.rounded-lg {
+    border-radius: 0.5rem !important;
+}
+
+.rounded-xl {
+    border-radius: 0.75rem !important;
+}
+
+.rounded-full {
+    border-radius: 9999px !important;
+}
+
+.rounded-md {
+    border-radius: 0.375rem !important;
+}
+
+.rounded-l-md {
+    border-top-left-radius: 0.375rem;
+    border-bottom-left-radius: 0.375rem;
+}
+
+.rounded-r-md {
+    border-top-right-radius: 0.375rem;
+    border-bottom-right-radius: 0.375rem;
+}
+
+.border {
+    border-width: 1px !important;
+    border-style: solid !important;
+}
+
+.border-b {
+    border-bottom-width: 1px !important;
+    border-style: solid !important;
+}
+
+.border-t {
+    border-top-width: 1px !important;
+    border-style: solid !important;
+}
+
+.border-none {
+    border-style: none !important;
+}
+
+.shadow-lg {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+}
+
+.shadow-2xl {
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+}
+
+.shadow-sm {
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+}
+
+.bg-transparent {
+    background-color: transparent !important;
+}
+
+.appearance-none {
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.cursor-pointer {
+    cursor: pointer !important;
+}
+
+/* Typography */
+.text-xs {
+    font-size: 0.75rem !important;
+    line-height: 1rem !important;
+}
+
+.text-sm {
+    font-size: 0.875rem !important;
+    line-height: 1.25rem !important;
+}
+
+.text-base {
+    font-size: 1rem !important;
+    line-height: 1.5rem !important;
+}
+
+.text-3xl {
+    font-size: 1.875rem !important;
+    line-height: 2.25rem !important;
+}
+
+.text-4xl {
+    font-size: 2.25rem !important;
+    line-height: 2.5rem !important;
+}
+
+.font-bold {
+    font-weight: 700 !important;
+}
+
+.font-medium {
+    font-weight: 500 !important;
+}
+
+.font-semibold {
+    font-weight: 600 !important;
+}
+
+.font-extrabold {
+    font-weight: 800 !important;
+}
+
+.font-mono {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
+}
+
+.tracking-tight {
+    letter-spacing: -0.025em !important;
+}
+
+.tracking-wide {
+    letter-spacing: 0.025em !important;
+}
+
+.tracking-wider {
+    letter-spacing: 0.05em !important;
+}
+
+.uppercase {
+    text-transform: uppercase !important;
+}
+
+.text-right {
+    text-align: right !important;
+}
+
+.whitespace-nowrap {
+    white-space: nowrap !important;
+}
+
+.truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Status Badges */
+.text-emerald-500 {
+    color: #10b981 !important;
+}
+
+.text-emerald-400 {
+    color: #34d399 !important;
+}
+
+.bg-emerald-400 {
+    background-color: #34d399 !important;
+}
+
+.bg-emerald-500\/10 {
+    background-color: rgba(16, 185, 129, 0.1) !important;
+}
+
+.border-emerald-500\/20 {
+    border-color: rgba(16, 185, 129, 0.2) !important;
+}
+
+.text-blue-400 {
+    color: #60a5fa !important;
+}
+
+.bg-blue-500\/10 {
+    background-color: rgba(59, 130, 246, 0.1) !important;
+}
+
+.border-blue-500\/20 {
+    border-color: rgba(59, 130, 246, 0.2) !important;
+}
+
+.text-red-400 {
+    color: #f87171 !important;
+}
+
+.bg-red-400 {
+    background-color: #f87171 !important;
+}
+
+.bg-red-500\/10 {
+    background-color: rgba(239, 68, 68, 0.1) !important;
+}
+
+.border-red-500\/20 {
+    border-color: rgba(239, 68, 68, 0.2) !important;
+}
+
+/* Arbitrary Values */
+.max-w-\[1400px\] {
+    max-width: 1400px !important;
+}
+
+.text-\[20px\] {
+    font-size: 20px !important;
+}
+
+.text-\[18px\] {
+    font-size: 18px !important;
+}
+
+.w-1\.5 {
+    width: 0.375rem !important;
+}
+
+.h-1\.5 {
+    height: 0.375rem !important;
+}
+
+/* Helper Classes */
+.absolute {
+    position: absolute !important;
+}
+
+.relative {
+    position: relative !important;
+}
+
+.right-2 {
+    right: 0.5rem !important;
+}
+
+.top-1\/2 {
+    top: 50% !important;
+}
+
+.-translate-y-1\/2 {
+    transform: translateY(-50%) !important;
+}
+
+.pointer-events-none {
+    pointer-events: none !important;
+}
+
+.overflow-hidden {
+    overflow: hidden !important;
+}
+
+.overflow-x-auto {
+    overflow-x: auto !important;
+}
+
+.transition-colors {
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 200ms;
+}
+
+.isolate {
+    isolation: isolate;
+}
+
+.-space-x-px> :not([hidden])~ :not([hidden]) {
+    margin-left: -1px;
+}
+
+/* Visibility */
+.hidden {
+    display: none !important;
+}
+
+@media (min-width: 1280px) {
+    .xl\:table-cell {
+        display: table-cell !important;
+    }
+}
+
+@media (min-width: 1536px) {
+    .\32 xl\:table-cell {
+        display: table-cell !important;
+    }
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+/* Original Scrollbar Styles */
+.custom-scrollbar::-webkit-scrollbar {
+    height: 8px;
+    width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: #171717;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #404040;
+    border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #525252;
+}

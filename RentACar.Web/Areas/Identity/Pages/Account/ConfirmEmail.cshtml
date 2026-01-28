@@ -1,0 +1,30 @@
+@page
+@model ConfirmEmailModel
+@{
+    Layout = "/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Confirm Email";
+    ViewData["BodyClass"] = "bg-background-dark";
+}
+
+<div class="flex items-center justify-center min-h-[calc(100vh-300px)] py-16 px-4">
+    <div class="w-full max-w-md space-y-8 bg-[#171717] p-10 rounded-2xl shadow-xl border border-white/5 text-center">
+        <div class="flex justify-center">
+            <div class="h-20 w-20 rounded-full bg-gold/10 flex items-center justify-center border border-gold/20">
+                <span class="material-symbols-outlined text-gold text-5xl">mark_email_read</span>
+            </div>
+        </div>
+        
+        <div class="space-y-4">
+             <h1 class="text-3xl font-bold text-white">@ViewData["Title"]</h1>
+             <div class="text-gray-400">
+                <partial name="_StatusMessage" model="Model.StatusMessage" />
+             </div>
+        </div>
+
+        <div class="mt-8">
+             <a asp-page="./Login" class="inline-flex w-full items-center justify-center px-6 py-3.5 border border-transparent text-base font-bold rounded-lg text-black bg-gold hover:bg-gold-hover transition-all duration-300 shadow-lg">
+                Go to Login
+            </a>
+        </div>
+    </div>
+</div>

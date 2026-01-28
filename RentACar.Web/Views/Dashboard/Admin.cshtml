@@ -1,0 +1,408 @@
+@model RentACar.Application.DTOs.AdminDashboardViewModel
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Rent A Car Admin Dashboard</title>
+    <!-- Material Symbols -->
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <!-- Theme Configuration -->
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#d4af35",
+                        "background-light": "#f8f7f6",
+                        "background-dark": "#0c0b08",
+                        "card-dark": "#1d1b14", 
+                        "border-gold": "#332f22"
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&amp;display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="~/css/AdminDashboard.css" />
+</head>
+<body class="font-display bg-background-light dark:bg-background-dark text-slate-900 dark:text-white antialiased overflow-hidden">
+    <div class="flex h-screen w-full overflow-hidden">
+        <!-- Sidebar -->
+        <aside class="hidden md:flex flex-col w-72 bg-[#14120b] border-r border-[#332f22] flex-shrink-0">
+            <div class="p-6 flex flex-col h-full justify-between">
+                <div class="flex flex-col gap-8">
+                    <!-- Brand -->
+                    <div class="flex items-center gap-3">
+                        <div class="size-10 rounded-full bg-gradient-to-br from-primary to-[#8c7322] flex items-center justify-center text-background-dark">
+                            <span class="material-symbols-outlined font-bold">directions_car</span>
+                        </div>
+                        <div class="flex flex-col">
+                            <h1 class="text-white text-lg font-bold leading-none tracking-tight">Prestige Rent</h1>
+                            <p class="text-primary/80 text-xs font-medium uppercase tracking-wider mt-1">Admin Panel</p>
+                        </div>
+                    </div>
+                    <!-- Navigation -->
+                    <!-- Navigation -->
+                    <nav class="flex flex-col gap-2">
+                        <!-- Dashboard -->
+                        <a href="/Dashboard/Admin" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/10 border border-primary/20 transition-colors">
+                            <span class="material-symbols-outlined text-primary">dashboard</span>
+                            <p class="text-white text-sm font-medium">Dashboard</p>
+                        </a>
+
+                        <!-- Control Panel Dropdown -->
+                        <div class="flex flex-col group/cp">
+                            <div class="flex items-center justify-between gap-1 pr-4 rounded-xl hover:bg-white/5 transition-all w-full">
+                                <a href="/ControlPanel" class="flex-1 flex items-center gap-3 px-4 py-3 text-[#c3b998] hover:text-white transition-colors">
+                                    <span class="material-symbols-outlined">settings</span>
+                                    <p class="text-sm font-medium">Control Panel</p>
+                                </a>
+                                <button onclick="toggleControlPanel()" class="p-2 text-[#c3b998] hover:text-white transition-colors z-20 focus:outline-none">
+                                    <span id="cp-arrow" class="material-symbols-outlined text-sm transition-transform group-hover/cp:rotate-180">expand_more</span>
+                                </button>
+                            </div>
+                            <!-- Dropdown Items -->
+                            <div id="control-panel-menu" class="hidden group-hover/cp:flex flex-col bg-black/20 rounded-xl mt-1 overflow-hidden transition-all">
+                                <a href="/Blacklist" class="flex items-center gap-3 px-4 py-2 pl-12 hover:bg-white/5 text-[#c3b998] hover:text-white transition-all">
+                                    <p class="text-xs font-medium">Blacklist</p>
+                                </a>
+                                <a href="/Booking" class="flex items-center gap-3 px-4 py-2 pl-12 hover:bg-white/5 text-[#c3b998] hover:text-white transition-all">
+                                    <p class="text-xs font-medium">Bookings</p>
+                                </a>
+                                <a href="/Car" class="flex items-center gap-3 px-4 py-2 pl-12 hover:bg-white/5 text-[#c3b998] hover:text-white transition-all">
+                                    <p class="text-xs font-medium">Cars</p>
+                                </a>
+                                <a href="/Category" class="flex items-center gap-3 px-4 py-2 pl-12 hover:bg-white/5 text-[#c3b998] hover:text-white transition-all">
+                                    <p class="text-xs font-medium">Categories</p>
+                                </a>
+                                <a href="/CreditCard" class="flex items-center gap-3 px-4 py-2 pl-12 hover:bg-white/5 text-[#c3b998] hover:text-white transition-all">
+                                    <p class="text-xs font-medium">Credit Cards</p>
+                                </a>
+                                <a href="/Customer" class="flex items-center gap-3 px-4 py-2 pl-12 hover:bg-white/5 text-[#c3b998] hover:text-white transition-all">
+                                    <p class="text-xs font-medium">Customers</p>
+                                </a>
+                                <a href="/Employee" class="flex items-center gap-3 px-4 py-2 pl-12 hover:bg-white/5 text-[#c3b998] hover:text-white transition-all">
+                                    <p class="text-xs font-medium">Employees</p>
+                                </a>
+                                <a href="/Payment" class="flex items-center gap-3 px-4 py-2 pl-12 hover:bg-white/5 text-[#c3b998] hover:text-white transition-all">
+                                    <p class="text-xs font-medium">Financials</p>
+                                </a>
+                                <a href="/PaymentMethod" class="flex items-center gap-3 px-4 py-2 pl-12 hover:bg-white/5 text-[#c3b998] hover:text-white transition-all">
+                                    <p class="text-xs font-medium">Payment Methods</p>
+                                </a>
+                                <a href="/Promocode" class="flex items-center gap-3 px-4 py-2 pl-12 hover:bg-white/5 text-[#c3b998] hover:text-white transition-all">
+                                    <p class="text-xs font-medium">Promocodes</p>
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Other Links -->
+                        <a href="/" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 text-[#c3b998] hover:text-white transition-all">
+                            <span class="material-symbols-outlined">home</span>
+                            <p class="text-sm font-medium">Home</p>
+                        </a>
+                        <a href="/Identity/Account/Manage" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 text-[#c3b998] hover:text-white transition-all">
+                            <span class="material-symbols-outlined">person</span>
+                            <p class="text-sm font-medium">Profile</p>
+                        </a>
+                        <a href="/Reports" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 text-[#c3b998] hover:text-white transition-all">
+                            <span class="material-symbols-outlined">bar_chart</span>
+                            <p class="text-sm font-medium">Reports</p>
+                        </a>
+                    </nav>
+                </div>
+                <!-- User Profile -->
+                <div class="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5">
+                    <div class="bg-center bg-no-repeat bg-cover rounded-full size-10 ring-2 ring-primary/30" style='background-image: url("https://ui-avatars.com/api/?name=Admin+User&background=d4af35&color=14120b");'></div>
+                    <div class="flex flex-col">
+                        <p class="text-white text-sm font-bold">@User.Identity?.Name</p>
+                        <p class="text-[#c3b998] text-xs">Admin</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col h-full overflow-y-auto relative bg-[#0c0b08]">
+            <!-- Mobile Header -->
+            <div class="md:hidden flex items-center justify-between p-4 bg-[#14120b] border-b border-[#332f22]">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">directions_car</span>
+                    <span class="text-white font-bold">Prestige Rent</span>
+                </div>
+                <button class="text-white"><span class="material-symbols-outlined">menu</span></button>
+            </div>
+            <div class="p-6 md:p-10 max-w-7xl mx-auto w-full flex flex-col gap-8">
+                <!-- Page Heading -->
+                <header class="flex flex-wrap justify-between items-end gap-4">
+                    <div class="flex flex-col gap-1">
+                        <h1 class="text-white text-3xl md:text-4xl font-black tracking-tight">Dashboard Overview</h1>
+                        <p class="text-[#c3b998] text-base">Here is what's happening in Rent A Car today.</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="flex items-center gap-2 px-4 py-2 bg-[#1d1b14] border border-[#332f22] rounded-lg">
+                            <span class="material-symbols-outlined text-primary text-sm">calendar_today</span>
+                            <span class="text-white text-sm font-medium">@DateTime.Now.ToString("MMM dd, yyyy")</span>
+                        </div>
+                        <a href="/Browse">
+                           <button class="bg-primary hover:bg-[#bfa030] text-black font-bold px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
+                            <span class="material-symbols-outlined text-xl">add</span>
+                            <span>New Booking</span>
+                        </button>
+                        </a>
+                        
+                    </div>
+                </header>
+                <!-- Top KPI Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <!-- Fleet Card -->
+                    <div class="bg-[#1d1b14] border border-[#332f22] rounded-xl p-5 flex flex-col justify-between gap-4">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-[#c3b998] text-sm font-medium">Total Fleet</p>
+                                <p class="text-white text-2xl font-bold mt-1">@Model.TotalCars Cars</p>
+                            </div>
+                            <div class="bg-[#332f22] p-2 rounded-lg text-primary">
+                                <span class="material-symbols-outlined">directions_car</span>
+                            </div>
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            <div class="flex justify-between text-xs">
+                                <span class="text-white font-medium">Availability</span>
+                                @{
+                                    var availability = Model.TotalCars > 0 ? (int)((double)Model.AvailableCars / Model.TotalCars * 100) : 0;
+                                }
+                                <span class="text-primary font-bold">@availability%</span>
+                            </div>
+                            <div class="h-2 w-full bg-[#332f22] rounded-full overflow-hidden">
+                                <div class="h-full bg-primary rounded-full" style="width: @availability%"></div>
+                            </div>
+                            <p class="text-[#8c8672] text-xs">@Model.AvailableCars cars available for booking</p>
+                        </div>
+                    </div>
+                    <!-- Active Bookings -->
+                    <div class="bg-[#1d1b14] border border-[#332f22] rounded-xl p-5 flex flex-col justify-between gap-4">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-[#c3b998] text-sm font-medium">Active Bookings</p>
+                                <p class="text-white text-2xl font-bold mt-1">@Model.ActiveBookings</p>
+                            </div>
+                            <div class="bg-[#332f22] p-2 rounded-lg text-primary">
+                                <span class="material-symbols-outlined">key</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 text-xs text-[#8c8672]">
+                            <span class="text-green-500 flex items-center gap-1 font-bold"><span class="material-symbols-outlined text-[14px]">trending_up</span></span>
+                            <span>Total Bookings: @Model.TotalBookings</span>
+                        </div>
+                    </div>
+                    <!-- Total Customers -->
+                    <div class="bg-[#1d1b14] border border-[#332f22] rounded-xl p-5 flex flex-col justify-between gap-4">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-[#c3b998] text-sm font-medium">Total Customers</p>
+                                <p class="text-white text-2xl font-bold mt-1">@Model.TotalCustomers.ToString("N0")</p>
+                            </div>
+                            <div class="bg-[#332f22] p-2 rounded-lg text-primary">
+                                <span class="material-symbols-outlined">group</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 text-xs text-[#8c8672]">
+                            <span class="text-white font-medium">Registered</span>
+                            <span>in total</span>
+                        </div>
+                    </div>
+                    <!-- Employees -->
+                    <div class="bg-[#1d1b14] border border-[#332f22] rounded-xl p-5 flex flex-col justify-between gap-4">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-[#c3b998] text-sm font-medium">Employees</p>
+                                <p class="text-white text-2xl font-bold mt-1">@Model.TotalEmployees</p>
+                            </div>
+                            <div class="bg-[#332f22] p-2 rounded-lg text-primary">
+                                <span class="material-symbols-outlined">badge</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 text-xs text-[#8c8672]">
+                            <span class="text-green-500 font-medium">Active</span>
+                            <span>All shifts covered</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Financial Stats Row -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Income -->
+                    <div class="bg-gradient-to-br from-[#1d1b14] to-[#14120b] border border-primary/30 rounded-xl p-6 relative overflow-hidden group">
+                        <div class="absolute right-0 top-0 w-24 h-24 bg-primary/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+                        <p class="text-[#c3b998] text-sm font-medium relative z-10">Monthly Income (@DateTime.Now.ToString("MMM"))</p>
+                        <p class="text-white text-3xl font-bold mt-2 relative z-10 tracking-tight">@Model.IncomeThisMonth.ToString("C0")</p>
+                        <div class="mt-4 flex items-center gap-2 relative z-10">
+                            <span class="text-[#8c8672] text-xs">Year Total: @Model.IncomeThisYear.ToString("C0")</span>
+                        </div>
+                    </div>
+                    <!-- Salaries -->
+                    <div class="bg-[#1d1b14] border border-[#332f22] rounded-xl p-6">
+                        <p class="text-[#c3b998] text-sm font-medium">Salaries Paid</p>
+                        <p class="text-white text-3xl font-bold mt-2 tracking-tight">@Model.SalariesToPay.ToString("C0")</p>
+                        <div class="mt-4 flex items-center gap-2">
+                            <span class="bg-white/5 text-[#c3b998] text-xs px-2 py-1 rounded font-medium border border-white/10">Fixed per month</span>
+                        </div>
+                    </div>
+                    <!-- Projected -->
+                    <div class="bg-[#1d1b14] border border-[#332f22] rounded-xl p-6">
+                        <p class="text-[#c3b998] text-sm font-medium">Net Revenue (Est.)</p>
+                        <p class="text-primary text-3xl font-bold mt-2 tracking-tight">@Model.ExpectedRevenue.ToString("C0")</p>
+                        <div class="mt-4 flex items-center gap-2">
+                            <span class="bg-primary/10 text-primary text-xs px-2 py-1 rounded font-bold border border-primary/20">Year to Date</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Charts & Activity Split -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Chart Section -->
+                    <div class="lg:col-span-2 bg-[#1d1b14] border border-[#332f22] rounded-xl p-6 flex flex-col h-full min-h-[400px]">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-white text-lg font-bold">Monthly Bookings Trend</h3>
+                            <select id="yearSelect" class="bg-[#14120b] border border-[#332f22] text-white text-sm rounded-lg px-3 py-1 focus:ring-1 focus:ring-primary outline-none">
+                                @foreach (var year in Model.AvailableYears)
+                                {
+                                    <option value="@year">@year</option>
+                                }
+                            </select>
+                        </div>
+                        <!-- Canvas for Chart.js -->
+                        <div class="relative w-full h-full min-h-[300px]">
+                            <canvas id="bookingChart"></canvas>
+                        </div>
+                    </div>
+                    <!-- Recent Activity Feed -->
+                    <div class="lg:col-span-1 bg-[#1d1b14] border border-[#332f22] rounded-xl p-6 flex flex-col">
+                        <h3 class="text-white text-lg font-bold mb-6">Recent Activity</h3>
+                        <div class="flex flex-col gap-6 overflow-y-auto max-h-[400px]">
+                            @if (Model.RecentActivities != null && Model.RecentActivities.Any())
+                            {
+                                @foreach (var item in Model.RecentActivities)
+                                {
+                                    <div class="flex gap-4">
+                                        <div class="relative">
+                                            <div class="size-10 rounded-full bg-[#14120b] border border-[#332f22] flex items-center justify-center @item.IconColorClass">
+                                                <span class="material-symbols-outlined text-[20px]">@item.Icon</span>
+                                            </div>
+                                            <!-- Vertical Line -->
+                                            <div class="absolute top-10 left-1/2 -translate-x-1/2 w-px h-full bg-[#332f22]"></div>
+                                        </div>
+                                        <div class="flex flex-col pb-2">
+                                            <p class="text-white text-sm font-semibold">@item.Title</p>
+                                            <p class="text-[#8c8672] text-xs mt-0.5">@item.Description</p>
+                                            <p class="text-[#332f22] text-[10px] font-bold mt-1 uppercase">@item.TimeAgo</p>
+                                        </div>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <p class="text-[#8c8672] text-sm text-center">No recent activity.</p>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Chart Script -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const monthData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.MonthlyBookings));
+        const ctx = document.getElementById('bookingChart');
+        if (ctx) {
+            const chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+                    datasets: [{
+                        label: 'Bookings',
+                        data: monthData,
+                        borderColor: '#d4af35', // Primary Gold
+                        backgroundColor: (context) => {
+                            const ctx = context.chart.ctx;
+                            const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+                            gradient.addColorStop(0, 'rgba(212,175,53,0.3)');
+                            gradient.addColorStop(1, 'rgba(212,175,53,0.0)');
+                            return gradient;
+                        },
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#d4af35',
+                        borderWidth: 3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: '#332f22',
+                                borderDash: [5, 5]
+                            },
+                            ticks: { color: '#8c8672' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#8c8672' }
+                        }
+                    }
+                }
+            });
+
+            document.getElementById('yearSelect').addEventListener('change', async function() {
+                const year = this.value;
+                try {
+                    const response = await fetch(`/api/Dashboard/GetChartData?year=${year}`);
+                    if (response.ok) {
+                        const newData = await response.json();
+                        chart.data.datasets[0].data = newData;
+                        chart.update();
+                    } else {
+                        console.error('Failed to fetch chart data');
+                    }
+                } catch (error) {
+                    console.error('Error fetching chart data:', error);
+                }
+            });
+        }
+
+        function toggleControlPanel() {
+            const menu = document.getElementById('control-panel-menu');
+            const arrow = document.getElementById('cp-arrow');
+            if (menu.classList.contains('hidden')) {
+                menu.classList.remove('hidden');
+                menu.classList.add('flex');
+                arrow.style.transform = 'rotate(180deg)';
+            } else {
+                menu.classList.add('hidden');
+                menu.classList.remove('flex');
+                arrow.style.transform = 'rotate(0deg)';
+            }
+        }
+    </script>
+</body>
+</html>

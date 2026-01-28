@@ -1,0 +1,1046 @@
+@page
+@model RentACar.Web.Areas.Identity.Pages.Account.Manage.IndexModel
+@{
+    Layout = "/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Settings";
+    ViewData["BodyClass"] = "bg-[#050505]";
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Unified Navigation Logic ---
+            const navLinks = document.querySelectorAll('nav.glass-nav a');
+            const sections = document.querySelectorAll('div.settings-section');
+
+            function showSection(id) {
+                sections.forEach(section => section.classList.add('hidden'));
+
+                const target = document.getElementById(id);
+                if (target) {
+                    target.classList.remove('hidden');
+                    target.classList.add('animate-fadeIn');
+                }
+            }
+
+            function setActiveLink(activeId) {
+                navLinks.forEach(link => {
+                    link.classList.remove('active', 'text-white');
+                    link.classList.add('text-white/60');
+
+                    const icon = link.querySelector('.material-symbols-outlined');
+                    if (icon) icon.classList.remove('text-[#d4af35]');
+                });
+
+                const activeLink = document.querySelector(`nav.glass-nav a[href="#${activeId}"]`);
+                if (activeLink) {
+                    activeLink.classList.remove('text-white/60');
+                    activeLink.classList.add('active', 'text-white');
+
+                    const icon = activeLink.querySelector('.material-symbols-outlined');
+                    if (icon) icon.classList.add('text-[#d4af35]');
+                }
+            }
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    const targetId = link.getAttribute('href').substring(1);
+                    showSection(targetId);
+                    setActiveLink(targetId);
+                    link.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                });
+            });
+
+            // Decide initial state
+            let initialTab = 'personal-details';
+            @if (TempData["IsMfaUnlocked"] as bool? == true || TempData["IsMfaOtpSent"] as bool? == true) {
+                <text>initialTab = 'mfa';</text>
+            } else if (Model.IsOtpSent || Model.IsOtpVerified) {
+                <text>initialTab = 'password-change';</text>
+            } else {
+                @if (ViewContext.HttpContext.Request.Method == "POST" && ViewContext.HttpContext.Request.Form.ContainsKey("NewCreditCard.CardNumber")) {
+                    <text>initialTab = 'payment-methods';</text>
+                } else if (ViewContext.HttpContext.Request.Method == "POST" && (
+                    ViewContext.HttpContext.Request.Form.ContainsKey("UploadNationalIdFront") ||
+                    ViewContext.HttpContext.Request.Form.ContainsKey("UploadNationalIdBack") ||
+                    ViewContext.HttpContext.Request.Form.ContainsKey("UploadDrivingLicenseFront") ||
+                    ViewContext.HttpContext.Request.Form.ContainsKey("UploadDrivingLicenseBack")
+                )) {
+                    <text>initialTab = 'identity-verification';</text>
+                }
+            }
+
+            showSection(initialTab);
+            setActiveLink(initialTab);
+
+            // --- OTP Inputs Logic (Password & MFA) ---
+            function setupOtpInputs(inputClass, hiddenInputId) {
+                const otpInputs = document.querySelectorAll(inputClass);
+                const hiddenOtpInput = document.getElementById(hiddenInputId);
+
+                if (otpInputs.length > 0 && hiddenOtpInput) {
+                    otpInputs.forEach((input, index) => {
+                        input.addEventListener('input', () => {
+                            if (input.value.length === 1 && index < otpInputs.length - 1) {
+                                otpInputs[index + 1].focus();
+                            }
+                            updateHiddenOtp();
+                        });
+
+                        input.addEventListener('keydown', (e) => {
+                            if (e.key === 'Backspace' && input.value.length === 0 && index > 0) {
+                                otpInputs[index - 1].focus();
+                            }
+                        });
+                    });
+
+                    function updateHiddenOtp() {
+                        let code = '';
+                        otpInputs.forEach(input => code += input.value);
+                        hiddenOtpInput.value = code;
+                    }
+                }
+            }
+
+            setupOtpInputs('.otp-digit', 'hiddenOtpInput');
+            setupOtpInputs('.mfa-otp-digit', 'hiddenMfaOtpInput');
+
+            // --- Add Card Modal ---
+            const btnAddCard = document.getElementById('btnAddCard');
+            const btnCancelAddCard = document.getElementById('btnCancelAddCard');
+            const addCardModal = document.getElementById('addCardModal');
+
+            if (btnAddCard && addCardModal) {
+                btnAddCard.addEventListener('click', () => addCardModal.classList.remove('hidden'));
+            }
+            if (btnCancelAddCard && addCardModal) {
+                btnCancelAddCard.addEventListener('click', () => addCardModal.classList.add('hidden'));
+            }
+
+            // --- View Card Details Logic ---
+            const viewCardModal = document.getElementById('viewCardModal');
+            const btnCloseViewCard = document.getElementById('btnCloseViewCard');
+            const viewCardBackdrop = document.getElementById('viewCardBackdrop');
+            const viewBtns = document.querySelectorAll('.btn-view-card');
+
+            const elNumber = document.getElementById('viewCardNumber');
+            const elHolder = document.getElementById('viewCardHolder');
+            const elExpiry = document.getElementById('viewCardExpiry');
+            const elCvv = document.getElementById('viewCardCvv');
+
+            function closeViewCard() {
+                if (viewCardModal) viewCardModal.classList.add('hidden');
+            }
+
+            if (viewCardModal && viewBtns) {
+                viewBtns.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        elNumber.innerText = btn.dataset.number.replace(/\D/g, '').match(/.{1,4}/g).join(' ');
+                        elHolder.innerText = btn.dataset.holder;
+                        elExpiry.innerText = btn.dataset.expiry;
+                        elCvv.innerText = btn.dataset.cvv;
+                        viewCardModal.classList.remove('hidden');
+                    });
+                });
+
+                if (btnCloseViewCard) btnCloseViewCard.addEventListener('click', closeViewCard);
+                if (viewCardBackdrop) viewCardBackdrop.addEventListener('click', closeViewCard);
+            }
+
+            // --- Notification Logic ---
+            @if (!string.IsNullOrEmpty(Model.StatusMessage))
+            {
+                var msgType = Model.StatusMessage.StartsWith("Error") ? "error" : "success";
+                var msgText = Model.StatusMessage.Replace("Error: ", "");
+                <text>
+                if (window.showPopup) window.showPopup('@Html.Raw(msgText)', '@msgType');
+                </text>
+            }
+
+            // --- Input Masking Logic (Card & Expiry) ---
+            const cardInput = document.getElementById('NewCreditCard_CardNumber');
+            const expiryInput = document.getElementById('NewCreditCard_ExpiryDate');
+
+            if (cardInput) {
+                cardInput.addEventListener('input', (e) => {
+                    let value = e.target.value.replace(/\D/g, '');
+                    let formatted = '';
+                    for (let i = 0; i < value.length; i++) {
+                        if (i > 0 && i % 4 === 0) formatted += ' ';
+                        formatted += value[i];
+                    }
+                    e.target.value = formatted.substring(0, 19);
+                });
+            }
+
+            if (expiryInput) {
+                expiryInput.addEventListener('input', (e) => {
+                    let value = e.target.value.replace(/\D/g, '');
+                    if (value.length >= 2) {
+                        let month = parseInt(value.substring(0, 2));
+                        if (month > 12) value = '12' + value.substring(2);
+                        else if (month === 0) value = '01' + value.substring(2);
+
+                        e.target.value = value.substring(0, 2) + '/' + value.substring(2, 4);
+                    } else {
+                        e.target.value = value;
+                    }
+                });
+            }
+        });
+
+        // --- Document Preview Logic (Global Scope) ---
+        function previewImage(input, previewId) {
+            const preview = document.getElementById(previewId);
+            const placeholder = document.getElementById(previewId.replace('preview-', 'placeholder-'));
+
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.classList.remove('hidden');
+                    if (placeholder) placeholder.classList.add('hidden');
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+    </script>
+}
+
+<style>
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #2c313a; border-radius: 99px; }
+    ::-webkit-scrollbar-thumb:hover { background: #d4af35; }
+
+    .glass-nav {
+        background: rgba(10, 10, 10, 0.8);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+    }
+    .glass-card {
+        background: rgba(18, 18, 18, 0.6);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    *:focus-visible {
+        outline: 2px solid #d4af35;
+        outline-offset: 2px;
+    }
+
+    input[type="text"], input[type="email"], input[type="password"], input[type="tel"] {
+        background-color: #18181b !important;
+        color: white !important;
+        border: none !important;
+        outline: none !important;
+    }
+    input[type="text"]:focus, input[type="email"]:focus, input[type="password"]:focus, input[type="tel"]:focus {
+        box-shadow: 0 0 0 2px rgba(212, 175, 53, 0.5) !important;
+    }
+
+    .nav-item { position: relative; }
+    .nav-item.active::after {
+        content: '';
+        position: absolute;
+        bottom: -1px;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background: #d4af35;
+        box-shadow: 0 -2px 10px rgba(212, 175, 53, 0.5);
+    }
+    @@media (min-width: 1024px) {
+        .nav-item.active::after { display: none; }
+        .nav-item.active {
+            background: rgba(212, 175, 53, 0.15);
+            color: #d4af35;
+            font-weight: 600;
+        }
+    }
+
+    .font-settings { font-family: 'Outfit', sans-serif; }
+</style>
+
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<div class="font-settings text-white min-h-screen flex flex-col selection:bg-[#d4af35]/30 selection:text-white">
+
+
+
+    <!-- ✅ UNIFIED HEADER & NAV -->
+    <div class="relative w-full bg-[#101010] border-b border-white/5 overflow-hidden">
+        <!-- Background Gear Watermark -->
+        <div class="absolute -top-20 -right-10 text-[#d4af35]/5 pointer-events-none select-none">
+             <span class="material-symbols-outlined text-[250px]">settings</span>
+        </div>
+
+        <div class="max-w-7xl mx-auto relative z-10 flex flex-col">
+            <!-- Top Section: Title (Centered, No Breadcrumbs) -->
+            <div class="px-6 pt-6 pb-2 lg:pt-8 lg:pb-3 w-full flex flex-col items-center justify-center">
+                 <!-- Title -->
+                 <div class="flex items-end gap-3">
+                    <div class="relative flex flex-col items-center">
+                        <h1 class="text-3xl font-black text-white tracking-wide uppercase leading-none text-center">
+                            Account <span class="text-[#d4af35]">Settings</span>
+                        </h1>
+                        <!-- Gold Underline -->
+                        <div class="w-12 h-1 bg-[#d4af35] mt-2 rounded-sm"></div>
+                    </div>
+                    <!-- Icon -->
+                     <span class="material-symbols-outlined text-[#27272a] text-2xl mb-1.5 font-black">settings</span>
+                </div>
+            </div>
+
+            <!-- Bottom Section: Sticky Nav -->
+            <nav class="glass-nav sticky top-0 z-40 w-full border-t border-white/5 shadow-lg lg:!bg-[#101010]/30 lg:backdrop-blur-md">
+                <div class="px-3 lg:px-6">
+                    <div class="flex flex-nowrap overflow-x-auto no-scrollbar lg:overflow-visible lg:grid lg:grid-cols-6 lg:gap-0">
+                        @{
+                            var baseNavItems = new List<dynamic> {
+                                new { Id = "personal-details", Icon = "badge", Label = "Profile" },
+                                new { Id = "password-change", Icon = "lock_reset", Label = "Password" },
+                                new { Id = "mfa", Icon = "phonelink_lock", Label = "MFA" },
+                                new { Id = "recovery-codes", Icon = "key", Label = "Recovery" }
+                            };
+
+                            bool isCustomer = User.IsInRole("Customer");
+                            if (isCustomer)
+                            {
+                                baseNavItems.Add(new { Id = "payment-methods", Icon = "credit_card", Label = "Saved Cards" });
+                                baseNavItems.Add(new { Id = "identity-verification", Icon = "verified_user", Label = "Verification" });
+                            }
+                        }
+
+                        @for (int i = 0; i < baseNavItems.Count; i++)
+                        {
+                            var item = baseNavItems[i];
+                            var gridClass = (!isCustomer && i == 0) ? "lg:col-start-2" : "";
+                            
+                             <a href="#@item.Id" class="nav-item @gridClass group flex items-center justify-center gap-2 px-4 py-4 lg:py-4 lg:my-0 text-sm font-medium text-white/50 hover:text-white transition-all whitespace-nowrap select-none w-auto lg:w-full border-b-2 border-transparent hover:bg-white/5 lg:rounded-none flex-shrink-0">
+                                <span class="material-symbols-outlined text-[20px] group-hover:scale-110 transition-transform">@item.Icon</span>
+                                <span class="hidden xl:inline">@item.Label</span>
+                                <span class="xl:hidden">@item.Label</span>
+                            </a>
+                        }
+                    </div>
+                </div>
+            </nav>
+        </div>
+    </div>
+    <!-- Main Content -->
+    <main class="flex-1 w-full max-w-5xl mx-auto p-6 lg:p-10 pb-20">
+
+        <div class="space-y-8">
+
+            <!-- Personal Details -->
+            <div class="settings-section" id="personal-details">
+                <section class="glass-card rounded-2xl p-6 md:p-8 relative overflow-hidden group">
+                    <div class="absolute -top-20 -right-20 size-64 bg-[#d4af35]/5 rounded-full blur-3xl pointer-events-none"></div>
+
+                    <div class="flex items-center justify-between mb-8 relative z-10">
+                        <div>
+                            <h3 class="text-xl font-bold uppercase tracking-wide"><span class="text-white">Personal</span> <span class="text-[#d4af35]">Information</span></h3>
+                            <p class="text-white/40 text-sm">Update your public profile and contact details.</p>
+                        </div>
+                    </div>
+
+                    <form method="post" class="relative z-10">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="col-span-2 md:col-span-1">
+                                <label class="block text-xs font-bold text-white/40 uppercase tracking-wider mb-2">Display Name</label>
+                                <div class="relative">
+                                    <input asp-for="Input.Name" class="w-full bg-[#18181b] border-none rounded-xl pl-11 pr-4 py-3.5 text-white focus:ring-2 focus:ring-[#d4af35]/50 transition-all font-medium placeholder:text-white/10" placeholder="Your Name" />
+                                    <span class="material-symbols-outlined absolute left-3.5 top-3.5 text-white/20">badge</span>
+                                </div>
+                                <span asp-validation-for="Input.Name" class="text-red-500 text-xs mt-1 block"></span>
+                            </div>
+
+                            <div class="col-span-2 md:col-span-1">
+                                <label class="block text-xs font-bold text-white/40 uppercase tracking-wider mb-2">Phone Number</label>
+                                <div class="relative">
+                                    <input asp-for="Input.PhoneNumber" class="w-full bg-[#18181b] border-none rounded-xl pl-11 pr-4 py-3.5 text-white focus:ring-2 focus:ring-[#d4af35]/50 transition-all font-medium placeholder:text-white/10" placeholder="+961..." />
+                                    <span class="material-symbols-outlined absolute left-3.5 top-3.5 text-white/20">call</span>
+                                </div>
+                                <span asp-validation-for="Input.PhoneNumber" class="text-red-500 text-xs mt-1 block"></span>
+                            </div>
+
+                            <div class="col-span-2">
+                                <label class="block text-xs font-bold text-white/40 uppercase tracking-wider mb-2">Home Address</label>
+                                <div class="relative">
+                                    <input asp-for="Input.Address" class="w-full bg-[#18181b] border-none rounded-xl pl-11 pr-4 py-3.5 text-white focus:ring-2 focus:ring-[#d4af35]/50 transition-all font-medium placeholder:text-white/10" placeholder="Street, City, Country" />
+                                    <span class="material-symbols-outlined absolute left-3.5 top-3.5 text-white/20">home_pin</span>
+                                </div>
+                            </div>
+
+                            <div class="col-span-2">
+                                <label class="block text-xs font-bold text-white/40 uppercase tracking-wider mb-2">Email Address</label>
+                                <div class="relative group/email">
+                                    <input asp-for="Input.Email" class="w-full bg-[#18181b]/50 border border-white/5 rounded-xl pl-11 pr-4 py-3.5 text-white/50 cursor-not-allowed" readonly />
+                                    <span class="material-symbols-outlined absolute left-3.5 top-3.5 text-white/20">mail</span>
+                                    <div class="absolute right-4 top-3.5 flex items-center gap-2 text-white/20 group-hover/email:text-[#d4af35]/50 transition-colors">
+                                        <span class="text-xs font-bold">LOCKED</span>
+                                        <span class="material-symbols-outlined text-sm">lock</span>
+                                    </div>
+                                </div>
+                                <p class="text-[15px] text-white/30 mt-2 flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-[22px]">info</span>
+                                    Contact support if you want to edit your email.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="mt-8 pt-6 border-t border-white/5 flex justify-end">
+                            <button type="submit" class="bg-[#d4af35] hover:bg-[#b5952f] text-black font-bold py-3.5 px-8 rounded-xl transition-all shadow-[0_4px_20px_rgba(212,175,53,0.2)] hover:shadow-[0_4px_25px_rgba(212,175,53,0.3)] hover:-translate-y-0.5 active:translate-y-0 flex items-center gap-2">
+                                <span>Save Changes</span>
+                                <span class="material-symbols-outlined text-lg">check</span>
+                            </button>
+                        </div>
+                    </form>
+                </section>
+            </div>
+
+            <!-- Password Change (OTP Flow) -->
+            <div class="settings-section" id="password-change">
+                <section class="glass-card rounded-2xl p-6 md:p-8">
+                    <div class="flex items-start justify-between mb-8">
+                        <div>
+                            <h3 class="text-xl font-bold uppercase tracking-wide"><span class="text-white">Security</span> <span class="text-[#d4af35]">& Password</span></h3>
+                            <p class="text-white/40 text-sm">Manage your password via secure OTP verification.</p>
+                        </div>
+                        <span class="material-symbols-outlined text-[#d4af35]/80 text-3xl">lock_reset</span>
+                    </div>
+
+                    <div class="bg-black/20 rounded-xl p-6 border border-white/5 shadow-inner">
+                        @if (!Model.IsOtpSent && !Model.IsOtpVerified)
+                        {
+                            <div class="flex flex-col sm:flex-row items-center justify-between gap-6">
+                                <div class="flex items-center gap-4">
+                                    <div class="bg-gradient-to-br from-white/10 to-transparent p-3 rounded-xl border border-white/5">
+                                        <span class="material-symbols-outlined text-white">key</span>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-white font-bold text-base">Confirm Identity</h4>
+                                        <p class="text-xs text-white/50 max-w-xs mt-1">We'll send a 6-digit code to @Model.Input.Email.</p>
+                                    </div>
+                                </div>
+                                <form method="post" asp-page-handler="SendOtp" class="w-full sm:w-auto">
+                                    <button type="submit" class="w-full sm:w-auto bg-white/5 hover:bg-white/10 hover:text-white text-white/80 font-bold py-3 px-6 rounded-xl border border-white/10 transition-all whitespace-nowrap">
+                                        Send Verification Code
+                                    </button>
+                                </form>
+                            </div>
+                        }
+
+                        @if (Model.IsOtpSent && !Model.IsOtpVerified)
+                        {
+                            <div class="max-w-md mx-auto text-center">
+                                <h4 class="text-white font-bold text-lg mb-2">Check your Email</h4>
+                                <p class="text-sm text-white/50 mb-6">We've sent a code to <span class="text-white">@Model.Input.Email</span></p>
+
+                                <form method="post" asp-page-handler="VerifyOtp">
+                                    <input type="hidden" asp-for="OTP" id="hiddenOtpInput" />
+                                    <div class="flex justify-center gap-2 mb-6">
+                                        @for (int i = 0; i < 6; i++)
+                                        {
+                                            <input type="text" maxlength="1" class="otp-digit size-12 sm:size-14 bg-[#18181b] border-none rounded-lg text-center text-2xl font-bold text-white focus:ring-2 focus:ring-[#d4af35] transition-all caret-[#d4af35] shadow-lg" autocomplete="off" />
+                                        }
+                                    </div>
+
+                                    <button type="submit" class="w-full bg-[#d4af35] hover:bg-[#b5952f] text-black font-bold py-3.5 rounded-xl transition-all shadow-[0_4px_20px_rgba(212,175,53,0.2)] mb-4">
+                                        Verify & Continue
+                                    </button>
+
+                                    <button type="submit" asp-page-handler="SendOtp"
+                                            class="mt-4 w-full bg-transparent text-white/50 hover:text-[#d4af35]
+                                                   transition-colors text-sm font-medium hover:underline
+                                                   flex items-center justify-center gap-2 border-0 outline-none">
+                                        <span class="material-symbols-outlined text-[16px]">refresh</span>
+                                        Didn't receive code? Resend
+                                    </button>
+                                </form>
+                            </div>
+                        }
+
+                        @if (Model.IsOtpVerified)
+                        {
+                            <div class="max-w-md mx-auto">
+                                <div class="text-center mb-6">
+                                    <div class="inline-flex bg-gradient-to-br from-green-500/20 to-green-500/5 text-green-500 p-4 rounded-full mb-4 shadow-[0_0_20px_rgba(34,197,94,0.3)] animate-pulse">
+                                        <span class="material-symbols-outlined text-4xl">verified_user</span>
+                                    </div>
+                                    <h4 class="text-white font-bold text-lg">Identity Verified</h4>
+                                    <p class="text-sm text-white/50">Create your new strong password.</p>
+                                </div>
+
+                                <!-- ✅ FIXED HANDLER NAME HERE -->
+                                <form method="post" asp-page-handler="ResetPasswordWithOtp" class="space-y-4">
+                                    <div>
+                                        <label class="block text-xs font-bold text-white/40 uppercase mb-2">New Password</label>
+                                        <div class="relative">
+                                            <input asp-for="NewPassword" type="password" class="w-full bg-[#18181b] border-none rounded-xl px-4 py-3.5 text-white focus:ring-2 focus:ring-[#d4af35]/50 transition-all font-medium" placeholder="••••••••" />
+                                            <span class="material-symbols-outlined absolute right-4 top-3.5 text-white/20">lock</span>
+                                        </div>
+                                        <span asp-validation-for="NewPassword" class="text-red-500 text-xs mt-1 block"></span>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-xs font-bold text-white/40 uppercase mb-2">Confirm Password</label>
+                                        <div class="relative">
+                                            <input asp-for="ConfirmNewPassword" type="password" class="w-full bg-[#18181b] border-none rounded-xl px-4 py-3.5 text-white focus:ring-2 focus:ring-[#d4af35]/50 transition-all font-medium" placeholder="••••••••" />
+                                            <span class="material-symbols-outlined absolute right-4 top-3.5 text-white/20">lock</span>
+                                        </div>
+                                        <span asp-validation-for="ConfirmNewPassword" class="text-red-500 text-xs mt-1 block"></span>
+                                    </div>
+
+                                    <button type="submit" class="w-full bg-[#d4af35] hover:bg-[#b5952f] text-black font-bold py-3.5 rounded-xl transition-all shadow-lg mt-2">
+                                        Update Password
+                                    </button>
+                                </form>
+                            </div>
+                        }
+                    </div>
+                </section>
+            </div>
+
+            <!-- MFA -->
+            <div class="settings-section" id="mfa">
+                 <section class="glass-card rounded-2xl p-6 md:p-8 relative overflow-hidden">
+                    <!-- Background Watermark -->
+                    <div class="absolute -right-6 -bottom-6 text-white/5 pointer-events-none">
+                        <span class="material-symbols-outlined text-[150px]">phonelink_lock</span>
+                    </div>
+
+                    <div class="flex items-center justify-between mb-8 relative z-10">
+                        <div>
+                            <h3 class="text-xl font-bold uppercase tracking-wide flex items-center gap-2"><span class="text-white">Two-Factor</span> <span class="text-[#d4af35]">Authentication</span></h3>
+                            <p class="text-white/40 text-sm">Secure your account with Email or Authenticator App.</p>
+                        </div>
+                        
+                        @if (Model.Is2faEnabled)
+                        {
+                            <div class="flex items-center gap-1.5 px-3 py-1 bg-green-500/10 text-green-500 rounded-full border border-green-500/20">
+                                <span class="material-symbols-outlined text-lg">shield</span>
+                                <span class="text-xs font-bold uppercase">Enabled</span>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="flex items-center gap-1.5 px-3 py-1 bg-red-500/10 text-red-500 rounded-full border border-red-500/20">
+                                <span class="material-symbols-outlined text-lg">no_encryption</span>
+                                <span class="text-xs font-bold uppercase">Disabled</span>
+                            </div>
+                        }
+                    </div>
+
+                    @if (!Model.IsMfaUnlocked)
+                    {
+                        @if (TempData["IsMfaOtpSent"] as bool? == true)
+                        {
+                            <!-- OTP Verification Step -->
+                            <div class="bg-black/20 rounded-xl p-6 border border-white/5 relative z-10 max-w-md mx-auto text-center">
+                                <h4 class="text-white font-bold text-lg mb-2">Verify it's you</h4>
+                                <p class="text-sm text-white/50 mb-6">Enter the code sent to your email to manage 2FA settings.</p>
+
+                                <form method="post" asp-page-handler="VerifyMfaOtp">
+                                    <input type="hidden" asp-for="MfaOtp" id="hiddenMfaOtpInput" />
+                                    <div class="flex justify-center gap-2 mb-6">
+                                        @for (int i = 0; i < 6; i++)
+                                        {
+                                            <input type="text" maxlength="1" class="mfa-otp-digit size-12 bg-[#18181b] border-none rounded-lg text-center text-2xl font-bold text-white focus:ring-2 focus:ring-[#d4af35] transition-all caret-[#d4af35]" autocomplete="off" />
+                                        }
+                                    </div>
+                                    <button type="submit" class="w-full bg-[#d4af35] hover:bg-[#b5952f] text-black font-bold py-3 rounded-xl transition-all shadow-lg">Verify Code</button>
+                                </form>
+                            </div>
+                        }
+                        else
+                        {
+                            <!-- Locked State -->
+                            <div class="bg-black/20 rounded-xl p-8 border border-white/5 relative z-10 text-center">
+                                <span class="material-symbols-outlined text-white/20 text-5xl mb-4">lock</span>
+                                <h4 class="text-white font-bold text-lg mb-2">Settings Locked</h4>
+                                <p class="text-white/40 text-sm max-w-sm mx-auto mb-6">To prevent unauthorized changes, you need to verify your identity before enabling or disabling 2FA.</p>
+                                
+                                <form method="post" asp-page-handler="SendMfaOtp">
+                                    <button type="submit" class="inline-flex items-center gap-2 bg-white/5 hover:bg-white/10 text-white border border-white/10 font-bold py-3 px-6 rounded-xl transition-all">
+                                        <span class="material-symbols-outlined">key</span>
+                                        Verify Identity
+                                    </button>
+                                </form>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <!-- Unlocked Management UI -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
+                            
+                            <!-- Email 2FA Option -->
+                            <div class="bg-[#18181b] rounded-xl p-5 border border-white/5 hover:border-[#d4af35]/30 transition-all flex flex-col justify-between h-full">
+                                <div>
+                                    <div class="flex items-center gap-3 mb-3">
+                                        <div class="bg-[#d4af35]/10 p-2 rounded-lg text-[#d4af35]">
+                                            <span class="material-symbols-outlined text-2xl">mail</span>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-white font-bold text-base">Email OTP</h4>
+                                            <p class="text-xs text-white/40">Receive login codes via email.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-4 pt-4 border-t border-white/5">
+                                    @if (Model.Is2faEnabled && !Model.HasAuthenticator)
+                                    {
+                                        <form method="post" asp-page-handler="Disable2fa">
+                                            <button type="submit" class="w-full bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 py-2.5 rounded-lg text-sm font-bold transition-all">Turn Off</button>
+                                        </form>
+                                    }
+                                    else if (!Model.Is2faEnabled)
+                                    {
+                                         <form method="post" asp-page-handler="EnableEmail2fa">
+                                            <button type="submit" class="w-full bg-white/5 hover:bg-white/10 text-white border border-white/10 py-2.5 rounded-lg text-sm font-bold transition-all">Enable Email 2FA</button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <div class="text-center text-xs text-white/30 py-2">Managed via Authenticator</div>
+                                    }
+                                </div>
+                            </div>
+
+                            <!-- Authenticator App Option -->
+                            <div class="bg-[#18181b] rounded-xl p-5 border border-white/5 hover:border-[#d4af35]/30 transition-all flex flex-col justify-between h-full">
+                                <div>
+                                    <div class="flex items-center gap-3 mb-3">
+                                        <div class="bg-[#d4af35]/10 p-2 rounded-lg text-[#d4af35]">
+                                            <span class="material-symbols-outlined text-2xl">smartphone</span>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-white font-bold text-base">Authenticator App</h4>
+                                            <p class="text-xs text-white/40">Use Google/Microsoft Authenticator.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-4 pt-4 border-t border-white/5">
+                                    @if (Model.HasAuthenticator)
+                                    {
+                                        <div class="grid grid-cols-2 gap-3">
+                                             <a asp-page="./EnableAuthenticator" class="text-center bg-white/5 hover:bg-white/10 text-white border border-white/10 py-2.5 rounded-lg text-sm font-bold transition-all">Setup / Reset</a>
+                                             
+                                             <form method="post" asp-page-handler="Disable2fa">
+                                                <button type="submit" class="w-full bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 py-2.5 rounded-lg text-sm font-bold transition-all">Disable 2FA</button>
+                                             </form>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <a asp-page="./EnableAuthenticator" class="block w-full text-center bg-[#d4af35] hover:bg-[#b5952f] text-black font-bold py-2.5 rounded-lg text-sm transition-all shadow-lg">Setup App</a>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </section>
+            </div>
+
+            <!-- Recovery Codes -->
+            <div class="settings-section" id="recovery-codes">
+                <section class="glass-card rounded-2xl p-6 md:p-8 relative overflow-hidden">
+                    <!-- Background Watermark -->
+                    <div class="absolute -right-6 -bottom-6 text-white/5 pointer-events-none">
+                        <span class="material-symbols-outlined text-[150px]">key</span>
+                    </div>
+
+                    <div class="flex items-center justify-between mb-4 relative z-10">
+                        <div>
+                            <h3 class="text-xl font-bold uppercase tracking-wide"><span class="text-white">Backup</span> <span class="text-[#d4af35]">Codes</span></h3>
+                            <p class="text-white/40 text-sm">Emergency access if you lose your device.</p>
+                        </div>
+                    </div>
+                    
+                    @if (Model.IsMfaUnlocked)
+                    {
+                         var newCodes = TempData["RecoveryCodes"] as string[];
+                         if (newCodes != null && newCodes.Length > 0)
+                         {
+                             <div class="bg-[#18181b] border border-[#d4af35]/30 p-6 rounded-xl mb-6 relative z-10 shadow-lg">
+                                 <div class="flex items-center justify-between mb-4">
+                                     <div class="flex items-center gap-3">
+                                         <div class="bg-[#d4af35]/10 p-2 rounded-lg text-[#d4af35]">
+                                             <span class="material-symbols-outlined">key</span>
+                                         </div>
+                                         <div>
+                                             <h4 class="text-white font-bold text-lg">New Recovery Codes</h4>
+                                             <p class="text-white/40 text-xs">Save these codes securely. They won't be shown again.</p>
+                                         </div>
+                                     </div>
+                                     <button onclick="printCodes()" class="text-white/50 hover:text-white transition-colors flex items-center gap-2 text-sm bg-white/5 px-3 py-1.5 rounded-lg hover:bg-white/10">
+                                         <span class="material-symbols-outlined text-[16px]">print</span> Print
+                                     </button>
+                                 </div>
+                                 
+                                 <div id="new-recovery-codes-container" class="grid grid-cols-2 md:grid-cols-4 gap-3 font-mono text-base bg-black/40 p-6 rounded-xl border border-white/5 text-center">
+                                     @foreach (var code in newCodes)
+                                     {
+                                         <div class="bg-white/5 rounded-lg py-2 px-1 text-[#d4af35] tracking-wider select-all hover:bg-white/10 transition-colors code-item">@code</div>
+                                     }
+                                 </div>
+                                 
+                                 <div class="mt-4 flex items-center gap-2 text-xs text-yellow-500/70 bg-yellow-500/5 p-3 rounded-lg border border-yellow-500/10">
+                                     <span class="material-symbols-outlined text-[16px]">warning</span>
+                                     <span>Generating these codes invalidates all previous recovery codes.</span>
+                                 </div>
+                             </div>
+                             <script>
+                                function printCodes() {
+                                    // Remove existing print iframe if any
+                                    var existingFrame = document.getElementById('print-frame');
+                                    if (existingFrame) {
+                                        document.body.removeChild(existingFrame);
+                                    }
+
+                                    var iframe = document.createElement('iframe');
+                                    iframe.id = 'print-frame';
+                                    iframe.style.display = 'none';
+                                    document.body.appendChild(iframe);
+
+                                    const codes = document.querySelectorAll('#new-recovery-codes-container .code-item');
+                                    let codesHtml = '<div style="display:grid; grid-template-columns: 1fr 1fr; gap: 15px; font-family: monospace; font-size: 18px; color: #000;">';
+                                    codes.forEach(c => codesHtml += '<div style="padding: 15px; border: 1px solid #333; text-align: center; border-radius: 4px;">' + c.innerText + '</div>');
+                                    codesHtml += '</div>';
+
+                                    var doc = iframe.contentWindow.document;
+                                    doc.open();
+                                    doc.write('<html><head><title>RentACar - Recovery Codes</title>');
+                                    doc.write('<style>');
+                                    doc.write('body { font-family: "Segoe UI", sans-serif; padding: 40px; text-align: center; color: #000; }');
+                                    doc.write('h1 { margin-bottom: 10px; font-size: 24px; font-weight: bold; text-transform: uppercase; }');
+                                    doc.write('p { margin-bottom: 30px; font-size: 14px; color: #666; }');
+                                    doc.write('@@media print { @@page { margin: 1cm; } }');
+                                    doc.write('</style>');
+                                    doc.write('</head><body>');
+                                    doc.write('<h1>Recovery Codes</h1>');
+                                    doc.write('<p>Keep these codes in a safe place. You will not be able to view them again.</p>');
+                                    doc.write(codesHtml);
+                                    doc.write('<div style="margin-top: 30px; font-size: 12px; color: #999;">Generated on ' + new Date().toLocaleDateString() + '</div>');
+                                    doc.write('<\/body><\/html>');
+                                    doc.close();
+
+                                    // Wait for content to load then print
+                                    setTimeout(function() {
+                                        iframe.contentWindow.focus();
+                                        iframe.contentWindow.print();
+                                    }, 500);
+                                }
+                             </script>
+                         }
+                    
+                        <div class="relative z-10">
+                            <!-- Action Area -->
+                            <div class="bg-[#18181b] rounded-xl p-6 border border-white/5 hover:border-[#d4af35]/30 transition-all flex items-center justify-between group">
+                                <div>
+                                    <h4 class="text-white font-bold text-base mb-1 group-hover:text-[#d4af35] transition-colors">Generate New Codes</h4>
+                                    <p class="text-xs text-white/40 max-w-sm">
+                                        If you simply want to get a new set of codes or lost your old ones.
+                                    </p>
+                                </div>
+                                <form method="post" asp-page-handler="GenerateRecoveryCodes" onsubmit="return confirm('Generating new codes will invalidate your old ones. Continue?');">
+                                    <button type="submit" class="bg-white/5 hover:bg-[#d4af35] text-white hover:text-black border border-white/10 hover:border-[#d4af35] py-2.5 px-6 rounded-xl text-sm font-bold transition-all shadow-lg flex items-center gap-2 group-hover:shadow-[#d4af35]/20">
+                                        <span class="material-symbols-outlined">refresh</span>
+                                        Regenerate
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <!-- Locked State -->
+                         <div class="relative z-10 flex flex-col items-center justify-center py-8 text-center bg-black/20 rounded-xl border border-white/5 backdrop-blur-sm">
+                            <div class="bg-white/5 p-4 rounded-full mb-4">
+                                <span class="material-symbols-outlined text-4xl text-white/30">lock</span>
+                            </div>
+                            <h4 class="text-white font-bold text-lg mb-2">Recovery Settings Locked</h4>
+                            <p class="text-white/40 text-sm max-w-sm mb-6">
+                                For your security, you must verify your identity to view or generate recovery codes.
+                            </p>
+                            
+                            @if (TempData["IsMfaOtpSent"] as bool? == true)
+                            {
+                                <form method="post" asp-page-handler="VerifyMfaOtp" class="w-full max-w-xs">
+                                    <input type="text" asp-for="MfaOtp" placeholder="Enter Email Code" class="w-full bg-black/50 border border-white/10 rounded-lg px-4 py-3 text-center text-white placeholder-white/30 focus:border-[#d4af35] focus:ring-1 focus:ring-[#d4af35] transition-all mb-3 tracking-widest font-mono text-lg" maxlength="6" />
+                                    <button type="submit" class="w-full bg-[#d4af35] hover:bg-[#b5952f] text-black font-bold py-3 rounded-lg transition-all shadow-lg">Verify & Unlock</button>
+                                </form>
+                            }
+                            else
+                            {
+                                <form method="post" asp-page-handler="SendMfaOtp">
+                                    <button type="submit" class="bg-[#d4af35] hover:bg-[#b5952f] text-black font-bold py-3 px-8 rounded-lg transition-all shadow-lg flex items-center gap-2">
+                                        <span class="material-symbols-outlined">mail</span>
+                                        Verify Identity
+                                    </button>
+                                </form>
+                            }
+                        </div>
+                    }
+                </section>
+            </div>
+
+            @if (User.IsInRole("Customer"))
+            {
+            <!-- Payment Methods -->
+            <div class="settings-section" id="payment-methods">
+                <section class="glass-card rounded-2xl p-6 md:p-8">
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <h3 class="text-xl font-bold uppercase tracking-wide"><span class="text-white">Saved</span> <span class="text-[#d4af35]">Cards</span></h3>
+                            <p class="text-white/40 text-sm">Manage your saved credit cards.</p>
+                        </div>
+                        <button id="btnAddCard" class="bg-white/5 hover:bg-white/10 text-white border border-white/10 font-bold py-2 px-4 rounded-lg transition-all flex items-center gap-2 text-sm">
+                            <span class="material-symbols-outlined text-lg">add</span>
+                            Add Card
+                        </button>
+                    </div>
+
+                    <div id="addCardModal" class="hidden mb-8 bg-black/40 rounded-xl border border-white/10 p-6 backdrop-blur-sm relative">
+                        <h4 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                            <span class="material-symbols-outlined text-[#d4af35]">add_card</span>
+                            New Card Details
+                        </h4>
+                        <form method="post" asp-page-handler="AddCreditCard">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                                <div class="col-span-2">
+                                    <label class="block text-xs text-white/40 font-bold uppercase mb-2">Card Number</label>
+                                    <input asp-for="NewCreditCard.CardNumber" class="w-full bg-[#18181b] border-none rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-[#d4af35]/50 font-mono" placeholder="0000 0000 0000 0000" maxlength="19" />
+                                    <span asp-validation-for="NewCreditCard.CardNumber" class="text-red-500 text-xs mt-1 block"></span>
+                                </div>
+                                <div class="col-span-2">
+                                    <label class="block text-xs text-white/40 font-bold uppercase mb-2">Card Holder Name</label>
+                                    <input asp-for="NewCreditCard.CardHolderName" class="w-full bg-[#18181b] border-none rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-[#d4af35]/50" placeholder="NAME ON CARD" />
+                                    <span asp-validation-for="NewCreditCard.CardHolderName" class="text-red-500 text-xs mt-1 block"></span>
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-white/40 font-bold uppercase mb-2">Expiry</label>
+                                    <input asp-for="NewCreditCard.ExpiryDate" class="w-full bg-[#18181b] border-none rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-[#d4af35]/50 text-center" placeholder="MM/YY" maxlength="5" />
+                                    <span asp-validation-for="NewCreditCard.ExpiryDate" class="text-red-500 text-xs mt-1 block"></span>
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-white/40 font-bold uppercase mb-2">CVV</label>
+                                    <input asp-for="NewCreditCard.Cvv" class="w-full bg-[#18181b] border-none rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-[#d4af35]/50 text-center" placeholder="•••" maxlength="4" />
+                                    <span asp-validation-for="NewCreditCard.Cvv" class="text-red-500 text-xs mt-1 block"></span>
+                                </div>
+                            </div>
+                            <div class="flex justify-end gap-3">
+                                <button type="button" id="btnCancelAddCard" class="bg-transparent px-6 py-2.5 text-white/50 hover:text-white transition-colors font-medium border-0 outline-none">Cancel</button>
+                                <button type="submit" class="bg-[#d4af35] hover:bg-[#b5952f] text-black font-bold py-2.5 px-6 rounded-lg transition-colors shadow-lg">Save Card</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        @if (Model.CreditCards != null && Model.CreditCards.Any())
+                        {
+                            @foreach (var card in Model.CreditCards)
+                            {
+                                <div class="p-5 rounded-xl bg-gradient-to-br from-white/5 to-transparent border border-white/5 hover:border-[#d4af35] hover:from-[#d4af35]/20 hover:to-[#d4af35]/5 transition-all group relative overflow-hidden">
+                                    <div class="flex justify-between items-start mb-4 relative z-10">
+                                        <div class="size-10 bg-[#d4af35] rounded-md flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                                            <span class="material-symbols-outlined text-black">credit_card</span>
+                                        </div>
+                                        <div class="flex gap-2">
+                                            <button class="btn-view-card text-xs font-bold bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-md transition-colors border border-white/5"
+                                                    data-number="@card.CardNumber"
+                                                    data-holder="@card.CardHolderName"
+                                                    data-expiry="@card.ExpiryDate.ToString("MM/yy")"
+                                                    data-cvv="@card.Cvv">
+                                                VIEW
+                                            </button>
+                                            <form method="post" asp-page-handler="DeleteCreditCard" asp-route-id="@card.CreditCardId" onsubmit="return confirm('Are you sure you want to delete this card?');">
+                                                <button type="submit" class="bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 px-3 py-1.5 rounded-md transition-colors flex items-center justify-center h-full">
+                                                    <span class="material-symbols-outlined text-lg">delete</span>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+
+                                        <div class="relative z-10">
+                                            <div class="flex justify-between items-center mb-2">
+                                                 <span class="material-symbols-outlined text-white/30 text-2xl">contactless</span>
+                                                 <span class="material-symbols-outlined text-[#d4af35] text-2xl">sim_card</span>
+                                            </div>
+                                            <p class="text-white/40 text-xs font-mono mb-1">•••• •••• ••••</p>
+                                            <p class="text-white font-bold text-lg font-mono tracking-widest">@card.CardNumber.Substring(Math.Max(0, card.CardNumber.Length - 4))</p>
+                                            <div class="flex justify-between mt-3 text-xs text-white/50">
+                                                <span>Expires @card.ExpiryDate.ToString("MM/yy")</span>
+                                                <span class="font-bold text-[#d4af35]">VISA</span>
+                                            </div>
+                                        </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="col-span-2 text-center py-10 bg-white/5 rounded-xl border border-dashed border-white/10">
+                                <span class="material-symbols-outlined text-white/20 text-4xl mb-2">credit_score</span>
+                                <p class="text-white/40 text-sm">No payment methods added yet.</p>
+                            </div>
+                        }
+                    </div>
+                </section>
+            </div>
+            }
+
+            @if (User.IsInRole("Customer"))
+            {
+            <!-- Identity Verification -->
+            <div class="settings-section" id="identity-verification">
+                <section class="glass-card rounded-2xl p-6 md:p-8">
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <h3 class="text-xl font-bold uppercase tracking-wide"><span class="text-white">Identity</span> <span class="text-[#d4af35]">Verification</span></h3>
+                            <p class="text-white/40 text-sm">Upload your documents for vehicle rental approval.</p>
+                        </div>
+                        <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/30 border border-white/5">
+                            <span class="text-xs font-bold text-white/70">Status:</span>
+                            @if (Model.IsVerified)
+                            {
+                                <div class="flex items-center gap-1 text-green-500">
+                                    <span class="material-symbols-outlined text-[16px]">check_circle</span>
+                                    <span class="text-xs font-black uppercase">Verified</span>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="flex items-center gap-1 text-orange-500">
+                                     <span class="material-symbols-outlined text-[16px] animate-spin-slow">pending</span>
+                                    <span class="text-xs font-black uppercase">Pending</span>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="relative h-2 bg-white/5 rounded-full overflow-hidden mb-8">
+                        <div class="absolute top-0 left-0 h-full bg-gradient-to-r from-[#d4af35] to-yellow-300 transition-all duration-1000 shadow-[0_0_10px_rgba(212,175,53,0.5)]"
+                             style="width: @((Model.CompletedDocsCount / 4.0 * 100).ToString("0"))%"></div>
+                    </div>
+
+                    <form method="post" enctype="multipart/form-data" asp-page-handler="UploadDocuments" id="verificationForm">
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                            @{
+                                var docs = new[] {
+                                    new { Title="ID Front", Name="UploadNationalIdFront", Src=Model.NationalIdFrontSrc, Icon="id_card" },
+                                    new { Title="ID Back", Name="UploadNationalIdBack", Src=Model.NationalIdBackSrc, Icon="id_card" },
+                                    new { Title="License Front", Name="UploadDrivingLicenseFront", Src=Model.DrivingLicenseFrontSrc, Icon="directions_car" },
+                                    new { Title="License Back", Name="UploadDrivingLicenseBack", Src=Model.DrivingLicenseBackSrc, Icon="directions_car" }
+                                };
+                            }
+
+                            @foreach (var doc in docs)
+                            {
+                                var hasFile = !string.IsNullOrEmpty(doc.Src);
+                                <div class="relative aspect-[4/3] group cursor-pointer overflow-hidden rounded-xl border-2 border-dashed border-white/10 hover:border-[#d4af35] transition-all bg-black/20">
+                                    <input type="file" name="@doc.Name" class="absolute inset-0 opacity-0 z-20 cursor-pointer" accept="image/*" onchange="previewImage(this, '@doc.Name-preview')" />
+                                    
+                                     <!-- Hover Overlay -->
+                                    <div class="absolute inset-0 bg-[#d4af35]/10 z-10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all pointer-events-none">
+                                        <div class="bg-black/80 px-4 py-2 rounded-full border border-[#d4af35]">
+                                            <span class="text-[#d4af35] font-bold text-xs uppercase tracking-wider">Upload @doc.Title</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="absolute inset-0 rounded-lg bg-[#18181b] border border-white/10 overflow-hidden ring-1 ring-white/5 group-hover:border-[#d4af35]/50 transition-all">
+                                        @if (hasFile)
+                                        {
+                                            <img src="@doc.Src" id="preview-@doc.Name" class="w-full h-full object-cover opacity-60 group-hover:opacity-40 transition-opacity" />
+                                            <div class="absolute top-2 right-2 bg-green-500/10 text-green-500 rounded-full p-0.5 border border-green-500/20 z-10">
+                                                <span class="material-symbols-outlined text-[16px]">check</span>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <img src="" id="preview-@doc.Name" class="w-full h-full object-cover hidden" />
+                                            <div class="absolute inset-0 flex flex-col items-center justify-center gap-2 p-2 text-center" id="placeholder-@doc.Name">
+                                                <div class="bg-white/5 p-2 rounded-full text-white/20 group-hover:text-[#d4af35] group-hover:bg-[#d4af35]/10 transition-colors">
+                                                    <span class="material-symbols-outlined text-2xl">@doc.Icon</span>
+                                                </div>
+                                                <span class="text-[10px] font-bold text-white/30 group-hover:text-white uppercase">@doc.Title</span>
+                                            </div>
+                                        }
+
+                                        @if (!Model.IsVerified)
+                                        {
+                                            <div class="absolute inset-0 bg-[#d4af35]/20 border-2 border-[#d4af35] opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-all duration-300 pointer-events-none z-10 backdrop-blur-[2px]">
+                                                <div class="bg-black/60 p-3 rounded-full mb-2 shadow-lg transform group-hover:scale-110 transition-transform">
+                                                    <span class="material-symbols-outlined text-[#d4af35] text-3xl">cloud_upload</span>
+                                                </div>
+                                                <span class="text-white font-bold text-sm uppercase tracking-wider drop-shadow-md bg-black/40 px-3 py-1 rounded-full">Press to Upload</span>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+
+                        @if (!Model.IsVerified)
+                        {
+                            <div class="flex justify-end">
+                                <button type="submit" class="bg-gradient-to-r from-[#d4af35] to-yellow-600 hover:from-[#b5952f] hover:to-yellow-700 text-black font-bold py-3 px-8 rounded-xl transition-all shadow-lg flex items-center gap-2">
+                                    <span>Submit Documents</span>
+                                    <span class="material-symbols-outlined">send</span>
+                                </button>
+                            </div>
+                        }
+                    </form>
+                </section>
+            </div>
+            }
+
+        </div>
+    </main>
+
+    <!-- View Card Details Modal -->
+    <div id="viewCardModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-md transition-opacity duration-300" id="viewCardBackdrop"></div>
+        <div class="w-full max-w-md bg-[#1a1a1a] rounded-3xl border border-white/10 shadow-2xl relative z-10 overflow-hidden">
+            <div class="p-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-white font-bold text-lg">Card Preview</h3>
+                    <button id="btnCloseViewCard" class="size-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/50 hover:text-white transition-colors border-0 outline-none">
+                        <span class="material-symbols-outlined text-lg">close</span>
+                    </button>
+                </div>
+
+                <div class="relative w-full aspect-[1.586/1] rounded-2xl overflow-hidden shadow-2xl mb-6">
+                    <div class="absolute inset-0 bg-gradient-to-bl from-zinc-800 to-black p-6 flex flex-col justify-between border border-white/10">
+                        <div class="flex justify-between items-start">
+                            <span class="material-symbols-outlined text-4xl text-white/80">contactless</span>
+                            <span class="text-[#d4af35] font-bold italic tracking-wide">PREMIUM</span>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="text-white font-mono text-xl sm:text-2xl tracking-widest" id="viewCardNumber">0000 0000 0000 0000</div>
+                            <div class="flex justify-between items-end">
+                                <div>
+                                    <div class="text-[9px] uppercase text-white/30 font-bold mb-0.5">Card Holder</div>
+                                    <div class="text-white font-medium tracking-wider uppercase text-sm truncate max-w-[150px]" id="viewCardHolder">NAME SURNAME</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-[9px] uppercase text-white/30 font-bold mb-0.5">Expires</div>
+                                    <div class="text-white font-medium tracking-widest text-sm" id="viewCardExpiry">MM/YY</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-black/30 rounded-xl p-4 border border-white/5 flex justify-between items-center">
+                    <span class="text-sm font-medium text-white/50">Security Code (CVV)</span>
+                    <span class="text-white font-mono font-bold tracking-[0.2em] text-lg text-[#d4af35]" id="viewCardCvv">•••</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+     </div>

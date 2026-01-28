@@ -1,0 +1,215 @@
+﻿@model RentACar.Web.Models.DriverBookingDetailsViewModel
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+    .glass-card {
+        background: rgba(39, 36, 27, 0.7);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .pulse-live {
+        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    @@keyframes pulse {
+
+        0%,
+        100% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.4;
+        }
+    }
+</style>
+
+<main class="px-6 md:px-20 lg:px-40 flex flex-1 justify-center py-8">
+    <div class="layout-content-container flex flex-col max-w-[1000px] flex-1 gap-6">
+        <div class="flex flex-col gap-2">
+            <div class="flex items-center gap-2 text-white/50 text-sm font-medium">
+                <a class="hover:text-primary" href="@Url.Action("Dashboard", "DriverPortal")">Bookings</a>
+                <span>/</span>
+                <span class="text-white">BK-@Model.BookingId</span>
+            </div>
+            <div class="flex flex-wrap justify-between items-end gap-4 py-2">
+                <div class="flex flex-col gap-1">
+                    <h1 class="text-white text-4xl font-black leading-tight tracking-[-0.033em]">Booking Details &amp;
+                        Tracking</h1>
+                    <p class="text-white/60 text-base">Real-time trip management and live updates.</p>
+                </div>
+                <div class="flex gap-3">
+                    <span
+                        class="px-3 py-1 rounded-full bg-primary/20 text-primary text-xs font-bold border border-primary/30 uppercase tracking-widest">@Model.BookingStatus</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-px rounded-xl bg-gradient-to-r from-primary/30 to-transparent">
+            <div class="glass-card rounded-xl p-6 flex flex-wrap md:flex-nowrap items-center gap-8 shadow-2xl">
+                <div class="flex-1 space-y-3">
+                    <div>
+                        <h2 class="text-2xl font-bold text-white leading-none mb-1">@Model.CarName</h2>
+                        <p class="text-white/60 font-medium">Plate: <span class="text-primary/80">@Model.CarPlate</span>
+                        </p>
+                    </div>
+                    <div class="text-white/60">
+                        Pickup: @Model.PickupAddress
+                        @if (Model.PickupDateTime.HasValue)
+                        {
+                            <span class="ms-2 text-primary">@Model.PickupDateTime.Value:g</span>
+                        }
+                    </div>
+                </div>
+                <div class="w-full md:w-64 h-36 bg-center bg-no-repeat bg-cover rounded-xl shadow-inner border border-white/5"
+                    style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCYipjA8bC8dQm3Ku-lVmnpUGAspp5jNQtmP7FjP6T9o86C20SRvkZvtV_rkntA51xx-hBS8kvvJ-uKdfQGQ5HuuOzG44-taJV2Mk8GyWlZ3M6fM-2oKnruMZQrdr_xz1tgF6HLCsqglhf3T3RREBZBycw_vdEemSzx3nkaDI8B4kKyfKOmL8UaGZEfnTL9ttHZZUA2F-ztuoI1_BGdayX8VjWIVctn-h_hr7eXVc5opbZl-C8zUZpOAHRLYn5j-Y1uB31Bp4C8YfGW");'>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="glass-card rounded-xl flex flex-col p-6 shadow-xl">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2 mb-4">
+                    <span class="material-symbols-outlined text-primary">person</span>
+                    Customer Information
+                </h3>
+                <p class="text-white/80">@Model.CustomerName</p>
+                <p class="text-white/50 text-sm">Driver ID: @Model.DriverCode</p>
+            </div>
+            <div class="glass-card rounded-xl flex flex-col p-6 shadow-xl">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2 mb-4">
+                    <span class="material-symbols-outlined text-primary">location_on</span>
+                    Pickup Location
+                </h3>
+                <p class="text-white/80">@Model.PickupAddress</p>
+            </div>
+        </div>
+
+        <div class="glass-card rounded-xl p-8 border border-primary/10 shadow-2xl relative overflow-hidden">
+            <div class="absolute top-0 right-0 p-4">
+                <div
+                    class="flex items-center gap-2 bg-green-500/10 px-3 py-1.5 rounded-full border border-green-500/20">
+                    <div class="size-2 rounded-full bg-green-500 pulse-live"></div>
+                    <span class="text-green-500 text-[10px] font-black tracking-widest uppercase"
+                        id="trackingStatus">Live: Not started</span>
+                </div>
+            </div>
+            <div class="flex flex-col items-center text-center max-w-md mx-auto gap-8">
+                <div>
+                    <h3 class="text-xl font-bold text-white mb-2">Tracking Control Center</h3>
+                    <p class="text-white/50 text-sm">Start tracking to share your live location with the customer.</p>
+                </div>
+                <div class="flex flex-col sm:flex-row gap-4 w-full">
+                    <button id="startTracking"
+                        class="flex-[2] h-16 flex items-center justify-center rounded-xl bg-primary text-background-dark text-lg font-black tracking-wider shadow-[0_0_25px_-5px_#f4c325] hover:brightness-110 transition-all">
+                        <span class="material-symbols-outlined mr-3 font-black text-2xl">sensors</span>
+                        START TRACKING
+                    </button>
+                    <button id="stopTracking"
+                        class="flex-1 h-16 flex items-center justify-center rounded-xl border-2 border-red-500/30 bg-red-500/5 text-red-500 font-bold hover:bg-red-500/10 transition-all group">
+                        <span
+                            class="material-symbols-outlined mr-2 group-hover:rotate-180 transition-transform">stop_circle</span>
+                        STOP
+                    </button>
+                </div>
+                <div class="grid grid-cols-3 gap-8 w-full border-t border-white/5 pt-8">
+                    <div class="flex flex-col gap-1">
+                        <p class="text-xs text-white/30 uppercase font-black">GPS Signal</p>
+                        <div class="flex items-center justify-center gap-1 text-primary">
+                            <span class="material-symbols-outlined text-[20px]">signal_cellular_alt</span>
+                            <span class="text-sm font-bold" id="gpsSignal">Ready</span>
+                        </div>
+                    </div>
+                    <div class="flex flex-col gap-1 border-x border-white/5">
+                        <p class="text-xs text-white/30 uppercase font-black">Battery</p>
+                        <div class="flex items-center justify-center gap-1 text-white">
+                            <span class="material-symbols-outlined text-[20px]">battery_charging_80</span>
+                            <span class="text-sm font-bold" id="batteryStatus">--%</span>
+                        </div>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <p class="text-xs text-white/30 uppercase font-black">Accuracy</p>
+                        <div class="flex items-center justify-center gap-1 text-white">
+                            <span class="material-symbols-outlined text-[20px]">my_location</span>
+                            <span class="text-sm font-bold" id="accuracyStatus">&lt; 5m</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+    let watchId = null;
+    const bookingId = @Model.BookingId;
+
+    const statusEl = document.getElementById('trackingStatus');
+    const batteryEl = document.getElementById('batteryStatus');
+    const accuracyEl = document.getElementById('accuracyStatus');
+    const gpsEl = document.getElementById('gpsSignal');
+
+    async function sendPingFromPosition(position) {
+        const payload = {
+            bookingId: bookingId,
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            speed: position.coords.speed ?? 0,
+            heading: position.coords.heading ?? 0,
+            accuracy: position.coords.accuracy ?? 0,
+            battery: null // optional (see note below)
+        };
+
+        await fetch('/api/driver/location', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        statusEl.textContent = `Live: Last sent ${new Date().toLocaleTimeString()}`;
+        gpsEl.textContent = 'Live';
+        accuracyEl.textContent = payload.accuracy ? `${Math.round(payload.accuracy)}m` : '--';
+    }
+
+    function onGeoError(err) {
+        gpsEl.textContent = 'Denied/Unavailable';
+        statusEl.textContent = 'Live: Location permission required';
+        console.error('Geolocation error:', err);
+    }
+
+    document.getElementById('startTracking').addEventListener('click', async () => {
+        if (!navigator.geolocation) {
+            statusEl.textContent = 'Live: Geolocation not supported';
+            return;
+        }
+
+        if (watchId) return;
+
+        statusEl.textContent = 'Live: Requesting location...';
+        gpsEl.textContent = 'Requesting...';
+
+        // This will trigger the browser permission popup ✅
+        watchId = navigator.geolocation.watchPosition(
+            async (position) => {
+                await sendPingFromPosition(position);
+            },
+            onGeoError,
+            {
+                enableHighAccuracy: true,
+                maximumAge: 1000,
+                timeout: 10000
+            }
+        );
+    });
+
+    document.getElementById('stopTracking').addEventListener('click', () => {
+        if (watchId) {
+            navigator.geolocation.clearWatch(watchId);
+            watchId = null;
+        }
+        statusEl.textContent = 'Live: Tracking stopped';
+        gpsEl.textContent = 'Stopped';
+    });
+</script>
