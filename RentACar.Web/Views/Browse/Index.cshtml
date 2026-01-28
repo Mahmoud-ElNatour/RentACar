@@ -1,107 +1,450 @@
-@using Microsoft.IdentityModel.Tokens
 @model RentACar.Application.DTOs.BrowseViewDTO
-
 @{
     ViewData["Title"] = "Browse Cars";
     Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["BodyClass"] = "bg-background-dark";
 }
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-<link rel="stylesheet" href="~/css/browse.css" />
+<!-- Tailwind & Config -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+    tailwind.config = {
+        darkMode: "class",
+        theme: {
+            extend: {
+                colors: { "gold": "#d4af37" },
+                fontFamily: { "display": ["Manrope", "sans-serif"] }
+            }
+        }
+    }
+</script>
 
-<div class="browse-container container my-4">
-    <h2 class="mb-4 text-white">Browse Cars</h2>
+<style>
+    /* Custom Scrollbar for sidebars if needed */
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #16181a; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #262626; border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #d4af37; }
 
-    <form method="get" class="row g-3 mb-4 align-items-end">
-        <div class="col">
-            <label class="form-label text-white">Name</label>
-            <input type="text" name="name" class="form-control" placeholder="Model name" value="@Model.FilterName" />
-        </div>
-        <div class="col">
-            <label class="form-label text-white">Category</label>
-            <select name="categoryId" class="form-select">
-                <option value="">All Categories</option>
-                @foreach (var cat in Model.Categories)
-                {
-                    if (cat.CategoryId == Model.FilterCategoryId)
-                    {
-                        <option value="@cat.CategoryId" selected>@cat.Name</option>
-                    }
-                    else
-                    {
-                        <option value="@cat.CategoryId">@cat.Name</option>
-                    }
-                }
-            </select>
-        </div>
-        <div class="col">
-            <label class="form-label text-white">Max Price</label>
-            <input type="number" name="maxPrice" class="form-control" placeholder="Max" min="0" value="@(Model.FilterMaxPrice?.ToString() ?? "")" />
-        </div>
-        <div class="col">
-            <label class="form-label text-white">Start Date</label>
-            <input type="date" name="startDate" class="form-control" value="@(Model.FilterStartDate?.ToString("yyyy-MM-dd") ?? "")" />
-        </div>
-        <div class="col">
-            <label class="form-label text-white">End Date</label>
-            <input type="date" name="endDate" class="form-control" value="@(Model.FilterEndDate?.ToString("yyyy-MM-dd") ?? "")" />
-        </div>
-        <div class="col-auto">
-            <button type="submit" class="btn btn-primary">Filter</button>
-        </div>
-    </form>
+    /* Dual Slider Styles */
+    .thumb-styled {
+        -webkit-appearance: none;
+        appearance: none;
+        background: transparent;
+        pointer-events: none;
+    }
+    .thumb-styled::-webkit-slider-thumb {
+        pointer-events: auto;
+        -webkit-appearance: none;
+        height: 18px;
+        width: 18px;
+        border-radius: 50%;
+        background: #d4af37; /* Gold */
+        cursor: grab;
+        border: 2px solid #000; /* Contrast ring */
+        margin-top: -6px; /* Center vert on track h-2 (8px) -> 18px thumb needs -5px offset relative to top? or center. */
+        box-shadow: 0 0 5px rgba(0,0,0,0.5);
+    }
+    .thumb-styled::-moz-range-thumb {
+        pointer-events: auto;
+        border: 2px solid #000;
+        height: 18px;
+        width: 18px;
+        border-radius: 50%;
+        background: #d4af37;
+        cursor: grab;
+        box-shadow: 0 0 5px rgba(0,0,0,0.5);
+    }
+    /* Firefox requires removing track bg */
+    .thumb-styled::-moz-range-track { background: transparent; }
+</style>
 
-    <div class="mb-3">
-        <input type="text" id="localSearch" class="form-control search-input" placeholder="Search cars..." />
+<div class="px-4 md:px-8 py-8 w-full min-h-screen text-white font-display">
+
+    <!-- Page Header (Mobile Only) -->
+    <div class="md:hidden mb-6">
+        <h1 class="text-3xl font-black tracking-tight text-white mb-2">Browse Cars</h1>
+        <button onclick="document.getElementById('mobileFilterModal').showModal()"
+                class="w-full bg-[#16181a] border border-[#262626] text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-[#1a1c1e] transition-colors">
+            <span class="material-symbols-outlined text-gold">filter_list</span>
+            Filters & Search
+        </button>
     </div>
 
-    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-4">
-        @foreach (var car in Model.Cars.Where(c => c.IsAvailable))
-        {
-            string imgSrc;
-            if (car.CarImage != null && car.CarImage.Length > 0)
+    <div class="flex flex-col md:flex-row gap-8 items-start">
+
+        <!-- SIDEBAR FILTERS (Desktop) -->
+        <aside class="hidden md:block w-80 shrink-0">
+             <div class="bg-[#16181a] border border-[#262626] rounded-2xl p-6 shadow-2xl">
+                <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-gold">tune</span> Filters
+                </h2>
+
+                <form method="get" id="filterForm" class="space-y-8">
+                    <!-- Search -->
+                    <div class="space-y-3">
+                        <label class="text-xs font-bold uppercase tracking-wider text-gray-400">Search Model</label>
+                        <div class="relative">
+                            <input type="text" name="name" value="@Model.FilterName" placeholder="e.g. BMW M4"
+                                   class="w-full bg-[#0a0a0a] border border-[#262626] rounded-xl py-3 pl-10 pr-4 text-white placeholder-gray-600 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all" />
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-gray-500">search</span>
+                        </div>
+                    </div>
+
+                    <!-- Date Range (Custom Calendar) -->
+                    <div class="space-y-3">
+                        <label class="text-xs font-bold uppercase tracking-wider text-gray-400">Rental Period</label>
+                        <!-- Calendar Widget -->
+                        <div class="bg-[#0a0a0a] border border-[#262626] rounded-2xl p-4 select-none">
+                            <!-- Header -->
+                            <div class="flex items-center justify-between mb-4">
+                                <h4 id="calMonthYear" class="font-bold text-white">October 2024</h4>
+                                <div class="flex gap-2">
+                                    <button type="button" onclick="changeMonth(-1)" class="text-gold hover:text-white"><span class="material-symbols-outlined">chevron_left</span></button>
+                                    <button type="button" onclick="changeMonth(1)" class="text-gold hover:text-white"><span class="material-symbols-outlined">chevron_right</span></button>
+                                </div>
+                            </div>
+                            <!-- Days Header -->
+                            <div class="grid grid-cols-7 gap-1 mb-2 text-center text-xs text-gray-500 font-bold">
+                                <div>S</div><div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>S</div>
+                            </div>
+                            <!-- Dates Grid -->
+                            <div id="calGrid" class="grid grid-cols-7 gap-1 text-center text-sm">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+
+                        <!-- Summary Section -->
+                        <div class="bg-gold/10 border border-gold/20 rounded-xl p-4 flex items-center justify-between">
+                            <div>
+                                <div class="text-[10px] uppercase font-bold text-gold tracking-wider mb-1">Selected Period</div>
+                                <div id="periodText" class="text-sm font-bold text-white">Select dates</div>
+                            </div>
+                            <div id="daysCount" class="bg-black/50 px-2 py-1 rounded text-xs font-bold text-gold hidden">0 DAYS</div>
+                        </div>
+
+                        <!-- Hidden Inputs sent to server -->
+                        <input type="hidden" name="startDate" id="hStartDate" value="@(Model.FilterStartDate?.ToString("yyyy-MM-dd"))" />
+                        <input type="hidden" name="endDate" id="hEndDate" value="@(Model.FilterEndDate?.ToString("yyyy-MM-dd"))" />
+                    </div>
+
+                    <!-- Category (Pills) -->
+                    <div class="space-y-3">
+                         <label class="text-xs font-bold uppercase tracking-wider text-gray-400">Categories</label>
+                         <div class="flex flex-wrap gap-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
+                             <!-- Categories -->
+                             @foreach(var cat in Model.Categories)
+                             {
+                                 var isChecked = Model.FilterCategoryIds?.Contains(cat.CategoryId) ?? false;
+                                 <label class="cursor-pointer">
+                                     <input type="checkbox" name="categoryIds" value="@cat.CategoryId" class="peer hidden" @(isChecked ? "checked" : "") />
+                                     <span class="inline-block px-4 py-2 rounded-full border border-[#262626] bg-[#0a0a0a] text-xs font-bold text-gray-400 peer-checked:bg-gold peer-checked:text-black peer-checked:border-gold hover:border-gray-500 transition-all select-none">
+                                         @cat.Name.ToUpper()
+                                     </span>
+                                 </label>
+                             }
+                         </div>
+                    </div>
+
+                    <!-- Price Range (Dual Slider) -->
+                    <div class="space-y-4">
+                         <div class="flex justify-between items-center">
+                             <label class="text-xs font-bold uppercase tracking-wider text-gray-400">Daily Rate</label>
+                             <span class="text-gold font-bold text-sm" id="priceLabel">
+                                 $@(Model.FilterMinPrice?.ToString("0") ?? "0") - $@(Model.FilterMaxPrice?.ToString("0") ?? "2000")
+                             </span>
+                         </div>
+
+                         <div class="relative h-2 bg-[#262626] rounded-full">
+                             <!-- Active Track -->
+                             <div id="sliderTrack" class="absolute h-full bg-gold rounded-full" style="left: 0%; right: 0%;"></div>
+
+                             <!-- Thumbs (Range Inputs) -->
+                             <input type="range" name="minPrice" id="minPriceRange" min="0" max="2000" step="50" value="@(Model.FilterMinPrice ?? 0)"
+                                    class="thumb-styled absolute w-full h-full inset-0 z-20" />
+
+                             <input type="range" name="maxPrice" id="maxPriceRange" min="0" max="2000" step="50" value="@(Model.FilterMaxPrice ?? 2000)"
+                                    class="thumb-styled absolute w-full h-full inset-0 z-20" />
+                         </div>
+                    </div>
+
+                    <div class="pt-4 border-t border-white/10 flex gap-3">
+                        <a href="/Browse" class="flex-1 py-3 rounded-xl border border-[#262626] text-gray-400 text-sm font-bold hover:text-white hover:border-gray-500 transition-colors text-center">
+                            Reset
+                        </a>
+                        <button type="submit" class="flex-[2] bg-gold hover:bg-[#b5952f] text-black py-3 rounded-xl font-bold shadow-lg shadow-gold/10 transition-all hover:scale-105 active:scale-95">
+                            Update Results
+                        </button>
+                    </div>
+                </form>
+             </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="flex-1 w-full">
+            
+            <!-- Result Bar -->
+            <div class="flex flex-col sm:flex-row justify-between items-end sm:items-center gap-4 mb-8">
+                <div>
+                     <h1 class="text-3xl md:text-4xl font-black tracking-tight mb-2 hidden md:block">
+                        Browse Cars
+                    </h1>
+                    <p class="text-gray-400">
+                        Showing <span class="text-white font-bold">@Model.Cars.Count()</span> available cars
+                    </p>
+                </div>
+                <!-- Sort -->
+                <div class="flex items-center gap-2">
+                     <select class="bg-[#16181a] border border-[#262626] rounded-lg py-2 pl-3 pr-8 text-sm text-white focus:border-gold focus:ring-0 cursor-pointer">
+                         <option>Recommended</option>
+                         <option>Price: Low to High</option>
+                         <option>Price: High to Low</option>
+                     </select>
+                </div>
+            </div>
+
+            <!-- CAR GRID (3 Cols) -->
+            @if(!Model.Cars.Any())
             {
-                var base64 = Convert.ToBase64String(car.CarImage);
-                imgSrc = $"data:image;base64,{base64}";
+                <div class="flex flex-col items-center justify-center py-20 text-center border-2 border-dashed border-[#262626] rounded-3xl">
+                     <div class="w-20 h-20 rounded-full bg-[#16181a] flex items-center justify-center mb-4">
+                         <span class="material-symbols-outlined text-4xl text-gray-600">no_crash</span>
+                     </div>
+                     <h3 class="text-xl font-bold text-white mb-2">No cars available</h3>
+                     <p class="text-gray-400 max-w-sm mb-6">Try adjusting your dates or category filters.</p>
+                     <a href="/Browse" class="text-gold font-bold hover:underline">Clear all filters</a>
+                </div>
             }
             else
             {
-                imgSrc = Url.Content("~/images/default-car.png");
-            }
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    @foreach(var car in Model.Cars)
+                    {
+                        string imgSrc = Url.Content("~/images/default-car.png");
+                        if (car.CarImage != null && car.CarImage.Length > 0)
+                        {
+                            imgSrc = $"data:image/jpeg;base64,{Convert.ToBase64String(car.CarImage)}";
+                        }
 
-            <div class="col car-card-container">
-                <div class="car-gallery-item">
-                    <img src="@imgSrc" alt="@car.ModelName" class="img-fluid">
-                    <div class="car-overlay">
-                        <div class="car-content">
-                            <h5>@car.ModelName (@car.ModelYear)</h5>
-                            <p class="mb-1">Plate #: @car.PlateNumber</p>
-                            <p class="mb-1">Price/Day: @(car.PricePerDay?.ToString("F2") ?? "N/A") $</p>
-                            <p class="mb-3">Category: @(string.IsNullOrEmpty(car.CategoryName) ? "N/A" : car.CategoryName)</p>
-                            @if (User.Identity?.IsAuthenticated == true)
-                            {
-                                <a asp-controller="Booking" asp-action="Add" asp-route-carId="@car.CarId" class="btn btn-book @(car.IsAvailable ? "" : "unavailable")">Book</a>
-                            }
-                            else
-                            {
-                                <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-book @(car.IsAvailable ? "" : "unavailable")">Book</a>
-                            }
+                        <div class="group bg-[#16181a] border border-[#262626] rounded-2xl overflow-hidden hover:border-gold/50 transition-all hover:shadow-[0_0_30px_rgba(212,175,55,0.1)] flex flex-col">
+                            <!-- Image -->
+                            <div class="relative aspect-[4/3] overflow-hidden bg-[#0a0a0a]">
+                                <img src="@imgSrc" alt="@car.ModelName" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700" />
+                                <div class="absolute inset-0 bg-gradient-to-t from-[#16181a] via-transparent to-transparent opacity-60"></div>
+                                
+                                <!-- Availability Badge -->
+                                <div class="absolute top-4 right-4 bg-black/50 backdrop-blur-md border border-white/10 text-white text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> Available
+                                </div>
+                                
+                                <div class="absolute bottom-4 left-4">
+                                     <span class="bg-gold text-black text-xs font-black uppercase tracking-wider px-2 py-1 rounded">
+                                         @(car.CategoryName ?? "Premium")
+                                     </span>
+                                </div>
+                            </div>
+
+                            <!-- Content -->
+                            <div class="p-5 flex-1 flex flex-col">
+                                <div class="flex-1">
+                                    <h3 class="text-xl font-bold text-white mb-1">@car.ModelName</h3>
+                                    <p class="text-gray-400 text-sm mb-4">@car.ModelYear Model</p>
+                                </div>
+
+                                <!-- Footer -->
+                                <div class="flex items-center justify-between pt-4 border-t border-[#262626]">
+                                    <div>
+                                        @if(car.PricePerDay.HasValue)
+                                        {
+                                            <div class="flex items-baseline gap-1">
+                                                <span class="text-lg font-bold text-white">$@car.PricePerDay?.ToString("0")</span>
+                                                <span class="text-xs text-gray-500">/ day</span>
+                                            </div>
+                                        } 
+                                        else 
+                                        {
+                                             <span class="text-sm font-bold text-gold">Price on Request</span>
+                                        }
+                                    </div>
+                                    
+                                    @if (User.Identity?.IsAuthenticated == true)
+                                    {
+                                         <a asp-controller="Booking" asp-action="Add" asp-route-carId="@car.CarId" 
+                                            class="bg-gold text-black hover:bg-[#b5952f] hover:text-black px-4 py-2 rounded-lg font-bold text-sm transition-all shadow-lg shadow-gold/20 hover:shadow-gold/60 hover:scale-105">
+                                            Book Now
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                         <a asp-area="Identity" asp-page="/Account/Login" 
+                                            class="bg-[#262626] text-white hover:bg-white hover:text-black px-4 py-2 rounded-lg font-bold text-sm transition-colors border border-white/10">
+                                            Login
+                                        </a>
+                                    }
+                                </div>
+                            </div>
                         </div>
-                    </div>
+                    }
                 </div>
-            </div>
-        }
+            }
+        </main>
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
 <script>
-    document.getElementById('localSearch').addEventListener('input', function () {
-        const val = this.value.toLowerCase();
-        document.querySelectorAll('.car-card-container').forEach(c => {
-            c.style.display = c.textContent.toLowerCase().includes(val) ? '' : 'none';
-        });
-    });
+    // --- Custom Calendar Logic ---
+    let currDate = new Date();
+    let selStart = document.getElementById('hStartDate').value ? new Date(document.getElementById('hStartDate').value) : null;
+    let selEnd = document.getElementById('hEndDate').value ? new Date(document.getElementById('hEndDate').value) : null;
+    
+    // Handle Timezone offset manually for Date inputs to match local/UTC
+    function toISODate(d) {
+        if(!d) return '';
+        return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+
+    function renderCalendar() {
+        const year = currDate.getFullYear();
+        const month = currDate.getMonth();
+        
+        document.getElementById('calMonthYear').innerText = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(currDate);
+        
+        const firstDay = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0);
+        const daysInMonth = lastDay.getDate();
+        const startDay = firstDay.getDay(); // 0 is Sunday
+        
+        const grid = document.getElementById('calGrid');
+        grid.innerHTML = '';
+        
+        // Empty cells for start padding
+        for(let i=0; i<startDay; i++) {
+            grid.innerHTML += '<div></div>';
+        }
+        
+        const today = new Date();
+        today.setHours(0,0,0,0);
+
+        for(let i=1; i<=daysInMonth; i++) {
+            const date = new Date(year, month, i);
+            const isPast = date < today;
+            
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.innerText = i;
+            btn.className = 'w-8 h-8 rounded-lg flex items-center justify-center transition-all text-gray-300 hover:bg-white/10 mx-auto';
+            
+            if(isPast) {
+                btn.classList.add('opacity-30', 'cursor-not-allowed');
+                btn.disabled = true;
+            } else {
+                btn.onclick = () => selectDate(date);
+            }
+
+            // Highlighting
+            if(selStart && date.getTime() === selStart.getTime()) btn.classList.add('bg-gold', 'text-black', 'font-bold');
+            else if(selEnd && date.getTime() === selEnd.getTime()) btn.classList.add('bg-gold', 'text-black', 'font-bold');
+            else if(selStart && selEnd && date > selStart && date < selEnd) btn.classList.add('bg-gold/20', 'text-gold');
+            
+            grid.appendChild(btn);
+        }
+        
+        updateSummary();
+    }
+
+    function changeMonth(dir) {
+        currDate.setMonth(currDate.getMonth() + dir);
+        renderCalendar();
+    }
+
+    function selectDate(date) {
+        // Reset if both selected or picking before start
+        if(selStart && selEnd) {
+            selStart = date;
+            selEnd = null;
+        } else if (!selStart) {
+            selStart = date;
+        } else if (date < selStart) {
+            selStart = date;
+        } else if (date.getTime() === selStart.getTime()) {
+             // do nothing or deselect? Keep start.
+        } else {
+            selEnd = date;
+        }
+        
+        renderCalendar();
+    }
+    
+    function updateSummary() {
+        const sInput = document.getElementById('hStartDate');
+        const eInput = document.getElementById('hEndDate');
+        const txt = document.getElementById('periodText');
+        const countBadge = document.getElementById('daysCount');
+        
+        if(selStart) sInput.value = toISODate(selStart);
+        if(selEnd) eInput.value = toISODate(selEnd);
+        else if(!selStart) { sInput.value = ''; eInput.value = ''; }
+        
+        if(selStart && selEnd) {
+             const diff = Math.ceil((selEnd - selStart) / (1000 * 60 * 60 * 24));
+             const fmt = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' });
+             txt.innerText = `${fmt.format(selStart)} - ${fmt.format(selEnd)}`;
+             countBadge.innerText = `${diff} DAYS`;
+             countBadge.classList.remove('hidden');
+        } else if(selStart) {
+             const fmt = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' });
+             txt.innerText = `${fmt.format(selStart)} - Select End Date`;
+             countBadge.classList.add('hidden');
+        } else {
+            txt.innerText = 'Select rental dates';
+            countBadge.classList.add('hidden');
+        }
+    }
+
+    // --- Dual Slider Logic ---
+    function initDualSlider() {
+        const minInput = document.getElementById('minPriceRange');
+        const maxInput = document.getElementById('maxPriceRange');
+        const track = document.getElementById('sliderTrack');
+        const label = document.getElementById('priceLabel');
+        const maxLimit = 2000;
+
+        function updateSlider() {
+            let minVal = parseInt(minInput.value);
+            let maxVal = parseInt(maxInput.value);
+
+            // Enforce gap
+            if (maxVal - minVal < 50) {
+                if (this === minInput) minInput.value = maxVal - 50;
+                else maxInput.value = minVal + 50;
+            }
+            
+            // Re-read after enforcement
+            minVal = parseInt(minInput.value);
+            maxVal = parseInt(maxInput.value);
+
+            // Visually order z-index
+            if(minVal > maxLimit - 100) minInput.style.zIndex = 20; // prevent blocking
+            
+            // Update Track
+            const minPercent = (minVal / maxLimit) * 100;
+            const maxPercent = (maxVal / maxLimit) * 100;
+            track.style.left = minPercent + "%";
+            track.style.width = (maxPercent - minPercent) + "%";
+            
+            // Update Label
+            label.innerText = `$${minVal} - $${maxVal}`;
+        }
+
+        minInput.addEventListener('input', updateSlider);
+        maxInput.addEventListener('input', updateSlider);
+        
+        // Initial call
+        updateSlider();
+    }
+
+    // Init
+    renderCalendar();
+    initDualSlider();
 </script>
+

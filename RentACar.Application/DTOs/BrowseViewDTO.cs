@@ -13,7 +13,8 @@ namespace RentACar.Application.DTOs
 
         // To keep filter inputs sticky on the form
         public string? FilterName { get; set; }
-        public int? FilterCategoryId { get; set; }
+        public IEnumerable<int> FilterCategoryIds { get; set; } = new List<int>();
+        public decimal? FilterMinPrice { get; set; }
         public decimal? FilterMaxPrice { get; set; }
 
         public DateOnly? FilterStartDate { get; set; }

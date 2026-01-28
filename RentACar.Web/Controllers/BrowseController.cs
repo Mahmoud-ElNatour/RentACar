@@ -19,14 +19,33 @@ namespace RentACar.Web.Controllers
         }
 
         [HttpGet("~/Browse")]
-        public async Task<IActionResult> Index(string? name = null, int? categoryId = null, decimal? maxPrice = null, DateOnly? startDate = null, DateOnly? endDate = null)
+        public async Task<IActionResult> Index(
+            string? name = null, 
+            [FromQuery] int[]? categoryIds = null, 
+            decimal? minPrice = null, 
+            decimal? maxPrice = null, 
+            DateOnly? startDate = null, 
+            DateOnly? endDate = null)
         {
             var categories = await _categoryManager.GetAllCategoriesAsync();
 
             // Get all filtered cars (without price yet)
-            var cars = await _carManager.SearchCarsByFilterAsync(modelName: name, categoryId: categoryId);
+            // Passing null for categoryId since we handle multiple below or client side
+            // Ideally we'd pass the array to manager, but for now we filter in-memory as before or adjust manager call.
+            // Since SearchCarsByFilterAsync only takes single ID, let's fetch all (filtered by name) and filter manually.
+            var cars = await _carManager.SearchCarsByFilterAsync(modelName: name);
 
-            // Apply price filter here (client-side filter, unless you want to add price param to CarManager too)
+            // Filter by Categories
+            if (categoryIds != null && categoryIds.Any())
+            {
+                cars = cars.Where(c => c.CategoryId.HasValue && categoryIds.Contains(c.CategoryId.Value)).ToList();
+            }
+
+            // Apply price filter
+            if (minPrice.HasValue)
+            {
+                cars = cars.Where(c => c.PricePerDay >= minPrice.Value).ToList();
+            }
             if (maxPrice.HasValue)
             {
                 cars = cars.Where(c => c.PricePerDay <= maxPrice.Value).ToList();
@@ -52,7 +71,8 @@ namespace RentACar.Web.Controllers
                 Cars = cars,
                 Categories = categories,
                 FilterName = name,
-                FilterCategoryId = categoryId,
+                FilterCategoryIds = categoryIds ?? Array.Empty<int>(),
+                FilterMinPrice = minPrice,
                 FilterMaxPrice = maxPrice,
                 FilterStartDate = startDate,
                 FilterEndDate = endDate
