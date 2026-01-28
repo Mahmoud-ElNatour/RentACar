@@ -2,157 +2,487 @@
 @{
     ViewData["Title"] = "Add Payment";
     Layout = null;
-    ViewData["Title"] = "Add Payment";
-    Layout = null;
-    var paymentDateValue = Model?.PaymentDate.ToDateTime(TimeOnly.MinValue).ToString("yyyy-MM-dd") ?? DateTime.Now.ToString("yyyy-MM-dd");
 }
-<!DOCTYPE html>
-<html lang="en">
 
+<!DOCTYPE html>
+<html lang="en" class="dark">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"]</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/login-style.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
-</head>
-
-<body>
-    @await Html.PartialAsync("_PopupNotifications")
-    <div class="container1">
-        <div class="login-container">
-            <a href="/Payment"
-                class="btn btn-outline-warning rounded-circle d-inline-flex align-items-center justify-content-center"
-                style="width: 40px; height: 40px;" title="Back">
-                <i class="fas fa-arrow-left"></i>
-            </a>
-            <div class="logo-text mt-3">
-                <i class="fas fa-money-bill-wave fa-lg"></i>
-                <div>RentACar</div>
-            </div>
-            <h2 class="mt-4">Add Payment</h2>
-            <form id="addPaymentForm" class="mt-3">
-                <div class="input mb-3">
-                    <label class="form-label text-white">Booking</label>
-                    <select name="BookingId" class="form-select" required></select>
-                </div>
-                <div class="input mb-3">
-                    <label class="form-label text-white">Amount</label>
-                    <input name="Amount" type="number" step="0.01" min="0" class="form-control" placeholder="Amount"
-                        required />
-                </div>
-                <div class="input mb-3">
-                    <label class="form-label text-white">Payment Date</label>
-                    <input name="PaymentDate" type="date" class="form-control" value="@paymentDateValue" required />
-                </div>
-                <div class="input mb-3">
-                    <label class="form-label text-white">Payment Method</label>
-                    <select id="paymentMethodSelect" name="PaymentMethodId" class="form-select" required>
-                        <option value="">Loading...</option>
-                    </select>
-                </div>
-
-                <div class="input mb-3">
-                    <label class="form-label text-white">Credit Card ID (optional)</label>
-                    <input name="CreditcardId" type="number" min="0" class="form-control"
-                        placeholder="Credit Card ID" />
-                </div>
-                <div class="input mb-4">
-                    <label class="form-label text-white">Status</label>
-                    <select name="Status" class="form-select">
-                        <option value="" selected>Select status</option>
-                        <option value="Unpaid">Unpaid</option>
-                        <option value="Paid">Paid</option>
-                        <option value="Cancelled">Cancelled</option>
-                    </select>
-                </div>
-                <button type="submit" class="login-btn w-100">Save</button>
-            </form>
-        </div>
-    </div>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
+    <title>Add Payment - RentACar</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+    
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        async function loadSelectOptions() {
-            const bookingSelect = document.querySelector('select[name="BookingId"]');
-            const methodSelect = document.querySelector('select[name="PaymentMethodId"]');
-            bookingSelect.innerHTML = '<option value="" disabled selected>Loading...</option>';
-            methodSelect.innerHTML = '<option value="" disabled selected>Loading...</option>';
-            try {
-                const [bookingRes, methodRes] = await Promise.all([
-                    fetch('/api/Booking'),
-                    fetch('/api/PaymentMethod/active')
-                ]);
-                if (!bookingRes.ok) {
-                    throw new Error('Failed to load bookings');
-                }
-                if (!methodRes.ok) {
-                    throw new Error('Failed to load payment methods');
-                }
-                const bookings = await bookingRes.json();
-                const methods = await methodRes.json();
-                bookingSelect.innerHTML = '<option value="" disabled selected>Select booking</option>';
-                bookings.forEach(b => {
-                    const option = document.createElement('option');
-                    const labelParts = [`#${b.bookingId}`];
-                    if (b.customerName) labelParts.push(b.customerName);
-                    if (b.carModel) labelParts.push(`- ${b.carModel}`);
-                    option.value = b.bookingId;
-                    option.textContent = labelParts.join(' ');
-                    bookingSelect.appendChild(option);
-                });
-                methodSelect.innerHTML = '<option value="" disabled selected>Select method</option>';
-                methods.forEach(m => {
-                    const option = document.createElement('option');
-                    option.value = m.id;
-                    option.textContent = m.paymentMethodName;
-                    methodSelect.appendChild(option);
-                });
-            } catch (error) {
-                console.error(error);
-                if (window.showPopup) {
-                    window.showPopup('Failed to load form data.', 'error');
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "gold": "#d4af37",
+                        "gold-hover": "#b5952f",
+                        "dark-bg": "#0a0a0a",
+                        "card-bg": "#121212",
+                        "border-color": "#262626"
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"],
+                    }
                 }
             }
         }
+    </script>
+    
+    <style>
+        body { font-family: 'Manrope', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        
+        /* Custom Gold Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1a1a1a;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #d4af37;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #b5952f;
+        }
+        /* Firefox fallback */
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: #d4af37 #1a1a1a;
+        }
+    </style>
+</head>
+<body class="bg-dark-bg text-white min-h-screen flex items-center justify-center p-4 md:p-8">
 
-        document.getElementById('addPaymentForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const form = e.target;
-            const payload = {
-                bookingId: Number(form.BookingId.value),
-                amount: Number(form.Amount.value),
-                paymentDate: form.PaymentDate.value,
-                paymentMethodId: Number(form.PaymentMethodId.value),
-                creditcardId: form.CreditcardId.value ? Number(form.CreditcardId.value) : null,
-                status: form.Status.value || null
-            };
+    <div class="w-full max-w-5xl bg-card-bg border border-border-color rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row relative">
+        
+        <!-- Background decorative elements -->
+        <div class="absolute top-0 right-0 w-96 h-96 bg-gold/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+        <div class="absolute bottom-0 left-0 w-64 h-64 bg-gold/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 pointer-events-none"></div>
+
+        <!-- Left Column: Form -->
+        <div class="flex-1 p-8 md:p-10 relative z-10 overflow-y-auto max-h-[90vh] custom-scrollbar">
+            <!-- Header -->
+            <div class="flex items-center justify-between mb-8">
+                <a href="/Payment" class="group flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
+                    <div class="h-8 w-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-white/10 transition-colors">
+                        <span class="material-symbols-outlined text-sm">arrow_back</span>
+                    </div>
+                    <span class="text-sm font-bold uppercase tracking-wider">Back</span>
+                </a>
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-gold">payments</span>
+                    <span class="font-black tracking-tight text-lg">RentCar<span class="text-gold">LB</span></span>
+                </div>
+            </div>
+
+            <div class="mb-8">
+                <h1 class="text-3xl md:text-4xl font-black text-white mb-2 tracking-tight">Add Payment.</h1>
+                <p class="text-gray-400">Search for a booking and record a new transaction.</p>
+            </div>
+
+            <!-- Booking Search -->
+            <div class="space-y-6">
+                <div class="relative z-50">
+                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Find Booking</label>
+                    <div class="relative group">
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-gray-500 group-focus-within:text-gold transition-colors">search</span>
+                        <input type="text" 
+                               id="bookingSearch" 
+                               class="w-full bg-dark-bg border border-border-color text-white rounded-xl py-4 pl-12 pr-4 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all placeholder-gray-700 font-medium"
+                               placeholder="Type Booking ID (e.g. 2024) or Customer Name..."
+                               autocomplete="off">
+                        
+                        <!-- Dropdown Results -->
+                        <div id="bookingDropdown" class="absolute left-0 right-0 top-full mt-2 bg-[#1a1a1a] border border-border-color rounded-xl shadow-2xl overflow-hidden hidden max-h-64 overflow-y-auto w-full">
+                            <!-- Items will be injected here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Selected Booking Info Panel -->
+                <div id="selectedBookingInfo" class="hidden p-5 bg-gold/5 border border-gold/10 rounded-2xl relative overflow-hidden group">
+                    <div class="absolute right-0 top-0 p-4 opacity-10">
+                        <span class="material-symbols-outlined text-6xl text-gold">directions_car</span>
+                    </div>
+                    <div class="relative z-10">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <p class="text-xs text-gold uppercase font-bold mb-1 tracking-wider">Active Selection</p>
+                                <div class="flex items-center gap-3">
+                                    <span class="text-2xl font-black text-white" id="selectedBookingId">#2024</span>
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-white/10 text-white uppercase tracking-wider" id="selectedBookingStatus">PENDING</span>
+                                </div>
+                            </div>
+                            <button type="button" id="clearBooking" class="text-gray-500 hover:text-white bg-black/20 hover:bg-black/40 px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1">
+                                <span class="material-symbols-outlined text-sm">close</span> Change
+                            </button>
+                        </div>
+                        <div class="space-y-1">
+                            <p class="text-white font-bold text-lg" id="selectedCustomerName">Customer Name</p>
+                            <p class="text-gray-400 text-sm flex items-center gap-1">
+                                <span class="material-symbols-outlined text-sm">directions_car</span>
+                                <span id="selectedCarModel">Car Model</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Form -->
+                <div id="paymentFormSection" class="space-y-6 opacity-50 pointer-events-none transition-all duration-300">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Amount</label>
+                            <div class="relative">
+                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gold font-bold text-lg">$</span>
+                                <input type="number" id="amountInput" step="0.01" min="0" class="w-full bg-dark-bg border border-border-color text-white rounded-xl py-3 pl-10 pr-4 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all font-mono font-bold text-lg">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Date</label>
+                            <input type="date" id="dateInput" class="w-full bg-dark-bg border border-border-color text-white rounded-xl py-3 px-4 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all font-medium" value="@DateTime.Now.ToString("yyyy-MM-dd")">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Payment Method</label>
+                        <div class="grid grid-cols-2 gap-4">
+                            <!-- Cash Option -->
+                            <label class="cursor-pointer relative group">
+                                <input type="radio" name="paymentMethod" value="cash" class="peer sr-only">
+                                <div class="p-4 rounded-2xl border border-border-color bg-dark-bg peer-checked:border-gold peer-checked:bg-gold/10 transition-all flex flex-col items-center gap-2 h-full justify-center group-hover:border-gray-600">
+                                    <span class="material-symbols-outlined text-gray-400 group-hover:text-white peer-checked:text-gold text-3xl transition-colors">attach_money</span>
+                                    <span class="text-sm font-bold text-gray-400 group-hover:text-white peer-checked:text-gold transition-colors">Cash</span>
+                                </div>
+                                <div class="absolute top-3 right-3 opacity-0 peer-checked:opacity-100 transition-opacity">
+                                    <span class="material-symbols-outlined text-gold text-sm">check_circle</span>
+                                </div>
+                            </label>
+
+                            <!-- Online Option -->
+                            <label class="cursor-pointer relative group">
+                                <input type="radio" name="paymentMethod" value="online" class="peer sr-only">
+                                <div class="p-4 rounded-2xl border border-border-color bg-dark-bg peer-checked:border-blue-500 peer-checked:bg-blue-500/10 transition-all flex flex-col items-center gap-2 h-full justify-center group-hover:border-gray-600">
+                                    <span class="material-symbols-outlined text-gray-400 group-hover:text-white peer-checked:text-blue-500 text-3xl transition-colors">credit_card</span>
+                                    <span class="text-sm font-bold text-gray-400 group-hover:text-white peer-checked:text-blue-500 transition-colors">Stripe / Online</span>
+                                </div>
+                                <div class="absolute top-3 right-3 opacity-0 peer-checked:opacity-100 transition-opacity">
+                                    <span class="material-symbols-outlined text-blue-500 text-sm">check_circle</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <button id="submitBtn" class="w-full py-4 rounded-xl font-bold text-black text-lg shadow-lg shadow-gold/10 transition-all transform active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none bg-gold hover:bg-gold-hover flex items-center justify-center gap-2 mt-4">
+                        <span>Select Method</span>
+                        <span class="material-symbols-outlined text-xl">arrow_forward</span>
+                    </button>
+                    
+                    <p class="text-center text-xs text-gray-500 mt-4">
+                        Secure transaction processed by RentCarLB System
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Summary Visuals -->
+        <div class="w-full md:w-[400px] bg-[#1a1a1a] border-t md:border-t-0 md:border-l border-border-color p-8 md:p-10 flex flex-col">
+            <h3 class="text-lg font-bold text-white mb-6 flex items-center gap-2">
+                <span class="material-symbols-outlined text-gold">receipt_long</span>
+                Booking Summary
+            </h3>
+
+            <div id="emptySummaryState" class="flex-1 flex flex-col items-center justify-center text-center opacity-30">
+                <span class="material-symbols-outlined text-6xl mb-4">search</span>
+                <p class="font-medium">Select a booking<br>to view details</p>
+            </div>
+
+            <div id="bookingSummaryContent" class="hidden space-y-6 flex-1">
+                <!-- Date Range Visual -->
+                <div class="flex items-center justify-between relative">
+                    <div class="absolute left-[15px] top-8 bottom-0 w-0.5 bg-gradient-to-b from-green-500 to-red-500 opacity-30"></div>
+                    
+                    <div class="flex flex-col gap-6 w-full">
+                        <div class="flex items-start gap-3">
+                            <div class="h-8 w-8 rounded-full bg-green-500/20 border border-green-500/30 flex items-center justify-center z-10 shrink-0">
+                                <span class="material-symbols-outlined text-green-500 text-sm">login</span>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500 uppercase font-bold tracking-wider mb-0.5">Pick-up</p>
+                                <p class="text-white font-bold" id="summaryStartDate">...</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start gap-3">
+                            <div class="h-8 w-8 rounded-full bg-red-500/20 border border-red-500/30 flex items-center justify-center z-10 shrink-0">
+                                <span class="material-symbols-outlined text-red-500 text-sm">logout</span>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500 uppercase font-bold tracking-wider mb-0.5">Return</p>
+                                <p class="text-white font-bold" id="summaryEndDate">...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="h-px bg-white/10 my-4"></div>
+
+                <!-- Financials -->
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center text-sm">
+                        <span class="text-gray-400">Total Booking Cost</span>
+                        <span class="text-white font-medium" id="summaryTotal">$0.00</span>
+                    </div>
+                    <div class="flex justify-between items-center text-sm">
+                        <span class="text-gray-400">Paid So Far</span>
+                        <span class="text-green-500 font-medium">$0.00</span> 
+                        <!-- Simplification: we assume we only know total for now unless we fetch payments -->
+                    </div>
+                </div>
+
+                <div class="mt-auto pt-6">
+                    <div class="p-4 rounded-xl bg-gold/10 border border-gold/20 flex flex-col items-center text-center">
+                        <p class="text-xs text-gold uppercase font-bold tracking-wider mb-1">Total Due</p>
+                        <p class="text-3xl font-black text-white" id="summaryTotalBig">$0.00</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-8 text-[10px] text-gray-600 text-center">
+                RentCarLB Admin Panel
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        let allBookings = [];
+        let selectedBooking = null;
+
+        // Load bookings on init
+        async function loadBookings() {
             try {
-                const res = await fetch('/api/Payment', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                if (!res.ok) {
-                    throw new Error(await res.text());
+                const res = await fetch('/api/Booking');
+                if (res.ok) {
+                    allBookings = await res.json();
                 }
-                if (window.showPopup) {
-                    window.showPopup('Payment added successfully.', 'success');
-                }
-                setTimeout(() => { window.location.href = '/Payment'; }, 900);
-            } catch (error) {
-                console.error(error);
-                if (window.showPopup) {
-                    window.showPopup('Failed to add payment.', 'error');
-                }
+            } catch (err) {
+                console.error('Failed to load bookings', err);
+            }
+        }
+
+        // Filter bookings
+        function filterBookings(query) {
+            if (!query) return [];
+            query = query.toLowerCase();
+            return allBookings.filter(b => 
+                b.bookingId.toString().includes(query) || 
+                (b.customerName && b.customerName.toLowerCase().includes(query)) ||
+                (b.carModel && b.carModel.toLowerCase().includes(query))
+            ).slice(0, 5); // Limit to 5 results
+        }
+
+        // UI Elements
+        const searchInput = document.getElementById('bookingSearch');
+        const dropdown = document.getElementById('bookingDropdown');
+        const selectedInfo = document.getElementById('selectedBookingInfo');
+        const paymentFormSection = document.getElementById('paymentFormSection');
+        const emptySummaryState = document.getElementById('emptySummaryState');
+        const bookingSummaryContent = document.getElementById('bookingSummaryContent');
+        const submitBtn = document.getElementById('submitBtn');
+        const amountInput = document.getElementById('amountInput');
+
+        // Event Listeners
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value;
+            const results = filterBookings(query);
+            renderDropdown(results);
+        });
+
+        searchInput.addEventListener('focus', () => {
+            if(searchInput.value) {
+                renderDropdown(filterBookings(searchInput.value));
+            } else if(allBookings.length > 0) {
+                 renderDropdown(allBookings.slice(0, 5));
+            }
+        });
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.classList.add('hidden');
             }
         });
 
-        document.addEventListener('DOMContentLoaded', loadSelectOptions);
+        function renderDropdown(bookings) {
+            dropdown.innerHTML = '';
+            if (bookings.length === 0) {
+                dropdown.classList.add('hidden');
+                return;
+            }
+
+            bookings.forEach(b => {
+                const div = document.createElement('div');
+                div.className = 'p-4 hover:bg-white/5 cursor-pointer border-b border-border-color last:border-0 flex items-center justify-between group transition-colors';
+                div.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="h-8 w-8 rounded bg-white/5 flex items-center justify-center text-gray-400 font-bold text-xs group-hover:bg-gold/20 group-hover:text-gold transition-colors">
+                            #${b.bookingId}
+                        </div>
+                        <div>
+                            <div class="text-white text-sm font-bold group-hover:text-gold transition-colors">${b.customerName || 'Unknown'}</div>
+                            <div class="text-xs text-gray-500">${b.carModel || 'No Car'}</div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-white font-mono font-bold">$${b.totalPrice}</div>
+                    </div>
+                `;
+                div.onclick = () => selectBooking(b);
+                dropdown.appendChild(div);
+            });
+            dropdown.classList.remove('hidden');
+        }
+
+        function selectBooking(booking) {
+            selectedBooking = booking;
+            
+            // Update Search UI
+            searchInput.parentElement.parentElement.classList.add('hidden'); // Hide search container
+            selectedInfo.classList.remove('hidden');
+            
+            // Populate Selected Info
+            document.getElementById('selectedBookingId').textContent = `#${booking.bookingId}`;
+            document.getElementById('selectedBookingStatus').textContent = booking.bookingStatus;
+            document.getElementById('selectedCustomerName').textContent = booking.customerName;
+            document.getElementById('selectedCarModel').textContent = booking.carModel;
+            
+            amountInput.value = booking.totalPrice; 
+
+            // Update Summary Sidebar
+            emptySummaryState.classList.add('hidden');
+            bookingSummaryContent.classList.remove('hidden');
+            
+            document.getElementById('summaryStartDate').textContent = new Date(booking.startdate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+            document.getElementById('summaryEndDate').textContent = new Date(booking.enddate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+            document.getElementById('summaryTotal').textContent = `$${booking.totalPrice.toFixed(2)}`;
+            document.getElementById('summaryTotalBig').textContent = `$${booking.totalPrice.toFixed(2)}`;
+
+            // Enable Payment Form
+            paymentFormSection.classList.remove('opacity-50', 'pointer-events-none');
+        }
+
+        document.getElementById('clearBooking').onclick = () => {
+            selectedBooking = null;
+            searchInput.parentElement.parentElement.classList.remove('hidden');
+            selectedInfo.classList.add('hidden');
+            searchInput.value = '';
+            searchInput.focus();
+            
+            paymentFormSection.classList.add('opacity-50', 'pointer-events-none');
+            emptySummaryState.classList.remove('hidden');
+            bookingSummaryContent.classList.add('hidden');
+            
+            // Reset Amount
+            amountInput.value = '';
+            // Reset Radio
+            document.querySelectorAll('input[name="paymentMethod"]').forEach(r => r.checked = false);
+            updateSubmitButton();
+        }
+
+        // Payment Method Logic
+        const methodRadios = document.getElementsByName('paymentMethod');
+        function updateSubmitButton() {
+            const method = document.querySelector('input[name="paymentMethod"]:checked')?.value;
+            if (method === 'cash') {
+                submitBtn.innerHTML = '<span class="material-symbols-outlined">save</span> <span>Record Cash Payment</span>';
+                submitBtn.className = 'w-full py-4 rounded-xl font-bold text-black text-lg shadow-lg shadow-gold/20 transition-all transform active:scale-[0.98] bg-gold hover:bg-gold-hover flex items-center justify-center gap-2 mt-4';
+            } else if (method === 'online') {
+                submitBtn.innerHTML = '<span class="material-symbols-outlined">credit_card</span> <span>Continue to Stripe</span>';
+                submitBtn.className = 'w-full py-4 rounded-xl font-bold text-white text-lg shadow-lg shadow-blue-500/20 transition-all transform active:scale-[0.98] bg-blue-600 hover:bg-blue-500 flex items-center justify-center gap-2 mt-4';
+            } else {
+                 submitBtn.innerHTML = '<span>Select Method</span> <span class="material-symbols-outlined text-xl">arrow_forward</span>';
+                 submitBtn.className = 'w-full py-4 rounded-xl font-bold text-black text-lg shadow-lg shadow-gold/10 transition-all transform active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none bg-gold hover:bg-gold-hover flex items-center justify-center gap-2 mt-4';
+            }
+        }
+        
+        methodRadios.forEach(radio => {
+            radio.addEventListener('change', updateSubmitButton);
+        });
+
+        // Submit Logic
+        submitBtn.onclick = async () => {
+            if (!selectedBooking) return;
+            const method = document.querySelector('input[name="paymentMethod"]:checked')?.value;
+            if (!method) {
+                alert('Please select a payment method');
+                return;
+            }
+
+            const amount = amountInput.value;
+            if (!amount || amount <= 0) {
+                alert('Please enter a valid amount');
+                return;
+            }
+            
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="animate-spin material-symbols-outlined">progress_activity</span> Processing...';
+
+            if (method === 'cash') {
+                try {
+                    const methodsRes = await fetch('/api/PaymentMethod/active');
+                    const methods = await methodsRes.json();
+                    const cashMethod = methods.find(m => m.paymentMethodName.toLowerCase().includes('cash'));
+                    
+                    if(!cashMethod) throw new Error('Cash payment method not found in system.');
+
+                    const payload = {
+                        bookingId: selectedBooking.bookingId,
+                        amount: Number(amount),
+                        paymentDate: document.getElementById('dateInput').value,
+                        paymentMethodId: cashMethod.id,
+                        status: 'Paid'
+                    };
+
+                    const res = await fetch('/api/Payment', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (res.ok) {
+                        window.location.href = '/Payment';
+                    } else {
+                        throw new Error(await res.text());
+                    }
+
+                } catch (err) {
+                    alert('Error: ' + err.message);
+                    submitBtn.disabled = false;
+                    updateSubmitButton();
+                }
+
+            } else if (method === 'online') {
+                alert("Redirecting to Stripe Checkout... (Placeholder)");
+                submitBtn.disabled = false;
+                updateSubmitButton();
+            }
+        };
+
+        loadBookings();
+
     </script>
 </body>
-
 </html>

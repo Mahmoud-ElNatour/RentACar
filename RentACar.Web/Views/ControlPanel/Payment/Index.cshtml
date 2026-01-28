@@ -7,20 +7,20 @@
 <div class="flex flex-col md:flex-row flex-wrap justify-between gap-6 mb-8 items-start md:items-center p-4 md:px-10 md:py-8 max-w-[1440px] mx-auto w-full">
     <div class="flex flex-col gap-2">
         <h1 class="text-white text-3xl md:text-4xl font-black tracking-tight flex items-center gap-3">
-            <span class="material-symbols-outlined text-gold text-4xl">payments</span>
-            Payment Management
+            <span class="material-symbols-outlined text-gold text-4xl">receipt_long</span>
+            Booking Payments
         </h1>
         <p class="text-gray-400 text-base">Manage and track all rental payments, refunds, and invoices.</p>
     </div>
-    <button onclick="loadModal('/Payment/Add')" class="flex items-center gap-2 bg-gold hover:bg-gold-hover transition-colors text-black px-6 py-3 rounded-lg font-bold shadow-lg shadow-gold/10">
+    <a href="/Payment/Add" class="flex items-center gap-2 bg-gold hover:bg-gold-hover transition-colors text-black px-6 py-3 rounded-lg font-bold shadow-lg shadow-gold/10 text-decoration-none">
         <span class="material-symbols-outlined text-[20px]">add_circle</span>
         <span>Add Payment</span>
-    </button>
+    </a>
 </div>
 
 <div class="px-4 md:px-10 pb-8 max-w-[1440px] mx-auto w-full">
     <!-- Stats Grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8" id="statsGrid">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8" id="statsGrid">
         <!-- Stats will be injected via JS -->
          <div class="bg-surface-dark rounded-xl p-5 border border-border-dark flex flex-col gap-1 animate-pulse">
              <div class="h-4 bg-white/10 rounded w-1/2 mb-2"></div>
@@ -253,40 +253,65 @@
             if(!stats) return;
             const grid = document.getElementById('statsGrid');
             grid.innerHTML = `
-                <div class="bg-surface-dark rounded-xl p-5 border border-border-dark flex flex-col gap-1 group hover:border-gold/50 transition-colors">
-                    <div class="flex justify-between items-start mb-2">
-                        <p class="text-gray-400 text-sm font-medium">Total Revenue</p>
-                        <span class="material-symbols-outlined text-gold group-hover:scale-110 transition-transform">payments</span>
+                <div class="flex flex-col gap-3 rounded-xl p-8 bg-[#121212] border-t-2 border-gold shadow-2xl relative overflow-hidden group">
+                    <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                         <span class="material-symbols-outlined text-6xl text-gold">payments</span>
                     </div>
-                    <p class="text-white text-3xl font-bold">$${formatMoney(stats.totalRevenue)}</p>
-                     <div class="text-xs text-gray-500 mt-1">Lifetime earnings</div>
-                </div>
-                <div class="bg-surface-dark rounded-xl p-5 border border-border-dark flex flex-col gap-1 group hover:border-gold/50 transition-colors">
-                    <div class="flex justify-between items-start mb-2">
-                        <p class="text-gray-400 text-sm font-medium">Pending</p>
-                        <span class="material-symbols-outlined text-gold group-hover:scale-110 transition-transform">pending_actions</span>
+                    <p class="text-gray-400 text-sm font-semibold uppercase tracking-wider z-10">Total Revenue</p>
+                    <div class="flex items-center gap-3 z-10">
+                        <p class="text-white tracking-tight text-3xl font-bold">$${formatMoney(stats.totalRevenue)}</p>
                     </div>
-                    <p class="text-white text-3xl font-bold">$${formatMoney(stats.pendingAmount)}</p>
-                    <div class="flex items-center gap-1 text-xs mt-1">
-                        <span class="text-yellow-500 font-bold">${stats.pendingCount} payments</span>
-                        <span class="text-gray-500">awaiting</span>
+                     <div class="flex items-center gap-2 z-10">
+                        <span class="text-[#0bda1d] text-sm font-bold flex items-center">
+                            <span class="material-symbols-outlined text-sm mr-1">trending_up</span>+12.5%
+                        </span>
+                        <span class="text-gray-500 text-xs tracking-wide">vs last month</span>
                     </div>
                 </div>
-                <div class="bg-surface-dark rounded-xl p-5 border border-border-dark flex flex-col gap-1 group hover:border-gold/50 transition-colors">
-                    <div class="flex justify-between items-start mb-2">
-                        <p class="text-gray-400 text-sm font-medium">Successful</p>
-                        <span class="material-symbols-outlined text-gold group-hover:scale-110 transition-transform">check_circle</span>
+
+                <div class="flex flex-col gap-3 rounded-xl p-8 bg-[#121212] border-t-2 border-gold shadow-2xl relative overflow-hidden group">
+                     <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                         <span class="material-symbols-outlined text-6xl text-gold">pending_actions</span>
                     </div>
-                    <p class="text-white text-3xl font-bold">${stats.successCount}</p>
-                    <div class="text-xs text-gray-500 mt-1">${((stats.successCount/stats.totalCount)*100 || 0).toFixed(1)}% success rate</div>
+                    <p class="text-gray-400 text-sm font-semibold uppercase tracking-wider z-10">Pending</p>
+                    <div class="flex items-center gap-3 z-10">
+                         <p class="text-white tracking-tight text-3xl font-bold">$${formatMoney(stats.pendingAmount)}</p>
+                    </div>
+                    <div class="flex items-center gap-2 z-10">
+                        <span class="text-yellow-500 text-sm font-bold flex items-center">
+                            ${stats.pendingCount} payments
+                        </span>
+                        <span class="text-gray-500 text-xs tracking-wide">awaiting processing</span>
+                    </div>
                 </div>
-                <div class="bg-surface-dark rounded-xl p-5 border border-border-dark flex flex-col gap-1 group hover:border-gold/50 transition-colors">
-                    <div class="flex justify-between items-start mb-2">
-                        <p class="text-gray-400 text-sm font-medium">Refunds</p>
-                        <span class="material-symbols-outlined text-gold group-hover:scale-110 transition-transform">keyboard_return</span>
+
+                <div class="flex flex-col gap-3 rounded-xl p-8 bg-[#121212] border-t-2 border-gold shadow-2xl relative overflow-hidden group">
+                     <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                         <span class="material-symbols-outlined text-6xl text-gold">check_circle</span>
                     </div>
-                    <p class="text-white text-3xl font-bold">$${formatMoney(stats.refundAmount)}</p>
-                    <div class="text-xs text-gray-500 mt-1">Processed refunds</div>
+                    <p class="text-gray-400 text-sm font-semibold uppercase tracking-wider z-10">Successful</p>
+                    <div class="flex items-center gap-3 z-10">
+                        <p class="text-white tracking-tight text-3xl font-bold">${stats.successCount}</p>
+                    </div>
+                     <div class="flex items-center gap-2 z-10">
+                        <div class="flex-1 h-1.5 bg-white/10 rounded-full w-24 overflow-hidden">
+                            <div class="bg-green-500 h-full" style="width: ${((stats.successCount/stats.totalCount)*100 || 0)}%"></div>
+                        </div>
+                        <span class="text-gray-500 text-xs tracking-wide">${((stats.successCount/stats.totalCount)*100 || 0).toFixed(1)}% rate</span>
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-3 rounded-xl p-8 bg-[#121212] border-t-2 border-gold shadow-2xl relative overflow-hidden group">
+                     <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                         <span class="material-symbols-outlined text-6xl text-gold">keyboard_return</span>
+                    </div>
+                    <p class="text-gray-400 text-sm font-semibold uppercase tracking-wider z-10">Refunds</p>
+                    <div class="flex items-center gap-3 z-10">
+                        <p class="text-white tracking-tight text-3xl font-bold">$${formatMoney(stats.refundAmount)}</p>
+                    </div>
+                     <div class="flex items-center gap-2 z-10">
+                        <span class="text-gray-500 text-xs tracking-wide">Processed refunds</span>
+                    </div>
                 </div>
             `;
         }

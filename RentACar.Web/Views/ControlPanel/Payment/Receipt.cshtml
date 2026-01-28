@@ -13,8 +13,25 @@
     <style>
         body { font-family: 'Space Mono', monospace; }
         @@media print {
-            .no-print { display: none; }
-            body { background: white; }
+            .no-print { 
+                display: none !important; 
+                visibility: hidden !important;
+            }
+            body { 
+                background: white !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            .bg-gray-100 {
+                background: white !important;
+            }
+            .receipt {
+                box-shadow: none !important;
+                margin: 0 auto;
+            }
+            @@page {
+                margin: 1cm;
+            }
         }
     </style>
 </head>
@@ -88,7 +105,7 @@
 
         <!-- Barcode Fake -->
         <div class="mt-6 flex justify-center opacity-50">
-             <div class="h-8 w-48 bg-[url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABAAQMAAACQdd1iAAAABlBMVEUAAAD///+l2Z/dAAAAAXRSTlMAQObYZgAAAAxJREFcup1jwA0MCAAABJ0BwZ4qO8AAAAAASUVORK5CYII=')] bg-repeat-x bg-contain"></div>
+             <div class="h-8 w-48 bg-[url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABAAQMAAACQdd1iAAAABlBMVEUAAAD///+l2Z/dAAAAAXRSTlMAQObYZgAAAAxJREFUeNp1jwA0MCAAABJ0BwZ4qO8AAAAAASUVORK5CYII=')] bg-repeat-x bg-contain"></div>
         </div>
     </div>
 

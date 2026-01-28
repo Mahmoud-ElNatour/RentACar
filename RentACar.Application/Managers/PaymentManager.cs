@@ -679,28 +679,9 @@ namespace RentACar.Application.Managers
 
         private PaymentDetailsDto MapToDetailsDto(Payment payment, IReadOnlyDictionary<string, int>? methodLookup = null)
         {
-            int? methodId = null;
-            if (!string.IsNullOrWhiteSpace(payment.PaymentMethod) && methodLookup != null &&
-                methodLookup.TryGetValue(payment.PaymentMethod, out var resolvedId))
-            {
-                methodId = resolvedId;
-            }
-
             var subtotal = payment.Booking?.Subtotal;
             var promocode = payment.Booking?.Promocode;
             var discountPercentage = promocode?.DiscountPercentage;
-
-            decimal? discountAmount = null;
-            if (discountPercentage.HasValue && subtotal.HasValue)
-            {
-                discountAmount = Math.Round(subtotal.Value * discountPercentage.Value / 100m, 2, MidpointRounding.AwayFromZero);
-            }
-
-            var total = payment.Booking?.TotalPrice;
-            if (!total.HasValue && subtotal.HasValue)
-            {
-                total = discountAmount.HasValue ? subtotal.Value - discountAmount.Value : subtotal.Value;
-            }
 
             return new PaymentDetailsDto
             {
@@ -708,23 +689,20 @@ namespace RentACar.Application.Managers
                 BookingId = payment.BookingId,
                 Amount = payment.Amount,
                 PaymentDate = payment.PaymentDate,
-                CreditcardId = payment.CreditcardId,
                 PaymentMethodName = payment.PaymentMethod,
                 Status = payment.Status,
                 PaymentProvider = payment.PaymentProvider,
                 PaymentProviderSessionId = payment.PaymentProviderSessionId,
-                PaymentProviderPaymentIntentId = payment.PaymentProviderPaymentIntentId,
                 CustomerName = payment.Booking?.Customer?.Name,
                 CustomerUsername = payment.Booking?.Customer?.User?.UserName,
                 BookingStatus = payment.Booking?.BookingStatus,
-                BookingTotal = total,
                 BookingSubtotal = subtotal,
-                BookingDiscountAmount = discountAmount,
                 PromocodeName = promocode?.Name,
                 PromocodeDiscountPercentage = discountPercentage,
                 CarModel = payment.Booking?.Car?.ModelName,
                 CarPlateNumber = payment.Booking?.Car?.PlateNumber,
-                PaymentMethodId = methodId
+                BookingStartDate = payment.Booking?.Startdate,
+                BookingEndDate = payment.Booking?.Enddate
             };
         }
 

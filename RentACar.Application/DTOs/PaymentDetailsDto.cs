@@ -12,11 +12,7 @@ namespace RentACar.Application.DTOs
 
         public DateOnly PaymentDate { get; set; }
 
-        public int? CreditcardId { get; set; }
-
         public string? PaymentMethodName { get; set; }
-
-        public int? PaymentMethodId { get; set; }
 
         public string? Status { get; set; }
 
@@ -24,19 +20,13 @@ namespace RentACar.Application.DTOs
 
         public string? PaymentProviderSessionId { get; set; }
 
-        public string? PaymentProviderPaymentIntentId { get; set; }
-
         public string? CustomerName { get; set; }
 
         public string? CustomerUsername { get; set; }
 
         public string? BookingStatus { get; set; }
 
-        public decimal? BookingTotal { get; set; }
-
         public decimal? BookingSubtotal { get; set; }
-
-        public decimal? BookingDiscountAmount { get; set; }
 
         public string? PromocodeName { get; set; }
 
@@ -45,5 +35,9 @@ namespace RentACar.Application.DTOs
         public string? CarModel { get; set; }
 
         public string? CarPlateNumber { get; set; }
+
+        public DateOnly? BookingStartDate { get; set; }
+
+        public DateOnly? BookingEndDate { get; set; }
     }
 }
