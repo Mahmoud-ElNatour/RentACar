@@ -1,0 +1,133 @@
+@model RentACar.Application.DTOs.RatingDetailsDto
+
+<!-- Wrapper to isolate styles if needed, though they match the Index styles -->
+<div class="w-full bg-[#121212] rounded-2xl shadow-2xl border border-white/10 overflow-hidden flex flex-col font-display">
+    <div class="px-8 py-6 border-b border-white/10 flex justify-between items-center bg-gradient-to-r from-background-dark to-card-dark">
+        <div class="space-y-1">
+            <h1 class="text-white text-2xl font-extrabold tracking-tight">Rating Details: <span class="text-primary italic">Booking #@Model.BookingId</span></h1>
+            <div class="flex items-center gap-2 text-white/40 text-xs font-bold uppercase tracking-[0.2em]">
+                <span class="material-symbols-outlined text-sm">calendar_today</span>
+                Rating Date: @Model.RatingDate.ToString("MMMM dd, yyyy")
+            </div>
+        </div>
+        <button type="button" class="size-10 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 text-white/50 hover:text-white transition-all" data-bs-dismiss="modal">
+            <span class="material-symbols-outlined">close</span>
+        </button>
+    </div>
+    
+    <div class="p-8 space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            <!-- Customer Panel -->
+            <div class="glass-panel p-5 rounded-xl flex flex-col justify-between" style="background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08);">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="space-y-1">
+                        <p class="text-white/40 text-[10px] font-black uppercase tracking-widest">Customer</p>
+                        <h3 class="text-lg font-bold text-white">@Model.CustomerName</h3>
+                    </div>
+                    <div class="flex gap-0.5 text-primary">
+                        @for (int i = 1; i <= 5; i++)
+                        {
+                            if (i <= Model.Stars) { <span class="material-symbols-outlined fill text-sm">star</span> }
+                            else { <span class="material-symbols-outlined text-sm">star</span> }
+                        }
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <div class="flex items-center gap-3 text-white/70 text-sm">
+                        <span class="material-symbols-outlined text-primary/70 text-base">mail</span>
+                        @(Model.CustomerEmail ?? "N/A")
+                    </div>
+                    <div class="flex items-center gap-3 text-white/70 text-sm">
+                        <span class="material-symbols-outlined text-primary/70 text-base">phone_iphone</span>
+                        @(Model.CustomerPhone ?? "N/A")
+                    </div>
+                </div>
+            </div>
+
+            <!-- Booking Panel -->
+            <div class="glass-panel p-5 rounded-xl flex flex-col justify-between" style="background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08);">
+                <div class="space-y-4">
+                    <div class="space-y-1">
+                        <p class="text-white/40 text-[10px] font-black uppercase tracking-widest">Booking Date</p>
+                        <p class="text-sm font-semibold flex items-center gap-2 text-white">
+                            <span class="material-symbols-outlined text-primary text-base">event</span>
+                            @Model.BookingDate.ToString("MMM dd, yyyy — hh:mm tt")
+                        </p>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="text-white/40 text-[10px] font-black uppercase tracking-widest">Managed By</p>
+                        <div class="flex items-center gap-2">
+                            <div class="size-6 rounded-full bg-primary/20 flex items-center justify-center">
+                                <span class="material-symbols-outlined text-[14px] text-primary">person</span>
+                            </div>
+                            <p class="text-sm font-semibold text-white">@Model.EmployeeName</p>
+                            <span class="text-[10px] bg-white/10 px-1.5 py-0.5 rounded text-white/50 uppercase">Staff</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Vehicle Panel -->
+            <div class="glass-panel p-4 rounded-xl flex items-center gap-4" style="background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08);">
+                <div class="size-20 rounded-lg overflow-hidden flex-shrink-0 bg-black/40 border border-white/5 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-4xl text-white/20">directions_car</span>
+                </div>
+                <div class="space-y-2">
+                    <div>
+                        <p class="text-white/40 text-[10px] font-black uppercase tracking-widest leading-none mb-1">Vehicle</p>
+                        <h3 class="text-base font-bold leading-tight text-white">@Model.CarName</h3>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="bg-primary text-black text-[9px] font-black px-1 py-0.5 rounded leading-none">PLATE</span>
+                        <p class="text-white/80 font-mono text-xs tracking-wider uppercase">@Model.CarPlateNumber</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Panel -->
+            <div class="glass-panel p-5 rounded-xl" style="background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08);">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <p class="text-white/40 text-[10px] font-black uppercase tracking-widest">Payment ID</p>
+                        <p class="text-xs font-mono text-white/80">@(Model.PaymentId.HasValue ? "#PAY-" + Model.PaymentId : "N/A")</p>
+                    </div>
+                    <div class="space-y-1 text-right">
+                        <p class="text-white/40 text-[10px] font-black uppercase tracking-widest">Total Amount</p>
+                        <p class="text-xl font-black text-primary">@(Model.PaymentTotal.HasValue ? "$" + Model.PaymentTotal : "$0.00")</p>
+                    </div>
+                    <div class="col-span-2 pt-2 border-t border-white/5 flex justify-between items-center">
+                        <p class="text-white/40 text-[10px] font-black uppercase tracking-widest">Promo Code</p>
+                        @if (!string.IsNullOrEmpty(Model.Promocode))
+                        {
+                            <span class="text-xs font-bold text-primary px-2 py-0.5 bg-primary/10 rounded border border-primary/20">@Model.Promocode</span>
+                        }
+                        else
+                        {
+                            <span class="text-xs text-white/30 italic">None</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Feedback Panel -->
+        <div class="glass-panel p-6 rounded-xl relative overflow-hidden" style="background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08);">
+            <div class="absolute top-0 right-0 p-4 opacity-10">
+                <span class="material-symbols-outlined text-6xl text-white">format_quote</span>
+            </div>
+            <p class="text-white/40 text-[10px] font-black uppercase tracking-widest mb-3">Full Customer Feedback</p>
+            <p class="text-white/90 text-lg font-medium leading-relaxed italic">
+                "@(Model.Feedback ?? "No written feedback provided.")"
+            </p>
+        </div>
+    </div>
+    
+
+</div>
+
+<style>
+    .material-symbols-outlined.fill {
+        font-variation-settings: 'FILL' 1;
+    }
+</style>

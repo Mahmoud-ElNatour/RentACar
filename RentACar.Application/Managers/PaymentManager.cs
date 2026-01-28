@@ -349,10 +349,7 @@ namespace RentACar.Application.Managers
             // No, Includes should be added before specific selects, but EF Core allows adding Include after Where.
             // Let's add Includes now.
             
-            var listQuery = query
-                .Include(p => p.Booking).ThenInclude(b => b.Customer).ThenInclude(c => c.User)
-                .Include(p => p.Booking).ThenInclude(b => b.Car)
-                .Include(p => p.Booking).ThenInclude(b => b.Promocode);
+            var listQuery = query; // No includes needed for projection
 
             // 3. Sorting
             // Re-assign listQuery for sorting
@@ -418,7 +415,21 @@ namespace RentACar.Application.Managers
         public async Task<PaymentStatsDto> GetPaymentStatsAsync(PaymentFilterDto filter)
         {
              var query = _paymentRepository.Query().AsNoTracking();
-             query = ApplyFilters(query, filter);
+             
+             // Optimized Stats Filter: Ignore heavy text search, only apply Status/Date
+             if (!string.IsNullOrWhiteSpace(filter.Status))
+             {
+                 if (filter.Status.Equals("Paid", StringComparison.OrdinalIgnoreCase))
+                     query = query.Where(p => p.Status == "Paid" || p.Status == "Done");
+                 else
+                     query = query.Where(p => p.Status == filter.Status);
+             }
+
+             if (filter.StartDate.HasValue) query = query.Where(p => p.PaymentDate >= filter.StartDate.Value);
+             if (filter.EndDate.HasValue) query = query.Where(p => p.PaymentDate <= filter.EndDate.Value);
+
+             // Note: We skip SearchTerm for stats to ensure query remains fast and reflects "Global" or "Date-Range" stats 
+             // rather than narrowed down single-row stats, which is often what users prefer for dashboard cards.
 
             var statsGroup = await query
                 .GroupBy(p => p.Status)
@@ -440,12 +451,20 @@ namespace RentACar.Application.Managers
         {
             if (!string.IsNullOrWhiteSpace(filter.SearchTerm))
             {
-                var term = filter.SearchTerm.ToLower();
-                query = query.Where(p => 
-                    p.PaymentId.ToString().Contains(term) ||
-                    p.BookingId.ToString().Contains(term) ||
-                    (p.Booking != null && p.Booking.Customer != null && p.Booking.Customer.Name.ToLower().Contains(term))
-                );
+                var term = filter.SearchTerm.Trim();
+                if (int.TryParse(term, out var num))
+                {
+                    query = query.Where(p => p.PaymentId == num || p.BookingId == num);
+                }
+                else
+                {
+                    // Case-insensitive like search
+                    var pattern = $"%{term}%";
+                    query = query.Where(p => 
+                        p.Booking != null && 
+                        p.Booking.Customer != null && 
+                        EF.Functions.Like(p.Booking.Customer.Name, pattern));
+                }
             }
 
             if (!string.IsNullOrWhiteSpace(filter.Status))

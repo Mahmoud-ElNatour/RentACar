@@ -41,6 +41,12 @@ namespace RentACar.Application.Managers
             return ratings.Select(MapToDisplayDto).ToList();
         }
 
+        public async Task<List<CustomerRatingDisplayDto>> GetAllRatingsAsync(string? searchTerm = null, string? sortColumn = null, string? sortDirection = null)
+        {
+            var ratings = await _ratingRepository.GetAllAsync(searchTerm, sortColumn, sortDirection);
+            return ratings.Select(MapToDisplayDto).ToList();
+        }
+
         public async Task<EmployeeRatingSummaryDto?> GetEmployeeRatingSummaryAsync(int employeeId)
         {
             var ratings = await _ratingRepository.GetByEmployeeIdAsync(employeeId);
@@ -87,11 +93,19 @@ namespace RentACar.Application.Managers
             return true;
         }
 
-        public async Task<bool> UserCanRateEmployeeAsync(int userId, int employeeId)
+        public Task<bool> UserCanRateEmployeeAsync(int userId, int employeeId)
         {
             // This method can be enhanced to check if user has completed bookings with this employee
             // For now, it returns true - you can add business logic as needed
-            return true;
+            return Task.FromResult(true);
+        }
+
+        public async Task<RatingDetailsDto?> GetFullRatingDetailsAsync(int ratingId)
+        {
+            var rating = await _ratingRepository.GetByIdAsync(ratingId);
+            if (rating == null) return null;
+
+            return MapToDetailsDto(rating);
         }
 
         private CustomerRatingDisplayDto MapToDisplayDto(CustomerRating rating)
@@ -99,11 +113,40 @@ namespace RentACar.Application.Managers
             return new CustomerRatingDisplayDto
             {
                 RatingId = rating.RatingId,
+                BookingId = rating.BookingId,
                 Stars = rating.Stars,
                 Feedback = rating.Feedback,
                 RatingDate = rating.RatingDate,
                 CustomerId = rating.CustomerId,
-                CustomerName = rating.Customer?.Name ?? "Unknown"
+                CustomerName = rating.Customer?.Name ?? "Unknown",
+                CustomerEmail = rating.Customer?.User?.Email
+            };
+        }
+
+        private RatingDetailsDto MapToDetailsDto(CustomerRating rating)
+        {
+            // Assuming Booking has related entities loaded
+            var booking = rating.Booking;
+            var payment = booking?.Payment;
+            
+            return new RatingDetailsDto
+            {
+                RatingId = rating.RatingId,
+                BookingId = rating.BookingId,
+                Stars = rating.Stars,
+                Feedback = rating.Feedback,
+                RatingDate = rating.RatingDate,
+                CustomerId = rating.CustomerId,
+                CustomerName = rating.Customer?.Name ?? "Unknown",
+                CustomerEmail = rating.Customer?.User?.Email, 
+                CustomerPhone = rating.Customer?.User?.PhoneNumber,
+                BookingDate = booking != null ? booking.Startdate.ToDateTime(TimeOnly.MinValue) : DateTime.MinValue,
+                EmployeeName = booking?.Employeebooker?.User?.UserName ?? "N/A",
+                CarName = booking?.Car?.ModelName ?? "Unknown", 
+                CarPlateNumber = booking?.Car?.PlateNumber ?? "Unknown",
+                PaymentId = payment?.PaymentId,
+                PaymentTotal = payment?.Amount,
+                Promocode = booking?.Promocode?.Name
             };
         }
     }
