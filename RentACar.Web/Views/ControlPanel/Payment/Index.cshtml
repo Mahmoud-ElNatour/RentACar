@@ -75,15 +75,45 @@
             <table class="w-full whitespace-nowrap text-left border-collapse">
                 <thead>
                     <tr class="bg-[#1a1a1a] border-b border-gold/20">
-                        <th class="px-6 py-4 text-xs font-bold text-gold uppercase tracking-wider cursor-pointer hover:bg-white/5" onclick="setSort('paymentId')">ID <i id="sort-paymentId" class="fas fa-sort float-end"></i></th>
-                        <th class="px-6 py-4 text-xs font-bold text-gold uppercase tracking-wider cursor-pointer hover:bg-white/5" onclick="setSort('paymentDate')">Date <i id="sort-paymentDate" class="fas fa-sort float-end"></i></th>
-                        <th class="px-6 py-4 text-xs font-bold text-gold uppercase tracking-wider cursor-pointer hover:bg-white/5" onclick="setSort('bookingId')">Booking <i id="sort-bookingId" class="fas fa-sort float-end"></i></th>
-                        <th class="px-6 py-4 text-xs font-bold text-gold uppercase tracking-wider cursor-pointer hover:bg-white/5" onclick="setSort('customerName')">Customer <i id="sort-customerName" class="fas fa-sort float-end"></i></th>
+                        <th class="px-6 py-4 text-xs font-bold text-gold uppercase tracking-wider cursor-pointer hover:bg-white/5 group" onclick="setSort('paymentId')">
+                            <div class="flex items-center justify-between gap-2">
+                                <span>ID</span>
+                                <span id="sort-paymentId" class="material-symbols-outlined text-sm text-gray-600 group-hover:text-gray-400 transition-colors">unfold_more</span>
+                            </div>
+                        </th>
+                        <th class="px-6 py-4 text-xs font-bold text-gold uppercase tracking-wider cursor-pointer hover:bg-white/5 group" onclick="setSort('paymentDate')">
+                            <div class="flex items-center justify-between gap-2">
+                                <span>Date</span>
+                                <span id="sort-paymentDate" class="material-symbols-outlined text-sm text-gray-600 group-hover:text-gray-400 transition-colors">unfold_more</span>
+                            </div>
+                        </th>
+                        <th class="px-6 py-4 text-xs font-bold text-gold uppercase tracking-wider cursor-pointer hover:bg-white/5 group" onclick="setSort('bookingId')">
+                            <div class="flex items-center justify-between gap-2">
+                                <span>Booking</span>
+                                <span id="sort-bookingId" class="material-symbols-outlined text-sm text-gray-600 group-hover:text-gray-400 transition-colors">unfold_more</span>
+                            </div>
+                        </th>
+                        <th class="px-6 py-4 text-xs font-bold text-gold uppercase tracking-wider cursor-pointer hover:bg-white/5 group" onclick="setSort('customerName')">
+                            <div class="flex items-center justify-between gap-2">
+                                <span>Customer</span>
+                                <span id="sort-customerName" class="material-symbols-outlined text-sm text-gray-600 group-hover:text-gray-400 transition-colors">unfold_more</span>
+                            </div>
+                        </th>
                         <th class="px-6 py-4 text-xs font-bold text-gold uppercase tracking-wider text-right">Subtotal</th>
                         <th class="px-6 py-4 text-xs font-bold text-gold uppercase tracking-wider">Promo</th>
-                        <th class="px-6 py-4 text-xs font-bold text-gold uppercase tracking-wider text-right" onclick="setSort('amount')">Total <i id="sort-amount" class="fas fa-sort float-end"></i></th>
+                        <th class="px-6 py-4 text-xs font-bold text-gold uppercase tracking-wider cursor-pointer hover:bg-white/5 group" onclick="setSort('amount')">
+                            <div class="flex items-center justify-end gap-2">
+                                <span>Total</span>
+                                <span id="sort-amount" class="material-symbols-outlined text-sm text-gray-600 group-hover:text-gray-400 transition-colors">unfold_more</span>
+                            </div>
+                        </th>
                         <th class="px-6 py-4 text-xs font-bold text-gold uppercase tracking-wider">Method</th>
-                        <th class="px-6 py-4 text-xs font-bold text-gold uppercase tracking-wider" onclick="setSort('status')">Status <i id="sort-status" class="fas fa-sort float-end"></i></th>
+                        <th class="px-6 py-4 text-xs font-bold text-gold uppercase tracking-wider cursor-pointer hover:bg-white/5 group" onclick="setSort('status')">
+                            <div class="flex items-center justify-between gap-2">
+                                <span>Status</span>
+                                <span id="sort-status" class="material-symbols-outlined text-sm text-gray-600 group-hover:text-gray-400 transition-colors">unfold_more</span>
+                            </div>
+                        </th>
                         <th class="px-6 py-4 text-xs font-bold text-gold uppercase tracking-wider text-right">Actions</th>
                     </tr>
                 </thead>
@@ -143,9 +173,15 @@
                 sortDirection = 'asc';
             }
             // Update icons
-            document.querySelectorAll('.fas.fa-sort').forEach(i => i.className = 'fas fa-sort float-end text-gray-600');
+            document.querySelectorAll('[id^="sort-"]').forEach(i => {
+                i.className = 'material-symbols-outlined text-sm text-gray-600 group-hover:text-gray-400 transition-colors';
+                i.textContent = 'unfold_more';
+            });
             const icon = document.getElementById(`sort-${col}`);
-            if(icon) icon.className = `fas fa-sort-${sortDirection === 'asc' ? 'up' : 'down'} float-end text-gold`;
+            if(icon) {
+                icon.className = 'material-symbols-outlined text-sm text-gold transition-colors';
+                icon.textContent = sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward';
+            }
 
             loadTableData(); // Only reload table on sort
         }
@@ -285,7 +321,7 @@
                         ${getStatusBadge(p.status)}
                     </td>
                     <td class="px-6 py-4 text-right">
-                        <div class="flex justify-end gap-1">
+                        <div class="grid grid-cols-2 gap-1 w-fit ml-auto">
                             <button onclick="loadModal('/Payment/Details/${p.paymentId}')" class="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors" title="View Details">
                                 <span class="material-symbols-outlined text-[20px]">visibility</span>
                             </button>
