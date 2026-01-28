@@ -4,8 +4,10 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using RentACar.Application.DTOs;
 using RentACar.Application.Managers;
+using RentACar.Infrastructure.Data;
 using RentACar.Web.Models;
 
 namespace RentACar.Web.Controllers;
@@ -18,19 +20,25 @@ public class DriverPortalController : Controller
     private readonly CustomerManager _customerManager;
     private readonly CarManager _carManager;
     private readonly UserManager<IdentityUser> _userManager;
+    private readonly RentACarDbContext _dbContext;
+    private readonly IConfiguration _config;
 
     public DriverPortalController(
         DriverManager driverManager,
         BookingManager bookingManager,
         CustomerManager customerManager,
         CarManager carManager,
-        UserManager<IdentityUser> userManager)
+        UserManager<IdentityUser> userManager,
+        RentACarDbContext dbContext,
+        IConfiguration config)
     {
         _driverManager = driverManager;
         _bookingManager = bookingManager;
         _customerManager = customerManager;
         _carManager = carManager;
         _userManager = userManager;
+        _dbContext = dbContext;
+        _config = config;
     }
 
     [HttpGet]
@@ -42,8 +50,27 @@ public class DriverPortalController : Controller
             return Forbid();
         }
 
-        var bookings = await _bookingManager.GetBookingsByDriverIdAsync(driver.DriverId);
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+        var todayBookings = await (from booking in _dbContext.Bookings.AsNoTracking()
+            join customer in _dbContext.Customers.AsNoTracking()
+                on booking.CustomerId equals customer.UserId into customerGroup
+            from customer in customerGroup.DefaultIfEmpty()
+            where booking.DriverId == driver.DriverId
+                  && booking.Startdate <= today
+                  && booking.Enddate >= today
+            orderby booking.Startdate
+            select new DriverPortalBookingViewModel
+            {
+                BookingId = booking.BookingId,
+                CustomerName = customer != null ? customer.Name : "Customer",
+                PickupLocationLabel = booking.PickupLocationLabel ?? booking.PickupAddress ?? "Pickup pin",
+                PickupLatitude = booking.PickupLatitude,
+                PickupLongitude = booking.PickupLongitude,
+                StartDate = booking.Startdate,
+                EndDate = booking.Enddate,
+                BookingStatus = booking.BookingStatus ?? "Scheduled"
+            }).ToListAsync();
 
         var model = new DriverDashboardViewModel
         {
@@ -51,8 +78,43 @@ public class DriverPortalController : Controller
             DriverName = driver.FullName,
             DriverCode = driver.DriverCode,
             IsAvailable = driver.IsActive,
-            TodayBookings = (await Task.WhenAll(bookings
-                    .Where(b => b.Startdate <= today && b.Enddate >= today)
+            TodayBookings = todayBookings
+        };
+
+        ViewData["Title"] = "Driver Dashboard";
+        ViewData["BodyClass"] = "bg-background-dark text-white";
+        return View("~/Views/DriverPortal/Dashboard.cshtml", model);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Schedule()
+    {
+        var driver = await GetCurrentDriverAsync();
+        if (driver == null) return Forbid();
+
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        var monthStart = new DateOnly(today.Year, today.Month, 1);
+        var monthEnd = monthStart.AddMonths(1).AddDays(-1);
+        var gridStart = monthStart.ToDateTime(TimeOnly.MinValue).AddDays(-(int)monthStart.DayOfWeek);
+        var gridEnd = monthEnd.ToDateTime(TimeOnly.MinValue).AddDays(6 - (int)monthEnd.DayOfWeek);
+        var gridStartDate = DateOnly.FromDateTime(gridStart);
+        var gridEndDate = DateOnly.FromDateTime(gridEnd);
+
+        var model = new DriverScheduleViewModel
+        {
+            DriverId = driver.DriverId,
+            DriverName = driver.FullName,
+            Availability = availability.Select(a => new DriverAvailabilityItemViewModel
+            {
+                DriverAvailabilityId = a.DriverAvailabilityId,
+                StartDateTime = a.StartDateTime,
+                EndDateTime = a.EndDateTime,
+                IsAvailable = a.IsAvailable,
+                IsRecurringWeekly = a.IsRecurringWeekly
+            }).ToList(),
+            UpcomingBookings = (await Task.WhenAll(bookings
+                    .OrderBy(b => b.Startdate)
+                    .Take(10)
                     .Select(async b =>
                     {
                         var customer = await _customerManager.GetCustomerById(b.CustomerId);
@@ -67,62 +129,6 @@ public class DriverPortalController : Controller
                         };
                     })))
                 .ToList()
-        };
-
-        ViewData["Title"] = "Driver Dashboard";
-        ViewData["BodyClass"] = "bg-background-dark text-white";
-        return View("~/Views/DriverPortal/Dashboard.cshtml", model);
-    }
-
-    [HttpGet]
-    public async Task<IActionResult> Schedule()
-    {
-        var driver = await GetCurrentDriverAsync();
-        if (driver == null) return Forbid();
-
-        var availability = await _driverManager.GetDriverAvailabilityAsync(driver.DriverId);
-        var bookings = await _bookingManager.GetBookingsByDriverIdAsync(driver.DriverId);
-
-        var topBookings = bookings
-            .OrderBy(b => b.Startdate)
-            .Take(10)
-            .ToList();
-
-        var customerIds = topBookings
-            .Select(b => b.CustomerId)
-            .Distinct()
-            .ToList();
-
-        var customers = await _customerManager.GetCustomersByIds(customerIds);
-        var customersDict = customers.ToDictionary(c => c.UserId, c => c);
-
-        var model = new DriverScheduleViewModel
-        {
-            DriverId = driver.DriverId,
-            DriverName = driver.FullName,
-            Availability = availability.Select(a => new DriverAvailabilityItemViewModel
-            {
-                DriverAvailabilityId = a.DriverAvailabilityId,
-                StartDateTime = a.StartDateTime,
-                EndDateTime = a.EndDateTime,
-                IsAvailable = a.IsAvailable,
-                IsRecurringWeekly = a.IsRecurringWeekly
-            }).ToList(),
-
-            UpcomingBookings = topBookings.Select(b =>
-            {
-                customersDict.TryGetValue(b.CustomerId, out var customer);
-
-                return new DriverPortalBookingViewModel
-                {
-                    BookingId = b.BookingId,
-                    CustomerName = customer?.Name ?? "Customer",
-                    PickupAddress = b.PickupAddress ?? "Pickup location",
-                    StartDate = b.Startdate,
-                    EndDate = b.Enddate,
-                    BookingStatus = b.BookingStatus
-                };
-            }).ToList()
         };
 
         ViewData["Title"] = "Driver Schedule";
@@ -163,6 +169,11 @@ public class DriverPortalController : Controller
         var car = await _carManager.GetCarByIdAsync(booking.CarId);
         var customer = await _customerManager.GetCustomerById(booking.CustomerId);
 
+        var lastPing = await _dbContext.DriverLocationPings.AsNoTracking()
+            .Where(p => p.BookingId == booking.BookingId)
+            .OrderByDescending(p => p.CreatedAt)
+            .FirstOrDefaultAsync();
+
         var model = new DriverBookingDetailsViewModel
         {
             BookingId = booking.BookingId,
@@ -170,13 +181,19 @@ public class DriverPortalController : Controller
             CarName = car?.ModelName ?? "Vehicle",
             CarPlate = car?.PlateNumber ?? "N/A",
             CustomerName = customer?.Name ?? "Customer",
-            PickupAddress = booking.PickupAddress ?? "Pickup location",
+            PickupLocationLabel = booking.PickupLocationLabel ?? booking.PickupAddress ?? "Pickup pin",
+            PickupLatitude = booking.PickupLatitude,
+            PickupLongitude = booking.PickupLongitude,
+            DriverLatitude = lastPing != null ? (double?)lastPing.Latitude : null,
+            DriverLongitude = lastPing != null ? (double?)lastPing.Longitude : null,
             PickupDateTime = booking.PickupDateTime,
-            DriverCode = driver.DriverCode
+            DriverCode = driver.DriverCode,
+            DriverId = driver.DriverId
         };
 
         ViewData["Title"] = "Booking Details";
         ViewData["BodyClass"] = "bg-background-dark text-white";
+        ViewBag.GoogleMapsKey = _config["GOOGLE_MAPS_API_KEY"];
         return View("~/Views/DriverPortal/BookingDetails.cshtml", model);
     }
 
@@ -189,5 +206,15 @@ public class DriverPortalController : Controller
         }
 
         return await _driverManager.GetDriverByUserIdAsync(user.Id);
+    }
+
+    private static bool IsAvailabilityOnDate(DriverAvailabilityItemViewModel availability, DateOnly date, DateTime dayStart, DateTime dayEnd)
+    {
+        if (availability.IsRecurringWeekly)
+        {
+            return availability.StartDateTime.DayOfWeek == dayStart.DayOfWeek;
+        }
+
+        return availability.StartDateTime <= dayEnd && availability.EndDateTime >= dayStart;
     }
 }

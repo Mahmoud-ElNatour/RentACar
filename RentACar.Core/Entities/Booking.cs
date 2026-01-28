@@ -48,6 +48,10 @@ public partial class Booking
     [StringLength(200)]
     public string? PickupAddress { get; set; }
 
+    [Column("pickupLocationLabel")]
+    [StringLength(200)]
+    public string? PickupLocationLabel { get; set; }
+
     [Column("pickupDateTime")]
     public DateTime? PickupDateTime { get; set; }
 
