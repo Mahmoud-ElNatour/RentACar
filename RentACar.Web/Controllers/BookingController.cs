@@ -87,6 +87,13 @@ namespace RentACar.Web.Controllers
             if (booking == null)
                 return NotFound();
 
+            // Fetch details for pre-filling the search inputs
+            var customer = await _customerManager.GetCustomerById(booking.CustomerId);
+            ViewBag.CustomerName = customer?.Name ?? string.Empty;
+
+            var car = await _carManager.GetCarByIdAsync(booking.CarId);
+            ViewBag.CarName = car != null ? $"{car.ModelName} - {car.PlateNumber}" : string.Empty;
+
             return View("~/Views/ControlPanel/Booking/Edit.cshtml", booking);
         }
 

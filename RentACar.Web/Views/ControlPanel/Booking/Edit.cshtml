@@ -1,91 +1,259 @@
 ﻿@model RentACar.Application.DTOs.BookingDto
 @{
     ViewData["Title"] = "Edit Booking";
-    Layout = null;
+    Layout = "_Layout";
+    ViewData["BodyClass"] = "bg-background-dark";
 }
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"]</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/bookings.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
-</head>
-<body>
-    @await Html.PartialAsync("_PopupNotifications")
-    <div class="booking-container container">
-        <a href="/Booking" class="btn btn-outline-warning rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:40px;height:40px" title="Back">
-            <i class="fas fa-arrow-left"></i>
-        </a>
-        <h2 class="text-center mb-4">Edit Booking</h2>
-        <form id="bookingForm">
-            <input type="hidden" asp-for="BookingId" />
-            <div class="mb-3">
-                <label class="form-label">Customer ID</label>
-                <input asp-for="CustomerId" class="form-control" />
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Car ID</label>
-                <input asp-for="CarId" class="form-control" />
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Start Date</label>
-                <input asp-for="Startdate" type="date" class="form-control" />
-            </div>
-            <div class="mb-3">
-                <label class="form-label">End Date</label>
-                <input asp-for="Enddate" type="date" class="form-control" />
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Booking Status</label>
-                <select asp-for="BookingStatus" class="form-select">
-                    <option value="Pending" selected="@(Model.BookingStatus == "Pending")">Pending</option>
-                    <option value="Booked" selected="@(Model.BookingStatus == "Booked")">Booked</option>
-                    <option value="Returned" selected="@(Model.BookingStatus == "Returned")">Returned</option>
-                    <option value="Rejected" selected="@(Model.BookingStatus == "Rejected")">Rejected</option>
-                </select>
 
-            </div>
-            <button type="submit" class="btn btn-primary">Save</button>
-        </form>
+<!-- Tailwind & Custom Styles -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+    tailwind.config = {
+        darkMode: "class",
+        theme: {
+            extend: {
+                colors: { "gold": "#d4af37" },
+                fontFamily: { "display": ["Manrope", "sans-serif"] }
+            }
+        }
+    }
+</script>
+
+<div class="px-4 md:px-10 py-8 max-w-[1440px] mx-auto w-full text-white font-display">
+    
+    <!-- Header -->
+    <div class="flex items-center gap-4 mb-8">
+        <a href="/Booking" class="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-all">
+            <span class="material-symbols-outlined">arrow_back</span>
+        </a>
+        <h1 class="text-3xl font-black tracking-tight flex items-center gap-3">
+            <span class="material-symbols-outlined text-gold text-3xl">edit_calendar</span>
+            Edit Booking #@Model.BookingId
+        </h1>
     </div>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    <script>
-        document.getElementById('bookingForm').addEventListener('submit', async function (e) {
-            e.preventDefault();
-            const form = e.target;
-            const id = form.querySelector('[name="BookingId"]').value;
-            const data = {
-                bookingId: parseInt(id),
-                customerId: parseInt(form.querySelector('[name="CustomerId"]').value || '0'),
-                carId: parseInt(form.querySelector('[name="CarId"]').value || '0'),
-                startdate: form.querySelector('[name="Startdate"]').value,
-                enddate: form.querySelector('[name="Enddate"]').value,
-                bookingStatus: form.querySelector('[name="BookingStatus"]').value
-            };
-            try {
-                const resp = await fetch('/api/Booking/' + id, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-                if (resp.ok) {
-                    showPopup('Booking updated successfully.', 'success');
-                    setTimeout(() => { window.location.href = '/Booking'; }, 1000);
-                } else {
-                    const errorText = await resp.text();
-                    showPopup(errorText || 'Error updating booking.', 'error');
-                }
-            } catch (error) {
-                console.error(error);
-                showPopup('Unexpected error occurred.', 'error');
+
+    <!-- Main Content -->
+    <div class="max-w-4xl mx-auto">
+        <div class="bg-[#16181a] border border-[#262626] rounded-2xl p-8 shadow-2xl relative overflow-visible"> 
+            <!-- Overflow must be visible for dropdowns -->
+            
+            <form id="bookingForm" class="relative z-10 space-y-8">
+                <input type="hidden" asp-for="BookingId" />
+
+                <!-- Section 1: Customer & Car Search -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    
+                    <!-- Customer Search -->
+                    <div class="space-y-2 relative">
+                        <label class="text-xs font-bold uppercase tracking-wider text-gray-400 flex items-center gap-2">
+                            <span class="material-symbols-outlined text-sm">person</span> Customer
+                        </label>
+                        <input type="hidden" asp-for="CustomerId" id="customerId" />
+                        <div class="relative">
+                            <input type="text" id="customerSearch" value="@ViewBag.CustomerName" autocomplete="off"
+                                   class="w-full bg-[#0a0a0a] border border-[#262626] rounded-xl py-3 pl-10 pr-4 text-white placeholder-gray-600 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all"
+                                   placeholder="Search Customer Name..." />
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-gray-500">search</span>
+                            
+                            <!-- Suggestions Dropdown -->
+                            <ul id="customerResults" class="hidden absolute left-0 top-full mt-2 w-full bg-[#1b1b1b] border border-[#262626] rounded-xl shadow-2xl z-50 max-h-60 overflow-y-auto divide-y divide-[#262626]"></ul>
+                        </div>
+                        <span asp-validation-for="CustomerId" class="text-xs text-red-500"></span>
+                    </div>
+
+                    <!-- Car Search -->
+                    <div class="space-y-2 relative">
+                        <label class="text-xs font-bold uppercase tracking-wider text-gray-400 flex items-center gap-2">
+                            <span class="material-symbols-outlined text-sm">directions_car</span> Car
+                        </label>
+                        <input type="hidden" asp-for="CarId" id="carId" />
+                        <div class="relative">
+                            <input type="text" id="carSearch" value="@ViewBag.CarName" autocomplete="off"
+                                   class="w-full bg-[#0a0a0a] border border-[#262626] rounded-xl py-3 pl-10 pr-4 text-white placeholder-gray-600 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all"
+                                   placeholder="Search Car Model..." />
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-gray-500">search</span>
+
+                            <!-- Suggestions Dropdown -->
+                            <ul id="carResults" class="hidden absolute left-0 top-full mt-2 w-full bg-[#1b1b1b] border border-[#262626] rounded-xl shadow-2xl z-50 max-h-60 overflow-y-auto divide-y divide-[#262626]"></ul>
+                        </div>
+                        <span asp-validation-for="CarId" class="text-xs text-red-500"></span>
+                    </div>
+                </div>
+
+                <!-- Section 2: Schedule & Status -->
+                <div class="bg-[#0a0a0a]/50 p-6 rounded-xl border border-white/5 grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Start Date -->
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold uppercase tracking-wider text-gray-400">Start Date</label>
+                        <input asp-for="Startdate" type="date" class="w-full bg-[#16181a] border border-[#262626] rounded-xl py-3 px-4 text-white placeholder-gray-600 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all [color-scheme:dark]" />
+                    </div>
+
+                    <!-- End Date -->
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold uppercase tracking-wider text-gray-400">End Date</label>
+                        <input asp-for="Enddate" type="date" class="w-full bg-[#16181a] border border-[#262626] rounded-xl py-3 px-4 text-white placeholder-gray-600 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all [color-scheme:dark]" />
+                    </div>
+
+                    <!-- Status -->
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold uppercase tracking-wider text-gray-400">Status</label>
+                        <div class="relative">
+                            <select asp-for="BookingStatus" class="w-full bg-[#16181a] border border-[#262626] rounded-xl py-3 pl-4 pr-10 text-white placeholder-gray-600 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold appearance-none cursor-pointer">
+                                <option value="Pending">Pending</option>
+                                <option value="Booked">Booked</option>
+                                <option value="Active">Active</option>
+                                <option value="Returned">Returned</option>
+                                <option value="Completed">Completed</option>
+                                <option value="Rejected">Rejected</option>
+                                <option value="Cancelled">Cancelled</option>
+                            </select>
+                            <span class="absolute right-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-gray-500 pointer-events-none">expand_more</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex justify-end gap-4 pt-4 border-t border-white/5">
+                    <a href="/Booking" class="px-6 py-3 rounded-xl font-bold text-gray-400 hover:text-white hover:bg-white/5 transition-colors">
+                        Cancel
+                    </a>
+                    <button type="submit" class="bg-gold hover:bg-[#b5952f] text-black px-8 py-3 rounded-xl font-bold shadow-lg shadow-gold/10 transition-all hover:scale-105 active:scale-95 flex items-center gap-2">
+                        <span class="material-symbols-outlined">save</span>
+                        Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@await Html.PartialAsync("_PopupNotifications")
+
+<script>
+    // Live Search Setup
+    function setupLiveSearch(inputId, resultsId, hiddenId, apiUrl, formatResult, mapResult) {
+        const input = document.getElementById(inputId);
+        const results = document.getElementById(resultsId);
+        const hidden = document.getElementById(hiddenId);
+        let debounce = null;
+
+        // Hide on click outside
+        document.addEventListener('click', (e) => {
+            if (!input.contains(e.target) && !results.contains(e.target)) {
+                results.classList.add('hidden');
             }
         });
-    </script>
-</body>
-</html>
+
+        // Search Fn
+        input.addEventListener('input', () => {
+             const query = input.value.trim();
+             clearTimeout(debounce);
+             
+             if(query.length < 1) {
+                 results.classList.add('hidden');
+                 return;
+             }
+             
+             debounce = setTimeout(async () => {
+                 try {
+                     // For Car: ?name=... For Customer: ?search=...
+                     const url = apiUrl.replace('__QUERY__', encodeURIComponent(query));
+                     const res = await fetch(url);
+                     if(!res.ok) return;
+                     
+                     const data = await res.json();
+                     const items = data.items || []; // Paged result items
+                     
+                     results.innerHTML = '';
+                     if(items.length === 0) {
+                         results.innerHTML = '<li class="p-3 text-gray-500 text-sm text-center">No results found</li>';
+                     } else {
+                         items.forEach(item => {
+                             const li = document.createElement('li');
+                             li.className = 'p-3 hover:bg-white/5 text-sm cursor-pointer transition-colors text-gray-300 hover:text-white';
+                             li.innerHTML = formatResult(item);
+                             li.onclick = () => {
+                                 input.value = mapResult(item).text;
+                                 hidden.value = mapResult(item).id;
+                                 results.classList.add('hidden');
+                             };
+                             results.appendChild(li);
+                         });
+                     }
+                     results.classList.remove('hidden');
+                 } catch(e) { console.error(e); }
+             }, 300);
+        });
+        
+        // Show all on focus if empty? Maybe not for now to avoid load.
+    }
+
+    // Init Customer Search
+    setupLiveSearch('customerSearch', 'customerResults', 'customerId', 
+        '/api/Customer/GetFilteredCustomers?search=__QUERY__&pageSize=5', 
+        (c) => `<div class='font-bold'>${c.name}</div><div class='text-xs text-gray-500'>${c.email}</div>`,
+        (c) => ({ id: c.userId, text: c.name })
+    );
+
+    // Init Car Search
+    setupLiveSearch('carSearch', 'carResults', 'carId', 
+        '/api/Car?name=__QUERY__&pageSize=5', 
+        (c) => `<div class='font-bold'>${c.modelName} ${c.modelYear}</div><div class='text-xs text-gold'>${c.plateNumber}</div><div class='text-xs text-gray-500'>${c.isAvailable ? 'Available' : 'Unavailable'} - $${c.pricePerDay}/day</div>`,
+        (c) => ({ id: c.carId, text: `${c.modelName} - ${c.plateNumber}` })
+    );
+
+    // Form Submit
+    document.getElementById('bookingForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const btn = e.target.querySelector('button[type="submit"]');
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="material-symbols-outlined animate-spin">progress_activity</span> Saving...';
+
+        const form = e.target;
+        const id = form.querySelector('[name="BookingId"]').value;
+        
+        const data = {
+            bookingId: parseInt(id),
+            customerId: parseInt(document.getElementById('customerId').value || '0'),
+            carId: parseInt(document.getElementById('carId').value || '0'),
+            startdate: form.querySelector('[name="Startdate"]').value,
+            enddate: form.querySelector('[name="Enddate"]').value,
+            bookingStatus: form.querySelector('[name="BookingStatus"]').value
+        };
+        
+        if(data.customerId === 0 || data.carId === 0) {
+              if(typeof showPopup === 'function') showPopup('Please select a valid customer and car.', 'error');
+              else alert('Please select a valid customer and car.');
+              btn.disabled = false;
+              btn.innerHTML = originalText;
+              return;
+        }
+
+        try {
+            const resp = await fetch('/api/Booking/' + id, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            
+            if (resp.ok) {
+                if(typeof showPopup === 'function') showPopup('Booking updated successfully.', 'success');
+                else alert('Booking updated successfully.');
+                setTimeout(() => { window.location.href = '/Booking'; }, 1000);
+            } else {
+                const errorText = await resp.text();
+                if(typeof showPopup === 'function') showPopup(errorText || 'Error updating booking.', 'error');
+                else alert(errorText || 'Error updating booking.');
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        } catch (error) {
+            console.error(error);
+             if(typeof showPopup === 'function') showPopup('Unexpected error occurred.', 'error');
+             else alert('Unexpected error occurred.');
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    });
+</script>
