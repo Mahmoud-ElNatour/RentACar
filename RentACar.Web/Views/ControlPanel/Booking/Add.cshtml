@@ -101,14 +101,10 @@
                 <label class="form-label">End Date</label>
                 <input type="date" class="form-control" id="Enddate" name="Enddate" value="@endValue" required />
             </div>
-            <div class="mb-3">
-                <label class="form-label">Pickup Address</label>
-                <input type="text" class="form-control" id="PickupAddress" name="PickupAddress" placeholder="Enter pickup address" />
-            </div>
-            <div id="pickupPinSection" class="mb-4" style="display:none;">
+            <div id="pickupPinSection" class="mb-4">
                 <h5 class="text-warning mb-2">Pickup Location (Pin)</h5>
                 <p class="text-muted small mb-3">
-                    Drop a pin to confirm pickup location for your chauffeur.
+                    Drop a pin to confirm your pickup location.
                 </p>
                 <div class="card bg-dark border border-secondary text-light p-3">
                     <div class="d-flex flex-column flex-md-row gap-2 mb-3">
@@ -124,8 +120,10 @@
                         <span id="pickupConfirm" class="text-warning">Location not confirmed</span>
                     </div>
                 </div>
+                <div id="pickupPinError" class="text-danger small mt-2 d-none">Please drop a pickup pin.</div>
                 <input type="hidden" id="PickupLatitude" name="PickupLatitude" />
                 <input type="hidden" id="PickupLongitude" name="PickupLongitude" />
+                <input type="hidden" id="PickupLocationName" name="PickupLocationName" />
             </div>
             <div class="mb-3">
                 <label class="form-label">Pickup Date & Time</label>
@@ -169,6 +167,7 @@
             const driverDailyFee = parseFloat(form.dataset.driverDailyFee || '0');
             const pickupLatitude = document.getElementById('PickupLatitude')?.value;
             const pickupLongitude = document.getElementById('PickupLongitude')?.value;
+            const pickupPinError = document.getElementById('pickupPinError');
             const data = {
                 carId: parseInt(document.getElementById('CarId').value),
                 startdate: document.getElementById('Startdate').value,
@@ -177,7 +176,7 @@
                 promocode: document.getElementById('promocode').value || null,
                 hasDriver: hasDriver,
                 driverDailyFee: hasDriver ? driverDailyFee : 0,
-                pickupAddress: document.getElementById('PickupAddress')?.value || null,
+                pickupLocationName: document.getElementById('PickupLocationName')?.value || null,
                 pickupDateTime: document.getElementById('PickupDateTime')?.value || null
             };
 
@@ -188,6 +187,10 @@
             if (pickupLatitude && pickupLongitude) {
                 data.pickupLatitude = parseFloat(pickupLatitude);
                 data.pickupLongitude = parseFloat(pickupLongitude);
+                pickupPinError?.classList.add('d-none');
+            } else {
+                pickupPinError?.classList.remove('d-none');
+                return;
             }
 
             try {
@@ -231,6 +234,8 @@
             const pickupLatLng = document.getElementById('pickupLatLng');
             const pickupLatInput = document.getElementById('PickupLatitude');
             const pickupLngInput = document.getElementById('PickupLongitude');
+            const pickupLabelInput = document.getElementById('PickupLocationName');
+            const pickupPinError = document.getElementById('pickupPinError');
             const pickupSearch = document.getElementById('pickupSearch');
             const useMyLocationBtn = document.getElementById('useMyLocation');
             let pickupMap;
@@ -269,6 +274,7 @@
                 pickupConfirm.textContent = 'Location confirmed';
                 pickupConfirm.classList.remove('text-warning');
                 pickupConfirm.classList.add('text-success');
+                pickupPinError?.classList.add('d-none');
             }
 
             function setPickupMarker(latLng, shouldCenter = true) {
@@ -321,6 +327,9 @@
                         if (!places || !places.length) return;
                         const place = places[0];
                         if (!place.geometry || !place.geometry.location) return;
+                        if (pickupLabelInput) {
+                            pickupLabelInput.value = place.name || pickupSearch.value || '';
+                        }
                         setPickupMarker({
                             lat: place.geometry.location.lat(),
                             lng: place.geometry.location.lng()
@@ -330,14 +339,6 @@
 
                 mapReady = true;
                 updatePickupDisplay(null);
-            }
-
-            function togglePickupSection() {
-                const hasDriver = document.querySelector('input[name="driverOption"]:checked')?.value === 'with';
-                pickupPinSection.style.display = hasDriver ? 'block' : 'none';
-                if (hasDriver && window.google) {
-                    initPickupMap();
-                }
             }
 
             if (useMyLocationBtn) {
@@ -353,6 +354,9 @@
                                 lat: pos.coords.latitude,
                                 lng: pos.coords.longitude
                             };
+                            if (pickupLabelInput) {
+                                pickupLabelInput.value = pickupSearch?.value || '';
+                            }
                             setPickupMarker(coords);
                         },
                         () => {
@@ -366,8 +370,9 @@
             startInput.addEventListener('change', updateDriverCost);
             endInput.addEventListener('change', updateDriverCost);
             updateDriverCost();
-            togglePickupSection();
-            options.forEach(option => option.addEventListener('change', togglePickupSection));
+            if (window.google) {
+                initPickupMap();
+            }
 
             window.initPickupMap = initPickupMap;
         })();

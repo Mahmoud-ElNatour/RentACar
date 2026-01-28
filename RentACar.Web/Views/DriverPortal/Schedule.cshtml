@@ -3,19 +3,54 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 <style>
-    .glass {
+    .calendar-shell {
         background: rgba(255, 255, 255, 0.03);
         backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.08);
     }
-    .glass-darker {
-        background: rgba(0, 0, 0, 0.2);
-        backdrop-filter: blur(16px);
-        border: 1px solid rgba(255, 255, 255, 0.05);
+
+    .day-cell {
+        min-height: 110px;
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        padding: 0.6rem;
+        position: relative;
+        transition: all 0.2s ease;
+        cursor: pointer;
     }
-    .hatched-bg {
-        background-image: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.05) 0, rgba(255, 255, 255, 0.05) 1px, transparent 0, transparent 50%);
-        background-size: 10px 10px;
+
+    .day-cell:hover {
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .day-muted {
+        color: rgba(255, 255, 255, 0.3);
+    }
+
+    .day-today {
+        border-color: rgba(244, 195, 37, 0.6);
+        box-shadow: 0 0 0 1px rgba(244, 195, 37, 0.2) inset;
+    }
+
+    .availability-bar {
+        height: 4px;
+        border-radius: 999px;
+        background: rgba(37, 99, 235, 0.8);
+        border: 1px solid rgba(37, 99, 235, 0.9);
+        margin-top: 6px;
+    }
+
+    .booking-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 999px;
+        background: rgba(244, 195, 37, 0.9);
+        display: inline-block;
+        margin-right: 3px;
+    }
+
+    .detail-panel {
+        background: rgba(17, 24, 39, 0.8);
+        border-left: 1px solid rgba(255, 255, 255, 0.08);
     }
 </style>
 
@@ -23,12 +58,12 @@
     <div class="flex flex-1">
         <main class="flex-1 flex">
             <div class="flex-1 flex flex-col p-6 md:p-8 overflow-y-auto">
-                <div class="flex flex-col gap-1 mb-8">
-                    <h1 class="text-4xl font-black tracking-tight text-white">Driver Calendar &amp; Schedule</h1>
-                    <p class="text-white/50 text-base">Manage availability blocks for @Model.DriverName.</p>
+                <div class="flex flex-col gap-1 mb-6">
+                    <h1 class="text-4xl font-black tracking-tight text-white">Driver Schedule</h1>
+                    <p class="text-white/50 text-base">Monthly overview for @Model.DriverName.</p>
                 </div>
 
-                <div class="flex-1 glass-darker rounded-2xl border border-white/5 flex flex-col min-h-[600px] overflow-auto">
+                <div class="calendar-shell rounded-2xl overflow-hidden">
                     <div class="grid grid-cols-7 border-b border-white/5 bg-white/5">
                         <div class="p-3 text-center text-xs font-bold text-white/30 uppercase tracking-widest">Sun</div>
                         <div class="p-3 text-center text-xs font-bold text-white/30 uppercase tracking-widest">Mon</div>
@@ -38,13 +73,54 @@
                         <div class="p-3 text-center text-xs font-bold text-white/30 uppercase tracking-widest">Fri</div>
                         <div class="p-3 text-center text-xs font-bold text-white/30 uppercase tracking-widest">Sat</div>
                     </div>
-                    <div class="grid grid-cols-7 grid-rows-5 flex-1 min-h-[600px]">
-                        @for (var day = 1; day <= 35; day++)
+                    <div class="grid grid-cols-7">
+                        @{
+                            var jsonOptions = new System.Text.Json.JsonSerializerOptions
+                            {
+                                PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
+                            };
+                        }
+                        @foreach (var day in Model.Days)
                         {
-                            <div class="border-r border-b border-white/5 p-2 hover:bg-white/5 transition-colors group relative">
-                                <span class="text-xs font-bold text-white/30 group-hover:text-white/60">@day</span>
+                            var bookingsJson = System.Text.Json.JsonSerializer.Serialize(day.Bookings, jsonOptions);
+                            var availabilityJson = System.Text.Json.JsonSerializer.Serialize(day.AvailabilityBlocks, jsonOptions);
+                            <div class="day-cell @(day.IsToday ? "day-today" : "") @(day.IsCurrentMonth ? "" : "day-muted")"
+                                 data-date="@day.Date:yyyy-MM-dd"
+                                 data-bookings='@Html.Raw(bookingsJson)'
+                                 data-availability='@Html.Raw(availabilityJson)'>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-xs font-bold">@day.Date:dd</span>
+                                    @if (day.HasBookings)
+                                    {
+                                        <span class="text-[10px] text-primary font-bold">@day.Bookings.Count</span>
+                                    }
+                                </div>
+                                <div class="mt-2 flex flex-wrap gap-1">
+                                    @if (day.HasBookings)
+                                    {
+                                        @for (var i = 0; i < Math.Min(day.Bookings.Count, 3); i++)
+                                        {
+                                            <span class="booking-dot"></span>
+                                        }
+                                    }
+                                </div>
+                                @if (day.HasAvailability)
+                                {
+                                    <div class="availability-bar"></div>
+                                }
                             </div>
                         }
+                    </div>
+                </div>
+
+                <div class="mt-6 flex items-center gap-4 text-xs text-white/60">
+                    <div class="flex items-center gap-2">
+                        <span class="availability-bar" style="width:24px;"></span>
+                        <span>Available</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="booking-dot"></span>
+                        <span>Booking</span>
                     </div>
                 </div>
 
@@ -53,16 +129,16 @@
                     <div class="space-y-3">
                         @if (!Model.UpcomingBookings.Any())
                         {
-                            <div class="glass p-4 rounded-xl text-white/50">No upcoming bookings assigned.</div>
+                            <div class="calendar-shell p-4 rounded-xl text-white/50">No upcoming bookings assigned.</div>
                         }
                         else
                         {
                             foreach (var booking in Model.UpcomingBookings)
                             {
-                                <div class="glass p-4 rounded-xl flex items-center justify-between">
+                                <div class="calendar-shell p-4 rounded-xl flex items-center justify-between">
                                     <div>
                                         <p class="text-sm font-bold text-white">Booking #@booking.BookingId</p>
-                                        <p class="text-xs text-white/50">@booking.CustomerName • @booking.PickupAddress</p>
+                                        <p class="text-xs text-white/50">@booking.CustomerName • @booking.PickupLocationLabel</p>
                                     </div>
                                     <span class="text-xs text-primary font-bold">@booking.StartDate:yyyy-MM-dd</span>
                                 </div>
@@ -72,9 +148,24 @@
                 </div>
             </div>
 
-            <aside class="w-80 glass-darker border-l border-white/10 flex flex-col p-6 gap-8 overflow-y-auto">
-                <div class="flex flex-col gap-6">
-                    <div class="flex items-center gap-2">
+            <aside class="w-96 detail-panel flex flex-col p-6 gap-6 overflow-y-auto">
+                <div>
+                    <h2 class="text-xl font-bold text-white" id="detailDate">Select a day</h2>
+                    <p class="text-sm text-white/50" id="detailSubtitle">Tap a day to see availability and bookings.</p>
+                </div>
+
+                <div>
+                    <h3 class="text-sm font-bold text-white/40 uppercase tracking-widest mb-3">Availability</h3>
+                    <div id="availabilityList" class="space-y-3 text-sm text-white/70"></div>
+                </div>
+
+                <div>
+                    <h3 class="text-sm font-bold text-white/40 uppercase tracking-widest mb-3">Bookings</h3>
+                    <div id="bookingList" class="space-y-3 text-sm text-white/70"></div>
+                </div>
+
+                <div class="border-t border-white/10 pt-6">
+                    <div class="flex items-center gap-2 mb-4">
                         <span class="material-symbols-outlined text-primary">event_available</span>
                         <h3 class="text-lg font-bold">Add Availability</h3>
                     </div>
@@ -84,12 +175,12 @@
                         <div class="space-y-4">
                             <div class="flex flex-col gap-1.5">
                                 <label class="text-xs font-bold text-white/40 uppercase">From Date &amp; Time</label>
-                                <input class="w-full glass bg-white/5 border-none rounded-xl px-4 py-2.5 text-sm focus:ring-1 focus:ring-primary/50"
+                                <input class="w-full calendar-shell bg-white/5 border-none rounded-xl px-4 py-2.5 text-sm focus:ring-1 focus:ring-primary/50"
                                        type="datetime-local" name="StartDateTime" required />
                             </div>
                             <div class="flex flex-col gap-1.5">
                                 <label class="text-xs font-bold text-white/40 uppercase">To Date &amp; Time</label>
-                                <input class="w-full glass bg-white/5 border-none rounded-xl px-4 py-2.5 text-sm focus:ring-1 focus:ring-primary/50"
+                                <input class="w-full calendar-shell bg-white/5 border-none rounded-xl px-4 py-2.5 text-sm focus:ring-1 focus:ring-primary/50"
                                        type="datetime-local" name="EndDateTime" required />
                             </div>
                             <div class="flex items-center justify-between px-1">
@@ -102,33 +193,57 @@
                         </div>
                     </form>
                 </div>
-
-                <div class="mt-auto flex flex-col gap-4">
-                    <div class="border-t border-white/10 pt-6">
-                        <p class="text-xs font-bold text-white/40 uppercase tracking-widest mb-4">Availability Blocks</p>
-                        <div class="space-y-3">
-                            @if (!Model.Availability.Any())
-                            {
-                                <div class="glass p-3 rounded-xl text-white/50 text-xs">No availability set yet.</div>
-                            }
-                            else
-                            {
-                                foreach (var item in Model.Availability)
-                                {
-                                    <div class="glass p-3 rounded-xl">
-                                        <p class="text-xs text-white/60">
-                                            @item.StartDateTime:g → @item.EndDateTime:g
-                                        </p>
-                                        <p class="text-[10px] text-primary font-bold uppercase">
-                                            @(item.IsRecurringWeekly ? "Recurring Weekly" : "One-time")
-                                        </p>
-                                    </div>
-                                }
-                            }
-                        </div>
-                    </div>
-                </div>
             </aside>
         </main>
     </div>
 </div>
+
+<script>
+    const availabilityList = document.getElementById('availabilityList');
+    const bookingList = document.getElementById('bookingList');
+    const detailDate = document.getElementById('detailDate');
+    const detailSubtitle = document.getElementById('detailSubtitle');
+
+    function renderAvailability(items) {
+        availabilityList.innerHTML = '';
+        if (!items || items.length === 0) {
+            availabilityList.innerHTML = '<div class="text-white/40">No availability set.</div>';
+            return;
+        }
+        items.forEach(item => {
+            const element = document.createElement('div');
+            element.className = 'calendar-shell p-3 rounded-xl';
+            const start = new Date(item.startDateTime).toLocaleString();
+            const end = new Date(item.endDateTime).toLocaleString();
+            element.innerHTML = `<div>${start} → ${end}</div><div class="text-xs text-primary">${item.isRecurringWeekly ? 'Recurring weekly' : 'One-time'}</div>`;
+            availabilityList.appendChild(element);
+        });
+    }
+
+    function renderBookings(items) {
+        bookingList.innerHTML = '';
+        if (!items || items.length === 0) {
+            bookingList.innerHTML = '<div class="text-white/40">No bookings.</div>';
+            return;
+        }
+        items.forEach(item => {
+            const element = document.createElement('div');
+            element.className = 'calendar-shell p-3 rounded-xl';
+            const time = item.pickupDateTime ? new Date(item.pickupDateTime).toLocaleString() : `${item.startDate} → ${item.endDate}`;
+            element.innerHTML = `<div class="text-white font-semibold">Booking #${item.bookingId}</div><div class="text-xs text-white/60">${item.customerName}</div><div class="text-xs text-white/40">${item.pickupLocationLabel}</div><div class="text-xs text-primary">${time}</div>`;
+            bookingList.appendChild(element);
+        });
+    }
+
+    document.querySelectorAll('.day-cell').forEach(cell => {
+        cell.addEventListener('click', () => {
+            const date = cell.getAttribute('data-date');
+            const bookings = JSON.parse(cell.getAttribute('data-bookings') || '[]');
+            const availability = JSON.parse(cell.getAttribute('data-availability') || '[]');
+            detailDate.textContent = new Date(date).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
+            detailSubtitle.textContent = `${bookings.length} booking(s) • ${availability.length} availability block(s)`;
+            renderAvailability(availability);
+            renderBookings(bookings);
+        });
+    });
+</script>

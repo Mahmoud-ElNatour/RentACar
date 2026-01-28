@@ -37,7 +37,7 @@
         {
             foreach (var booking in Model.TodayBookings)
             {
-                <div class="glass-card glass-card-hover rounded-xl p-5 flex flex-col md:flex-row gap-6">
+                <div class="glass-card glass-card-hover rounded-xl p-5 flex flex-col md:flex-row gap-6" data-booking-id="@booking.BookingId">
                     <div class="flex-1 flex flex-col justify-between">
                         <div class="flex justify-between items-start">
                             <div>
@@ -56,12 +56,25 @@
                         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mt-4">
                             <div class="flex items-center gap-2 text-gray-400">
                                 <span class="material-symbols-outlined text-primary text-sm">location_on</span>
-                                <span class="text-sm truncate">@booking.PickupAddress</span>
+                                <span class="text-sm truncate">@booking.PickupLocationLabel</span>
                             </div>
-                            <a class="bg-primary text-background-dark px-6 py-2 rounded-lg font-bold text-sm shadow-[0_0_15px_rgba(244,195,37,0.3)] hover:scale-105 transition-transform"
-                               href="@Url.Action("BookingDetails", "DriverPortal", new { id = booking.BookingId })">
-                                Start Tracking
-                            </a>
+                            <div class="flex flex-wrap gap-2 items-center">
+                                <button class="tracking-start bg-primary text-background-dark px-4 py-2 rounded-lg font-bold text-xs shadow-[0_0_15px_rgba(244,195,37,0.3)] hover:scale-105 transition-transform">
+                                    Start Tracking
+                                </button>
+                                <button class="tracking-stop border border-red-500/40 text-red-400 px-4 py-2 rounded-lg font-bold text-xs hover:bg-red-500/10 transition-transform">
+                                    Stop
+                                </button>
+                                <a class="bg-white/10 text-white px-4 py-2 rounded-lg font-bold text-xs hover:bg-white/20 transition-transform"
+                                   href="@Url.Action("BookingDetails", "DriverPortal", new { id = booking.BookingId })">
+                                    View Trip
+                                </a>
+                            </div>
+                        </div>
+                        <div class="mt-3 flex flex-wrap items-center gap-3 text-xs text-white/50">
+                            <span class="tracking-status">Tracking idle</span>
+                            <span class="tracking-error text-red-400 hidden"></span>
+                            <button class="tracking-retry text-primary underline hidden" type="button">Retry</button>
                         </div>
                     </div>
                 </div>
@@ -103,3 +116,192 @@
         </div>
     </aside>
 </main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js" integrity="sha512-1Yf1sAP0f1C4XqE1P6rrG0o7b4EJhp3hsl2Ov9gfy6dqr8e3VshqV4xRtZ8y6k+GOpAxv4C9M4D9YolX2a+8tw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script>
+    const driverId = @Model.DriverId;
+    const throttleMs = 25000;
+    const idleMs = 120000;
+    const movementThresholdMeters = 15;
+
+    let watchId = null;
+    let lastSentAt = 0;
+    let lastSentPosition = null;
+    let lastMovementAt = 0;
+    let isIdle = false;
+    let activeBookingId = null;
+    let hubConnection = null;
+
+    function haversineMeters(a, b) {
+        if (!a || !b) return 0;
+        const toRad = (deg) => (deg * Math.PI) / 180;
+        const R = 6371000;
+        const dLat = toRad(b.lat - a.lat);
+        const dLng = toRad(b.lng - a.lng);
+        const lat1 = toRad(a.lat);
+        const lat2 = toRad(b.lat);
+        const sinLat = Math.sin(dLat / 2);
+        const sinLng = Math.sin(dLng / 2);
+        const h = sinLat * sinLat + Math.cos(lat1) * Math.cos(lat2) * sinLng * sinLng;
+        return 2 * R * Math.asin(Math.sqrt(h));
+    }
+
+    async function ensureHubConnection() {
+        if (hubConnection) return hubConnection;
+        hubConnection = new signalR.HubConnectionBuilder()
+            .withUrl('/hubs/driverTracking')
+            .withAutomaticReconnect()
+            .build();
+
+        await hubConnection.start();
+        return hubConnection;
+    }
+
+    function updateStatus(card, message) {
+        const statusEl = card.querySelector('.tracking-status');
+        if (statusEl) {
+            statusEl.textContent = message;
+        }
+    }
+
+    function showError(card, message) {
+        const errorEl = card.querySelector('.tracking-error');
+        const retryBtn = card.querySelector('.tracking-retry');
+        if (errorEl) {
+            errorEl.textContent = message;
+            errorEl.classList.remove('hidden');
+        }
+        if (retryBtn) {
+            retryBtn.classList.remove('hidden');
+        }
+    }
+
+    function clearError(card) {
+        const errorEl = card.querySelector('.tracking-error');
+        const retryBtn = card.querySelector('.tracking-retry');
+        if (errorEl) {
+            errorEl.classList.add('hidden');
+            errorEl.textContent = '';
+        }
+        if (retryBtn) {
+            retryBtn.classList.add('hidden');
+        }
+    }
+
+    async function sendLocation(position) {
+        if (!activeBookingId) return;
+        const connection = await ensureHubConnection();
+        await connection.invoke('UpdateLocation', activeBookingId, driverId, position.coords.latitude, position.coords.longitude,
+            new Date().toISOString(), position.coords.speed ?? null, position.coords.heading ?? null, position.coords.accuracy ?? null);
+
+        lastSentAt = Date.now();
+        lastSentPosition = { lat: position.coords.latitude, lng: position.coords.longitude };
+
+        const card = document.querySelector(`[data-booking-id='${activeBookingId}']`);
+        if (card) {
+            updateStatus(card, `Last sent ${new Date().toLocaleTimeString()}`);
+        }
+    }
+
+    function shouldSend(position) {
+        if (!lastSentPosition) {
+            lastMovementAt = Date.now();
+            return true;
+        }
+
+        const current = { lat: position.coords.latitude, lng: position.coords.longitude };
+        const distance = haversineMeters(lastSentPosition, current);
+        const moved = distance >= movementThresholdMeters;
+
+        if (moved) {
+            lastMovementAt = Date.now();
+            if (isIdle) {
+                isIdle = false;
+            }
+        }
+
+        if (isIdle) {
+            return false;
+        }
+
+        if (Date.now() - lastMovementAt >= idleMs) {
+            isIdle = true;
+            const card = document.querySelector(`[data-booking-id='${activeBookingId}']`);
+            if (card) {
+                updateStatus(card, 'Idle (waiting for movement)');
+            }
+            return false;
+        }
+
+        if (!moved) {
+            return false;
+        }
+
+        return Date.now() - lastSentAt >= throttleMs;
+    }
+
+    function onGeoError(error, card) {
+        console.error('Geolocation error:', error);
+        showError(card, 'Location permission denied. Please retry.');
+        updateStatus(card, 'Tracking paused');
+    }
+
+    async function startTracking(card, bookingId) {
+        if (!navigator.geolocation) {
+            showError(card, 'Geolocation is not supported in this browser.');
+            return;
+        }
+
+        if (watchId && activeBookingId === bookingId) {
+            return;
+        }
+
+        activeBookingId = bookingId;
+        lastSentAt = 0;
+        lastSentPosition = null;
+        lastMovementAt = Date.now();
+        isIdle = false;
+
+        clearError(card);
+        updateStatus(card, 'Requesting location...');
+
+        await ensureHubConnection();
+        await hubConnection.invoke('JoinBookingGroup', bookingId);
+
+        watchId = navigator.geolocation.watchPosition(
+            async (position) => {
+                if (!lastSentPosition) {
+                    await sendLocation(position);
+                } else if (shouldSend(position)) {
+                    await sendLocation(position);
+                }
+            },
+            (err) => onGeoError(err, card),
+            {
+                enableHighAccuracy: true,
+                maximumAge: 1000,
+                timeout: 10000
+            }
+        );
+    }
+
+    function stopTracking(card) {
+        if (watchId) {
+            navigator.geolocation.clearWatch(watchId);
+            watchId = null;
+        }
+        updateStatus(card, 'Tracking stopped');
+        activeBookingId = null;
+    }
+
+    document.querySelectorAll('[data-booking-id]').forEach(card => {
+        const bookingId = parseInt(card.getAttribute('data-booking-id'), 10);
+        const startBtn = card.querySelector('.tracking-start');
+        const stopBtn = card.querySelector('.tracking-stop');
+        const retryBtn = card.querySelector('.tracking-retry');
+
+        startBtn?.addEventListener('click', () => startTracking(card, bookingId));
+        stopBtn?.addEventListener('click', () => stopTracking(card));
+        retryBtn?.addEventListener('click', () => startTracking(card, bookingId));
+    });
+</script>
