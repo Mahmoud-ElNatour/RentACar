@@ -25,15 +25,66 @@ namespace RentACar.Web.Controllers
             decimal? minPrice = null, 
             decimal? maxPrice = null, 
             DateOnly? startDate = null, 
-            DateOnly? endDate = null)
+            DateOnly? endDate = null,
+            int page = 1)
         {
             var categories = await _categoryManager.GetAllCategoriesAsync();
 
-            // Get all filtered cars (without price yet)
-            // Passing null for categoryId since we handle multiple below or client side
-            // Ideally we'd pass the array to manager, but for now we filter in-memory as before or adjust manager call.
-            // Since SearchCarsByFilterAsync only takes single ID, let's fetch all (filtered by name) and filter manually.
-            var cars = await _carManager.SearchCarsByFilterAsync(modelName: name);
+            var cars = await GetFilteredCarsInternal(name, categoryIds, minPrice, maxPrice, startDate, endDate);
+            
+            int pageSize = 12;
+            int totalCount = cars.Count;
+            int totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+
+            var pagedCars = cars.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+
+            var model = new BrowseViewDTO
+            {
+                Cars = pagedCars,
+                Categories = categories,
+                FilterName = name,
+                FilterCategoryIds = categoryIds ?? Array.Empty<int>(),
+                FilterMinPrice = minPrice,
+                FilterMaxPrice = maxPrice,
+                FilterStartDate = startDate,
+                FilterEndDate = endDate,
+                CurrentPage = page,
+                TotalPages = totalPages
+            };
+
+            return View(model);
+        }
+
+        [HttpGet("~/Browse/LoadMore")]
+        public async Task<IActionResult> LoadMore(
+            string? name = null,
+            [FromQuery] int[]? categoryIds = null,
+            decimal? minPrice = null,
+            decimal? maxPrice = null,
+            DateOnly? startDate = null,
+            DateOnly? endDate = null,
+            int page = 1)
+        {
+            var cars = await GetFilteredCarsInternal(name, categoryIds, minPrice, maxPrice, startDate, endDate);
+
+            int pageSize = 12;
+            var pagedCars = cars.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+
+            if (!pagedCars.Any()) return NoContent();
+
+            return PartialView("_CarGridItems", pagedCars);
+        }
+
+        private async Task<List<CarListDto>> GetFilteredCarsInternal(
+            string? name, 
+            int[]? categoryIds, 
+            decimal? minPrice, 
+            decimal? maxPrice, 
+            DateOnly? startDate, 
+            DateOnly? endDate)
+        {
+            // Initial Fetch (Lightweight DTOs)
+            var cars = await _carManager.SearchCarsForListAsync(modelName: name);
 
             // Filter by Categories
             if (categoryIds != null && categoryIds.Any())
@@ -51,34 +102,23 @@ namespace RentACar.Web.Controllers
                 cars = cars.Where(c => c.PricePerDay <= maxPrice.Value).ToList();
             }
 
+            // Apply Date Availability Logic
             if (startDate.HasValue || endDate.HasValue)
             {
                 var start = startDate ?? endDate ?? DateOnly.FromDateTime(DateTime.Today);
                 var end = endDate ?? start;
-                if (end < start)
-                {
-                    var temp = start;
-                    start = end;
-                    end = temp;
-                }
+                if (end < start) (start, end) = (end, start);
+                
+                // Fetch unavailable cars in timeline (or available ones)
+                // Manager returns *Available* cars.
+                // We must intersect with the search result.
                 var available = await _carManager.GetAvailableCarsInTimelineAsync(start.ToDateTime(TimeOnly.MinValue), end.ToDateTime(TimeOnly.MinValue));
                 var availIds = available.Select(c => c.CarId).ToHashSet();
+                
                 cars = cars.Where(c => availIds.Contains(c.CarId)).ToList();
             }
 
-            var model = new BrowseViewDTO
-            {
-                Cars = cars,
-                Categories = categories,
-                FilterName = name,
-                FilterCategoryIds = categoryIds ?? Array.Empty<int>(),
-                FilterMinPrice = minPrice,
-                FilterMaxPrice = maxPrice,
-                FilterStartDate = startDate,
-                FilterEndDate = endDate
-            };
-
-            return View(model);
+            return cars;
         }
 
     }

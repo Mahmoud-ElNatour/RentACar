@@ -1,0 +1,69 @@
+@model IEnumerable<RentACar.Application.DTOs.CarListDto>
+
+@foreach(var car in Model)
+{
+    var imgSrc = $"/api/Car/Image/{car.CarId}";
+    
+    <div class="group bg-[#16181a] border border-[#262626] rounded-2xl overflow-hidden hover:border-gold/50 transition-all hover:shadow-[0_0_30px_rgba(212,175,55,0.1)] flex flex-col">
+        <!-- Image with Lazy Loading -->
+        <div class="relative aspect-[4/3] overflow-hidden bg-[#0a0a0a]">
+            <!-- Placeholder / Loading State handled by browser or simple bg -->
+            <img src="@imgSrc" loading="lazy" alt="@car.ModelName" 
+                 class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700" 
+                 onerror="this.src='/images/default-car.png'" />
+            
+            <div class="absolute inset-0 bg-gradient-to-t from-[#16181a] via-transparent to-transparent opacity-60"></div>
+            
+            <!-- Availability Badge -->
+            <div class="absolute top-4 right-4 bg-black/50 backdrop-blur-md border border-white/10 text-white text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> Available
+            </div>
+            
+            <div class="absolute bottom-4 left-4">
+                 <span class="bg-gold text-black text-xs font-black uppercase tracking-wider px-2 py-1 rounded">
+                     @(car.CategoryName ?? "Premium")
+                 </span>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="p-5 flex-1 flex flex-col">
+            <div class="flex-1">
+                <h3 class="text-xl font-bold text-white mb-1">@car.ModelName</h3>
+                <p class="text-gray-400 text-sm mb-4">@car.ModelYear Model</p>
+            </div>
+
+            <!-- Footer -->
+            <div class="flex items-center justify-between pt-4 border-t border-[#262626]">
+                <div>
+                    @if(car.PricePerDay.HasValue)
+                    {
+                        <div class="flex items-baseline gap-1">
+                            <span class="text-lg font-bold text-white">$@car.PricePerDay?.ToString("0")</span>
+                            <span class="text-xs text-gray-500">/ day</span>
+                        </div>
+                    } 
+                    else 
+                    {
+                         <span class="text-sm font-bold text-gold">Price on Request</span>
+                    }
+                </div>
+                
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                     <a asp-controller="Booking" asp-action="Add" asp-route-carId="@car.CarId" 
+                        class="bg-gold text-black hover:bg-[#b5952f] hover:text-black px-4 py-2 rounded-lg font-bold text-sm transition-all shadow-lg shadow-gold/20 hover:shadow-gold/60 hover:scale-105">
+                        Book Now
+                    </a>
+                }
+                else
+                {
+                     <a asp-area="Identity" asp-page="/Account/Login" 
+                        class="bg-[#262626] text-white hover:bg-white hover:text-black px-4 py-2 rounded-lg font-bold text-sm transition-colors border border-white/10">
+                        Login
+                    </a>
+                }
+            </div>
+        </div>
+    </div>
+}
