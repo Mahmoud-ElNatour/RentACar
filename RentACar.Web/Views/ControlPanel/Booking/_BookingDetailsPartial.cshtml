@@ -1,110 +1,171 @@
-@model RentACar.Web.Models.BookingDetailsViewModel
+@model RentACar.Application.DTOs.BookingDetailsDto
 
 <div class="modal fade" id="bookingDetailsModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content dark-modal">
-            <div class="modal-header">
-                <h5 class="modal-title">Booking Details</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content bg-[#141414] border border-white/10 shadow-2xl rounded-2xl overflow-hidden font-display">
+            <!-- Header -->
+            <div class="modal-header border-b border-white/5 p-6 flex justify-between items-center bg-[#1a1a1a]">
+                <div class="flex items-center gap-4">
+                    <div class="h-12 w-12 rounded-xl bg-gold/10 flex items-center justify-center border border-gold/20">
+                        <span class="material-symbols-outlined text-gold text-2xl">receipt_long</span>
+                    </div>
+                    <div>
+                        <h5 class="text-xl font-bold text-white">Booking Details</h5>
+                        <p class="text-sm text-gray-400 font-mono">#@Model.BookingId</p>
+                    </div>
+                </div>
+                <button type="button" class="text-gray-400 hover:text-white transition-colors" data-bs-dismiss="modal">
+                    <span class="material-symbols-outlined text-2xl">close</span>
+                </button>
             </div>
-            <div class="modal-body">
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <h6 class="text-uppercase text-secondary">Booking</h6>
-                        <dl class="row mb-0">
-                            <dt class="col-sm-5">Booking ID</dt>
-                            <dd class="col-sm-7">@Model.BookingId</dd>
+            
+            <!-- Body -->
+            <div class="modal-body p-0">
+                <div class="grid grid-cols-1 md:grid-cols-2">
+                    
+                    <!-- Left Column: Customer & Car -->
+                    <div class="p-6 space-y-8 border-r border-white/5">
+                        <!-- Status Banner -->
+                        <div class="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10">
+                            <span class="text-gray-400 text-sm font-semibold uppercase">Status</span>
+                            @{
+                                var statusClass = "bg-gray-500/10 text-gray-500 border-gray-500/20";
+                                if(Model.BookingStatus == "Confirmed" || Model.BookingStatus == "Booked") statusClass = "bg-green-500/10 text-green-500 border-green-500/20";
+                                else if(Model.BookingStatus == "Pending") statusClass = "bg-yellow-500/10 text-yellow-500 border-yellow-500/20";
+                                else if(Model.BookingStatus == "Active") statusClass = "bg-blue-500/10 text-blue-500 border-blue-500/20";
+                                else if(Model.BookingStatus == "Cancelled") statusClass = "bg-red-500/10 text-red-500 border-red-500/20";
+                            }
+                            <span class="px-3 py-1 rounded-full text-xs font-bold border @statusClass">@Model.BookingStatus</span>
+                        </div>
 
-                            <dt class="col-sm-5">Status</dt>
-                            <dd class="col-sm-7">@(!string.IsNullOrWhiteSpace(Model.BookingStatus) ? Model.BookingStatus : "-")</dd>
+                        <!-- Customer -->
+                        <div>
+                            <h6 class="text-gold text-xs font-bold uppercase tracking-wider mb-4 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-sm">person</span> Customer Info
+                            </h6>
+                            <div class="flex items-start gap-4">
+                                <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white font-bold text-sm">
+                                    @((Model.CustomerName ?? "U").Substring(0,1))
+                                </div>
+                                <div>
+                                    <div class="text-white font-bold">@Model.CustomerName</div>
+                                    <div class="text-sm text-gray-400">@Model.CustomerEmail</div>
+                                    <div class="text-sm text-gray-500">@Model.CustomerPhone</div>
+                                </div>
+                            </div>
+                        </div>
 
-                            <dt class="col-sm-5">Start Date</dt>
-                            <dd class="col-sm-7">@Model.StartDate.ToString("yyyy-MM-dd")</dd>
-
-                            <dt class="col-sm-5">End Date</dt>
-                            <dd class="col-sm-7">@Model.EndDate.ToString("yyyy-MM-dd")</dd>
-
-                            <dt class="col-sm-5">Subtotal</dt>
-                            <dd class="col-sm-7">@((Model.Subtotal ?? 0).ToString("C"))</dd>
-
-                            <dt class="col-sm-5">Total Price</dt>
-                            <dd class="col-sm-7">@((Model.TotalPrice).ToString("C"))</dd>
-                        </dl>
+                        <!-- Car -->
+                        <div>
+                            <h6 class="text-gold text-xs font-bold uppercase tracking-wider mb-4 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-sm">directions_car</span> Vehicle Info
+                            </h6>
+                            <div class="bg-[#0a0a0a] rounded-xl p-4 border border-white/10 overflow-hidden">
+                                @if(!string.IsNullOrEmpty(Model.CarImageUrl))
+                                {
+                                    <div class="mb-4 rounded-lg overflow-hidden border border-white/5 bg-[#121212] aspect-video relative group">
+                                        <img src="@Model.CarImageUrl" alt="@Model.CarModel" loading="lazy" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                                    </div>
+                                }
+                                <div class="flex justify-between items-start mb-2">
+                                    <div>
+                                        <div class="text-white font-bold text-lg">@Model.CarModel</div>
+                                        <div class="text-xs text-gray-500">@Model.CarCategory • @Model.CarModelYear</div>
+                                    </div>
+                                    <div class="text-xs font-mono bg-gold/10 text-gold border border-gold/20 px-2 py-1 rounded">
+                                        @Model.CarPlateNumber
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2 text-xs text-gray-400 mt-2">
+                                    <span class="w-2 h-2 rounded-full" style="background-color: @(Model.CarColor ?? "white")"></span>
+                                    @Model.CarColor
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="col-md-6">
-                        <h6 class="text-uppercase text-secondary">Customer</h6>
-                        <dl class="row mb-0">
-                            <dt class="col-sm-5">Name</dt>
-                            <dd class="col-sm-7">@(!string.IsNullOrWhiteSpace(Model.CustomerName) ? Model.CustomerName : "-")</dd>
+                    <!-- Right Column: Timeline & Payment -->
+                    <div class="p-6 space-y-8 bg-[#181818]">
+                        <!-- Dates -->
+                        <div>
+                            <h6 class="text-gold text-xs font-bold uppercase tracking-wider mb-4 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-sm">date_range</span> Schedule
+                            </h6>
+                            <div class="relative pl-4 border-l-2 border-white/10 space-y-6">
+                                <div class="relative">
+                                    <div class="absolute -left-[21px] top-1 w-3 h-3 rounded-full bg-gold ring-4 ring-[#181818]"></div>
+                                    <div class="text-xs text-gray-400 uppercase">Pick-up</div>
+                                    <div class="text-white font-bold">@Model.StartDate.ToShortDateString()</div>
+                                </div>
+                                <div class="relative">
+                                    <div class="absolute -left-[21px] top-1 w-3 h-3 rounded-full bg-gray-600 ring-4 ring-[#181818]"></div>
+                                    <div class="text-xs text-gray-400 uppercase">Return</div>
+                                    <div class="text-white font-bold">@Model.EndDate.ToShortDateString()</div>
+                                </div>
+                            </div>
+                        </div>
 
-                            <dt class="col-sm-5">Username</dt>
-                            <dd class="col-sm-7">@(!string.IsNullOrWhiteSpace(Model.CustomerUsername) ? Model.CustomerUsername : "-")</dd>
-
-                            <dt class="col-sm-5">Email</dt>
-                            <dd class="col-sm-7">@(!string.IsNullOrWhiteSpace(Model.CustomerEmail) ? Model.CustomerEmail : "-")</dd>
-
-                            <dt class="col-sm-5">Phone</dt>
-                            <dd class="col-sm-7">@(!string.IsNullOrWhiteSpace(Model.CustomerPhone) ? Model.CustomerPhone : "-")</dd>
-                        </dl>
-                    </div>
-
-                    <div class="col-md-6">
-                        <h6 class="text-uppercase text-secondary mt-3">Car</h6>
-                        <dl class="row mb-0">
-                            <dt class="col-sm-5">Model</dt>
-                            <dd class="col-sm-7">@(!string.IsNullOrWhiteSpace(Model.CarModel) ? Model.CarModel : "-")</dd>
-
-                            <dt class="col-sm-5">Plate</dt>
-                            <dd class="col-sm-7">@(!string.IsNullOrWhiteSpace(Model.CarPlateNumber) ? Model.CarPlateNumber : "-")</dd>
-
-                            <dt class="col-sm-5">Category</dt>
-                            <dd class="col-sm-7">@(!string.IsNullOrWhiteSpace(Model.CarCategory) ? Model.CarCategory : "-")</dd>
-
-                            <dt class="col-sm-5">Color</dt>
-                            <dd class="col-sm-7">@(!string.IsNullOrWhiteSpace(Model.CarColor) ? Model.CarColor : "-")</dd>
-
-                            <dt class="col-sm-5">Model Year</dt>
-                            <dd class="col-sm-7">@((Model.CarModelYear?.ToString() ?? "-"))</dd>
-
-                            <dt class="col-sm-5">Price / day</dt>
-                            <dd class="col-sm-7">@((Model.CarPricePerDay?.ToString("C") ?? "-"))</dd>
-                        </dl>
-                    </div>
-
-                    <div class="col-md-6">
-                        <h6 class="text-uppercase text-secondary mt-3">Additional</h6>
-                        <dl class="row mb-0">
-                            <dt class="col-sm-5">Booked By</dt>
-                            <dd class="col-sm-7">@(!string.IsNullOrWhiteSpace(Model.EmployeeName) ? Model.EmployeeName : "-")</dd>
-
-                            <dt class="col-sm-5">Payment</dt>
-                            <dd class="col-sm-7">@((Model.PaymentId.HasValue ? $"#{Model.PaymentId}" : "-"))</dd>
-
-                            <dt class="col-sm-5">Paid Amount</dt>
-                            <dd class="col-sm-7">@((Model.PaymentAmount?.ToString("C") ?? "-"))</dd>
-
-                            <dt class="col-sm-5">Promocode</dt>
-                            <dd class="col-sm-7">@(!string.IsNullOrWhiteSpace(Model.PromocodeName) ? Model.PromocodeName : "-")</dd>
-
-                            <dt class="col-sm-5">Discount</dt>
-                            <dd class="col-sm-7">@((Model.PromocodeDiscount.HasValue ? $"{Model.PromocodeDiscount.Value}%" : "-"))</dd>
-                        </dl>
+                        <!-- Payment Breakdown -->
+                        <div>
+                            <h6 class="text-gold text-xs font-bold uppercase tracking-wider mb-4 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-sm">payments</span> Payment
+                            </h6>
+                            <div class="space-y-3 text-sm">
+                                <div class="flex justify-between text-gray-400">
+                                    <span>Rate per day</span>
+                                    <span>@Model.CarPricePerDay?.ToString("C")</span>
+                                </div>
+                                <div class="flex justify-between text-gray-400">
+                                    <span>Subtotal</span>
+                                    <span>@Model.Subtotal?.ToString("C")</span>
+                                </div>
+                                @if(Model.PromocodeDiscount.HasValue)
+                                {
+                                    <div class="flex justify-between text-green-400">
+                                        <span>Discount (@Model.PromocodeName)</span>
+                                        <span>-@Model.PromocodeDiscount%</span>
+                                    </div>
+                                }
+                                <div class="pt-3 border-t border-white/10 flex justify-between items-center">
+                                    <span class="text-white font-bold">Total</span>
+                                    <span class="text-xl font-bold text-gold">@Model.TotalPrice.ToString("C")</span>
+                                </div>
+                                <div class="mt-2 text-right">
+                                    @if(Model.PaymentId.HasValue)
+                                    {
+                                        <span class="text-green-500 text-xs font-bold flex items-center justify-end gap-1">
+                                            <span class="material-symbols-outlined text-[14px]">check_circle</span> Paid (ID: @Model.PaymentId)
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-red-400 text-xs font-bold flex items-center justify-end gap-1">
+                                            <span class="material-symbols-outlined text-[14px]">error</span> Payment Pending
+                                        </span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <!-- Footer -->
+            <div class="modal-footer border-t border-white/5 p-4 bg-[#1a1a1a] flex justify-end gap-3">
+                <a href="/Booking/Edit/@Model.BookingId" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-bold text-sm transition-colors shadow-lg shadow-blue-500/20 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[18px]">edit</span> Edit
+                </a>
+                @if(Model.BookingStatus == "Pending") {
+                     <a href="/Booking/Approve/@Model.BookingId" class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-bold text-sm transition-colors shadow-lg shadow-green-500/20">
+                        Approve Booking
+                    </a>
+                }
+                <a href="/Booking/Contract/@Model.BookingId" target="_blank" class="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg font-bold text-sm transition-colors border border-white/10 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[18px]">print</span> Print Contract
+                </a>
+                <button type="button" class="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg font-bold text-sm transition-colors border border-white/10" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
 </div>
-
-<script>
-    (function () {
-        const modalElement = document.getElementById('bookingDetailsModal');
-        modalElement.addEventListener('hidden.bs.modal', () => modalElement.remove(), { once: true });
-        new bootstrap.Modal(modalElement).show();
-    })();
-</script>

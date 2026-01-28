@@ -81,9 +81,8 @@ namespace RentACar.Application.Managers
             {
                 var customerEntity = (await _customerRepository.GetAllAsync())
                     .FirstOrDefault(c => c.aspNetUserId == loggedInUserId);
-                _logger.LogInformation("Customer is booking with customer id if this print them custome ris null");
-                _logger.LogInformation("Customer is booking with customer id", customerEntity.UserId);
-                _logger.LogInformation("Customer", customerEntity);
+                _logger.LogInformation("Customer found with ID: {CustomerId}", customerEntity.UserId);
+                _logger.LogInformation("Customer Details: {@Customer}", customerEntity);
                 if (customerEntity == null)
                 {
                     _logger.LogWarning("Booking failed: No customer found for user {UserId}", loggedInUserId);
@@ -407,6 +406,181 @@ namespace RentACar.Application.Managers
             }
 
             return bookings;
+        }
+
+        public async Task<PagedResultDto<BookingListDto>> GetBookingsPagedAsync(
+            int page, int pageSize, string? search, string? status, 
+            string? sortColumn, string? sortDirection, 
+            DateOnly? startDate, DateOnly? endDate)
+        {
+            var query = _bookingRepository.Query()
+                .Include(b => b.Customer).ThenInclude(c => c.User)
+                .Include(b => b.Car).ThenInclude(c => c.Category)
+                .Include(b => b.Promocode)
+                .Include(b => b.Employeebooker)
+                .AsNoTracking();
+
+            // 🔍 Filters
+            if (!string.IsNullOrEmpty(search))
+            {
+                search = search.ToLower();
+                query = query.Where(b => 
+                    b.BookingId.ToString().Contains(search) ||
+                    (b.Customer != null && b.Customer.Name.ToLower().Contains(search)) ||
+                    (b.Car != null && (b.Car.ModelName.ToLower().Contains(search) || b.Car.PlateNumber.ToLower().Contains(search)))
+                );
+            }
+
+            if (!string.IsNullOrEmpty(status))
+            {
+                query = query.Where(b => b.BookingStatus == status);
+            }
+
+            if (startDate.HasValue)
+            {
+                query = query.Where(b => b.Startdate >= startDate.Value);
+            }
+
+            if (endDate.HasValue)
+            {
+                query = query.Where(b => b.Enddate <= endDate.Value);
+            }
+
+            // 📊 Stats Calculation (Pre-Pagination)
+            var statsQuery = query; 
+            // Note: If you want global stats ignoring filters, use _bookingRepository.Query() base.
+            // Usually dashboard stats are filtered if filters are applied, but "Widgets" often want global or specific logic.
+            // For now, let's return stats based on the *current filtered view* which is more dynamic for reports, 
+            // OR we can do a separate global count. Let's do Global if no filters, else Filtered.
+            // Actually, typical UI shows "Total Bookings" (Global) and filters narrow the list. 
+            // But let's stick to the pattern: Return Filtered Counts for pagination, and maybe side-load Stats.
+            // 🔢 Sorting
+            query = sortColumn?.ToLower() switch
+            {
+                "customer" => sortDirection == "desc" ? query.OrderByDescending(b => b.Customer.Name) : query.OrderBy(b => b.Customer.Name),
+                "car" => sortDirection == "desc" ? query.OrderByDescending(b => b.Car.ModelName) : query.OrderBy(b => b.Car.ModelName),
+                "startdate" => sortDirection == "desc" ? query.OrderByDescending(b => b.Startdate) : query.OrderBy(b => b.Startdate),
+                "enddate" => sortDirection == "desc" ? query.OrderByDescending(b => b.Enddate) : query.OrderBy(b => b.Enddate),
+                "price" => sortDirection == "desc" ? query.OrderByDescending(b => b.TotalPrice) : query.OrderBy(b => b.TotalPrice),
+                "status" => sortDirection == "desc" ? query.OrderByDescending(b => b.BookingStatus) : query.OrderBy(b => b.BookingStatus),
+                _ => sortDirection == "asc" ? query.OrderBy(b => b.BookingId) : query.OrderByDescending(b => b.BookingId) // Default DESC ID
+            };
+
+            // 📄 Pagination
+            var filteredCount = await query.CountAsync();
+            var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+
+            // 🗺️ Mapping
+            var mappedItems = items.Select(b => new BookingListDto
+            {
+                BookingId = b.BookingId,
+                CustomerId = b.CustomerId,
+                CustomerName = b.Customer?.Name,
+                CustomerUsername = b.Customer?.User?.UserName,
+                CustomerEmail = b.Customer?.User?.Email,
+                CarId = b.CarId,
+                CarModel = b.Car?.ModelName,
+                CarPlate = b.Car?.PlateNumber,
+                EmployeebookerId = b.EmployeebookerId,
+                EmployeeName = b.Employeebooker?.Name,
+                Subtotal = b.Subtotal,
+                TotalPrice = b.TotalPrice,
+                PromocodeId = b.PromocodeId,
+                PromocodeName = b.Promocode?.Name,
+                PromocodeDiscount = b.Promocode?.DiscountPercentage,
+                Startdate = b.Startdate.ToString("yyyy-MM-dd"), // Ensure format
+                Enddate = b.Enddate.ToString("yyyy-MM-dd"),
+                BookingStatus = b.BookingStatus
+            }).ToList();
+
+            // 🔗 Fetch Payments for this batch to show status
+            if (mappedItems.Any())
+            {
+                var ids = mappedItems.Select(x => x.BookingId).ToList();
+                var payments = await _paymentRepository.Query()
+                    .Where(p => ids.Contains(p.BookingId))
+                    .Select(p => new { p.BookingId, p.PaymentId, p.Amount, p.Status, p.PaymentDate })
+                    .AsNoTracking()
+                    .ToListAsync();
+
+                foreach (var item in mappedItems)
+                {
+                     var latest = payments.Where(p => p.BookingId == item.BookingId)
+                        .OrderByDescending(p => p.PaymentDate)
+                        .ThenByDescending(p => p.PaymentId)
+                        .FirstOrDefault();
+                     
+                     if (latest != null)
+                     {
+                         item.PaymentId = latest.PaymentId;
+                         item.PaymentAmount = latest.Amount;
+                         item.PaymentStatus = latest.Status;
+                     }
+                     else
+                     {
+                         item.PaymentStatus = "Unpaid";
+                     }
+                }
+            }
+
+            return new PagedResultDto<BookingListDto>
+            {
+                Items = mappedItems,
+                TotalCount = filteredCount,
+                TotalPages = (int)Math.Ceiling(filteredCount / (double)pageSize),
+                Stats = null // Stats fetched separately
+            };
+        }
+
+        public async Task<object> GetBookingStatsAsync(string? search, string? status, DateOnly? startDate, DateOnly? endDate)
+        {
+            var query = _bookingRepository.Query().AsNoTracking();
+
+            // 🔍 Filters (Must match PagedAsync filters to show relevant stats)
+            if (!string.IsNullOrEmpty(search))
+            {
+                search = search.ToLower();
+                query = query.Where(b => 
+                    b.BookingId.ToString().Contains(search) ||
+                    (b.Customer != null && b.Customer.Name.ToLower().Contains(search)) ||
+                    (b.Car != null && (b.Car.ModelName.ToLower().Contains(search) || b.Car.PlateNumber.ToLower().Contains(search)))
+                );
+            }
+
+            if (!string.IsNullOrEmpty(status))
+            {
+                query = query.Where(b => b.BookingStatus == status);
+            }
+
+            if (startDate.HasValue)
+            {
+                query = query.Where(b => b.Startdate >= startDate.Value);
+            }
+
+            if (endDate.HasValue)
+            {
+                query = query.Where(b => b.Enddate <= endDate.Value);
+            }
+
+            // 📊 Stats Calculation
+            var stats = await query
+                .GroupBy(x => 1)
+                .Select(g => new 
+                {
+                    Total = g.Count(),
+                    Active = g.Count(b => b.BookingStatus == "Active"),
+                    Pending = g.Count(b => b.BookingStatus == "Pending"),
+                    Revenue = g.Where(b => b.BookingStatus == "Completed" || b.BookingStatus == "Active").Sum(b => b.TotalPrice)
+                })
+                .FirstOrDefaultAsync();
+
+            return new 
+            { 
+                Total = stats?.Total ?? 0, 
+                Active = stats?.Active ?? 0, 
+                Pending = stats?.Pending ?? 0, 
+                Revenue = stats?.Revenue ?? 0 
+            };
         }
 
         public async Task<List<BookingDto>> GetAllBookingsAsync()

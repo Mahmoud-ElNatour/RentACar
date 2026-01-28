@@ -1,8 +1,8 @@
 using System;
 
-namespace RentACar.Web.Models
+namespace RentACar.Application.DTOs
 {
-    public class BookingDetailsViewModel
+    public class BookingDetailsDto
     {
         public int BookingId { get; set; }
         public string? BookingStatus { get; set; }
@@ -21,6 +21,7 @@ namespace RentACar.Web.Models
         public string? CarColor { get; set; }
         public int? CarModelYear { get; set; }
         public decimal? CarPricePerDay { get; set; }
+        public string? CarImageUrl { get; set; }
         public int? PaymentId { get; set; }
         public decimal? PaymentAmount { get; set; }
         public string? PromocodeName { get; set; }

@@ -8,6 +8,7 @@ using RentACar.Application.Managers;
 using AutoMapper;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
+using QuestPDF.Infrastructure;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -139,7 +140,7 @@ namespace RentACar.Web.Controllers
                 ? await _promocodeManager.GetPromocodeByIdAsync(booking.PromocodeId.Value)
                 : null;
 
-            var viewModel = new BookingDetailsViewModel
+            var dto = new BookingDetailsDto
             {
                 BookingId = booking.BookingId,
                 BookingStatus = booking.BookingStatus,
@@ -158,21 +159,47 @@ namespace RentACar.Web.Controllers
                 CarColor = car?.Color,
                 CarModelYear = car?.ModelYear,
                 CarPricePerDay = car?.PricePerDay,
+                CarImageUrl = car?.CarImage != null ? $"data:image/jpeg;base64,{Convert.ToBase64String(car.CarImage)}" : null,
                 PaymentId = payment?.PaymentId,
                 PaymentAmount = payment?.Amount,
                 PromocodeName = promo?.Name,
                 PromocodeDiscount = promo?.DiscountPercentage
             };
 
-            return PartialView("~/Views/ControlPanel/Booking/_BookingDetailsPartial.cshtml", viewModel);
+            return PartialView("~/Views/ControlPanel/Booking/_BookingDetailsPartial.cshtml", dto);
 
         }
 
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<BookingListDto>>> Get()
+        [HttpGet("GetFilteredBookings")]
+        public async Task<ActionResult<PagedResultDto<BookingListDto>>> GetFilteredBookings(
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10,
+            [FromQuery] string? search = null,
+            [FromQuery] string? status = null,
+            [FromQuery] string? sortColumn = "BookingId",
+            [FromQuery] string? sortDirection = "desc",
+            [FromQuery] DateTime? startDate = null,
+            [FromQuery] DateTime? endDate = null)
         {
-            var bookings = await _bookingManager.GetAllBookingsForListAsync();
-            return Ok(bookings);
+            var start = startDate.HasValue ? DateOnly.FromDateTime(startDate.Value) : (DateOnly?)null;
+            var end = endDate.HasValue ? DateOnly.FromDateTime(endDate.Value) : (DateOnly?)null;
+
+            var result = await _bookingManager.GetBookingsPagedAsync(page, pageSize, search, status, sortColumn, sortDirection, start, end);
+            return Ok(result);
+        }
+
+        [HttpGet("GetStats")]
+        public async Task<ActionResult<object>> GetStats(
+            [FromQuery] string? search = null,
+            [FromQuery] string? status = null,
+            [FromQuery] DateTime? startDate = null,
+            [FromQuery] DateTime? endDate = null)
+        {
+            var start = startDate.HasValue ? DateOnly.FromDateTime(startDate.Value) : (DateOnly?)null;
+            var end = endDate.HasValue ? DateOnly.FromDateTime(endDate.Value) : (DateOnly?)null;
+
+            var stats = await _bookingManager.GetBookingStatsAsync(search, status, start, end);
+            return Ok(stats);
         }
 
         [HttpPost("Pay")]
@@ -318,36 +345,176 @@ namespace RentACar.Web.Controllers
 
         private byte[] GenerateContractPdf(BookingDto booking, CarDto? car, CustomerDTO? customer, PaymentDto? payment, PromocodeDto? promo)
         {
+            var gold = "#d4af37";
+            var dark = "#16181a";
+
             var document = Document.Create(container =>
             {
                 container.Page(page =>
                 {
-                    page.Margin(20);
+                    page.Margin(40);
                     page.Size(PageSizes.A4);
-                    page.Content().Column(col =>
+                    //page.Background(dark); // Contracts usually white for print, let's keep white but use Dark/Gold text.
+                    
+                    page.Header().Row(row =>
                     {
-                        col.Item().AlignCenter().Text("Rental Contract").FontSize(20).Bold();
-                        col.Item().Text($"Booking ID: {booking.BookingId}");
-                        if (customer != null)
-                            col.Item().Text($"Customer: {customer.Name} (ID: {customer.UserId})");
-                        if (car != null)
-                            col.Item().Text($"Car: {car.ModelName} - {car.PlateNumber}");
-                        if (payment != null)
-                            col.Item().Text($"Payment ID: {payment.PaymentId} Amount: {payment.Amount:C}");
-                        if (promo != null)
-                            col.Item().Text($"Promocode: {promo.Name} ({promo.DiscountPercentage}% off)");
-                        col.Item().Text($"Start Date: {booking.Startdate:yyyy-MM-dd}");
-                        col.Item().Text($"End Date: {booking.Enddate:yyyy-MM-dd}");
-                        if (booking.Subtotal != null)
-                            col.Item().Text($"Subtotal: {booking.Subtotal:C}");
-                        else
-                            col.Item().Text($"Total Price: {booking.TotalPrice:C}");
-                        col.Item().PaddingVertical(20).Text("I, the renter, accept responsibility for the rental vehicle.");
+                        row.RelativeItem().Column(col =>
+                        {
+                            col.Item().Text("Lebanon Drive").FontSize(24).Bold().FontColor(dark);
+                            col.Item().Text("RentACar").FontSize(24).Bold().FontColor(gold);
+                        });
+                        row.RelativeItem().AlignRight().Column(col =>
+                        {
+                            col.Item().Text("RENTAL AGREEMENT").FontSize(16).SemiBold().FontColor(Colors.Grey.Medium);
+                            col.Item().Text($"#{booking.BookingId}").FontSize(20).Bold().FontColor(dark);
+                            col.Item().Text($"{DateTime.Now:dd MMM yyyy}").FontSize(10).FontColor(Colors.Grey.Medium);
+                        });
+                    });
+
+                    page.Content().PaddingVertical(20).Column(col =>
+                    {
+                        // 1. Customer & Car Section
                         col.Item().Row(row =>
                         {
-                            row.RelativeItem().Text("Customer Signature: ___________________");
-                            row.RelativeItem().AlignRight().Text("Company Signature: ___________________");
+                            // Customer
+                            row.RelativeItem().Border(1).BorderColor(Colors.Grey.Lighten2).Padding(10).Column(c =>
+                            {
+                                c.Item().Text("LESSEE (CUSTOMER)").FontSize(10).SemiBold().FontColor(gold);
+                                if(customer != null)
+                                {
+                                    c.Item().Text(customer.Name).Bold().FontSize(12);
+                                    c.Item().Text(customer.Email).FontSize(10);
+                                    c.Item().Text(customer.PhoneNumber ?? "-").FontSize(10);
+                                    c.Item().Text(customer.Address ?? "No Address Provided").FontSize(10);
+                                }
+                            });
+                            
+                            row.ConstantItem(20);
+
+                            // Car
+                            row.RelativeItem().Border(1).BorderColor(Colors.Grey.Lighten2).Padding(10).Column(c =>
+                            {
+                                c.Item().Text("VEHICLE").FontSize(10).SemiBold().FontColor(gold);
+                                if(car != null)
+                                {
+                                    c.Item().Text(car.ModelName).Bold().FontSize(12);
+                                    c.Item().Text($"{car.Color} • {car.ModelYear}").FontSize(10);
+                                    c.Item().Text($"Plate: {car.PlateNumber}").FontSize(10).Bold();
+                                    c.Item().Text($"Category: {car.CategoryName}").FontSize(10);
+                                }
+                            });
                         });
+
+                        col.Item().Height(20);
+
+                        // 2. Rental Terms Table
+                        col.Item().Table(table =>
+                        {
+                            table.ColumnsDefinition(columns =>
+                            {
+                                columns.RelativeColumn();
+                                columns.RelativeColumn();
+                                columns.RelativeColumn();
+                                columns.RelativeColumn();
+                            });
+
+                            table.Header(header =>
+                            {
+                                header.Cell().Element(CellStyle).Text("PICK-UP DATE");
+                                header.Cell().Element(CellStyle).Text("RETURN DATE");
+                                header.Cell().Element(CellStyle).Text("DURATION");
+                                header.Cell().Element(CellStyle).AlignRight().Text("RATE / DAY");
+
+                                // Removing static and using local variables is fine if not static
+                                IContainer CellStyle(IContainer container)
+                                {
+                                    return container.Background(dark).Padding(5).BorderBottom(1).BorderColor(gold);
+                                }
+                            });
+
+                            var days = (booking.Enddate.ToDateTime(TimeOnly.MinValue) - booking.Startdate.ToDateTime(TimeOnly.MinValue)).Days;
+                            
+                            table.Cell().Element(CellStyle).Text(booking.Startdate.ToString("dd MMM yyyy"));
+                            table.Cell().Element(CellStyle).Text(booking.Enddate.ToString("dd MMM yyyy"));
+                            table.Cell().Element(CellStyle).Text($"{days} Days");
+                            table.Cell().Element(CellStyle).AlignRight().Text($"{car?.PricePerDay:C}");
+
+                            IContainer CellStyle(IContainer container)
+                            {
+                                return container.Padding(10).BorderBottom(1).BorderColor(Colors.Grey.Lighten3);
+                            }
+                        });
+                        
+                        // 3. Financials
+                        col.Item().PaddingTop(10).AlignRight().Column(c => 
+                        {
+                            c.Item().Row(r => { r.RelativeItem().Text("Subtotal:"); r.RelativeItem().AlignRight().Text($"{booking.Subtotal:C}"); });
+                            
+                            if (promo != null)
+                            {
+                                c.Item().Row(r => { 
+                                    r.RelativeItem().Text($"Discount ({promo.Name} {promo.DiscountPercentage}%):").FontColor(Colors.Green.Medium); 
+                                    r.RelativeItem().AlignRight().Text($"-{(booking.Subtotal * promo.DiscountPercentage / 100):C}").FontColor(Colors.Green.Medium); 
+                                });
+                            }
+                            
+                            c.Item().PaddingTop(5).BorderTop(1).BorderColor(Colors.Grey.Lighten2).Row(r => 
+                            { 
+                                r.RelativeItem().Text("TOTAL ESTIMATED CHARGES:").Bold(); 
+                                r.RelativeItem().AlignRight().Text($"{booking.TotalPrice:C}").Bold().FontSize(14).FontColor(gold); 
+                            });
+                             
+                             if(payment != null)
+                             {
+                                 c.Item().PaddingTop(5).Row(r => { 
+                                     r.RelativeItem().Text("Payment Status:"); 
+                                     r.RelativeItem().AlignRight().Text("PAID").Bold().FontColor(Colors.Green.Medium); 
+                                 });
+                             }
+                        });
+
+                        col.Item().Height(30);
+
+                        // 4. Terms
+                        col.Item().Background(Colors.Grey.Lighten4).Padding(10).Column(c => 
+                        {
+                            c.Item().Text("TERMS AND CONDITIONS").Bold().FontSize(10);
+                            c.Item().Text("1. The Lessee acknowledges that the vehicle is in good operating condition.").FontSize(8);
+                            c.Item().Text("2. The Lessee agrees to return the vehicle on the specified return date.").FontSize(8);
+                            c.Item().Text("3. The Lessee is responsible for all traffic violations and fines incurred during the rental period.").FontSize(8);
+                            c.Item().Text("4. Damage or loss of the vehicle will be charged to the Lessee according to the insurance policy.").FontSize(8);
+                            c.Item().Text("5. No smoking inside the vehicle.").FontSize(8);
+                        });
+
+                        col.Item().Height(40);
+
+                        // 5. Signatures
+                        col.Item().Row(row =>
+                        {
+                            row.RelativeItem().Column(c =>
+                            {
+                                c.Item().Text("Lessee Signature:").FontSize(10).FontColor(Colors.Grey.Medium);
+                                c.Item().Height(30).BorderBottom(1).BorderColor(Colors.Black);
+                                c.Item().Text(customer?.Name ?? "Customer").FontSize(8);
+                            });
+                            
+                            row.ConstantItem(40);
+
+                            row.RelativeItem().Column(c =>
+                            {
+                                c.Item().Text("Company Representative:").FontSize(10).FontColor(Colors.Grey.Medium);
+                                c.Item().Height(30).BorderBottom(1).BorderColor(Colors.Black);
+                                c.Item().Text("Lebanon Drive RentACar").FontSize(8);
+                            });
+                        });
+                    });
+                    
+                    page.Footer().AlignCenter().Text(x =>
+                    {
+                        x.Span("Lebanon Drive RentACar - Standard Rental Agreement - Page ");
+                        x.CurrentPageNumber();
+                        x.Span(" / ");
+                        x.TotalPages();
                     });
                 });
             });

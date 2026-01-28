@@ -1,105 +1,32 @@
 @model RentACar.Application.DTOs.BookingDto
-@{
-    ViewData["Title"] = "Delete Booking";
-    Layout = null;
-}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"]</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/bookings.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
-</head>
-<body>
-    @await Html.PartialAsync("_PopupNotifications")
-    <div class="booking-container container text-center">
-        <a href="/Booking" class="btn btn-outline-warning rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:40px;height:40px" title="Back">
-            <i class="fas fa-arrow-left"></i>
-        </a>
 
-        <h2 class="mb-4">Delete Booking</h2>
-        <p>Are you sure you want to delete booking #@Model.BookingId?</p>
+<div class="modal fade" id="deleteBookingModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-[#141414] border border-red-500/30 shadow-[0_0_50px_-12px_rgba(239,68,68,0.2)] rounded-2xl overflow-hidden font-display">
+            <div class="p-8 text-center">
+                <!-- Warning Icon -->
+                <div class="w-20 h-20 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-6 border border-red-500/20">
+                    <span class="material-symbols-outlined text-4xl text-red-500">warning</span>
+                </div>
 
-        <div class="mt-3">
-            <div class="alert alert-danger d-none" id="deleteBookingError" role="alert"></div>
-            <button id="confirmDelete" class="btn btn-danger">Delete</button>
-            <a href="/Booking" class="btn btn-secondary ms-2">Cancel</a>
+                <h3 class="text-2xl font-bold text-white mb-2">Cancel Booking?</h3>
+                <p class="text-gray-400 mb-8 leading-relaxed">
+                    Are you sure you want to cancel/delete booking <span class="text-white font-mono font-bold">#@Model.BookingId</span>?<br>
+                    This action <span class="text-red-400 font-bold">cannot be undone</span> and will remove all associated payment records.
+                </p>
+
+                <form asp-action="Delete" asp-controller="Booking" method="post" class="flex flex-col gap-3">
+                    <input type="hidden" name="id" value="@Model.BookingId" />
+                    
+                    <button type="submit" class="w-full py-3.5 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold text-lg shadow-lg shadow-red-500/20 transition-all hover:scale-[1.02] active:scale-[0.98]">
+                        Yes, Delete Booking
+                    </button>
+                    
+                    <button type="button" class="w-full py-3.5 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 font-bold border border-white/10 transition-colors" data-bs-dismiss="modal">
+                        No, Keep It
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
-
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    <script>
-        (function () {
-            // Safe serialization: works for int, string, or GUID
-            const id = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.BookingId));
-
-            const btn = document.getElementById('confirmDelete');
-            const errorAlert = document.getElementById('deleteBookingError');
-
-            function showError(message) {
-                if (errorAlert) {
-                    errorAlert.textContent = message || 'Error deleting booking.';
-                    errorAlert.classList.remove('d-none');
-                }
-                showPopup(message || 'Error deleting booking.', 'error');
-            }
-
-            function clearError() {
-                if (errorAlert) {
-                    errorAlert.textContent = '';
-                    errorAlert.classList.add('d-none');
-                }
-            }
-
-            btn.addEventListener('click', async () => {
-                clearError();
-
-                // Optional anti-forgery token support
-                const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
-                const headers = { 'Accept': 'application/json' };
-                if (tokenInput && tokenInput.value) {
-                    headers['RequestVerificationToken'] = tokenInput.value;
-                }
-
-                try {
-                    const resp = await fetch('/api/Booking/' + encodeURIComponent(id), {
-                        method: 'DELETE',
-                        headers
-                    });
-
-                    if (resp.ok) {
-                        showPopup('Booking deleted successfully.', 'success');
-                        setTimeout(() => { window.location.href = '/Booking'; }, 1000);
-                        return;
-                    }
-
-                    // Build a helpful error message
-                    let message = 'Error deleting booking.';
-                    const ct = resp.headers.get('Content-Type') || '';
-                    try {
-                        if (ct.includes('application/json')) {
-                            const data = await resp.json();
-                            if (data && typeof data === 'object') {
-                                message = data.message || data.error || data.title || message;
-                            }
-                        } else {
-                            const text = await resp.text();
-                            if (text) message = text;
-                        }
-                    } catch { /* ignore parse errors */ }
-
-                    showError(message);
-                } catch (e) {
-                    showError('Unable to connect to the server. Please try again.');
-                }
-            });
-        })();
-    </script>
-</body>
-</html>
+</div>
