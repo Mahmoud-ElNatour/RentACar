@@ -14,6 +14,7 @@ using Microsoft.EntityFrameworkCore;
 using RentACar.Web.Models;
 using System.Security.Claims;
 using System.Linq;
+using Microsoft.Extensions.Configuration;
 
 namespace RentACar.Web.Controllers
 {
@@ -31,6 +32,7 @@ namespace RentACar.Web.Controllers
         private readonly UserManager<IdentityUser> _userManager;
         private readonly IMapper _mapper;
         private readonly ILogger<BookingController> _logger;
+        private readonly IConfiguration _config;
 
         public BookingController(
             BookingManager bookingManager,
@@ -41,7 +43,8 @@ namespace RentACar.Web.Controllers
             EmployeeManager employeeManager,
             UserManager<IdentityUser> userManager,
             IMapper mapper,
-            ILogger<BookingController> logger)
+            ILogger<BookingController> logger,
+            IConfiguration config)
         {
             _bookingManager = bookingManager;
             _paymentManager = paymentManager;
@@ -52,6 +55,7 @@ namespace RentACar.Web.Controllers
             _userManager = userManager;
             _mapper = mapper;
             _logger = logger;
+            _config = config;
         }
 
         [HttpGet("~/Booking")]
@@ -73,6 +77,8 @@ namespace RentACar.Web.Controllers
                 ViewBag.EndDate = end.ToDateTime(TimeOnly.MinValue).ToString("yyyy-MM-dd");
                 ViewBag.CarId = carId.Value.ToString();
             }
+
+            ViewBag.GoogleMapsKey = _config["GOOGLE_MAPS_API_KEY"];
 
             return View("~/Views/ControlPanel/Booking/Add.cshtml", new BookingDto());
         }
