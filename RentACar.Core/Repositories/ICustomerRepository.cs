@@ -6,6 +6,8 @@ namespace RentACar.Core.Repositories
 {
     public interface ICustomerRepository
     {
+        Task<List<Customer>> GetByIdsAsync(List<int> ids);
+
         Task<Customer?> GetByIdAsync(String id);
         Task<Customer?> GetByIdAsync(int id);
         Task<List<Customer>> GetAllAsync();

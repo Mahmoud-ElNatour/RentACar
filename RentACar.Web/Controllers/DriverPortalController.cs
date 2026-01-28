@@ -78,13 +78,23 @@ public class DriverPortalController : Controller
     public async Task<IActionResult> Schedule()
     {
         var driver = await GetCurrentDriverAsync();
-        if (driver == null)
-        {
-            return Forbid();
-        }
+        if (driver == null) return Forbid();
 
         var availability = await _driverManager.GetDriverAvailabilityAsync(driver.DriverId);
         var bookings = await _bookingManager.GetBookingsByDriverIdAsync(driver.DriverId);
+
+        var topBookings = bookings
+            .OrderBy(b => b.Startdate)
+            .Take(10)
+            .ToList();
+
+        var customerIds = topBookings
+            .Select(b => b.CustomerId)
+            .Distinct()
+            .ToList();
+
+        var customers = await _customerManager.GetCustomersByIds(customerIds);
+        var customersDict = customers.ToDictionary(c => c.UserId, c => c);
 
         var model = new DriverScheduleViewModel
         {
@@ -98,29 +108,28 @@ public class DriverPortalController : Controller
                 IsAvailable = a.IsAvailable,
                 IsRecurringWeekly = a.IsRecurringWeekly
             }).ToList(),
-            UpcomingBookings = (await Task.WhenAll(bookings
-                    .OrderBy(b => b.Startdate)
-                    .Take(10)
-                    .Select(async b =>
-                    {
-                        var customer = await _customerManager.GetCustomerById(b.CustomerId);
-                        return new DriverPortalBookingViewModel
-                        {
-                            BookingId = b.BookingId,
-                            CustomerName = customer?.Name ?? "Customer",
-                            PickupAddress = b.PickupAddress ?? "Pickup location",
-                            StartDate = b.Startdate,
-                            EndDate = b.Enddate,
-                            BookingStatus = b.BookingStatus
-                        };
-                    })))
-                .ToList()
+
+            UpcomingBookings = topBookings.Select(b =>
+            {
+                customersDict.TryGetValue(b.CustomerId, out var customer);
+
+                return new DriverPortalBookingViewModel
+                {
+                    BookingId = b.BookingId,
+                    CustomerName = customer?.Name ?? "Customer",
+                    PickupAddress = b.PickupAddress ?? "Pickup location",
+                    StartDate = b.Startdate,
+                    EndDate = b.Enddate,
+                    BookingStatus = b.BookingStatus
+                };
+            }).ToList()
         };
 
         ViewData["Title"] = "Driver Schedule";
         ViewData["BodyClass"] = "bg-background-dark text-white";
         return View("~/Views/DriverPortal/Schedule.cshtml", model);
     }
+
 
     [HttpPost]
     [ValidateAntiForgeryToken]

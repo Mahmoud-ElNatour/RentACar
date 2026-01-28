@@ -16,6 +16,16 @@ namespace RentACar.Infrastructure.Repositories
         {
             _dbContext = dbContext;
         }
+        public async Task<List<Customer>> GetByIdsAsync(List<int> ids)
+        {
+            if (ids == null || ids.Count == 0) return new List<Customer>();
+
+            return await _dbContext.Set<Customer>()
+                .AsNoTracking()
+                .Include(c => c.User)
+                .Where(c => ids.Contains(c.UserId))
+                .ToListAsync();
+        }
 
         public async Task<Customer?> GetByIdAsync(int id)
         {
