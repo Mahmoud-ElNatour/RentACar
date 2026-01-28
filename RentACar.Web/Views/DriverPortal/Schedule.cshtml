@@ -19,16 +19,16 @@
     }
 </style>
 
-<div class="flex flex-col h-screen overflow-hidden">
-    <div class="flex flex-1 overflow-hidden">
-        <main class="flex-1 flex overflow-hidden">
-            <div class="flex-1 flex flex-col p-8 overflow-y-auto">
+<div class="flex flex-col min-h-screen">
+    <div class="flex flex-1">
+        <main class="flex-1 flex">
+            <div class="flex-1 flex flex-col p-6 md:p-8 overflow-y-auto">
                 <div class="flex flex-col gap-1 mb-8">
                     <h1 class="text-4xl font-black tracking-tight text-white">Driver Calendar &amp; Schedule</h1>
                     <p class="text-white/50 text-base">Manage availability blocks for @Model.DriverName.</p>
                 </div>
 
-                <div class="flex-1 glass-darker rounded-2xl overflow-hidden border border-white/5 flex flex-col">
+                <div class="flex-1 glass-darker rounded-2xl border border-white/5 flex flex-col min-h-[600px] overflow-auto">
                     <div class="grid grid-cols-7 border-b border-white/5 bg-white/5">
                         <div class="p-3 text-center text-xs font-bold text-white/30 uppercase tracking-widest">Sun</div>
                         <div class="p-3 text-center text-xs font-bold text-white/30 uppercase tracking-widest">Mon</div>

@@ -209,16 +209,53 @@ namespace RentACar.Application.Managers
                 PickupAddress = requestDto.PickupAddress,
                 PickupDateTime = requestDto.PickupDateTime
             };
-            var coords = await _geocodingService.GeocodeAsync(booking.PickupAddress ?? "");
 
-            if (coords == null)
+            var requestLat = requestDto.PickupLatitude;
+            var requestLng = requestDto.PickupLongitude;
+
+            if (requestDto.HasDriver)
             {
-                _logger.LogWarning("Geocoding failed for pickup address: {Address}", booking.PickupAddress);
-                throw new InvalidOperationException("GEOCODING_FAILED");
-            }
+                if (requestLat.HasValue && requestLng.HasValue)
+                {
+                    booking.PickupLatitude = requestLat;
+                    booking.PickupLongitude = requestLng;
+                }
+                else if (!string.IsNullOrWhiteSpace(booking.PickupAddress))
+                {
+                    var coords = await _geocodingService.GeocodeAsync(booking.PickupAddress);
+                    if (coords == null)
+                    {
+                        _logger.LogWarning("Geocoding failed for pickup address: {Address}", booking.PickupAddress);
+                        throw new InvalidOperationException("GEOCODING_FAILED");
+                    }
 
-            booking.PickupLatitude = coords.Value.lat;
-            booking.PickupLongitude = coords.Value.lng;
+                    booking.PickupLatitude = coords.Value.lat;
+                    booking.PickupLongitude = coords.Value.lng;
+                }
+                else
+                {
+                    _logger.LogWarning("Pickup location missing for chauffeur booking.");
+                    throw new InvalidOperationException("GEOCODING_FAILED");
+                }
+            }
+            else if (requestLat.HasValue && requestLng.HasValue)
+            {
+                booking.PickupLatitude = requestLat;
+                booking.PickupLongitude = requestLng;
+            }
+            else if (!string.IsNullOrWhiteSpace(booking.PickupAddress))
+            {
+                var coords = await _geocodingService.GeocodeAsync(booking.PickupAddress);
+                if (coords != null)
+                {
+                    booking.PickupLatitude = coords.Value.lat;
+                    booking.PickupLongitude = coords.Value.lng;
+                }
+                else
+                {
+                    _logger.LogWarning("Geocoding skipped for pickup address: {Address}", booking.PickupAddress);
+                }
+            }
 
 
             // Save booking first to generate BookingId
