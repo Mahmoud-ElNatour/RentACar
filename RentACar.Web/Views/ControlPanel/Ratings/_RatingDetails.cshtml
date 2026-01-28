@@ -71,7 +71,14 @@
             <!-- Vehicle Panel -->
             <div class="glass-panel p-4 rounded-xl flex items-center gap-4" style="background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08);">
                 <div class="size-20 rounded-lg overflow-hidden flex-shrink-0 bg-black/40 border border-white/5 flex items-center justify-center">
-                    <span class="material-symbols-outlined text-4xl text-white/20">directions_car</span>
+                    @if (!string.IsNullOrEmpty(Model.CarImageBase64))
+                    {
+                        <img src="data:image/jpeg;base64,@Model.CarImageBase64" alt="@Model.CarName" class="w-full h-full object-cover" loading="lazy" />
+                    }
+                    else
+                    {
+                        <span class="material-symbols-outlined text-4xl text-white/20">directions_car</span>
+                    }
                 </div>
                 <div class="space-y-2">
                     <div>

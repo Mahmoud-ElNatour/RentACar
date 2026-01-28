@@ -21,6 +21,7 @@ namespace RentACar.Application.DTOs
         public string? CustomerPhone { get; set; }
         public string CarName { get; set; } = string.Empty;
         public string CarPlateNumber { get; set; } = string.Empty;
+        public string? CarImageBase64 { get; set; }
         public int? PaymentId { get; set; }
         public decimal? PaymentTotal { get; set; }
         public string? Promocode { get; set; }

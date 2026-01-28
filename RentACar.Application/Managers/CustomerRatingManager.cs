@@ -144,6 +144,7 @@ namespace RentACar.Application.Managers
                 EmployeeName = booking?.Employeebooker?.User?.UserName ?? "N/A",
                 CarName = booking?.Car?.ModelName ?? "Unknown", 
                 CarPlateNumber = booking?.Car?.PlateNumber ?? "Unknown",
+                CarImageBase64 = booking?.Car?.CarImage != null ? Convert.ToBase64String(booking.Car.CarImage) : null,
                 PaymentId = payment?.PaymentId,
                 PaymentTotal = payment?.Amount,
                 Promocode = booking?.Promocode?.Name

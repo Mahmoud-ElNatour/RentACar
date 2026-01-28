@@ -1,28 +1,45 @@
 ﻿<!-- Rating Popup Modal -->
+<!-- Using Bootstrap Modal Wrapper for compatibility with existing triggers, but styled with Tailwind/Custom CSS -->
 <div class="modal fade" id="ratingModal" tabindex="-1" aria-labelledby="ratingModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content" style="background: rgba(30, 30, 30, 0.95); backdrop-filter: blur(10px); border: 1px solid #c5a059; color: #fff; box-shadow: 0 0 20px rgba(197, 160, 89, 0.2);">
-            <div class="modal-header border-0" style="border-bottom: 1px solid rgba(197, 160, 89, 0.2) !important;">
-                <h5 class="modal-title w-100 text-center" id="ratingModalLabel" style="color: #c5a059; font-weight: 600; letter-spacing: 1px;">RATE YOUR EXPERIENCE</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        <!-- Glassmorphism Card Style -->
+        <div class="modal-content overflow-hidden rounded-2xl border border-white/10 bg-[#121212] shadow-2xl relative">
+            
+            <!-- Background Decoration -->
+            <div class="absolute top-0 right-0 -z-10 w-32 h-32 bg-[#edbc1d]/10 blur-[50px] rounded-full pointer-events-none"></div>
+            
+            <div class="modal-header border-b border-white/5 px-6 py-5 flex flex-col items-center justify-center relative">
+                <h5 class="modal-title font-display text-2xl font-bold text-white tracking-tight" id="ratingModalLabel">
+                    Rate Your <span class="text-[#edbc1d] italic">Experience</span>
+                </h5>
+                <p class="text-xs text-white/40 uppercase tracking-[0.2em] font-bold mt-1">We value your feedback</p>
+                <button type="button" class="absolute top-4 right-4 size-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 text-white/50 hover:text-white transition-all border-0 focus:outline-none" data-bs-dismiss="modal" aria-label="Close">
+                    <span class="material-symbols-outlined text-sm">close</span>
+                </button>
             </div>
-            <div class="modal-body text-center px-4 py-4">
+            
+            <div class="modal-body px-6 py-6">
                 <!-- Star Rating -->
-                <div class="rating-stars mb-4" id="starRating">
-                    <i class="fas fa-star star" data-rating="1"></i>
-                    <i class="fas fa-star star" data-rating="2"></i>
-                    <i class="fas fa-star star" data-rating="3"></i>
-                    <i class="fas fa-star star" data-rating="4"></i>
-                    <i class="fas fa-star star" data-rating="5"></i>
+                <div class="flex flex-col items-center gap-2 mb-6">
+                    <div class="rating-stars flex gap-2 p-3 rounded-full bg-white/5 border border-white/5" id="starRating">
+                        <span class="material-symbols-outlined star text-3xl cursor-pointer text-white/20 transition-all hover:scale-110" data-rating="1">star</span>
+                        <span class="material-symbols-outlined star text-3xl cursor-pointer text-white/20 transition-all hover:scale-110" data-rating="2">star</span>
+                        <span class="material-symbols-outlined star text-3xl cursor-pointer text-white/20 transition-all hover:scale-110" data-rating="3">star</span>
+                        <span class="material-symbols-outlined star text-3xl cursor-pointer text-white/20 transition-all hover:scale-110" data-rating="4">star</span>
+                        <span class="material-symbols-outlined star text-3xl cursor-pointer text-white/20 transition-all hover:scale-110" data-rating="5">star</span>
+                    </div>
+                    <p class="text-sm text-white/50 h-5" id="ratingLabel">Select a rating</p>
                 </div>
 
                 <!-- Feedback Textarea -->
-                <div class="mb-3 text-start">
-                    <label for="feedbackText" class="form-label" style="color: #bbb;">Please share your feedback</label>
-                    <textarea class="form-control" id="feedbackText" rows="4" placeholder="Tell us about your trip..." maxlength="500" 
-                        style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(197, 160, 89, 0.3); color: #fff; resize: none;"></textarea>
-                    <div class="text-end mt-1">
-                        <small class="text-muted" style="color: #888 !important;"><span id="charCount" style="color: #c5a059;">0</span>/500</small>
+                <div class="space-y-2 group">
+                    <label for="feedbackText" class="text-xs font-bold text-white/40 uppercase tracking-wider pl-1">Feedback</label>
+                    <div class="relative">
+                        <textarea class="w-full bg-[#050505] border border-white/10 rounded-xl p-4 text-white placeholder:text-white/20 focus:border-[#edbc1d] focus:ring-1 focus:ring-[#edbc1d] outline-none transition-all resize-none text-sm leading-relaxed" 
+                            id="feedbackText" rows="4" placeholder="How was your trip? Tell us what you liked or what we can improve..." maxlength="500"></textarea>
+                        <div class="absolute bottom-3 right-3 text-[10px] font-mono text-white/30">
+                            <span id="charCount" class="text-[#edbc1d]">0</span>/500
+                        </div>
                     </div>
                 </div>
 
@@ -30,13 +47,13 @@
                 <input type="hidden" id="ratingBookingId" value="" />
                 <input type="hidden" id="ratingEmployeeId" value="" />
             </div>
-            <div class="modal-footer border-0 justify-content-center pb-4">
-                <button type="button" class="btn btn-outline-light px-4" data-bs-dismiss="modal" style="border-radius: 20px;">
-                    Close
+            
+            <div class="modal-footer border-t border-white/5 px-6 py-5 flex justify-end gap-3 bg-white/[0.02]">
+                <button type="button" class="px-5 py-2.5 rounded-lg text-white/60 hover:text-white hover:bg-white/5 text-sm font-bold transition-all border-0" data-bs-dismiss="modal">
+                    Cancel
                 </button>
-                <button type="button" class="btn px-4" id="sendRatingBtn" 
-                    style="background: #c5a059; color: #000; font-weight: bold; border-radius: 20px; border: none; box-shadow: 0 4px 15px rgba(197, 160, 89, 0.4);">
-                    Submit Rating
+                <button type="button" id="sendRatingBtn" class="px-8 py-2.5 rounded-lg bg-[#edbc1d] hover:bg-[#edbc1d]/90 text-black font-extrabold text-sm transition-all shadow-[0_4px_15px_rgba(237,188,29,0.2)] hover:shadow-[0_4px_20px_rgba(237,188,29,0.4)] hover:-translate-y-0.5 border-0">
+                    Submit Review
                 </button>
             </div>
         </div>
@@ -46,60 +63,49 @@
 <!-- Success Message Modal -->
 <div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-sm">
-        <div class="modal-content" style="background: rgba(30, 30, 30, 0.95); border: 1px solid #c5a059; color: #fff;">
-            <div class="modal-body text-center py-4">
-                <div class="mb-3">
-                    <div style="width: 60px; height: 60px; border-radius: 50%; background: rgba(197, 160, 89, 0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto;">
-                        <i class="fas fa-check" style="font-size: 30px; color: #c5a059;"></i>
-                    </div>
+        <div class="modal-content overflow-hidden rounded-2xl border border-white/10 bg-[#121212] shadow-2xl relative text-center">
+            <div class="modal-body p-8 flex flex-col items-center gap-4">
+                <div class="size-16 rounded-full bg-[#edbc1d]/10 flex items-center justify-center border border-[#edbc1d]/20 mb-2">
+                    <span class="material-symbols-outlined text-3xl text-[#edbc1d]">check</span>
                 </div>
-                <h5 style="color: #c5a059;">Thank You!</h5>
-                <p class="mb-0 text-muted">Your feedback has been submitted.</p>
-                <button type="button" class="btn mt-3 btn-sm" data-bs-dismiss="modal" style="background: transparent; border: 1px solid #c5a059; color: #c5a059; width: 100%;">Close</button>
+                <div>
+                    <h5 class="text-xl font-bold text-white mb-1">Thank You!</h5>
+                    <p class="text-sm text-white/50">Your feedback preserves our quality.</p>
+                </div>
+                <button type="button" class="w-full py-2 rounded-lg border border-white/10 text-xs font-bold text-white/60 hover:text-white hover:border-white/30 transition-all uppercase tracking-wider" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
 </div>
 
 <style>
-    .rating-stars {
-        font-size: 40px;
-        cursor: pointer;
-        display: inline-block;
-        padding: 10px 20px;
-        background: rgba(255, 255, 255, 0.03);
-        border-radius: 50px;
-        border: 1px solid rgba(255, 255, 255, 0.05);
+    /* Styling specifically for the Material Symbols in this context */
+    .star.filled {
+        color: #FFD700; /* Brighter real gold */
+        font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 48;
+        filter: drop-shadow(0 0 8px rgba(255, 217, 0, 0.88));
     }
-
-    .rating-stars .star {
-        color: #444;
-        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        margin: 0 8px;
-        text-shadow: 0 2px 5px rgba(0,0,0,0.5);
-    }
-
-    .rating-stars .star:hover,
-    .rating-stars .star.active {
-        color: #c5a059;
-        transform: scale(1.2);
-        text-shadow: 0 0 15px rgba(197, 160, 89, 0.6);
-    }
-
-    .rating-stars .star.filled {
-        color: #c5a059;
+    .star.active {
+        color: #FFD700;
+        font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 48;
+        transform: scale(1.15);
+        filter: drop-shadow(0 0 12px rgba(255, 215, 0, 0.8));
     }
     
-    #feedbackText:focus {
-        background: rgba(255, 255, 255, 0.08) !important;
-        border-color: #c5a059 !important;
-        box-shadow: 0 0 0 0.2rem rgba(197, 160, 89, 0.25);
-        color: #fff;
+    /* Ensure modal backdrop is dark enough */
+    .modal-backdrop.show {
+        opacity: 0.8;
+        background-color: #000;
+        backdrop-filter: blur(4px);
     }
 </style>
 
 <script>
+    // Ensure font variation settings are applied correctly
+    // (Existing JS logic preserved but updated for new class names/structure if needed)
+    
     let selectedRating = 0;
+    const ratingLabels = ["Select a rating", "Poor", "Fair", "Good", "Very Good", "Excellent"];
 
     function showRatingPopup(bookingId) {
         document.getElementById('ratingBookingId').value = bookingId || '';
@@ -113,6 +119,9 @@
         selectedRating = 0;
         document.getElementById('feedbackText').value = '';
         document.getElementById('charCount').textContent = '0';
+        document.getElementById('ratingLabel').textContent = ratingLabels[0];
+        document.getElementById('ratingLabel').className = "text-sm text-white/50 h-5";
+        
         document.querySelectorAll('.star').forEach(star => {
             star.classList.remove('filled', 'active');
         });
@@ -120,9 +129,9 @@
 
     // Star rating functionality
     document.addEventListener('DOMContentLoaded', function() {
-        // Only attach if elements exist (in case partial is loaded dynamically)
         const stars = document.querySelectorAll('.star');
         const feedbackText = document.getElementById('feedbackText');
+        const ratingLabel = document.getElementById('ratingLabel');
         
         if(stars.length > 0) {
             // Star click event
@@ -157,21 +166,27 @@
             // Send button
             sendBtn.addEventListener('click', async function() {
                 if (selectedRating === 0) {
-                    alert('Please select a star rating');
+                    // Simple shake animation for error
+                    const starContainer = document.getElementById('starRating');
+                    starContainer.classList.add('animate-pulse', 'border-red-500/50');
+                    setTimeout(() => starContainer.classList.remove('animate-pulse', 'border-red-500/50'), 500);
                     return;
                 }
 
                 const feedback = document.getElementById('feedbackText').value.trim();
                 const bookingIdValue = document.getElementById('ratingBookingId').value;
                 
-                // Prepare data to send to API
+                // Prepare data
                 const ratingData = {
                     bookingId: parseInt(bookingIdValue),
                     stars: parseInt(selectedRating),
                     feedback: feedback || ""
                 };
 
-                // console.log('Sending rating data:', ratingData); 
+                // Change button state
+                const originalBtnText = sendBtn.innerHTML;
+                sendBtn.innerHTML = '<span class="material-symbols-outlined animate-spin text-sm">progress_activity</span>';
+                sendBtn.disabled = true;
 
                 try {
                     const response = await fetch('/api/Ratings', {
@@ -192,10 +207,12 @@
                         const successModal = new bootstrap.Modal(document.getElementById('successModal'));
                         successModal.show();
 
-                        // Auto close success modal after 2 seconds
+                        // Auto close success modal
                         setTimeout(() => {
                             successModal.hide();
-                        }, 2000);
+                            // Optional: Reload page or update UI row
+                            // location.reload(); 
+                        }, 2500);
                     } else {
                         const errorText = await response.text();
                         alert('Failed to submit rating: ' + errorText);
@@ -203,6 +220,9 @@
                 } catch (error) {
                     console.error('Error:', error);
                     alert('An error occurred. Please try again.');
+                } finally {
+                    sendBtn.innerHTML = originalBtnText;
+                    sendBtn.disabled = false;
                 }
             });
         }
@@ -210,11 +230,24 @@
 
     function updateStars(rating, isHover = false) {
         const stars = document.querySelectorAll('.star');
+        const ratingLabel = document.getElementById('ratingLabel');
+        
         stars.forEach((star, index) => {
             star.classList.remove('filled', 'active');
             if (index < rating) {
                 star.classList.add(isHover ? 'active' : 'filled');
             }
         });
+
+        if (isHover || rating > 0) {
+            if (rating > 0 && rating <= 5) {
+                ratingLabel.textContent = ratingLabels[rating];
+                ratingLabel.className = "text-sm h-5 font-bold transition-colors " + 
+                    (rating >= 4 ? "text-[#edbc1d]" : (rating >= 3 ? "text-white" : "text-red-400"));
+            }
+        } else if (!isHover && selectedRating === 0) {
+            ratingLabel.textContent = ratingLabels[0];
+            ratingLabel.className = "text-sm text-white/50 h-5";
+        }
     }
 </script>
