@@ -1,258 +1,607 @@
 ﻿@{
-    ViewData["Title"] = "Manage Cars";
-    Layout = null;
+    ViewData["Title"] = "Vehicle Fleet";
+    Layout = "_Layout";
+    ViewData["BodyClass"] = "bg-background-dark";
 }
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - CarRental</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/cars.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
-</head>
-<body>
-    @await Html.PartialAsync("_PopupNotifications")
-    <div class="container car-container">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <a href="../ControlPanel" class="btn btn-outline-warning rounded-circle d-inline-flex align-items-center justify-content-center" style="width:40px;height:40px;" title="Back to Control Panel">
-                <i class="fas fa-arrow-left"></i>
-            </a>
-            <h2 class="flex-grow-1 text-center m-0">Manage Cars</h2>
-            <div style="width:40px;"></div>
+
+<!-- Tailwind & Custom Styles -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+    tailwind.config = {
+        darkMode: "class",
+        theme: {
+            extend: {
+                colors: {
+                    "gold": "#d4af37",
+                },
+                fontFamily: {
+                    "display": ["Manrope", "sans-serif"],
+                }
+            }
+        }
+    }
+</script>
+
+<div class="px-4 md:px-10 py-8 max-w-[1440px] mx-auto w-full text-white font-display">
+    
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
+        <div>
+            <h1 class="text-3xl md:text-4xl font-black tracking-tight flex items-center gap-3">
+                <span class="material-symbols-outlined text-gold text-4xl">garage_home</span>
+                Vehicle Fleet
+            </h1>
+            <p class="text-gray-400 mt-2">Manage your inventory, track availability, and update vehicle details.</p>
         </div>
-        <form id="filterForm" class="row g-2 mb-4 align-items-end">
-            <div class="col">
-                <label class="form-label">Name</label>
-                <input type="text" name="name" class="form-control" placeholder="Model name" />
+        <button id="addCarBtn" class="flex items-center gap-2 bg-gold hover:bg-[#b5952f] text-black px-6 py-3 rounded-xl font-bold shadow-lg shadow-gold/10 transition-all hover:scale-105 active:scale-95">
+            <span class="material-symbols-outlined text-[20px]">add_circle</span>
+            <span>Add Vehicle</span>
+        </button>
+    </div>
+
+    <!-- Stats Grid (Updated to match Ratings logic/design) -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 px-4 md:px-0">
+        <!-- Total Fleet -->
+        <div class="flex flex-col gap-3 rounded-xl p-8 bg-[#121212] border-t-2 border-gold shadow-2xl relative overflow-hidden group">
+            <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                 <span class="material-symbols-outlined text-6xl text-gold">directions_car</span>
             </div>
-            <div class="col">
-                <label class="form-label">Category</label>
-                <select name="categoryId" id="categoryFilter" class="form-select">
-                    <option value="">All Categories</option>
-                </select>
+            <p class="text-gray-400 text-sm font-semibold uppercase tracking-wider z-10">Total Fleet</p>
+            <div class="flex items-center gap-3 z-10">
+                <p class="text-white tracking-tight text-4xl font-bold" id="statTotal">-</p>
             </div>
-            <div class="col">
-                <label class="form-label">Availability</label>
-                <select name="available" class="form-select">
-                    <option value="">Any</option>
-                    <option value="true">Available</option>
-                    <option value="false">Not Available</option>
-                </select>
+             <div class="flex items-center gap-2 z-10">
+                <span class="text-[#0bda1d] text-sm font-bold flex items-center">
+                    <span class="material-symbols-outlined text-sm mr-1">trending_up</span>+0%
+                </span>
+                <span class="text-gray-500 text-xs tracking-wide">new additions</span>
             </div>
-            <div class="col-auto">
-                <button type="submit" class="btn btn-secondary">Filter</button>
+        </div>
+
+        <!-- Active -->
+        <div class="flex flex-col gap-3 rounded-xl p-8 bg-[#121212] border-t-2 border-gold shadow-2xl relative overflow-hidden group">
+             <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                 <span class="material-symbols-outlined text-6xl text-green-500">check_circle</span>
             </div>
-            <div class="col-auto ms-auto">
-                <button type="button" id="addCar" class="btn btn-primary"><i class="fas fa-plus me-1"></i>Add Car</button>
+            <p class="text-gray-400 text-sm font-semibold uppercase tracking-wider z-10">Active Fleet</p>
+            <div class="flex items-center gap-3 z-10">
+                <p class="text-white tracking-tight text-4xl font-bold" id="statAvailable">-</p>
             </div>
+            <div class="flex items-center gap-2 z-10">
+                 <span class="text-green-500 text-xs font-bold tracking-wide flex items-center gap-1">
+                    <span class="material-symbols-outlined text-sm">verified</span> Operational
+                 </span>
+            </div>
+        </div>
+
+        <!-- Inactive -->
+        <div class="flex flex-col gap-3 rounded-xl p-8 bg-[#121212] border-t-2 border-gold shadow-2xl relative overflow-hidden group">
+             <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                 <span class="material-symbols-outlined text-6xl text-red-500">do_not_disturb_on</span>
+            </div>
+            <p class="text-gray-400 text-sm font-semibold uppercase tracking-wider z-10">Inactive / Maintenance</p>
+            <div class="flex items-center gap-3 z-10">
+                <p class="text-white tracking-tight text-4xl font-bold" id="statRented">-</p>
+            </div>
+             <div class="flex items-center gap-2 z-10">
+               <span class="text-red-500 text-xs font-bold tracking-wide flex items-center gap-1">
+                    <span class="material-symbols-outlined text-sm">warning</span> Out of service
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters & Toolbar -->
+    <div class="bg-[#16181a] border border-[#262626] rounded-2xl p-4 mb-6 shadow-xl">
+        <form id="filterForm" class="flex flex-col lg:flex-row gap-4 items-end">
+            <!-- Search -->
+            <label class="flex flex-col w-full lg:flex-[2]">
+                <span class="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Search</span>
+                <div class="relative">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-gray-500">search</span>
+                    <input type="text" name="name" id="searchName"
+                           class="w-full bg-[#0a0a0a] border border-[#262626] rounded-xl py-3 pl-12 pr-4 text-white placeholder-gray-600 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all" 
+                           placeholder="Search Model, Plate..." />
+                </div>
+            </label>
+
+            <!-- Category Filter -->
+            <label class="flex flex-col w-full lg:flex-1">
+                <span class="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Category</span>
+                <div class="relative">
+                    <select name="categoryId" id="categoryFilter" 
+                            class="w-full bg-[#0a0a0a] bg-none border border-[#262626] rounded-xl py-3 pl-4 pr-10 text-white placeholder-gray-600 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold appearance-none cursor-pointer">
+                        <option value="">All Categories</option>
+                    </select>
+                    <span class="absolute right-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-gray-500 pointer-events-none">expand_more</span>
+                </div>
+            </label>
+
+             <!-- Availability Filter -->
+            <label class="flex flex-col w-full lg:flex-1">
+                <span class="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Status</span>
+                <div class="relative">
+                     <select name="available" id="availableFilter"
+                            class="w-full bg-[#0a0a0a] bg-none border border-[#262626] rounded-xl py-3 pl-4 pr-10 text-white placeholder-gray-600 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold appearance-none cursor-pointer">
+                        <option value="">Any Status</option>
+                        <option value="true">Active</option>
+                        <option value="false">Inactive</option>
+                    </select>
+                    <span class="absolute right-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-gray-500 pointer-events-none">expand_more</span>
+                </div>
+            </label>
+
+            <!-- Filter Button -->
+            <button type="submit" class="w-full lg:w-auto h-[50px] bg-white/5 hover:bg-white/10 text-white border border-[#262626] px-6 rounded-xl font-bold transition-colors flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined">filter_list</span>
+                Filter
+            </button>
         </form>
-        <div class="mb-3">
-            <input type="text" id="tableSearch" class="form-control" placeholder="Search table..." />
-        </div>
-        <div class="table-responsive">
-            <table id="carTable" class="table table-striped table-dark align-middle">
+    </div>
+
+    <!-- Table -->
+    <div class="bg-[#16181a] border border-[#262626] rounded-2xl overflow-hidden shadow-2xl">
+        <div class="overflow-x-auto min-h-[400px]">
+            <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr>
-                        <th>Image</th>
-                        <th>Plate #</th>
-                        <th>Model</th>
-                        <th>Year</th>
-                        <th>Color</th>
-                        <th>Price/Day</th>
-                        <th>Available</th>
-                        <th>Category</th>
-                        <th></th>
+                    <tr class="bg-white/5 border-b border-[#262626] text-gray-400 text-xs uppercase tracking-wider font-bold">
+                        <th class="px-6 py-4 cursor-pointer hover:text-white transition-colors" onclick="setSort('ModelName')">
+                            <div class="flex items-center gap-1">Vehicle <span class="material-symbols-outlined text-[14px]" id="sort-ModelName">unfold_more</span></div>
+                        </th>
+                        <th class="px-6 py-4 cursor-pointer hover:text-white transition-colors" onclick="setSort('PlateNumber')">
+                            <div class="flex items-center gap-1">Plate # <span class="material-symbols-outlined text-[14px]" id="sort-PlateNumber">unfold_more</span></div>
+                        </th>
+                        <th class="px-6 py-4">Color</th>
+                        <th class="px-6 py-4 cursor-pointer hover:text-white transition-colors" onclick="setSort('Category')">
+                             <div class="flex items-center gap-1">Category <span class="material-symbols-outlined text-[14px]" id="sort-Category">unfold_more</span></div>
+                        </th>
+                        <th class="px-6 py-4 cursor-pointer hover:text-white transition-colors" onclick="setSort('Year')">
+                             <div class="flex items-center gap-1">Year <span class="material-symbols-outlined text-[14px]" id="sort-Year">unfold_more</span></div>
+                        </th>
+                        <th class="px-6 py-4 text-right cursor-pointer hover:text-white transition-colors" onclick="setSort('Price')">
+                             <div class="flex items-center justify-end gap-1">Price / Day <span class="material-symbols-outlined text-[14px]" id="sort-Price">unfold_more</span></div>
+                        </th>
+                        <th class="px-6 py-4 text-center cursor-pointer hover:text-white transition-colors" onclick="setSort('Status')">
+                             <div class="flex items-center justify-center gap-1">Status <span class="material-symbols-outlined text-[14px]" id="sort-Status">unfold_more</span></div>
+                        </th>
+                        <th class="px-6 py-4 text-right">Actions</th>
                     </tr>
                 </thead>
-                <tbody id="carRows">
+                <tbody id="carRows" class="divide-y divide-[#262626]">
+                    <!-- Rows injected via JS -->
                 </tbody>
             </table>
         </div>
-        <nav></nav>
+        
+        <!-- Pagination controls -->
+        <div id="paginationControls" class="border-t border-[#262626] p-4 flex items-center justify-between bg-[#0a0a0a]">
+            <div class="text-sm text-gray-500" id="showingText">Showing 0 of 0</div>
+            <div class="flex items-center gap-2">
+                <button id="prevBtn" onclick="changePage(-1)" class="p-2 rounded-lg hover:bg-white/10 text-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                    <span class="material-symbols-outlined">chevron_left</span>
+                </button>
+                <div id="pageNumbers" class="flex items-center gap-1">
+                    <!-- Page numbers injected -->
+                </div>
+                <button id="nextBtn" onclick="changePage(1)" class="p-2 rounded-lg hover:bg-white/10 text-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                    <span class="material-symbols-outlined">chevron_right</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Loading / Empty State -->
+        <div id="loadingState" class="hidden p-12 text-center text-gray-500">
+            <span class="material-symbols-outlined text-4xl animate-spin mb-2">progress_activity</span>
+            <p>Loading fleet data...</p>
+        </div>
+        <div id="emptyState" class="hidden p-12 text-center text-gray-500">
+            <span class="material-symbols-outlined text-4xl mb-2">no_crash</span>
+            <p>No vehicles found.</p>
+        </div>
     </div>
-    <div id="carModalPlaceholder"></div>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    <script>
-        let categories = [];
-        async function loadCategories() {
+
+</div>
+
+<!-- Global Modal Placeholder -->
+<div id="carModalPlaceholder"></div>
+
+<script>
+    // State
+    let categories = [];
+    let currentPage = 1;
+    let pageSize = 10;
+    let totalPages = 1;
+    let sortColumn = 'ModelName';
+    let sortDirection = 'asc';
+    
+    // Init
+    document.addEventListener('DOMContentLoaded', () => {
+        loadCategories();
+        loadCars();
+
+        document.getElementById('filterForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            currentPage = 1; // Reset to page 1 on filter
+            loadCars();
+        });
+
+        document.getElementById('addCarBtn').addEventListener('click', () => {
+             // Reset form state logic if needed
+             loadModal('/Car/Add');
+        });
+        
+        // Debounce search
+        let timeout = null;
+        document.getElementById('searchName').addEventListener('input', (e) => {
+           clearTimeout(timeout);
+           timeout = setTimeout(() => {
+               currentPage = 1;
+               loadCars();
+           }, 400);
+        });
+        
+        // Filter changes
+        document.getElementById('categoryFilter').addEventListener('change', () => { currentPage = 1; loadCars(); });
+        document.getElementById('availableFilter').addEventListener('change', () => { currentPage = 1; loadCars(); });
+    });
+
+    async function loadCategories() {
+        try {
             const res = await fetch('/api/Category');
-            categories = await res.json();
-            const select = document.getElementById('categoryFilter');
-            categories.forEach(c => {
-                const opt = document.createElement('option');
-                opt.value = c.categoryId;
-                opt.textContent = c.name;
-                select.appendChild(opt);
-            });
+            if(res.ok) {
+                categories = await res.json();
+                const select = document.getElementById('categoryFilter');
+                select.innerHTML = '<option value="">All Categories</option>';
+                categories.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.categoryId;
+                    opt.textContent = c.name;
+                    select.appendChild(opt);
+                });
+                
+                // document.getElementById('statCategories').textContent = categories.length; // Stats handled by API now if we wanted, or keep simplistic
+            }
+        } catch(e) { console.error(e); }
+    }
+    
+    function setSort(col) {
+        if(sortColumn === col) {
+            sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            sortColumn = col;
+            sortDirection = 'asc';
         }
+        
+        // Update icons
+        document.querySelectorAll('[id^="sort-"]').forEach(el => el.textContent = 'unfold_more');
+        const active = document.getElementById('sort-' + col);
+        if(active) active.textContent = sortDirection === 'asc' ? 'keyboard_arrow_up' : 'keyboard_arrow_down';
+        
+        loadCars();
+    }
+    
+    function changePage(delta) {
+        const novo = currentPage + delta;
+        if(novo > 0 && novo <= totalPages) {
+            currentPage = novo;
+            loadCars();
+        }
+    }
+    
+    function gotoPage(p) {
+        currentPage = p;
+        loadCars();
+    }
 
-        async function loadCars() {
-            const params = new URLSearchParams(new FormData(document.getElementById('filterForm')));
+    async function loadCars() {
+        const tbody = document.getElementById('carRows');
+        const loading = document.getElementById('loadingState');
+        const empty = document.getElementById('emptyState');
+        const contentDiv = tbody.closest('.overflow-x-auto');
+        const pagination = document.getElementById('paginationControls');
+        
+        // Show lightweight loading opacity instead of clearing everything if possible for smoother feel
+        tbody.style.opacity = '0.5';
+        
+        try {
+            const formData = new FormData(document.getElementById('filterForm'));
+            const params = new URLSearchParams();
+            for(let [k,v] of formData) {
+                if(v) params.append(k,v);
+            }
+            
+            // Add Paging & Sorting
+            params.append('page', currentPage);
+            params.append('pageSize', pageSize);
+            params.append('sortColumn', sortColumn);
+            params.append('sortDirection', sortDirection);
+
             const res = await fetch('/api/Car?' + params.toString());
+            if(!res.ok) throw new Error('Failed to load cars');
+            
             const data = await res.json();
-            const tbody = document.getElementById('carRows');
+            // Data is PagedResultDto: { items: [], totalCount: 0, page: 1, pageSize: 10, totalPages: 0 }
+            
+            tbody.style.opacity = '1';
             tbody.innerHTML = '';
-            data.forEach(car => {
-                const row = document.createElement('tr');
-                // Use a default placeholder if image fails or while loading? 
-                // We'll set src to the API endpoint.
-                const imgCell = `<img class="car-thumb" width="80" height="80" src="/api/Car/Image/${car.carId}" onerror="this.style.display='none'"/>`;
-                row.innerHTML = `
-                    <td>${imgCell}</td>
-                    <td>${car.plateNumber}</td>
-                    <td>${car.modelName}</td>
-                    <td>${car.modelYear}</td>
-                    <td>${car.color || ''}</td>
-                    <td>${car.pricePerDay ?? ''}</td>
-                    <td class="text-center">${car.isAvailable ? '<i class="fas fa-check text-success"></i>' : '<i class="fas fa-times text-danger"></i>'}</td>
-                    <td>${car.categoryName || ''}</td>
-                    <td><a href="#" class="text-warning me-2 edit-car" data-id="${car.carId}"><i class="fas fa-pencil-alt"></i></a>
-                        <a href="#" class="text-danger delete-car" data-id="${car.carId}"><i class="fas fa-trash"></i></a></td>`;
-                tbody.appendChild(row);
-            });
-        }
+            
+            if(data.items.length === 0) {
+                empty.classList.remove('hidden');
+                loading.classList.add('hidden');
+                pagination.classList.add('hidden');
+                
+                // Clear stats?
+                updateStats(data.totalCount, '-', '-');
+                return;
+            }
+            
+            empty.classList.add('hidden');
+            loading.classList.add('hidden');
+            pagination.classList.remove('hidden');
 
-        async function loadModal(url) {
+            // Stats Update
+            // NOTE: The API returns PagedResult, so we only know total count. 
+            // Available/Rented counts can't be derived from a single paged page correctly.
+            // Ideally we need a separate Stats endpoint or return stats in PagedResult.
+            // For now, let's just show Total. Or if the user wants accurate stats, we should fetch them separately.
+            // Converting implementation to just show Total for now, and maybe rough estimate or fetch separate stats?
+            // User requested "make design of statistics boxes as that in ratings".
+            // Since we don't have a stats endpoint for Car, I will calculate on the *current page* which is wrong, OR separate fetch?
+            // I'll leave simple logic but beware it's only current page. 
+            // Better: I will create a small side-fetch for ALL cars just for stats (lightweight) or just accept it's page-bound?
+            // "browseall" endpoint exists! I can use it for stats once on load.
+            if(currentPage === 1 && !formData.get('name')) {
+                 fetchStats(); 
+            }
+
+            // Render Table
+            data.items.forEach(car => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-white/5 transition-colors group align-middle';
+                
+                const imgSrc = `/api/Car/Image/${car.carId}`;
+                const statusBadge = car.isAvailable 
+                    ? `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-500/10 text-green-500 border border-green-500/20">Active</span>`
+                    : `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-500/10 text-red-500 border border-red-500/20">Inactive</span>`;
+                
+                tr.innerHTML = `
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-4">
+                            <div class="h-12 w-16 rounded-lg bg-[#0a0a0a] border border-[#262626] overflow-hidden flex items-center justify-center relative shadow-md">
+                                <img src="${imgSrc}" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/100x60?text=No+Image';this.style.opacity='0.5'" />
+                            </div>
+                            <div class="font-bold text-white text-base">${car.modelName}</div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 font-mono text-gray-400 text-sm whitespace-nowrap">${car.plateNumber}</td>
+                    <td class="px-6 py-4 font-mono text-gray-400 text-sm">
+                        <span class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full border border-white/20" style="background-color: ${car.color || '#333'}"></span>
+                            ${car.color || 'N/A'}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-300">${car.categoryName || '-'}</td>
+                    <td class="px-6 py-4 text-sm text-gray-400">${car.modelYear}</td>
+                    <td class="px-6 py-4 text-right font-bold text-gold">$${car.pricePerDay || 0}</td>
+                    <td class="px-6 py-4 text-center">${statusBadge}</td>
+                    <td class="px-6 py-4 text-right">
+                        <div class="flex items-center justify-end gap-2">
+                             <button class="edit-btn p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors" data-id="${car.carId}" title="Edit">
+                                <span class="material-symbols-outlined text-[20px]">edit</span>
+                            </button>
+                            <button class="delete-btn p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors" data-id="${car.carId}" title="Delete">
+                                <span class="material-symbols-outlined text-[20px]">delete</span>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                
+                tr.querySelector('.edit-btn').addEventListener('click', () => loadModal('/Car/Edit/' + car.carId));
+                tr.querySelector('.delete-btn').addEventListener('click', () => loadModal('/Car/Delete/' + car.carId));
+                
+                tbody.appendChild(tr);
+            });
+            
+            // Pagination UI
+            totalPages = data.totalPages;
+            document.getElementById('showingText').innerText = `Showing ${(currentPage-1)*pageSize + 1} - ${Math.min(currentPage*pageSize, data.totalCount)} of ${data.totalCount}`;
+            document.getElementById('prevBtn').disabled = currentPage <= 1;
+            document.getElementById('nextBtn').disabled = currentPage >= totalPages;
+            
+            renderPageNumbers(totalPages, currentPage);
+
+        } catch(e) {
+            console.error(e);
+            loading.innerHTML = '<span class="text-red-500">Failed to load data</span>';
+            tbody.style.opacity = '1';
+        }
+    }
+    
+    // Separate fetch for accurate stats across ALL pages
+    async function fetchStats() {
+       try {
+           const res = await fetch('/api/Car/browseall');
+           if(res.ok) {
+               const all = await res.json();
+               const total = all.length;
+               const active = all.filter(c => c.isAvailable).length; // Available = Active
+               const inactive = total - active; // Inactive
+               updateStats(total, active, inactive);
+           }
+       } catch(e) {}
+    }
+
+    function updateStats(total, available, rented) {
+        document.getElementById('statTotal').textContent = total;
+        document.getElementById('statAvailable').textContent = available;
+        document.getElementById('statRented').textContent = rented;
+    }
+    
+    function renderPageNumbers(total, current) {
+        const container = document.getElementById('pageNumbers');
+        container.innerHTML = '';
+        
+        // Simple logic: show first 5 or surrounding?
+        // Let's show: 1 ... current-1 current current+1 ... total
+        
+        let pages = [];
+        if(total <= 7) {
+            pages = Array.from({length: total}, (_, i) => i + 1);
+        } else {
+            if(current <= 4) {
+                pages = [1,2,3,4,5, '...', total];
+            } else if(current >= total - 3) {
+                pages = [1, '...', total-4, total-3, total-2, total-1, total];
+            } else {
+                pages = [1, '...', current-1, current, current+1, '...', total];
+            }
+        }
+        
+        pages.forEach(p => {
+             if(p === '...') {
+                 const span = document.createElement('span');
+                 span.className = 'text-gray-600 px-2';
+                 span.textContent = '...';
+                 container.appendChild(span);
+             } else {
+                 const btn = document.createElement('button');
+                 btn.className = `w-8 h-8 rounded-lg text-xs font-bold transition-all ${p === current ? 'bg-gold text-black shadow-lg shadow-gold/20' : 'bg-[#16181a] text-gray-400 hover:text-white hover:bg-white/10'}`;
+                 btn.textContent = p;
+                 btn.onclick = () => gotoPage(p);
+                 container.appendChild(btn);
+             }
+        });
+    }
+
+    // Modal Logic 
+    async function loadModal(url) {
+        try {
             const res = await fetch(url);
+            if(!res.ok) throw new Error('Msg');
             const html = await res.text();
+            
             const placeholder = document.getElementById('carModalPlaceholder');
-            placeholder.innerHTML = html;
+            placeholder.innerHTML = html; 
 
             const modalEl = placeholder.querySelector('.modal');
-            const modal = new bootstrap.Modal(modalEl);
-            modal.show();
+            if(modalEl) {
+                const modal = new bootstrap.Modal(modalEl);
+                modal.show();
+                bindModalEvents(modalEl, modal);
+            }
+        } catch(e) { console.error(e); }
+    }
 
-            // 🚘 Add/Edit Car Form Logic
-            const form = modalEl.querySelector('#carForm');
-            const imageInput = modalEl.querySelector('#CarImage');
-            const previewImg = modalEl.querySelector('#CarImagePreview');
+    function bindModalEvents(modalEl, modalInstance) {
+        // Handle Add/Edit Form
+        const carForm = modalEl.querySelector('#carForm');
+        if(carForm) {
+            // Image Preview Logic
+            const imageInput = carForm.querySelector('input[type="file"]');
+            const previewImg = document.getElementById('CarImagePreview');
+            const placeholderInfo = document.getElementById('uploadPlaceholder');
+            const previewContainer = document.getElementById('previewContainer');
 
-            if (imageInput) {
+            if(imageInput && previewImg) {
                 imageInput.addEventListener('change', () => {
                     const file = imageInput.files[0];
-                    if (file) {
+                    if(file) {
                         const reader = new FileReader();
                         reader.onload = e => {
                             previewImg.src = e.target.result;
-                            previewImg.style.display = 'block';
+                            previewImg.classList.remove('hidden');
+                            if(placeholderInfo) placeholderInfo.classList.add('hidden');
                         };
                         reader.readAsDataURL(file);
-                    } else {
-                        previewImg.src = '';
-                        previewImg.style.display = 'none';
                     }
                 });
             }
 
-            if (form) {
-                form.addEventListener('submit', async function (e) {
-                    e.preventDefault();
+            carForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const btn = carForm.querySelector('button[type="submit"]');
+                if(btn) {
+                    btn.disabled = true; 
+                    btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-sm">progress_activity</span> Saving...';
+                }
 
-                    const data = {
-                        carId       : parseInt(form.querySelector('[name="CarId"]')?.value || '0'),
-                        plateNumber : form.querySelector('[name="PlateNumber"]')?.value || '',
-                        modelName   : form.querySelector('[name="ModelName"]')?.value || '',
-                        modelYear   : parseInt(form.querySelector('[name="ModelYear"]')?.value || '0'),
-                        color       : form.querySelector('[name="Color"]')?.value || '',
-                        pricePerDay : parseFloat(form.querySelector('[name="PricePerDay"]')?.value || '0'),
-                        categoryId  : parseInt(form.querySelector('[name="CategoryId"]')?.value || '0'),
-                        isAvailable : form.querySelector('[name="IsAvailable"]')?.checked ?? false
-                    };
+                const formData = new FormData(carForm);
+                const data = {};
+                formData.forEach((value, key) => data[key] = value);
+                
+                const payload = {
+                    carId: Number(data.CarId || 0),
+                    plateNumber: data.PlateNumber,
+                    modelName: data.ModelName,
+                    modelYear: Number(data.ModelYear || 0),
+                    color: data.Color,
+                    pricePerDay: Number(data.PricePerDay || 0),
+                    categoryId: Number(data.CategoryId || 0),
+                    isAvailable: !!carForm.querySelector('[name="IsAvailable"]')?.checked
+                };
+                
+                if(imageInput && imageInput.files.length > 0) {
+                     payload.carImage = await toBase64(imageInput.files[0]);
+                }
 
-                    if (imageInput?.files.length > 0) {
-                        data.carImage = await toBase64(imageInput.files[0]);
+                const url = payload.carId ? '/api/Car/' + payload.carId : '/api/Car';
+                const method = payload.carId ? 'PUT' : 'POST';
+
+                try {
+                    const res = await fetch(url, {
+                        method: method,
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    if(!res.ok) throw new Error(await res.text());
+                    
+                    modalInstance.hide();
+                    loadCars(); 
+                    
+                } catch(err) {
+                    alert('Error: ' + err.message);
+                } finally {
+                    if(btn) {
+                        btn.disabled = false;
+                        btn.textContent = payload.carId ? "Save Changes" : "Add Vehicle";
                     }
-
-                    const url = data.carId ? '/api/Car/' + data.carId : '/api/Car';
-                    const method = data.carId ? 'PUT' : 'POST';
-
-                    try {
-                        const response = await fetch(url, {
-                            method,
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(data)
-                        });
-
-                        if (!response.ok) {
-                            const error = await response.text();
-                            showPopup(`Error: ${error}`, 'error');
-                            return;
-                        }
-
-                        modal.hide();
-                        if (window.loadCars) loadCars();
-                    } catch (err) {
-                        showPopup('An error occurred while saving the car.', 'error');
-                        console.error(err);
-                    }
-                });
-            }
-
-            // 🗑️ Delete Car Form Logic
-            const deleteForm = modalEl.querySelector('#deleteCarForm');
-            if (deleteForm) {
-                deleteForm.addEventListener('submit', async function (e) {
-                    e.preventDefault();
-                    const id = deleteForm.querySelector('[name="carId"]')?.value;
-                    try {
-                        const response = await fetch('/api/Car/' + id, {
-                            method: 'DELETE'
-                        });
-
-                        if (!response.ok) {
-                            const error = await response.text();
-                            showPopup(`Delete failed: ${error}`, 'error');
-                            return;
-                        }
-
-                        modal.hide();
-                        if (window.loadCars) loadCars();
-                    } catch (err) {
-                        console.error(err);
-                        showPopup('An error occurred while deleting the car.', 'error');
-                    }
-                });
-            }
-        }
-
-        async function toBase64(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = () => resolve(reader.result.split(',')[1]);
-                reader.onerror = reject;
-                reader.readAsDataURL(file);
-            });
-        }
-
-
-
-        document.addEventListener('DOMContentLoaded', () => {
-            loadCategories().then(loadCars);
-            document.getElementById('filterForm').addEventListener('submit', e => { e.preventDefault(); loadCars(); });
-            document.getElementById('addCar').addEventListener('click', () => loadModal('/Car/Add'));
-            document.getElementById('carRows').addEventListener('click', e => {
-                const edit = e.target.closest('.edit-car');
-                const del = e.target.closest('.delete-car');
-                if (edit) {
-                    e.preventDefault();
-                    loadModal('/Car/Edit/' + edit.dataset.id);
-                } else if (del) {
-                    e.preventDefault();
-                    loadModal('/Car/Delete/' + del.dataset.id);
                 }
             });
-            document.getElementById('tableSearch').addEventListener('keyup', function () {
-                const value = this.value.toLowerCase();
-                document.querySelectorAll('#carTable tbody tr').forEach(tr => {
-                    tr.style.display = tr.textContent.toLowerCase().includes(value) ? '' : 'none';
-                });
+            return;
+        }
+
+        // Handle Delete Form
+        const deleteForm = modalEl.querySelector('#deleteCarForm');
+        if(deleteForm) {
+            deleteForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const btn = deleteForm.querySelector('button[type="submit"]');
+                if(btn) btn.disabled = true;
+
+                const carId = deleteForm.querySelector('[name="carId"]').value;
+
+                try {
+                    const res = await fetch('/api/Car/' + carId, { method: 'DELETE' });
+                    if(!res.ok) throw new Error(await res.text());
+
+                    modalInstance.hide();
+                    loadCars();
+                } catch (err) {
+                    alert('Error deleting car: ' + err.message);
+                    if(btn) btn.disabled = false;
+                }
             });
+        }
+    }
+
+    function toBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result.split(',')[1]);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
         });
-    </script>
-</body>
-</html>
+    }
+
+</script>

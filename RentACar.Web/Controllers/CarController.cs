@@ -84,12 +84,26 @@ namespace RentACar.Web.Controllers
 
         [HttpGet]
         [Authorize(Roles = "Admin,Employee")]
-        public async Task<ActionResult<IEnumerable<CarListDto>>> Get([FromQuery] string? name, [FromQuery] int? categoryId, [FromQuery] bool? available)
+        public async Task<ActionResult<PagedResultDto<CarListDto>>> GetFilteredCars(
+            [FromQuery] string? name, 
+            [FromQuery] int? categoryId, 
+            [FromQuery] bool? available,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10,
+            [FromQuery] string? sortColumn = "ModelName",
+            [FromQuery] string? sortDirection = "asc")
         {
-            _logger.LogInformation("📥 [Get] Querying cars - Name: {Name}, CategoryId: {CategoryId}, Available: {Available}", name, categoryId, available);
-            var cars = await _carManager.GetAllCarsForListAsync(name, categoryId, available);
-            _logger.LogInformation("📦 [Get] Retrieved {Count} cars", cars.Count());
-            return Ok(cars);
+            try
+            {
+                _logger.LogInformation("📥 [Get] Querying cars - Name: {Name}, Page: {Page}", name, page);
+                var result = await _carManager.GetCarsPagedAsync(name, categoryId, available, page, pageSize, sortColumn, sortDirection);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to load cars paged");
+                return StatusCode(500, new { message = ex.Message, stack = ex.StackTrace, inner = ex.InnerException?.Message });
+            }
         }
 
         [HttpGet("Image/{id}")]
@@ -164,24 +178,9 @@ namespace RentACar.Web.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             _logger.LogInformation("🗑️ [Delete] Request to delete car ID {Id}", id);
-            try
-            {
-                await _carManager.DeleteCarAsync(id);
-                _logger.LogInformation("✅ [Delete] Car ID {Id} deleted successfully", id);
-                return NoContent();
-            }
-            catch (DbUpdateException ex)
-            {
-                _logger.LogError(ex, "Database constraint prevented deleting car {Id}", id);
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    "Unable to delete car because related records exist. Remove the related data before deleting the car.");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Unexpected error while deleting car {Id}", id);
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    "An unexpected error occurred while deleting the car. Please try again later.");
-            }
+            await _carManager.DeleteCarAsync(id);
+            _logger.LogInformation("✅ [Delete] Car processed (Deleted or Deactivated)", id);
+            return NoContent();
         }
 
         private async Task PopulateCategories()

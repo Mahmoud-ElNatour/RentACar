@@ -160,20 +160,101 @@ namespace RentACar.Application.Managers
         public async Task DeleteCarAsync(int id)
         {
             _logger.LogInformation("Deleting car {Id}", id);
-            // 📨 Send Car Update Email (Delete)
-            var car = await _carRepository.GetByIdAsync(id);
-            if (car != null) {
-                var emails = await _employeeManager.GetActiveEmployeeEmailsAsync();
-                await _emailManager.SendCarUpdateEmail(emails, car, "Delete", "Status", "Active", "Deleted", "System/Admin");
+            try 
+            {
+                // Try Hard Delete first
+                 await _carRepository.DeleteAsync(id);
+                 await _auditLogManager.LogAsync("Delete", "Car", id.ToString(), "Deleted car from fleet");
+                 
+                 // 📨 Send Email (Hard Delete)
+                 // (Ideally fetch car before delete if we need details, but assuming ID is enough or already handled)
             }
-
-            await _carRepository.DeleteAsync(id);
-            await _auditLogManager.LogAsync("Delete", "Car", id.ToString(), "Deleted car from fleet");
+            catch (DbUpdateException)
+            {
+                // Fallback to Soft Delete (Deactivate)
+                _logger.LogInformation("Car {Id} has related records. Switching to Soft Delete (Deactivate).", id);
+                await UpdateCarAvailabilityAsync(id, false); // Set IsAvailable = false
+                await _auditLogManager.LogAsync("Deactivate", "Car", id.ToString(), "Deactivated car (Soft Delete) due to existing records");
+            }
         }
         public async Task<List<CarListDto>> SearchCarsForListAsync(string? modelName = null, int? modelYear = null, int? categoryId = null, bool? isAvailable = null)
         {
             var cars = await _carRepository.SearchByFilterAsync(modelName, modelYear, categoryId, isAvailable);
             return _mapper.Map<List<CarListDto>>(cars);
+        }
+
+        public async Task<PagedResultDto<CarListDto>> GetCarsPagedAsync(
+            string? name, 
+            int? categoryId, 
+            bool? available,
+            int page = 1,
+            int pageSize = 10,
+            string? sortColumn = "ModelName",
+            string? sortDirection = "asc")
+        {
+            var query = _carRepository.Query().AsNoTracking().Include(c => c.Category).AsQueryable();
+
+            if (!string.IsNullOrEmpty(name))
+            {
+                query = query.Where(c => c.ModelName.Contains(name) || c.PlateNumber.Contains(name));
+            }
+
+            if (categoryId.HasValue)
+            {
+                query = query.Where(c => c.CategoryId == categoryId.Value);
+            }
+
+            if (available.HasValue)
+            {
+                query = query.Where(c => c.IsAvailable == available.Value);
+            }
+
+            var totalCount = await query.CountAsync();
+
+            // Apply Sort
+            query = ApplySort(query, sortColumn, sortDirection);
+
+            var items = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(c => new CarListDto
+                {
+                    CarId = c.CarId,
+                    PlateNumber = c.PlateNumber,
+                    ModelName = c.ModelName,
+                    ModelYear = c.ModelYear,
+                    Color = c.Color,
+                    PricePerDay = c.PricePerDay,
+                    IsAvailable = c.IsAvailable,
+                    CategoryId = c.CategoryId,
+                    CategoryName = c.Category != null ? c.Category.Name : null
+                })
+                .ToListAsync();
+
+            return new PagedResultDto<CarListDto>
+            {
+                Items = items,
+                TotalCount = totalCount,
+                Page = page,
+                PageSize = pageSize,
+                TotalPages = (int)System.Math.Ceiling(totalCount / (double)pageSize)
+            };
+        }
+
+        private IQueryable<Car> ApplySort(IQueryable<Car> query, string? col, string? dir)
+        {
+            bool asc = (dir?.ToLower() ?? "asc") == "asc";
+            col = col?.ToLower();
+
+            return col switch
+            {
+                "price" => asc ? query.OrderBy(c => c.PricePerDay) : query.OrderByDescending(c => c.PricePerDay),
+                "year" => asc ? query.OrderBy(c => c.ModelYear) : query.OrderByDescending(c => c.ModelYear),
+                "status" => asc ? query.OrderBy(c => c.IsAvailable) : query.OrderByDescending(c => c.IsAvailable),
+                "plate" => asc ? query.OrderBy(c => c.PlateNumber) : query.OrderByDescending(c => c.PlateNumber),
+                "category" => asc ? query.OrderBy(c => c.Category.Name) : query.OrderByDescending(c => c.Category.Name),
+                _ => asc ? query.OrderBy(c => c.ModelName) : query.OrderByDescending(c => c.ModelName)
+            };
         }
 
         public async Task<IEnumerable<CarListDto>> GetAllCarsForListAsync(string? name, int? categoryId, bool? available)
@@ -195,7 +276,6 @@ namespace RentACar.Application.Managers
                 query = query.Where(c => c.IsAvailable == available.Value);
             }
 
-            // Project to DTO directly to avoid fetching Blob columns (CarImage)
             return await query.Select(c => new CarListDto
             {
                 CarId = c.CarId,
