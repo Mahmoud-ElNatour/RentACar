@@ -1,47 +1,82 @@
 @model RentACar.Application.DTOs.EmployeeDto
+
 <div class="modal fade" id="employeeFormModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content dark-modal">
-            <div class="modal-header">
-                <h5 class="modal-title">@((Model.EmployeeId == 0) ? "Add Employee" : "Edit Employee")</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-[#141414] border border-white/10 shadow-2xl rounded-2xl">
+            <!-- Header -->
+            <div class="modal-header border-b border-white/5 p-5">
+                <h5 class="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[#d4af37]">
+                        @(Model.EmployeeId == 0 ? "person_add" : "manage_accounts")
+                    </span>
+                    @((Model.EmployeeId == 0) ? "Add Employee" : "Edit Employee")
+                </h5>
+                <button type="button" class="text-gray-400 hover:text-white transition-colors" data-bs-dismiss="modal">
+                    <span class="material-symbols-outlined text-2xl">close</span>
+                </button>
             </div>
-            <div class="modal-body">
-                <form id="employeeForm">
+            
+            <!-- Body -->
+            <div class="modal-body p-6">
+                <form id="employeeForm" class="space-y-4">
                     <input type="hidden" asp-for="EmployeeId" />
-                    <div class="mb-3">
-                        <label class="form-label">Name</label>
-                        <input asp-for="Name" class="form-control" />
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Email</label>
-                        <input asp-for="Email" class="form-control" />
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                         <div>
+                            <label class="block text-xs font-medium text-gray-500 uppercase mb-1.5">Full Name</label>
+                            <input asp-for="Name" class="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-[#d4af37]/50 focus:ring-1 focus:ring-[#d4af37]/50 placeholder-gray-600" placeholder="e.g. Alice Smith" required />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 uppercase mb-1.5">Email Address</label>
+                            <input asp-for="Email" class="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-[#d4af37]/50 focus:ring-1 focus:ring-[#d4af37]/50 placeholder-gray-600" placeholder="alice@example.com" required readonly="@(Model.EmployeeId != 0 ? "readonly" : null)" />
+                        </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">Phone Number</label>
-                        <input asp-for="PhoneNumber" class="form-control" />
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 uppercase mb-1.5">Phone Number</label>
+                            <input asp-for="PhoneNumber" class="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-[#d4af37]/50 focus:ring-1 focus:ring-[#d4af37]/50 placeholder-gray-600" placeholder="+1 234..." />
+                        </div>
+                         <div>
+                            <label class="block text-xs font-medium text-gray-500 uppercase mb-1.5">Monthly Salary ($)</label>
+                            <input asp-for="Salary" type="number" step="0.01" class="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-[#d4af37]/50 focus:ring-1 focus:ring-[#d4af37]/50 placeholder-gray-600" placeholder="0.00" />
+                        </div>
                     </div>
+
                     @if (Model.EmployeeId == 0)
                     {
-                        <div class="mb-3">
-                            <label class="form-label">Password</label>
-                            <input type="password" name="Password" class="form-control" />
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 uppercase mb-1.5">Initial Password</label>
+                            <input type="password" name="Password" class="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-[#d4af37]/50 focus:ring-1 focus:ring-[#d4af37]/50 placeholder-gray-600" required />
+                             <p class="text-xs text-gray-500 mt-1">Must contain uppercase, lowercase, number, and symbol.</p>
                         </div>
                     }
-                    <div class="mb-3">
-                        <label class="form-label">Salary</label>
-                        <input asp-for="Salary" class="form-control" />
+
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 uppercase mb-1.5">Address</label>
+                         <textarea asp-for="Address" rows="2" class="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-[#d4af37]/50 focus:ring-1 focus:ring-[#d4af37]/50 placeholder-gray-600 resize-none" placeholder="Residential Address"></textarea>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Address</label>
-                        <input asp-for="Address" class="form-control" />
+
+                    <div class="flex items-center gap-3 pt-2">
+                         <label class="flex items-center gap-3 cursor-pointer group">
+                             <div class="relative">
+                                <input asp-for="IsActive" type="checkbox" class="peer sr-only" />
+                                <div class="w-10 h-6 bg-white/10 rounded-full peer-checked:bg-green-500/50 transition-colors"></div>
+                                <div class="absolute left-1 top-1 w-4 h-4 bg-gray-400 rounded-full transition-transform peer-checked:translate-x-4 peer-checked:bg-white"></div>
+                            </div>
+                            <span class="text-sm text-gray-300 group-hover:text-white transition-colors">Active Account</span>
+                        </label>
                     </div>
-                    <div class="form-check mb-3">
-                        <input asp-for="IsActive" class="form-check-input" />
-                        <label class="form-check-label" asp-for="IsActive">Active</label>
+
+                    <!-- Footer -->
+                    <div class="pt-4 border-t border-white/5 flex gap-3">
+                         <button type="submit" class="flex-1 bg-[#d4af37] hover:bg-[#b5952f] text-black font-semibold py-2.5 rounded-xl transition-all shadow-[0_0_15px_rgba(212,175,55,0.3)]">
+                            @(Model.EmployeeId == 0 ? "Create Employee" : "Save Changes")
+                        </button>
+                         <button type="button" class="flex-1 bg-white/5 hover:bg-white/10 text-white font-medium py-2.5 rounded-xl transition-colors border border-white/10" data-bs-dismiss="modal">
+                            Cancel
+                        </button>
                     </div>
-                    <button type="submit" class="btn btn-primary">@(Model.EmployeeId == 0 ? "Add" : "Save")</button>
                 </form>
             </div>
         </div>
@@ -51,27 +86,35 @@
     document.getElementById('employeeForm').addEventListener('submit', async function (e) {
         e.preventDefault();
         const form = e.target;
+        const btn = form.querySelector('button[type="submit"]');
+        const originalText = btn.textContent;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-sm">sync</span> Processing...';
+
         const f = form.elements;
         const data = {
-            employeeId: parseInt(form.querySelector('[name="EmployeeId"]')?.value || '0'),
-            name: f['Name']?.value,
-            email: f['Email']?.value,
-            username: f['Email']?.value,
-            phoneNumber: f['PhoneNumber']?.value,
-            salary: parseFloat(f['Salary']?.value || '0'),
-            address: f['Address']?.value,
-            isActive: form.querySelector('[name="IsActive"]')?.checked ?? false
-            };
-        let url = '/api/Employee';
-        let method = 'POST';
-        const isUpdate = Boolean(data.employeeId);
-        if (isUpdate) {
-            url += '/' + data.employeeId;
-            method = 'PUT';
-        } else {
-            data.password = f['Password']?.value;
-        }
+            employeeId: parseInt(form.querySelector('[name="EmployeeId"]').value || '0'),
+            name: f['Name'].value,
+            email: f['Email'].value,
+            username: f['Email'].value,
+            phoneNumber: f['PhoneNumber'].value,
+            salary: f['Salary'].value ? parseFloat(f['Salary'].value) : null,
+            address: f['Address'].value,
+            isActive: form.querySelector('[name="IsActive"]').checked
+        };
+       
         try {
+            let url = '/api/Employee';
+            let method = 'POST';
+            const isUpdate = Boolean(data.employeeId); 
+
+            if (isUpdate) {
+                url += '/' + data.employeeId;
+                method = 'PUT';
+            } else {
+                 data.password = f['Password'].value;
+            }
+
             const response = await fetch(url, {
                 method: method,
                 headers: { 'Content-Type': 'application/json' },
@@ -80,39 +123,28 @@
 
             if (!response.ok) {
                 let message = 'Failed to save employee.';
-                try {
-                    const contentType = response.headers.get('Content-Type') || '';
-                    if (contentType.includes('application/json')) {
-                        const payload = await response.json();
-                        if (payload && typeof payload === 'object' && payload.message) {
-                            message = payload.message;
-                        }
-                    } else {
-                        const text = await response.text();
-                        if (text) message = text;
-                    }
-                } catch {
-                    // ignore
+                 try {
+                    const payload = await response.json();
+                    if (payload && payload.message) message = payload.message;
+                } catch { 
+                    try { message = await response.text(); } catch {} 
                 }
-
-                if (window.showPopup) {
-                    window.showPopup(message, 'error');
-                }
+                
+                if (window.showPopup) window.showPopup(message, 'error');
                 return;
             }
 
-            if (window.showPopup) {
-                window.showPopup(isUpdate ? 'Employee updated successfully.' : 'Employee created successfully.', 'success');
-            }
-
-            const modalEl = form.closest('.modal');
+            const modalEl = document.getElementById('employeeFormModal');
             bootstrap.Modal.getInstance(modalEl).hide();
+            if (window.showPopup) window.showPopup(isUpdate ? 'Employee updated.' : 'Employee created.', 'success');
             if (window.loadEmployees) loadEmployees();
+            
         } catch (err) {
-            if (window.showPopup) {
-                window.showPopup('Unexpected error occurred while saving the employee.', 'error');
-            }
             console.error(err);
+            if (window.showPopup) window.showPopup('Unexpected error occurred.', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = originalText;
         }
     });
 </script>

@@ -1,41 +1,84 @@
 @model RentACar.Application.DTOs.CustomerDTO
+
 <div class="modal fade" id="customerDocsModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content dark-modal">
-            <div class="modal-header">
-                <h5 class="modal-title">Customer Documents</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content bg-[#141414] border border-white/10 shadow-2xl rounded-2xl">
+            <!-- Header -->
+            <div class="modal-header border-b border-white/5 p-5">
+                <h5 class="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[#d4af37]">folder_shared</span>
+                    Customer Documents
+                </h5>
+                <button type="button" class="text-gray-400 hover:text-white transition-colors" data-bs-dismiss="modal">
+                    <span class="material-symbols-outlined text-2xl">close</span>
+                </button>
             </div>
-            <div class="modal-body">
+            
+            <!-- Body -->
+            <div class="modal-body p-6">
                 <form id="docsForm">
                     <input type="hidden" name="customerId" value="@Model.UserId" />
-                    <div class="row g-3">
-                        <div class="col-md-6 text-center">
-                            <label class="form-label">Driving License Front</label>
-                            <img src="/api/Customer/Document/@Model.UserId/license-front" class="img-fluid mb-2" onerror="this.style.display='none'" />
-                            <input type="file" name="DrivingLicenseFront" class="form-control" />
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- License Front -->
+                        <div class="bg-[#0a0a0a] border border-white/5 rounded-xl p-4 flex flex-col items-center group hover:border-[#d4af37]/30 transition-colors">
+                            <label class="text-xs font-semibold text-gray-400 uppercase mb-3">Driving License (Front)</label>
+                            <div class="w-full h-48 bg-white/5 rounded-lg mb-3 flex items-center justify-center overflow-hidden border border-white/5 relative">
+                                <img src="/api/Customer/Document/@Model.UserId/license-front" class="max-w-full max-h-full object-contain" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                                <div class="hidden flex-col items-center justify-center text-gray-600">
+                                    <span class="material-symbols-outlined text-4xl mb-1">image_not_supported</span>
+                                    <span class="text-xs">No Image</span>
+                                </div>
+                            </div>
+                            <input type="file" name="DrivingLicenseFront" class="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#d4af37]/10 file:text-[#d4af37] hover:file:bg-[#d4af37]/20 transition-all cursor-pointer" />
                         </div>
-                        <div class="col-md-6 text-center">
-                            <label class="form-label">Driving License Back</label>
-                            <img src="/api/Customer/Document/@Model.UserId/license-back" class="img-fluid mb-2" onerror="this.style.display='none'" />
-                            <input type="file" name="DrivingLicenseBack" class="form-control" />
+                        
+                        <!-- License Back -->
+                        <div class="bg-[#0a0a0a] border border-white/5 rounded-xl p-4 flex flex-col items-center group hover:border-[#d4af37]/30 transition-colors">
+                            <label class="text-xs font-semibold text-gray-400 uppercase mb-3">Driving License (Back)</label>
+                            <div class="w-full h-48 bg-white/5 rounded-lg mb-3 flex items-center justify-center overflow-hidden border border-white/5 relative">
+                                <img src="/api/Customer/Document/@Model.UserId/license-back" class="max-w-full max-h-full object-contain" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                                <div class="hidden flex-col items-center justify-center text-gray-600">
+                                    <span class="material-symbols-outlined text-4xl mb-1">image_not_supported</span>
+                                    <span class="text-xs">No Image</span>
+                                </div>
+                            </div>
+                            <input type="file" name="DrivingLicenseBack" class="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#d4af37]/10 file:text-[#d4af37] hover:file:bg-[#d4af37]/20 transition-all cursor-pointer" />
                         </div>
-                        <div class="col-md-6 text-center">
-                            <label class="form-label">National ID Front</label>
-                            <img src="/api/Customer/Document/@Model.UserId/id-front" class="img-fluid mb-2" onerror="this.style.display='none'" />
-                            <input type="file" name="NationalIdfront" class="form-control" />
+
+                        <!-- ID Front -->
+                        <div class="bg-[#0a0a0a] border border-white/5 rounded-xl p-4 flex flex-col items-center group hover:border-[#d4af37]/30 transition-colors">
+                            <label class="text-xs font-semibold text-gray-400 uppercase mb-3">National ID (Front)</label>
+                            <div class="w-full h-48 bg-white/5 rounded-lg mb-3 flex items-center justify-center overflow-hidden border border-white/5 relative">
+                                <img src="/api/Customer/Document/@Model.UserId/id-front" class="max-w-full max-h-full object-contain" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                                <div class="hidden flex-col items-center justify-center text-gray-600">
+                                    <span class="material-symbols-outlined text-4xl mb-1">image_not_supported</span>
+                                    <span class="text-xs">No Image</span>
+                                </div>
+                            </div>
+                            <input type="file" name="NationalIdfront" class="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#d4af37]/10 file:text-[#d4af37] hover:file:bg-[#d4af37]/20 transition-all cursor-pointer" />
                         </div>
-                        <div class="col-md-6 text-center">
-                            <label class="form-label">National ID Back</label>
-                            <img src="/api/Customer/Document/@Model.UserId/id-back" class="img-fluid mb-2" onerror="this.style.display='none'" />
-                            <input type="file" name="NationalIdback" class="form-control" />
+
+                         <!-- ID Back -->
+                        <div class="bg-[#0a0a0a] border border-white/5 rounded-xl p-4 flex flex-col items-center group hover:border-[#d4af37]/30 transition-colors">
+                            <label class="text-xs font-semibold text-gray-400 uppercase mb-3">National ID (Back)</label>
+                            <div class="w-full h-48 bg-white/5 rounded-lg mb-3 flex items-center justify-center overflow-hidden border border-white/5 relative">
+                                <img src="/api/Customer/Document/@Model.UserId/id-back" class="max-w-full max-h-full object-contain" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                                <div class="hidden flex-col items-center justify-center text-gray-600">
+                                    <span class="material-symbols-outlined text-4xl mb-1">image_not_supported</span>
+                                    <span class="text-xs">No Image</span>
+                                </div>
+                            </div>
+                            <input type="file" name="NationalIdback" class="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#d4af37]/10 file:text-[#d4af37] hover:file:bg-[#d4af37]/20 transition-all cursor-pointer" />
                         </div>
                     </div>
                 </form>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" id="saveDocs" class="btn btn-primary">Save</button>
+            
+             <!-- Footer -->
+            <div class="modal-footer border-t border-white/5 p-5 flex gap-3">
+                <button type="button" class="flex-1 bg-white/5 hover:bg-white/10 text-white font-medium py-2.5 rounded-xl transition-colors border border-white/10" data-bs-dismiss="modal">Close</button>
+                <button type="button" id="saveDocs" class="flex-1 bg-[#d4af37] hover:bg-[#b5952f] text-black font-semibold py-2.5 rounded-xl transition-all shadow-[0_0_15px_rgba(212,175,55,0.3)]">Save Documents</button>
             </div>
         </div>
     </div>
@@ -58,16 +101,23 @@
     }
 
     document.getElementById('saveDocs').addEventListener('click', async function () {
+        const btn = this;
+        const originalText = btn.textContent;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-sm">sync</span> Saving...';
+
         const form = document.getElementById('docsForm');
         const files = form.elements;
-        const data = {
-            drivingLicenseFront: files['DrivingLicenseFront'].files[0] ? await fileToBase64(files['DrivingLicenseFront'].files[0]) : null,
-            drivingLicenseBack: files['DrivingLicenseBack'].files[0] ? await fileToBase64(files['DrivingLicenseBack'].files[0]) : null,
-            nationalIdfront: files['NationalIdfront'].files[0] ? await fileToBase64(files['NationalIdfront'].files[0]) : null,
-            nationalIdback: files['NationalIdback'].files[0] ? await fileToBase64(files['NationalIdback'].files[0]) : null
-        };
-        const id = form.querySelector('[name="customerId"]').value;
+        
         try {
+            const data = {
+                drivingLicenseFront: files['DrivingLicenseFront'].files[0] ? await fileToBase64(files['DrivingLicenseFront'].files[0]) : null,
+                drivingLicenseBack: files['DrivingLicenseBack'].files[0] ? await fileToBase64(files['DrivingLicenseBack'].files[0]) : null,
+                nationalIdfront: files['NationalIdfront'].files[0] ? await fileToBase64(files['NationalIdfront'].files[0]) : null,
+                nationalIdback: files['NationalIdback'].files[0] ? await fileToBase64(files['NationalIdback'].files[0]) : null
+            };
+            const id = form.querySelector('[name="customerId"]').value;
+            
             const response = await fetch('/api/Customer/' + id + '/documents', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
@@ -77,36 +127,25 @@
             if (!response.ok) {
                 let message = 'Failed to update customer documents.';
                 try {
-                    const contentType = response.headers.get('Content-Type') || '';
-                    if (contentType.includes('application/json')) {
-                        const payload = await response.json();
-                        if (payload && typeof payload === 'object' && payload.message) {
-                            message = payload.message;
-                        }
-                    } else {
-                        const text = await response.text();
-                        if (text) message = text;
-                    }
-                } catch {
-                    // ignore parsing errors
+                    const payload = await response.json();
+                    if (payload && payload.message) message = payload.message;
+                } catch { 
+                    try { message = await response.text(); } catch {} 
                 }
 
-                if (window.showPopup) {
-                    window.showPopup(message, 'error');
-                }
+                if (window.showPopup) window.showPopup(message, 'error');
                 return;
             }
 
             const modalEl = document.getElementById('customerDocsModal');
             bootstrap.Modal.getInstance(modalEl).hide();
-            if (window.showPopup) {
-                window.showPopup('Customer documents updated successfully.', 'success');
-            }
+            if (window.showPopup) window.showPopup('Customer documents updated successfully.', 'success');
         } catch (err) {
-            if (window.showPopup) {
-                window.showPopup('Unexpected error occurred while updating documents.', 'error');
-            }
             console.error(err);
+            if (window.showPopup) window.showPopup('Unexpected error occurred.', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = originalText;
         }
     });
 </script>

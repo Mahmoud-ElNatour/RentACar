@@ -102,13 +102,30 @@ namespace RentACar.Web.Controllers
             return PartialView("~/Views/ControlPanel/Customer/_CustomerSummaryPartial.cshtml", customer);
         }
 
-        [HttpGet]
+
+        [HttpGet("GetFilteredCustomers")]
         [Authorize(Roles = "Admin,Employee")]
-        public async Task<ActionResult<IEnumerable<CustomerListDto>>> Get([FromQuery] string? search, [FromQuery] bool? verified, [FromQuery] bool? active)
+        public async Task<ActionResult<PagedResultDto<CustomerListDto>>> GetFilteredCustomers(
+            [FromQuery] string? search, 
+            [FromQuery] bool? verified, 
+            [FromQuery] bool? active,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10,
+            [FromQuery] string? sortColumn = "Name",
+            [FromQuery] string? sortDirection = "asc")
         {
-            var customers = await _customerManager.GetAllCustomersForListAsync(search, verified, active);
-            return Ok(customers);
+            try
+            {
+                var result = await _customerManager.GetCustomersPagedAsync(search, verified, active, page, pageSize, sortColumn, sortDirection);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to load customers paged");
+                return StatusCode(500, new { message = ex.Message });
+            }
         }
+
 
         [HttpGet("Document/{id}/{type}")]
         [AllowAnonymous]
@@ -208,32 +225,37 @@ namespace RentACar.Web.Controllers
             }
         }
 
-        [HttpPost("{id}/reset-password")]
-        public async Task<IActionResult> ResetPassword(int id)
+        [HttpGet("~/Customer/ResetPassword/{id}")]
+        [Authorize(Roles = "Admin")]
+        [ApiExplorerSettings(IgnoreApi = true)]
+        public async Task<IActionResult> ResetPasswordForm(int id)
         {
-            var success = await _customerManager.ResetPassword(id);
-            if (!success) return NotFound();
-            return NoContent();
+            var customer = await _customerManager.GetCustomerById(id);
+            if (customer == null) return NotFound();
+            return PartialView("~/Views/ControlPanel/Customer/_ResetPasswordPartial.cshtml", customer);
         }
 
-        [HttpPut("{id}/documents")]
-        public async Task<IActionResult> UpdateDocuments(int id, [FromBody] CustomerDocumentsDto dto)
+        [HttpPost("{id}/reset-password")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> ResetPassword(int id, [FromBody] ResetPasswordRequest? request)
         {
-            await _customerManager.UpdateCustomerDocuments(id, dto);
-            return NoContent();
+            var success = await _customerManager.ResetPassword(id, request?.NewPassword);
+            if (!success) return NotFound();
+            return Ok(new { message = "Password reset successfully and email sent." });
         }
-        [HttpGet("~/Customer/Verify/{id}")]
-        public async Task<IActionResult> Verify(int id)
+
+        [HttpPost("{id}/resend-verification")]
+        [Authorize(Roles = "Admin,Employee")]
+        public async Task<IActionResult> ResendVerification(int id)
         {
-            await _customerManager.UpdateVerificationStatus(id, true);
-            
-            // Return to the previous page (likely the dashboard or customer list)
-            var returnUrl = Request.Headers["Referer"].ToString();
-            if (string.IsNullOrEmpty(returnUrl))
-            {
-                return RedirectToAction("Index", "Dashboard");
-            }
-            return Redirect(returnUrl);
+            var s = await _customerManager.SendReminderToCustomerAsync(id);
+            if (!s) return BadRequest("Could not send reminder. Customer might already be verified or email failed.");
+            return Ok(new { message = "Document verification reminder sent." });
+        }
+        
+        public class ResetPasswordRequest
+        {
+            public string? NewPassword { get; set; }
         }
 
         [HttpPost("{id}/resend-confirmation")]

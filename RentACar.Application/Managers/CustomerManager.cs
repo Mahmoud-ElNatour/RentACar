@@ -363,7 +363,12 @@ namespace RentACar.Application.Managers
             }
         }
 
-        public async Task<bool> ResetPassword(int customerId)
+        public async Task<bool> SendReminderToCustomerAsync(int customerId)
+        {
+             return await _emailManager.SendReminderToCustomerAsync(customerId);
+        }
+
+        public async Task<bool> ResetPassword(int customerId, string? specificPassword = null)
         {
             var customer = await _customerRepository.GetByIdAsync(customerId);
             if (customer == null) return false;
@@ -371,7 +376,9 @@ namespace RentACar.Application.Managers
             if (user == null) return false;
             
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-            var newPassword = $"RentCar{new Random().Next(100000, 999999)}!";
+            var newPassword = !string.IsNullOrEmpty(specificPassword) 
+                ? specificPassword 
+                : $"RentCar{new Random().Next(100000, 999999)}!";
             
             var result = await _userManager.ResetPasswordAsync(user, token, newPassword);
             
@@ -463,6 +470,80 @@ namespace RentACar.Application.Managers
                 PhoneNumber = c.User.PhoneNumber
             }).ToListAsync();
         }
+
+        public async Task<PagedResultDto<CustomerListDto>> GetCustomersPagedAsync(
+            string? search, 
+            bool? verified, 
+            bool? active,
+            int page = 1,
+            int pageSize = 10,
+            string? sortColumn = "Name",
+            string? sortDirection = "asc")
+        {
+            var query = _customerRepository.Query()
+                .Include(c => c.User)
+                .AsNoTracking()
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                search = search.Trim().ToLower();
+                query = query.Where(c => c.Name.Contains(search) || c.User.Email.Contains(search));
+            }
+
+            if (verified.HasValue)
+            {
+                query = query.Where(c => c.IsVerified == verified.Value);
+            }
+
+            if (active.HasValue)
+            {
+                query = query.Where(c => c.Isactive == active.Value);
+            }
+
+            var totalCount = await query.CountAsync();
+
+            query = ApplySort(query, sortColumn, sortDirection);
+
+            var items = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(c => new CustomerListDto
+                {
+                    UserId = c.UserId,
+                    Name = c.Name,
+                    aspNetUserId = c.aspNetUserId,
+                    IsVerified = c.IsVerified,
+                    Isactive = c.Isactive,
+                    Address = c.Address,
+                    Email = c.User.Email,
+                    IsEmailConfirmed = c.User.EmailConfirmed,
+                    PhoneNumber = c.User.PhoneNumber
+                })
+                .ToListAsync();
+
+            return new PagedResultDto<CustomerListDto>
+            {
+                Items = items,
+                TotalCount = totalCount,
+                Page = page,
+                PageSize = pageSize,
+                TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize)
+            };
+        }
+
+        private IQueryable<Customer> ApplySort(IQueryable<Customer> query, string? sortColumn, string? sortDirection)
+        {
+            return sortColumn?.ToLower() switch
+            {
+                "name" => sortDirection == "desc" ? query.OrderByDescending(c => c.Name) : query.OrderBy(c => c.Name),
+                "email" => sortDirection == "desc" ? query.OrderByDescending(c => c.User.Email) : query.OrderBy(c => c.User.Email),
+                "isverified" => sortDirection == "desc" ? query.OrderByDescending(c => c.IsVerified) : query.OrderBy(c => c.IsVerified),
+                "isactive" => sortDirection == "desc" ? query.OrderByDescending(c => c.Isactive) : query.OrderBy(c => c.Isactive),
+                _ => query.OrderByDescending(c => c.UserId)
+            };
+        }
+
     }
 
     public class CustomerProfile : Profile

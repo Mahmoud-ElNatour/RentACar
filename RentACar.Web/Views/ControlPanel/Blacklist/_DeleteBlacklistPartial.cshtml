@@ -1,112 +1,94 @@
 @model RentACar.Application.DTOs.BlacklistDto
 
 <div class="modal fade" id="blacklistDeleteModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content dark-modal">
-      <div class="modal-header">
-        <h5 class="modal-title">Unblock User</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-[#141414] border border-white/10 shadow-2xl rounded-2xl overflow-hidden">
+            <!-- Header -->
+            <div class="modal-header bg-gradient-to-r from-green-900/20 to-transparent border-b border-white/5 p-5">
+                <h5 class="text-xl font-bold text-white flex items-center gap-2">
+                    <span class="material-symbols-outlined text-green-500">lock_open</span>
+                    Unblock User
+                </h5>
+                <button type="button" class="text-gray-400 hover:text-white transition-colors" data-bs-dismiss="modal">
+                    <span class="material-symbols-outlined text-2xl">close</span>
+                </button>
+            </div>
+            
+            <!-- Body -->
+            <div class="modal-body p-6">
+                <div class="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center mx-auto mb-4">
+                    <span class="material-symbols-outlined text-3xl text-green-500">check_circle</span>
+                </div>
 
-      <form id="deleteBlacklistForm">
-        <div class="modal-body">
-          <div class="alert alert-danger d-none" id="deleteBlacklistError" role="alert"></div>
-          <input type="hidden" name="id" value="@Model.BlacklistId" />
-          <p>Unblock user <strong>@Model.UserId</strong>?</p>
+                <div class="text-center space-y-2">
+                    <h3 class="text-lg font-semibold text-white">Restore Access?</h3>
+                    <p class="text-gray-400 text-sm">
+                        You are about to unblock <strong class="text-white">@Model.UserId</strong> (ID). 
+                        They will immediately regain access to their account.
+                    </p>
+                     <div id="deleteBlacklistError" class="hidden bg-red-500/10 border border-red-500/20 text-red-400 text-sm p-3 rounded-xl mt-3"></div>
+                </div>
+
+                <form id="deleteBlacklistForm" class="mt-6">
+                    <input type="hidden" name="id" value="@Model.BlacklistId" />
+                    <div class="flex gap-3">
+                        <button type="button" class="flex-1 bg-white/5 hover:bg-white/10 text-white font-medium py-2.5 rounded-xl transition-colors border border-white/10" data-bs-dismiss="modal">
+                            Cancel
+                        </button>
+                        <button type="submit" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-2.5 rounded-xl transition-colors shadow-[0_0_15px_rgba(22,163,74,0.3)]">
+                            Unblock User
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-danger">Unblock</button>
-        </div>
-      </form>
     </div>
-  </div>
 </div>
 
 <script>
-(function () {
-  const form = document.getElementById('deleteBlacklistForm');
-  if (!form) return;
+    document.getElementById('deleteBlacklistForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const id = this.querySelector('[name="id"]').value;
+        const errorAlert = this.querySelector('#deleteBlacklistError');
+        
+        const btn = this.querySelector('button[type="submit"]');
+        const originalText = btn.textContent;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-sm">sync</span> Unblocking...';
 
-  form.addEventListener('submit', async function (e) {
-    e.preventDefault();
-
-    const id = this.querySelector('[name="id"]').value;
-    const errorAlert = this.querySelector('#deleteBlacklistError');
-
-    // Clear any old error
-    if (errorAlert) {
-      errorAlert.classList.add('d-none');
-      errorAlert.textContent = '';
-    }
-
-    // Optional: Anti-forgery token support (if you’re using it)
-    const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
-    const headers = {};
-    if (tokenInput && tokenInput.value) {
-      headers['RequestVerificationToken'] = tokenInput.value;
-    }
-    headers['Accept'] = 'application/json';
-
-    try {
-      const res = await fetch(`/api/Blacklist/${encodeURIComponent(id)}`, {
-        method: 'DELETE',
-        headers
-      });
-
-      // Try to read a message from JSON or text
-      let message = '';
-      const ct = res.headers.get('Content-Type') || '';
-      try {
-        if (ct.includes('application/json')) {
-          const data = await res.json();
-          message = (data && (data.message || data.error || data.title)) || '';
-        } else {
-          message = await res.text();
+        if (errorAlert) {
+            errorAlert.classList.add('hidden');
+            errorAlert.textContent = '';
         }
-      } catch { /* ignore parse errors */ }
 
-      if (!res.ok) {
-        if (!message) message = 'An error occurred while unblocking this user.';
-        if (typeof showPopup === 'function') {
-          showPopup(message, 'error');
-        } else if (errorAlert) {
-          errorAlert.textContent = message;
-          errorAlert.classList.remove('d-none');
+        try {
+            const response = await fetch(`/api/Blacklist/${encodeURIComponent(id)}`, { method: 'DELETE' });
+
+            if (!response.ok) {
+                 let message = 'Failed to unblock user.';
+                 try {
+                    const payload = await response.json();
+                    if (payload && payload.message) message = payload.message;
+                } catch { 
+                    try { message = await response.text(); } catch {} 
+                }
+                throw new Error(message);
+            }
+
+            const modalEl = document.getElementById('blacklistDeleteModal');
+            bootstrap.Modal.getInstance(modalEl).hide();
+            if (window.showPopup) window.showPopup('User unblocked successfully.', 'success');
+            if (window.loadBlacklist) loadBlacklist(true);
+
+        } catch (err) {
+            console.error(err);
+             if (errorAlert) {
+                errorAlert.textContent = err.message || 'Unable to connect to the server.';
+                errorAlert.classList.remove('hidden');
+            }
+        } finally {
+            btn.disabled = false;
+            btn.textContent = originalText;
         }
-        return;
-      }
-
-      // Success UI
-      if (!message) message = 'User unblocked successfully.';
-      if (typeof showPopup === 'function') {
-        showPopup(message, 'success');
-      }
-
-      // Hide the modal safely whether or not an instance exists yet
-      const modalEl = this.closest('.modal');
-      if (modalEl) {
-        let instance = window.bootstrap && window.bootstrap.Modal.getInstance
-          ? window.bootstrap.Modal.getInstance(modalEl)
-          : null;
-        if (!instance && window.bootstrap && window.bootstrap.Modal) {
-          instance = new window.bootstrap.Modal(modalEl);
-        }
-        if (instance && typeof instance.hide === 'function') instance.hide();
-      }
-
-      if (typeof window.loadBlacklist === 'function') {
-        window.loadBlacklist(true);
-      }
-    } catch (err) {
-      const msg = 'Unable to connect to the server. Please try again.';
-      if (typeof showPopup === 'function') {
-        showPopup(msg, 'error');
-      } else if (errorAlert) {
-        errorAlert.textContent = msg;
-        errorAlert.classList.remove('d-none');
-      }
-    }
-  });
-})();
+    });
 </script>

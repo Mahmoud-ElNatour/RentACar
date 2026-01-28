@@ -1,32 +1,65 @@
 @model RentACar.Application.DTOs.EmployeeDto
+
 <div class="modal fade" id="deleteEmployeeModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content dark-modal">
-            <div class="modal-header">
-                <h5 class="modal-title">Delete Employee</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-[#141414] border border-white/10 shadow-2xl rounded-2xl overflow-hidden">
+            <!-- Header with Warning gradient -->
+            <div class="modal-header bg-gradient-to-r from-red-900/20 to-transparent border-b border-white/5 p-5">
+                <h5 class="text-xl font-bold text-white flex items-center gap-2">
+                    <span class="material-symbols-outlined text-red-500">warning</span>
+                    Delete Employee
+                </h5>
+                <button type="button" class="text-gray-400 hover:text-white transition-colors" data-bs-dismiss="modal">
+                    <span class="material-symbols-outlined text-2xl">close</span>
+                </button>
             </div>
-            <form id="deleteEmployeeForm">
-                <div class="modal-body">
-                    <div class="alert alert-danger d-none" id="deleteEmployeeError" role="alert"></div>
+            
+            <!-- Body -->
+            <div class="modal-body p-6">
+                <!-- Warning Icon Circle -->
+                <div class="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-4">
+                    <span class="material-symbols-outlined text-3xl text-red-500">priority_high</span>
+                </div>
+
+                <div class="text-center space-y-2">
+                    <h3 class="text-lg font-semibold text-white">Are you sure?</h3>
+                    <p class="text-gray-400 text-sm">
+                        You are about to delete the employee <strong class="text-white">@Model.Name</strong>. 
+                        This action cannot be undone and will remove their access immediately.
+                    </p>
+                    <div id="deleteEmployeeError" class="hidden bg-red-500/10 border border-red-500/20 text-red-400 text-sm p-3 rounded-xl mt-3"></div>
+                </div>
+
+                <form id="deleteEmployeeForm" class="mt-6">
                     <input type="hidden" name="employeeId" value="@Model.EmployeeId" />
-                    <p>Are you sure you want to delete employee <strong>@Model.Name</strong>?</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-danger">Delete</button>
-                </div>
-            </form>
+                    <div class="flex gap-3">
+                        <button type="button" class="flex-1 bg-white/5 hover:bg-white/10 text-white font-medium py-2.5 rounded-xl transition-colors border border-white/10" data-bs-dismiss="modal">
+                            Cancel
+                        </button>
+                        <button type="submit" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-2.5 rounded-xl transition-colors shadow-[0_0_15px_rgba(220,38,38,0.3)]">
+                            Delete Employee
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 </div>
+
 <script>
     document.getElementById('deleteEmployeeForm').addEventListener('submit', async function (e) {
         e.preventDefault();
         const id = this.querySelector('[name="employeeId"]').value;
-        const errorAlert = this.querySelector('#deleteEmployeeError');
+        const errorAlert = document.getElementById('deleteEmployeeError');
+        
+        // Button Loading State
+        const btn = this.querySelector('button[type="submit"]');
+        const originalText = btn.textContent;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-sm">sync</span> Deleting...';
+        
         if (errorAlert) {
-            errorAlert.classList.add('d-none');
+            errorAlert.classList.add('hidden');
             errorAlert.textContent = '';
         }
 
@@ -34,40 +67,30 @@
             const response = await fetch('/api/Employee/' + id, { method: 'DELETE' });
 
             if (!response.ok) {
-                let message = 'An error occurred while deleting the employee.';
-                const contentType = response.headers.get('Content-Type') || '';
-
-                try {
-                    if (contentType.includes('application/json')) {
-                        const data = await response.json();
-                        if (data && typeof data === 'object') {
-                            message = data.message || message;
-                        }
-                    } else {
-                        const text = await response.text();
-                        if (text) {
-                            message = text;
-                        }
-                    }
-                } catch {
-                    // ignore
+                 let message = 'Failed to delete employee.';
+                 try {
+                    const payload = await response.json();
+                    if (payload && payload.message) message = payload.message;
+                } catch { 
+                    try { message = await response.text(); } catch {} 
                 }
-
-                if (errorAlert) {
-                    errorAlert.textContent = message;
-                    errorAlert.classList.remove('d-none');
-                }
-                return;
+                throw new Error(message);
             }
 
-            const modalEl = this.closest('.modal');
+            const modalEl = document.getElementById('deleteEmployeeModal');
             bootstrap.Modal.getInstance(modalEl).hide();
+            if (window.showPopup) window.showPopup('Employee deleted successfully.', 'success');
             if (window.loadEmployees) loadEmployees();
+
         } catch (err) {
+            console.error(err);
             if (errorAlert) {
-                errorAlert.textContent = 'Unable to connect to the server. Please try again.';
-                errorAlert.classList.remove('d-none');
+                errorAlert.textContent = err.message || 'Unable to connect to the server.';
+                errorAlert.classList.remove('hidden');
             }
+        } finally {
+            btn.disabled = false;
+            btn.textContent = originalText;
         }
     });
 </script>

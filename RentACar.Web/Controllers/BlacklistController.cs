@@ -62,10 +62,24 @@ namespace RentACar.Web.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<BlacklistDisplayDto>>> Get([FromQuery] string? type, [FromQuery] string? search, [FromQuery] int? offset)
+        public async Task<ActionResult<PagedResultDto<BlacklistDisplayDto>>> Get(
+            [FromQuery] string? search, 
+            [FromQuery] string? type, 
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10,
+            [FromQuery] string? sortColumn = "DateBlocked",
+            [FromQuery] string? sortDirection = "desc")
         {
-            var list = await _blacklistManager.GetAllAsync(type, search, offset ?? 0);
-            return Ok(list);
+             try
+            {
+                var result = await _blacklistManager.GetBlacklistPagedAsync(search, type, page, pageSize, sortColumn, sortDirection);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to load blacklist paged");
+                return StatusCode(500, new { message = ex.Message });
+            }
         }
 
         [HttpGet("{id}")]

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using RentACar.Core.Entities;
 
@@ -12,5 +13,6 @@ namespace RentACar.Core.Repositories
         Task AddAsync(Employee employee);
         Task UpdateAsync(Employee employee);
         Task DeleteAsync(int id);
+        IQueryable<Employee> Query();
     }
 }

@@ -1,27 +1,69 @@
 @model RentACar.Application.DTOs.BlacklistDisplayDto
+
 <div class="modal fade" id="blacklistViewModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content dark-modal">
-            <div class="modal-header">
-                <h5 class="modal-title">Blacklist Details</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="modal-content bg-[#141414] border border-white/10 shadow-2xl rounded-2xl overflow-hidden">
+            <!-- Header -->
+            <div class="modal-header border-b border-white/5 p-5">
+                <h5 class="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[#d4af37]">info</span>
+                    Blacklist Details
+                </h5>
+                <button type="button" class="text-gray-400 hover:text-white transition-colors" data-bs-dismiss="modal">
+                    <span class="material-symbols-outlined text-2xl">close</span>
+                </button>
             </div>
-            <div class="modal-body">
-                <dl class="row mb-0">
-                    <dt class="col-sm-4">User</dt>
-                    <dd class="col-sm-8">@Model.Username <small class="text-muted">(@Model.UserId)</small></dd>
-                    <dt class="col-sm-4">Type</dt>
-                    <dd class="col-sm-8">@Model.UserType</dd>
-                    <dt class="col-sm-4">Reason</dt>
-                    <dd class="col-sm-8">@(!string.IsNullOrWhiteSpace(Model.Reason) ? Model.Reason : "—")</dd>
-                    <dt class="col-sm-4">Date Blocked</dt>
-                    <dd class="col-sm-8">@Model.DateBlocked.ToString("MMMM d, yyyy")</dd>
-                    <dt class="col-sm-4">Blocked By</dt>
-                    <dd class="col-sm-8">@(!string.IsNullOrWhiteSpace(Model.EmployeeName) ? Model.EmployeeName : $"Employee #{Model.EmployeeDoneBlacklistId}")</dd>
-                </dl>
+            
+            <!-- Body -->
+            <div class="modal-body p-6 space-y-6">
+                <!-- User Info Section -->
+                <div class="flex items-center gap-4 bg-white/5 p-4 rounded-xl border border-white/5">
+                    <div class="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 font-bold text-lg">
+                        @Model.Username.Substring(0, 1).ToUpper()
+                    </div>
+                    <div>
+                        <h4 class="text-lg font-bold text-white">@Model.Username</h4>
+                        <div class="flex items-center gap-2 text-sm text-gray-400">
+                            <span class="material-symbols-outlined text-sm">badge</span>
+                            @Model.UserType
+                            <span class="text-gray-600">•</span>
+                            <span class="font-mono text-xs">ID: @Model.UserId</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-2 gap-4">
+                     <div class="bg-[#0a0a0a] p-3 rounded-xl border border-white/5">
+                        <label class="block text-xs font-medium text-gray-500 uppercase mb-1">Date Blocked</label>
+                        <div class="flex items-center gap-2 text-white">
+                            <span class="material-symbols-outlined text-gray-400 text-sm">calendar_today</span>
+                            @Model.DateBlocked.ToString("MMMM d, yyyy")
+                        </div>
+                    </div>
+                    <div class="bg-[#0a0a0a] p-3 rounded-xl border border-white/5">
+                        <label class="block text-xs font-medium text-gray-500 uppercase mb-1">Blocked By</label>
+                         <div class="flex items-center gap-2 text-[#d4af37]">
+                            <span class="material-symbols-outlined text-sm">admin_panel_settings</span>
+                            @(!string.IsNullOrWhiteSpace(Model.EmployeeName) ? Model.EmployeeName : $"ID: {Model.EmployeeDoneBlacklistId}")
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reason Section -->
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 uppercase mb-2">Reason for Blocking</label>
+                    <div class="bg-red-900/10 border border-red-500/20 text-red-200 p-4 rounded-xl text-sm leading-relaxed">
+                        @(!string.IsNullOrWhiteSpace(Model.Reason) ? Model.Reason : "No specific reason provided.")
+                    </div>
+                </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+
+            <!-- Footer -->
+            <div class="p-4 border-t border-white/5 bg-[#0a0a0a]">
+                <button type="button" class="w-full bg-white/5 hover:bg-white/10 text-white font-medium py-2.5 rounded-xl transition-colors border border-white/10" data-bs-dismiss="modal">
+                    Close
+                </button>
             </div>
         </div>
     </div>

@@ -9,6 +9,7 @@ using RentACar.Application.Managers;
 using RentACar.Core.Entities;
 using RentACar.Core.Repositories;
 using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
 
 namespace RentACar.Application.Managers
 {
@@ -209,12 +210,13 @@ namespace RentACar.Application.Managers
                 throw new InvalidOperationException("Employee has existing activity and was marked as inactive instead of being deleted.");
             }
 
+            await _employeeRepository.DeleteAsync(id);
+            
             if (user != null)
             {
                 await _userManager.DeleteAsync(user);
             }
 
-            await _employeeRepository.DeleteAsync(id);
             await _auditLogManager.LogAsync("Delete", "Employee", id.ToString(), $"Deleted employee {id}");
         }
 
@@ -387,6 +389,146 @@ namespace RentACar.Application.Managers
                 }
             }
             return emails;
+        }
+
+        public async Task<PagedResultDto<EmployeeDisplayDto>> GetEmployeesPagedAsync(
+            string? search,
+            bool? active,
+            string? role,
+            int page = 1,
+            int pageSize = 10,
+            string? sortColumn = "Name",
+            string? sortDirection = "asc")
+        {
+            var query = _employeeRepository.Query()
+                .Include(e => e.User)
+                .AsNoTracking()
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var lowerSearch = search.ToLower();
+                query = query.Where(e =>
+                    e.Name.ToLower().Contains(lowerSearch) ||
+                    e.User.Email.ToLower().Contains(lowerSearch) ||
+                    e.User.PhoneNumber.ToLower().Contains(lowerSearch));
+            }
+
+            if (active.HasValue)
+            {
+                query = query.Where(e => e.IsActive == active.Value);
+            }
+
+            // Apply sorting before pagination
+            query = ApplySort(query, sortColumn, sortDirection);
+
+            // If filtering by role, we might need to do it after fetching if we can't join easily
+            // However, for performance, if role is specified, we might want to filter first.
+            // Given complexity, if role is specified, we'll fetch all matching other criteria, then filter by role memory, then page.
+            // If role is NOT specified, we page normally.
+
+            if (!string.IsNullOrEmpty(role))
+            {
+                // In-memory filter for role (less efficient but simplest without custom joins)
+                var allMatches = await query.ToListAsync();
+                var roleFiltered = new List<Employee>();
+                
+                foreach (var emp in allMatches)
+                {
+                    var user = await _userManager.FindByIdAsync(emp.aspNetUserId);
+                    if (user != null && await _userManager.IsInRoleAsync(user, role))
+                    {
+                        roleFiltered.Add(emp);
+                    }
+                }
+
+                var totalCountFiltered = roleFiltered.Count;
+                var pagedItemsFiltered = roleFiltered
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToList();
+
+                var dtosFiltered = new List<EmployeeDisplayDto>();
+                foreach (var emp in pagedItemsFiltered)
+                {
+                    var user = await _userManager.FindByIdAsync(emp.aspNetUserId);
+                    var roles = await _userManager.GetRolesAsync(user);
+                     dtosFiltered.Add(new EmployeeDisplayDto
+                    {
+                        EmployeeId = emp.EmployeeId,
+                        Name = emp.Name,
+                        Email = user.Email,
+                        PhoneNumber = user.PhoneNumber,
+                        Salary = emp.Salary,
+                        Address = emp.Address,
+                        IsActive = emp.IsActive,
+                        Role = roles.FirstOrDefault() ?? "N/A"
+                    });
+                }
+
+                return new PagedResultDto<EmployeeDisplayDto>
+                {
+                    Items = dtosFiltered,
+                    TotalCount = totalCountFiltered,
+                    Page = page,
+                    PageSize = pageSize,
+                    TotalPages = (int)Math.Ceiling(totalCountFiltered / (double)pageSize)
+                };
+            }
+
+            // Normal path (no role filter)
+            var totalCount = await query.CountAsync();
+            var pagedItems = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            var dtos = new List<EmployeeDisplayDto>();
+            foreach (var emp in pagedItems)
+            {
+                 var user = await _userManager.FindByIdAsync(emp.aspNetUserId);
+                 // If user is null (data integrity issue), skip or handle? distinct from query include? 
+                 // Include(e => e.User) guarantees it's loaded if EF recognizes relationship.
+                 // But _userManager might trigger extra DB calls if we aren't careful.
+                 // Since we have the User object from Include, we can try to use it directly if possible, 
+                 // but GetRolesAsync needs user.Id or User object.
+                 
+                 var roles = user != null ? await _userManager.GetRolesAsync(user) : new List<string>();
+
+                 dtos.Add(new EmployeeDisplayDto
+                {
+                    EmployeeId = emp.EmployeeId,
+                    Name = emp.Name,
+                    Email = emp.User?.Email ?? "N/A",
+                    PhoneNumber = emp.User?.PhoneNumber,
+                    Salary = emp.Salary,
+                    Address = emp.Address,
+                    IsActive = emp.IsActive,
+                    Role = roles.FirstOrDefault() ?? "N/A"
+                });
+            }
+
+            return new PagedResultDto<EmployeeDisplayDto>
+            {
+                Items = dtos,
+                TotalCount = totalCount,
+                Page = page,
+                PageSize = pageSize,
+                TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize)
+            };
+        }
+
+        private IQueryable<Employee> ApplySort(IQueryable<Employee> query, string? sortColumn, string? sortDirection)
+        {
+            var isAsc = sortDirection?.ToLower() == "asc";
+            return sortColumn?.ToLower() switch
+            {
+                "name" => isAsc ? query.OrderBy(e => e.Name) : query.OrderByDescending(e => e.Name),
+                "email" => isAsc ? query.OrderBy(e => e.User.Email) : query.OrderByDescending(e => e.User.Email),
+                "salary" => isAsc ? query.OrderBy(e => e.Salary) : query.OrderByDescending(e => e.Salary),
+                "isactive" => isAsc ? query.OrderBy(e => e.IsActive) : query.OrderByDescending(e => e.IsActive),
+                _ => isAsc ? query.OrderBy(e => e.Name) : query.OrderByDescending(e => e.Name)
+            };
         }
     }
     public class EmployeeProfile : Profile

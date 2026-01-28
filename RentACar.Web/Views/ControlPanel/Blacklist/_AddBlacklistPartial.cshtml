@@ -1,42 +1,61 @@
 @model RentACar.Application.DTOs.AddToBlacklistRequestDto
 
 <div class="modal fade" id="blacklistAddModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content dark-modal">
-            <div class="modal-header">
-                <h5 class="modal-title">Add To Blacklist</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-[#141414] border border-white/10 shadow-2xl rounded-2xl overflow-visible">
+            <!-- Header -->
+            <div class="modal-header border-b border-white/5 p-5">
+                <h5 class="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+                    <span class="material-symbols-outlined text-red-500">person_off</span>
+                    Block User
+                </h5>
+                <button type="button" class="text-gray-400 hover:text-white transition-colors" data-bs-dismiss="modal">
+                    <span class="material-symbols-outlined text-2xl">close</span>
+                </button>
             </div>
-
-            <div class="modal-body">
-                <style>
-                    .ui-autocomplete {
-                        z-index: 2055 !important
-                    }</style>
-
-                <!-- (optional) honeypot to keep password extensions away -->
-                <input class="d-none" type="text" name="username" autocomplete="username">
-                <input class="d-none" type="password" name="password" autocomplete="current-password">
-
-                <form id="addBlacklistForm" autocomplete="off">
-                    <div class="mb-3">
-                        <label class="form-label" for="IdentifierInput">User</label>
-                        <input type="text"
-                               id="IdentifierInput"
-                               class="form-control"
-                               placeholder="Search by email or username"
-                               autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
-                               data-form-type="other" data-lpignore="true" data-1p-ignore="true" />
-                        <input type="hidden" asp-for="Identifier" id="Identifier" />
-                        <input type="hidden" asp-for="UseUsername" id="UseUsername" value="true" />
+            
+            <!-- Body -->
+            <div class="modal-body p-6">
+                 <form id="addBlacklistForm" autocomplete="off" class="space-y-4">
+                    <input type="hidden" asp-for="Identifier" id="Identifier" />
+                    <input type="hidden" asp-for="UseUsername" id="UseUsername" value="true" />
+                    
+                    <div class="relative">
+                        <label class="block text-xs font-medium text-gray-500 uppercase mb-1.5">User to Block</label>
+                        <div class="relative">
+                            <span class="material-symbols-outlined absolute left-3 top-2.5 text-gray-500">search</span>
+                            <input type="text" 
+                                   id="IdentifierInput" 
+                                   class="w-full bg-[#0a0a0a] border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-white focus:outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/50 placeholder-gray-600 transition-all" 
+                                   placeholder="Search by username or email..." 
+                                   autocomplete="off" />
+                            <!-- Loading Spinner -->
+                            <div id="searchSpinner" class="absolute right-3 top-2.5 hidden">
+                                <span class="material-symbols-outlined animate-spin text-gray-500 text-sm">sync</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Custom Autocomplete Dropdown -->
+                        <div id="searchResults" class="absolute z-50 left-0 right-0 mt-2 bg-[#1a1a1a] border border-white/10 rounded-xl shadow-xl max-h-60 overflow-y-auto hidden">
+                            <!-- Results injected here -->
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1" id="selectionStatus">Search and select a user to block.</p>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label" asp-for="Reason">Reason</label>
-                        <input asp-for="Reason" class="form-control" autocomplete="off" />
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 uppercase mb-1.5">Reason for Blocking</label>
+                        <textarea asp-for="Reason" rows="3" class="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/50 placeholder-gray-600 resize-none" placeholder="Explain why this user is being blocked..."></textarea>
                     </div>
 
-                    <button type="submit" class="btn btn-primary">Add</button>
+                    <!-- Footer -->
+                    <div class="pt-4 border-t border-white/5 flex gap-3">
+                         <button type="submit" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-2.5 rounded-xl transition-all shadow-[0_0_15px_rgba(220,38,38,0.3)]">
+                            Block User
+                        </button>
+                         <button type="button" class="flex-1 bg-white/5 hover:bg-white/10 text-white font-medium py-2.5 rounded-xl transition-colors border border-white/10" data-bs-dismiss="modal">
+                            Cancel
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -44,79 +63,126 @@
 </div>
 
 <script>
-      console.log("jQuery version:", $.fn.jquery, " | jQuery UI present:", !!$.ui, " | has autocomplete:", !!$.fn.autocomplete);
+    // --- Autocomplete Logic ---
+    const input = document.getElementById('IdentifierInput');
+    const resultsDiv = document.getElementById('searchResults');
+    const spinner = document.getElementById('searchSpinner');
+    const hiddenId = document.getElementById('Identifier');
+    const hiddenUseUsername = document.getElementById('UseUsername');
+    const statusText = document.getElementById('selectionStatus');
+    let debounceTimer;
 
-    // init autocomplete AFTER modal content exists
-    function initBlacklistAutocomplete() {
-
-      const $input = $("#IdentifierInput");
-          console.log("initBlacklistAutocomplete() called. input exists:", $input.length > 0);
-
-      if (!$input.length) return;
-
-      if ($input.data("ui-autocomplete")) $input.autocomplete("destroy");
-
-      $input.autocomplete({
-        appendTo: "#blacklistAddModal",
-        minLength: 2,
-        delay: 150,
-        source: function (request, response) {
-                    console.log("typing term:", request.term);   // should log on each keystroke
-
-          $.ajax({
-          url: "/api/Blacklist/identifiers",
-          data: { term: request.term },
-          dataType: "json"
-        })
-        .done(function (data) {
-          console.log("api/Blacklist/identifiers ->", data.length, "items");
-          response(data);
-        })
-        .fail(function (xhr) {
-          console.error("identifiers call failed", xhr.status, xhr.responseText);
-          response([]);
-        });
-      },
-      select: function (e, ui) {
-        $("#IdentifierInput").val(ui.item.value || ui.item.label);
-        $("#Identifier").val(ui.item.id);
-        $("#UseUsername").val("false");
-        return false;
-      }
-    });
-    }
-
-    // 1) Re-init autocomplete when modal opens (partial just injected)
-    $(document).on("shown.bs.modal", "#blacklistAddModal", function () {
-      initBlacklistAutocomplete();
-    });
-
-    // 2) Delegate SUBMIT handler so it works even if partial is injected later
-    $(document).on("submit", "#addBlacklistForm", async function (e) {
-      e.preventDefault(); // stop navigation to /Blacklist?... (your redirect)
-      const form = this;
-      const payload = {
-        identifier: form.Identifier.value,                 // hidden field
-        reason: form.Reason.value,
-        useUsername: (form.UseUsername.value === "true")
-      };
-
-      try {
-        const res = await fetch('/api/Blacklist', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        const result = await res.json();
-        showPopup(result.message || (res.ok ? 'Added.' : 'Failed.'), res.ok ? 'success' : 'error');
-        if (res.ok) {
-          const modalEl = form.closest('.modal');
-          (bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl)).hide();
-          if (window.loadBlacklist) loadBlacklist(true);
+    input.addEventListener('input', function() {
+        clearTimeout(debounceTimer);
+        const query = this.value.trim();
+        
+        // Reset valid selection if typing changes
+        if (hiddenId.value && query !== input.dataset.selectedLabel) {
+            hiddenId.value = ''; // Invalid state until re-selected
+            statusText.textContent = 'Please select a user from the list.';
+            statusText.classList.add('text-yellow-500');
+            statusText.classList.remove('text-green-500', 'text-gray-500');
         }
-      } catch (err) {
-        console.error(err);
-        showPopup('Network error while adding to blacklist.', 'error');
-      }
+
+        if (query.length < 2) {
+            resultsDiv.classList.add('hidden');
+            return;
+        }
+
+        spinner.classList.remove('hidden');
+        debounceTimer = setTimeout(async () => {
+            try {
+                const res = await fetch(`/api/Blacklist/identifiers?term=${encodeURIComponent(query)}`);
+                const data = await res.json();
+                
+                resultsDiv.innerHTML = '';
+                if (data.length > 0) {
+                    data.forEach(item => {
+                        const div = document.createElement('div');
+                        div.className = 'p-3 hover:bg-white/5 cursor-pointer border-b border-white/5 last:border-0 transition-colors flex flex-col';
+                        div.innerHTML = `<span class="text-sm font-medium text-white">${item.label.split('  ')[0]}</span><span class="text-xs text-gray-500">${item.label.split('  ')[1] || ''}</span>`;
+                        div.onclick = () => {
+                            input.value = item.value; // Email usually
+                            input.dataset.selectedLabel = item.value;
+                            hiddenId.value = item.id;
+                            hiddenUseUsername.value = 'false'; // using ID
+                            resultsDiv.classList.add('hidden');
+                            statusText.textContent = 'User selected.';
+                            statusText.classList.remove('text-yellow-500', 'text-gray-500');
+                            statusText.classList.add('text-green-500');
+                        };
+                        resultsDiv.appendChild(div);
+                    });
+                    resultsDiv.classList.remove('hidden');
+                } else {
+                    resultsDiv.innerHTML = '<div class="p-3 text-sm text-gray-500 text-center">No users found</div>';
+                    resultsDiv.classList.remove('hidden');
+                }
+            } catch (err) {
+                console.error(err);
+            } finally {
+                spinner.classList.add('hidden');
+            }
+        }, 300);
+    });
+
+    // Close dropdown on outside click
+    document.addEventListener('click', function(e) {
+        if (!input.contains(e.target) && !resultsDiv.contains(e.target)) {
+            resultsDiv.classList.add('hidden');
+        }
+    });
+
+    // --- Form Submission ---
+    document.getElementById('addBlacklistForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const form = e.target;
+        
+        if (!hiddenId.value) {
+            if (window.showPopup) window.showPopup('Please search and select a user first.', 'error');
+            return;
+        }
+
+        const btn = form.querySelector('button[type="submit"]');
+        const originalText = btn.textContent;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-sm">sync</span> Blocking...';
+
+        const payload = {
+            identifier: hiddenId.value,
+            reason: form.querySelector('[name="Reason"]').value,
+            useUsername: false // We set ID from autocomplete always
+        };
+
+        try {
+            const res = await fetch('/api/Blacklist', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!res.ok) {
+                 let message = 'Failed to block user.';
+                 try {
+                    const data = await res.json();
+                    if (data && data.message) message = data.message;
+                } catch { 
+                    try { message = await res.text(); } catch {} 
+                }
+                throw new Error(message);
+            }
+
+            const modalEl = document.getElementById('blacklistAddModal');
+            bootstrap.Modal.getInstance(modalEl).hide();
+            if (window.showPopup) window.showPopup('User blocked successfully.', 'success');
+            if (window.loadBlacklist) loadBlacklist(true);
+            
+        } catch (err) {
+            console.error(err);
+            if (window.showPopup) window.showPopup(err.message, 'error');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = originalText;
+        }
     });
 </script>

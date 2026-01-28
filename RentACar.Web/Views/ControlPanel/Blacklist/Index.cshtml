@@ -1,141 +1,427 @@
 @{
-    ViewData["Title"] = "Blacklist";
-    Layout = null;
+    ViewData["Title"] = "Blacklist Management";
+    Layout = "_Layout"; 
+    ViewData["BodyClass"] = "bg-background-dark";
 }
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"]</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/blacklist.css" />
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css" />
-    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
-</head>
-<body>
-    @await Html.PartialAsync("_PopupNotifications")
-    <div class="blacklist-container container">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <a href="../ControlPanel" class="btn btn-outline-warning rounded-circle d-inline-flex align-items-center justify-content-center" style="width:40px;height:40px" title="Back">
-                <i class="fas fa-arrow-left"></i>
-            </a>
-            <h2 class="flex-grow-1 text-center m-0">Manage Blacklist</h2>
-            <div style="width:40px;"></div>
+
+<!-- Tailwind & Custom Styles -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+    tailwind.config = {
+        darkMode: "class",
+        theme: {
+            extend: {
+                colors: {
+                    "gold": "#d4af37",
+                },
+                fontFamily: {
+                    "display": ["Manrope", "sans-serif"],
+                }
+            }
+        }
+    }
+</script>
+
+<div class="px-4 md:px-10 py-8 max-w-[1440px] mx-auto w-full text-white font-display">
+    
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
+        <div>
+            <h1 class="text-3xl md:text-4xl font-black tracking-tight flex items-center gap-3">
+                <span class="material-symbols-outlined text-gold text-4xl">block</span>
+                Blacklist Management
+            </h1>
+            <p class="text-gray-400 mt-2">Monitor and manage blocked accounts and restrictions.</p>
         </div>
-        <form id="filterForm" class="row g-2 mb-4 align-items-end">
-            <div class="col">
-                <label class="form-label">Search</label>
-                <input type="text" name="search" class="form-control" placeholder="Name or Reason" />
+        <button id="addBlacklistBtn" class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-red-600/20 transition-all hover:scale-105 active:scale-95">
+            <span class="material-symbols-outlined text-[20px]">dangerous</span>
+            <span>Block User</span>
+        </button>
+    </div>
+
+    <!-- Stats Grid (Car Style) -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 px-4 md:px-0">
+        <!-- Total -->
+        <div class="flex flex-col gap-3 rounded-xl p-8 bg-[#121212] border-t-2 border-gold shadow-2xl relative overflow-hidden group">
+            <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                 <span class="material-symbols-outlined text-6xl text-red-500">dangerous</span>
             </div>
-            <div class="col">
-                <label class="form-label">Type</label>
-                <select name="type" class="form-select">
-                    <option value="">Any</option>
-                    <option value="Customer">Customer</option>
-                    <option value="Employee">Employee</option>
-                </select>
+            <p class="text-gray-400 text-sm font-semibold uppercase tracking-wider z-10">Total Blocked</p>
+            <div class="flex items-center gap-3 z-10">
+                <p class="text-white tracking-tight text-4xl font-bold" id="stat-total">-</p>
             </div>
-            <div class="col-auto">
-                <button type="submit" class="btn btn-secondary">Filter</button>
+             <div class="flex items-center gap-2 z-10">
+                <span class="text-red-500 text-sm font-bold flex items-center">
+                    <span class="material-symbols-outlined text-sm mr-1">trending_up</span>+0
+                </span>
+                <span class="text-gray-500 text-xs tracking-wide">new blocks</span>
             </div>
-            <div class="col-auto ms-auto">
-                <button type="button" id="addBlacklist" class="btn btn-primary"><i class="fas fa-plus me-1"></i>Add to Blacklist</button>
-            </div>
-        </form>
-        <div class="mb-3">
-            <input type="text" id="tableSearch" class="form-control" placeholder="Search table..." />
         </div>
-        <div class="table-responsive">
-            <table id="blacklistTable" class="table table-striped table-dark align-middle">
-                <thead>
-                    <tr>
-                        <th>User</th>
-                        <th>Reason</th>
-                        <th>Date Blocked</th>
-                        <th>Blocked By</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="blacklistRows"></tbody>
-            </table>
+
+        <!-- Customers -->
+        <div class="flex flex-col gap-3 rounded-xl p-8 bg-[#121212] border-t-2 border-gold shadow-2xl relative overflow-hidden group">
+             <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                 <span class="material-symbols-outlined text-6xl text-blue-500">person_off</span>
+            </div>
+            <p class="text-gray-400 text-sm font-semibold uppercase tracking-wider z-10">Blocked Customers</p>
+            <div class="flex items-center gap-3 z-10">
+                <p class="text-white tracking-tight text-4xl font-bold" id="stat-customers">-</p>
+            </div>
+             <div class="flex items-center gap-2 z-10">
+                 <span class="text-blue-500 text-xs font-bold tracking-wide flex items-center gap-1">
+                    <span class="material-symbols-outlined text-sm">group</span> Restricted
+                </span>
+            </div>
         </div>
-        <div class="text-center mt-3">
-            <button type="button" id="loadMore" class="btn btn-secondary">Load More</button>
+
+        <!-- Employees -->
+        <div class="flex flex-col gap-3 rounded-xl p-8 bg-[#121212] border-t-2 border-gold shadow-2xl relative overflow-hidden group">
+             <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                 <span class="material-symbols-outlined text-6xl text-[#d4af37]">badge</span>
+            </div>
+            <p class="text-gray-400 text-sm font-semibold uppercase tracking-wider z-10">Blocked Staff</p>
+            <div class="flex items-center gap-3 z-10">
+                <p class="text-white tracking-tight text-4xl font-bold" id="stat-employees">-</p>
+            </div>
+             <div class="flex items-center gap-2 z-10">
+                 <span class="text-[#d4af37] text-xs font-bold tracking-wide flex items-center gap-1">
+                    <span class="material-symbols-outlined text-sm">shield</span> Privileged
+                </span>
+            </div>
         </div>
     </div>
-    <div id="blacklistModalPlaceholder"></div>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    <script>
-        let currentOffset = 0;
-        const pageSize = 30;
-        async function loadBlacklist(reset = false) {
-            if (reset) currentOffset = 0;
-            const params = new URLSearchParams(new FormData(document.getElementById('filterForm')));
-            params.append('offset', currentOffset.toString());
-            const res = await fetch('/api/Blacklist?' + params.toString());
-            const data = await res.json();
-            const tbody = document.getElementById('blacklistRows');
-            if (reset) tbody.innerHTML = '';
-            data.forEach(b => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${b.username}</td>
-                    <td>${b.reason ?? ''}</td>
-                    <td>${b.dateBlocked}</td>
-                    <td>${b.employeeName}</td>
-                    <td>
-                        <a href="#" class="text-info me-2 view-blacklist" data-id="${b.blacklistId}" title="View details"><i class="fas fa-eye"></i></a>
-                        <a href="#" class="text-danger unblock-blacklist" data-id="${b.blacklistId}" title="Unblock"><i class="fas fa-unlock"></i></a>
-                    </td>`;
-                tbody.appendChild(row);
-            });
-            currentOffset += data.length;
-            document.getElementById('loadMore').style.display = data.length >= pageSize ? '' : 'none';
+
+    <!-- Filters & Toolbar (Car Style) -->
+    <div class="bg-[#16181a] border border-[#262626] rounded-2xl p-4 mb-6 shadow-xl">
+        <form id="filterForm" class="flex flex-col lg:flex-row gap-4 items-end">
+            <!-- Search -->
+            <label class="flex flex-col w-full lg:flex-[2]">
+                <span class="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Search</span>
+                <div class="relative">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-gray-500">search</span>
+                    <input type="text" name="search" id="searchInput"
+                           class="w-full bg-[#0a0a0a] border border-[#262626] rounded-xl py-3 pl-12 pr-4 text-white placeholder-gray-600 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all" 
+                           placeholder="Search Name, Email, or Reason..." />
+                </div>
+            </label>
+            
+            <!-- Type Filter -->
+            <label class="flex flex-col w-full lg:flex-1">
+                <span class="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">User Type</span>
+                <div class="relative">
+                     <select name="type" id="typeFilter"
+                            class="w-full bg-[#0a0a0a] bg-none border border-[#262626] rounded-xl py-3 pl-4 pr-10 text-white placeholder-gray-600 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold appearance-none cursor-pointer">
+                        <option value="">All Types</option>
+                        <option value="Customer">Customer</option>
+                        <option value="Employee">Employee</option>
+                    </select>
+                    <span class="absolute right-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-gray-500 pointer-events-none">expand_more</span>
+                </div>
+            </label>
+
+            <button type="submit" class="w-full lg:w-auto h-[50px] bg-white/5 hover:bg-white/10 text-white border border-[#262626] px-6 rounded-xl font-bold transition-colors flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined">filter_list</span>
+                Filter
+            </button>
+        </form>
+    </div>
+
+    <!-- Table Container (Car Style) -->
+    <div class="bg-[#16181a] border border-[#262626] rounded-2xl overflow-hidden shadow-2xl">
+        <div class="overflow-x-auto min-h-[400px]">
+             <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-white/5 border-b border-[#262626] text-gray-400 text-xs uppercase tracking-wider font-bold">
+                        <th class="px-6 py-4 cursor-pointer hover:text-white transition-colors" onclick="setSort('User')">
+                            <div class="flex items-center gap-1">User <span class="material-symbols-outlined text-[14px]" id="sort-User">unfold_more</span></div>
+                        </th>
+                         <th class="px-6 py-4">Type</th>
+                        <th class="px-6 py-4 cursor-pointer hover:text-white transition-colors" onclick="setSort('Reason')">
+                            <div class="flex items-center gap-1">Reason <span class="material-symbols-outlined text-[14px]" id="sort-Reason">unfold_more</span></div>
+                        </th>
+                        <th class="px-6 py-4 cursor-pointer hover:text-white transition-colors" onclick="setSort('DateBlocked')">
+                            <div class="flex items-center gap-1">Date Blocked <span class="material-symbols-outlined text-[14px]" id="sort-DateBlocked">unfold_more</span></div>
+                        </th>
+                         <th class="px-6 py-4 cursor-pointer hover:text-white transition-colors" onclick="setSort('BlockedBy')">
+                            <div class="flex items-center gap-1">Blocked By <span class="material-symbols-outlined text-[14px]" id="sort-BlockedBy">unfold_more</span></div>
+                        </th>
+                        <th class="px-6 py-4 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="blacklistRows" class="divide-y divide-[#262626]">
+                    <!-- Rows injected via JS -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination Controls -->
+        <div id="paginationControls" class="border-t border-[#262626] p-4 flex items-center justify-between bg-[#0a0a0a] hidden">
+            <div class="text-sm text-gray-500" id="showingText">Showing 0 of 0</div>
+            <div class="flex items-center gap-2">
+                <button id="prevBtn" onclick="changePage(-1)" class="p-2 rounded-lg hover:bg-white/10 text-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                    <span class="material-symbols-outlined">chevron_left</span>
+                </button>
+                <div id="pageNumbers" class="flex items-center gap-1"></div>
+                <button id="nextBtn" onclick="changePage(1)" class="p-2 rounded-lg hover:bg-white/10 text-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                    <span class="material-symbols-outlined">chevron_right</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Loading / Empty -->
+        <div id="loadingState" class="hidden p-12 text-center text-gray-500">
+            <span class="material-symbols-outlined text-4xl animate-spin mb-2">progress_activity</span>
+            <p>Loading blacklist data...</p>
+        </div>
+        <div id="emptyState" class="hidden p-12 text-center text-gray-500">
+            <span class="material-symbols-outlined text-4xl mb-2">playlist_remove</span>
+            <p>No blocked users found.</p>
+        </div>
+    </div>
+
+</div>
+
+<!-- Global Modal Placeholder -->
+<div id="blacklistModalPlaceholder"></div>
+
+<script>
+    // State
+    let currentPage = 1;
+    let pageSize = 10;
+    let totalPages = 1;
+    let sortColumn = 'DateBlocked';
+    let sortDirection = 'desc';
+
+    // Init
+    document.addEventListener('DOMContentLoaded', () => {
+        loadBlacklist();
+
+        document.getElementById('filterForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            currentPage = 1;
+            loadBlacklist();
+        });
+
+        document.getElementById('addBlacklistBtn').addEventListener('click', () => {
+            loadModal('/Blacklist/Add');
+        });
+        
+        // Debounce search
+        let timeout = null;
+        document.getElementById('searchInput').addEventListener('input', () => {
+           clearTimeout(timeout);
+           timeout = setTimeout(() => {
+               currentPage = 1;
+               loadBlacklist();
+           }, 400);
+        });
+        
+        // Filter changes
+        document.getElementById('typeFilter').addEventListener('change', () => { currentPage = 1; loadBlacklist(); });
+    });
+
+    function setSort(col) {
+        if(sortColumn === col) {
+            sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            sortColumn = col;
+            sortDirection = 'asc';
         }
-        async function loadModal(url) {
+        
+        // Update icons
+        document.querySelectorAll('[id^="sort-"]').forEach(el => el.textContent = 'unfold_more');
+        const active = document.getElementById('sort-' + col);
+        if(active) active.textContent = sortDirection === 'asc' ? 'keyboard_arrow_up' : 'keyboard_arrow_down';
+        
+        loadBlacklist();
+    }
+    
+    function changePage(delta) {
+        const novo = currentPage + delta;
+        if(novo > 0 && novo <= totalPages) {
+            currentPage = novo;
+            loadBlacklist();
+        }
+    }
+    
+    function gotoPage(p) {
+        currentPage = p;
+        loadBlacklist();
+    }
+
+    async function loadBlacklist() {
+        const tbody = document.getElementById('blacklistRows');
+        const loading = document.getElementById('loadingState');
+        const empty = document.getElementById('emptyState');
+        const pagination = document.getElementById('paginationControls');
+        
+        tbody.closest('table').style.opacity = '0.5';
+        
+        try {
+            const formData = new FormData(document.getElementById('filterForm'));
+            const params = new URLSearchParams();
+            for(let [k,v] of formData) {
+                if(v) params.append(k,v);
+            }
+            
+            params.append('page', currentPage);
+            params.append('pageSize', pageSize);
+            params.append('sortColumn', sortColumn);
+            params.append('sortDirection', sortDirection);
+
+            const res = await fetch('/api/Blacklist?' + params.toString());
+            if(!res.ok) throw new Error('Failed to load data');
+            
+            const data = await res.json();
+            
+            tbody.closest('table').style.opacity = '1';
+            tbody.innerHTML = '';
+            
+            if(data.items.length === 0) {
+                empty.classList.remove('hidden');
+                loading.classList.add('hidden');
+                pagination.classList.add('hidden');
+                updateStatsWidgets(); 
+                return;
+            }
+            
+            empty.classList.add('hidden');
+            loading.classList.add('hidden');
+            pagination.classList.remove('hidden');
+
+            // Render Table
+            data.items.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-white/5 transition-colors group border-b border-[#262626] last:border-0 align-middle';
+                
+                tr.innerHTML = `
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 font-bold text-sm border border-red-500/20">
+                                ${(item.username || '?').substring(0,2).toUpperCase()}
+                            </div>
+                            <span class="font-bold text-white text-base">${item.username || 'Unknown'}</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${item.userType === 'Employee' ? 'bg-purple-500/10 text-purple-500 border border-purple-500/20' : 'bg-blue-500/10 text-blue-500 border border-blue-500/20'}">
+                            ${item.userType}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-gray-400 text-sm max-w-[200px] truncate" title="${item.reason}">${item.reason || '-'}</td>
+                    <td class="px-6 py-4 text-gray-400 text-sm font-mono">${item.dateBlocked}</td>
+                    <td class="px-6 py-4 text-gray-300 text-sm">${item.employeeName}</td>
+                    <td class="px-6 py-4 text-right">
+                        <div class="flex items-center justify-end gap-2 opacity-100 transition-opacity">
+                            <button class="unblock-blacklist p-2 text-red-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors" data-id="${item.blacklistId}" title="Unblock User">
+                               <span class="material-symbols-outlined text-[20px]">lock_open</span>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            
+            // Pagination UI
+            totalPages = data.totalPages;
+            document.getElementById('showingText').innerText = `Showing ${(currentPage-1)*pageSize + 1} - ${Math.min(currentPage*pageSize, data.totalCount)} of ${data.totalCount}`;
+            document.getElementById('prevBtn').disabled = currentPage <= 1;
+            document.getElementById('nextBtn').disabled = currentPage >= totalPages;
+            
+            renderPageNumbers(totalPages, currentPage);
+            updateStatsWidgets();
+
+        } catch(e) {
+            console.error(e);
+            tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-red-500">Failed to load data</td></tr>';
+            tbody.closest('table').style.opacity = '1';
+        }
+    }
+    
+    function renderPageNumbers(total, current) {
+        const container = document.getElementById('pageNumbers');
+        container.innerHTML = '';
+        
+        let pages = [];
+        if(total <= 7) {
+            pages = Array.from({length: total}, (_, i) => i + 1);
+        } else {
+            if(current <= 4) {
+                pages = [1,2,3,4,5, '...', total];
+            } else if(current >= total - 3) {
+                pages = [1, '...', total-4, total-3, total-2, total-1, total];
+            } else {
+                pages = [1, '...', current-1, current, current+1, '...', total];
+            }
+        }
+        
+        pages.forEach(p => {
+             if(p === '...') {
+                 const span = document.createElement('span');
+                 span.className = 'text-gray-600 px-2';
+                 span.textContent = '...';
+                 container.appendChild(span);
+             } else {
+                 const btn = document.createElement('button');
+                 btn.className = `w-8 h-8 rounded-lg text-xs font-bold transition-all ${p === current ? 'bg-gold text-black shadow-lg shadow-gold/20' : 'bg-[#16181a] text-gray-400 hover:text-white hover:bg-white/10'}`;
+                 btn.textContent = p;
+                 btn.onclick = () => gotoPage(p);
+                 container.appendChild(btn);
+             }
+        });
+    }
+
+    async function updateStatsWidgets() {
+         const getCount = async (params) => {
+             const p = new URLSearchParams(params);
+             p.append('pageSize', '1'); 
+             const res = await fetch('/api/Blacklist?' + p.toString());
+             const data = await res.json();
+             return data.totalCount;
+         };
+
+         const [total, customers, employees] = await Promise.all([
+             getCount({}), 
+             getCount({type: 'Customer'}), 
+             getCount({type: 'Employee'})
+         ]);
+
+         document.getElementById('stat-total').textContent = total;
+         document.getElementById('stat-customers').textContent = customers;
+         document.getElementById('stat-employees').textContent = employees;
+    }
+
+    async function loadModal(url) {
+        try {
             const res = await fetch(url);
+            if(!res.ok) throw new Error("Failed to load modal");
             const html = await res.text();
+            
             const placeholder = document.getElementById('blacklistModalPlaceholder');
-            placeholder.innerHTML = html;
+            placeholder.innerHTML = html; 
+            
+            // Execute scripts
             placeholder.querySelectorAll('script').forEach(scr => {
                 const s = document.createElement('script');
                 s.textContent = scr.textContent;
                 document.body.appendChild(s);
                 document.body.removeChild(s);
             });
+
             const modalEl = placeholder.querySelector('.modal');
             const modal = new bootstrap.Modal(modalEl);
             modal.show();
+            
+        } catch(e) { console.error(e); }
+    }
+    
+    // Delegation for Action Buttons
+    document.getElementById('blacklistRows').addEventListener('click', async e => {
+        const del = e.target.closest('.unblock-blacklist');
+
+        if (del) {
+           loadModal('/Blacklist/Delete/' + del.dataset.id);
         }
-        document.addEventListener('DOMContentLoaded', () => {
-            loadBlacklist(true);
-            document.getElementById('filterForm').addEventListener('submit', e => { e.preventDefault(); loadBlacklist(true); });
-            document.getElementById('addBlacklist').addEventListener('click', () => loadModal('/Blacklist/Add'));
-            document.getElementById('loadMore').addEventListener('click', () => loadBlacklist(false));
-            document.getElementById('blacklistRows').addEventListener('click', e => {
-                const view = e.target.closest('.view-blacklist');
-                const del = e.target.closest('.unblock-blacklist');
-                if (view) {
-                    e.preventDefault();
-                    loadModal('/Blacklist/Details/' + view.dataset.id);
-                } else if (del) {
-                    e.preventDefault();
-                    loadModal('/Blacklist/Delete/' + del.dataset.id);
-                }
-            });
-            document.getElementById('tableSearch').addEventListener('keyup', function () {
-                const value = this.value.toLowerCase();
-                document.querySelectorAll('#blacklistTable tbody tr').forEach(tr => {
-                    tr.style.display = tr.textContent.toLowerCase().includes(value) ? '' : 'none';
-                });
-            });
-        });
-    </script>
-</body>
-</html>
+    });
+
+</script>

@@ -8,6 +8,7 @@ using RentACar.Application.DTOs;
 using RentACar.Core.Entities;
 using RentACar.Core.Repositories;
 using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
 using AspNetUserDto = RentACar.Application.DTOs.AspNetUser; // Assuming you have this DTO
 using EmployeeDto = RentACar.Application.DTOs.EmployeeDto;        // Assuming you have this DTO
 using CustomerDto = RentACar.Application.DTOs.CustomerDTO;        // Assuming you have this DTO
@@ -352,6 +353,82 @@ namespace RentACar.Application.Managers
                 return OperationResult<bool>.Failure("Entry not found");
             var req = new RemoveFromBlacklistRequestDto { Identifier = entry.UserId, UseUsername = false };
             return await RemoveFromBlacklistAsync(req, loggedInEmployeeDto);
+        }
+        public async Task<PagedResultDto<BlacklistDisplayDto>> GetBlacklistPagedAsync(
+            string? search, 
+            string? type, 
+            int page = 1, 
+            int pageSize = 10,
+            string? sortColumn = "DateBlocked",
+            string? sortDirection = "desc")
+        {
+            var query = _blacklistRepository.Query()
+                .Include(b => b.User)
+                    .ThenInclude(u => u.Roles)
+                .Include(b => b.EmployeeDoneBlacklist)
+                .AsNoTracking()
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var lowerSearch = search.ToLower();
+                query = query.Where(b => 
+                    (b.User.UserName != null && b.User.UserName.ToLower().Contains(lowerSearch)) ||
+                    (b.User.Email != null && b.User.Email.ToLower().Contains(lowerSearch)) ||
+                    (b.Reason != null && b.Reason.ToLower().Contains(lowerSearch)));
+            }
+            
+            if (!string.IsNullOrWhiteSpace(type))
+            {
+                // This assumes Roles collection is available and populated.
+                // If it's a many-to-many skip logic, EF Core might handle it if configured.
+                // If standard identity, it might be UserRoles join.
+                // Validating based on 'AspNetUser.cs' having 'Roles' collection of 'AspNetRole'.
+                query = query.Where(b => b.User.Roles.Any(r => r.Name == type));
+            }
+
+            var totalCount = await query.CountAsync();
+
+            query = ApplySort(query, sortColumn, sortDirection);
+
+            var items = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            var dtos = items.Select(item => new BlacklistDisplayDto
+            {
+                BlacklistId = item.BlacklistId,
+                UserId = item.UserId,
+                Username = item.User.UserName ?? "Unknown",
+                Reason = item.Reason,
+                DateBlocked = item.DateBlocked,
+                EmployeeDoneBlacklistId = item.EmployeeDoneBlacklistId,
+                EmployeeName = item.EmployeeDoneBlacklist?.Name ?? "Unknown",
+                UserType = item.User.Roles.FirstOrDefault()?.Name ?? "Unknown" // Just taking first role for display, accurate enough for Customer vs Employee distinction
+            }).ToList();
+
+            return new PagedResultDto<BlacklistDisplayDto>
+            {
+                Items = dtos,
+                TotalCount = totalCount,
+                Page = page,
+                PageSize = pageSize,
+                TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize)
+            };
+        }
+
+        private IQueryable<BlackList> ApplySort(IQueryable<BlackList> query, string? sortColumn, string? sortDirection)
+        {
+            var isAsc = sortDirection?.ToLower() == "asc";
+            return sortColumn?.ToLower() switch
+            {
+                "user" => isAsc ? query.OrderBy(b => b.User.UserName) : query.OrderByDescending(b => b.User.UserName),
+                "reason" => isAsc ? query.OrderBy(b => b.Reason) : query.OrderByDescending(b => b.Reason),
+                "dateblocked" => isAsc ? query.OrderBy(b => b.DateBlocked) : query.OrderByDescending(b => b.DateBlocked),
+                "blockedby" => isAsc ? query.OrderBy(b => b.EmployeeDoneBlacklist.Name) : query.OrderByDescending(b => b.EmployeeDoneBlacklist.Name),
+                _ => query.OrderByDescending(b => b.DateBlocked)
+            };
         }
     }
 

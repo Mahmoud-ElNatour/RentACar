@@ -81,14 +81,15 @@
                      <p class="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Management</p>
                      
                      <!-- Control Panel Group -->
-                     <button onclick="toggleSidebarDropdown('controlPanelMenu', 'cpArrow')" 
-                             class="w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors group">
-                        <div class="flex items-center gap-3">
-                             <span class="material-symbols-outlined text-[22px] group-hover:scale-110 transition-transform">settings</span>
-                             Control Panel
-                        </div>
-                        <span id="cpArrow" class="material-symbols-outlined text-[18px] transition-transform duration-200">expand_more</span>
-                     </button>
+                     <div class="relative group/menu" onmouseenter="openMenu('controlPanelMenu', 'cpArrow')" onmouseleave="closeMenu('controlPanelMenu', 'cpArrow')">
+                         <a href="/ControlPanel" 
+                            class="w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors group">
+                            <div class="flex items-center gap-3">
+                                 <span class="material-symbols-outlined text-[22px] group-hover:scale-110 transition-transform">settings</span>
+                                 Control Panel
+                            </div>
+                            <span id="cpArrow" class="material-symbols-outlined text-[18px] transition-transform duration-200">expand_more</span>
+                         </a>
                      
                      <!-- Submenu -->
                      <div id="controlPanelMenu" class="hidden pl-4 space-y-1 mt-1 border-l border-border-dark ml-5">
@@ -104,9 +105,7 @@
                           <a href="/Category" class="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md text-gray-500 hover:text-gold hover:bg-gold/5 transition-colors">
                               <span class="material-symbols-outlined text-[18px]">category</span> Categories
                           </a>
-                          <a href="/CreditCard" class="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md text-gray-500 hover:text-gold hover:bg-gold/5 transition-colors">
-                              <span class="material-symbols-outlined text-[18px]">credit_card</span> Credit Cards
-                          </a>
+
                           <a href="/Customer" class="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md text-gray-500 hover:text-gold hover:bg-gold/5 transition-colors">
                               <span class="material-symbols-outlined text-[18px]">group</span> Customers
                           </a>
@@ -122,50 +121,57 @@
                           <a href="/Promocode" class="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md text-gray-500 hover:text-gold hover:bg-gold/5 transition-colors">
                               <span class="material-symbols-outlined text-[18px]">local_offer</span> Promocodes
                           </a>
-                          <a href="/ControlPanel/Ratings" class="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md text-gray-500 hover:text-gold hover:bg-gold/5 transition-colors">
-                              <span class="material-symbols-outlined text-[18px]">star</span> Ratings
-                          </a>
+
                           @if (User.IsInRole("Admin"))
                           {
                               <a href="/ControlPanel/ChangeRole" class="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md text-gray-500 hover:text-gold hover:bg-gold/5 transition-colors">
                                   <span class="material-symbols-outlined text-[18px]">admin_panel_settings</span> Change Role
                               </a>
                           }
-                     </div>
+                     </div> <!-- End Submenu -->
+                     </div> <!-- End Hover Group -->
+
+                     <!-- Ratings (Moved Outside) -->
+                     <a href="/ControlPanel/Ratings" class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors group mt-1 text-gray-400 hover:text-white hover:bg-white/5">
+                        <span class="material-symbols-outlined text-[22px] group-hover:scale-110 transition-transform">star</span>
+                        Ratings
+                     </a>
 
                      <!-- Email Services Group -->
-                     <button onclick="toggleSidebarDropdown('emailServicesMenu', 'esArrow')" 
-                             class="w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors group mt-1">
-                        <div class="flex items-center gap-3">
-                             <span class="material-symbols-outlined text-[22px] group-hover:scale-110 transition-transform">mail</span>
-                             Email Services
-                        </div>
-                        <span id="esArrow" class="material-symbols-outlined text-[18px] transition-transform duration-200">expand_more</span>
-                     </button>
+                     <div class="relative group/menu mt-1" onmouseenter="openMenu('emailServicesMenu', 'esArrow')" onmouseleave="closeMenu('emailServicesMenu', 'esArrow')">
+                         <a href="/EmailServices/EmailServicesHub" 
+                                 class="w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors group">
+                            <div class="flex items-center gap-3">
+                                 <span class="material-symbols-outlined text-[22px] group-hover:scale-110 transition-transform">mail</span>
+                                 Email Services
+                            </div>
+                            <span id="esArrow" class="material-symbols-outlined text-[18px] transition-transform duration-200">expand_more</span>
+                         </a>
                      
                      <!-- Email Services Submenu -->
                      <div id="emailServicesMenu" class="hidden pl-4 space-y-1 mt-1 border-l border-border-dark ml-5">
                           <a href="/EmailServices/EmailServicesHub" class="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md text-gray-500 hover:text-gold hover:bg-gold/5 transition-colors">
                               <span class="material-symbols-outlined text-[18px]">hub</span> Email Hub
                           </a>
-                          <a href="/SendEmail" class="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md text-gray-500 hover:text-gold hover:bg-gold/5 transition-colors">
+                          <a href="/Admin/EmailServices/SendEmail" class="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md text-gray-500 hover:text-gold hover:bg-gold/5 transition-colors">
                               <span class="material-symbols-outlined text-[18px]">send</span> Send Email
                           </a>
                           <a href="/DistributionLists" class="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md text-gray-500 hover:text-gold hover:bg-gold/5 transition-colors">
                               <span class="material-symbols-outlined text-[18px]">group_add</span> Dist. Lists
                           </a>
-                          <a href="/EmailConfigurationCenter" class="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md text-gray-500 hover:text-gold hover:bg-gold/5 transition-colors">
+                          <a href="/Admin/EmailServices/NotificationsEmailManagement" class="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md text-gray-500 hover:text-gold hover:bg-gold/5 transition-colors">
                               <span class="material-symbols-outlined text-[18px]">settings_applications</span> Configure
                           </a>
                           <a href="/Admin/EmailServices/Templates" class="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md text-gray-500 hover:text-gold hover:bg-gold/5 transition-colors">
                               <span class="material-symbols-outlined text-[18px]">dashboard_customize</span> Templates
                           </a>
                           <a href="/Admin/Outbox" class="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md text-gray-500 hover:text-gold hover:bg-gold/5 transition-colors">
-                              <span class="material-symbols-outlined text-[18px]">outbox</span> Outbox
+                              <span class="material-symbols-outlined text-[18px]">history</span> Email Logs
                           </a>
                           <a href="/Admin/NotificationLog" class="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md text-gray-500 hover:text-gold hover:bg-gold/5 transition-colors">
                               <span class="material-symbols-outlined text-[18px]">receipt_long</span> Notification Log
                           </a>
+                     </div> 
                      </div>
 
                      <a href="/Reports" class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors group mt-1 @(ViewContext.RouteData.Values["controller"]?.ToString() == "Reports" ? "bg-gold/10 text-gold shadow-glow" : "text-gray-400 hover:text-white hover:bg-white/5")">
@@ -188,14 +194,16 @@
         <!-- Footer / User Info -->
         <div class="p-4 border-t border-border-dark bg-background-dark/50 shrink-0">
              <div class="flex items-center justify-between gap-3">
-                 <div class="flex items-center gap-3 min-w-0">
-                     <div class="h-10 w-10 shrink-0 rounded-full border border-gold/30 shadow-sm bg-center bg-cover" 
-                          style="background-image: url('@avatarUrl');"></div>
-                     <div class="min-w-0 flex-1 hidden sm:block">
-                         <p class="text-sm font-medium text-white truncate">@displayName</p>
-                         <p class="text-[10px] text-gray-500 truncate">@User.Identity?.Name</p>
+                 <a href="/Identity/Account/Manage" class="flex items-center justify-between gap-3 min-w-0 flex-1 hover:bg-white/5 p-2 -m-2 rounded-lg transition-colors group">
+                     <div class="flex items-center gap-3 min-w-0">
+                         <div class="h-10 w-10 shrink-0 rounded-full border border-gold/30 shadow-sm bg-center bg-cover" 
+                              style="background-image: url('@avatarUrl');"></div>
+                         <div class="min-w-0 flex-1 hidden sm:block text-left">
+                             <p class="text-sm font-medium text-white truncate group-hover:text-gold transition-colors">@displayName</p>
+                             <p class="text-[10px] text-gray-500 truncate">@User.Identity?.Name</p>
+                         </div>
                      </div>
-                 </div>
+                 </a>
                  
                  <!-- Logout Button -->
                 <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
@@ -206,3 +214,18 @@
              </div>
         </div>
     </aside>
+<script>
+    function openMenu(menuId, arrowId) {
+        const menu = document.getElementById(menuId);
+        const arrow = document.getElementById(arrowId);
+        if (menu) menu.classList.remove('hidden');
+        if (arrow) arrow.style.transform = 'rotate(180deg)';
+    }
+
+    function closeMenu(menuId, arrowId) {
+        const menu = document.getElementById(menuId);
+        const arrow = document.getElementById(arrowId);
+        if (menu) menu.classList.add('hidden');
+        if (arrow) arrow.style.transform = 'rotate(0deg)';
+    }
+</script>

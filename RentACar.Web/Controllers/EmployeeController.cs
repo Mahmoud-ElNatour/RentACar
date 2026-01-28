@@ -65,25 +65,25 @@ namespace RentACar.Web.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<EmployeeDisplayDto>>> Get([FromQuery] string? search, [FromQuery] bool? active, [FromQuery] string? role)
+        public async Task<ActionResult<PagedResultDto<EmployeeDisplayDto>>> Get(
+            [FromQuery] string? search, 
+            [FromQuery] bool? active, 
+            [FromQuery] string? role,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10,
+            [FromQuery] string? sortColumn = "Name",
+            [FromQuery] string? sortDirection = "asc")
         {
-            var employees = await _employeeManager.GetAllEmployeesWithRoles();
-            if (!string.IsNullOrWhiteSpace(search))
+            try
             {
-                employees = employees.Where(e =>
-                    (!string.IsNullOrEmpty(e.Name) && e.Name.Contains(search, System.StringComparison.OrdinalIgnoreCase)) ||
-                    (!string.IsNullOrEmpty(e.Email) && e.Email.Contains(search, System.StringComparison.OrdinalIgnoreCase))
-                ).ToList();
+                var result = await _employeeManager.GetEmployeesPagedAsync(search, active, role, page, pageSize, sortColumn, sortDirection);
+                return Ok(result);
             }
-            if (active.HasValue)
+            catch (Exception ex)
             {
-                employees = employees.Where(e => e.IsActive == active.Value).ToList();
+                _logger.LogError(ex, "Failed to load employees paged");
+                return StatusCode(500, new { message = ex.Message });
             }
-            if (!string.IsNullOrWhiteSpace(role))
-            {
-                employees = employees.Where(e => string.Equals(e.Role, role, System.StringComparison.OrdinalIgnoreCase)).ToList();
-            }
-            return Ok(employees);
         }
 
 

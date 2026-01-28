@@ -62,5 +62,10 @@ namespace RentACar.Infrastructure.Repositories
                                    .Include(e => e.BlackLists)
                                    .FirstOrDefaultAsync(c => c.aspNetUserId == aspNetUserId);
         }
+
+        public IQueryable<Employee> Query()
+        {
+            return _dbContext.Set<Employee>().AsQueryable();
+        }
     }
 }

@@ -1,58 +1,75 @@
 @{
     ViewData["Title"] = "Payment Management";
+    Layout = "_Layout";
     ViewData["BodyClass"] = "bg-background-dark";
 }
 
-<!-- Content Header (Custom to match design, not extending _Layout header) -->
-<div class="flex flex-col md:flex-row flex-wrap justify-between gap-6 mb-8 items-start md:items-center p-4 md:px-10 md:py-8 max-w-[1440px] mx-auto w-full">
-    <div class="flex flex-col gap-2">
-        <h1 class="text-white text-3xl md:text-4xl font-black tracking-tight flex items-center gap-3">
-            <span class="material-symbols-outlined text-gold text-4xl">receipt_long</span>
-            Booking Payments
-        </h1>
-        <p class="text-gray-400 text-base">Manage and track all rental payments, refunds, and invoices.</p>
-    </div>
-    <a href="/Payment/Add" class="flex items-center gap-2 bg-gold hover:bg-gold-hover transition-colors text-black px-6 py-3 rounded-lg font-bold shadow-lg shadow-gold/10 text-decoration-none">
-        <span class="material-symbols-outlined text-[20px]">add_circle</span>
-        <span>Add Payment</span>
-    </a>
-</div>
+<!-- Tailwind & Custom Styles -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+    tailwind.config = {
+        darkMode: "class",
+        theme: {
+            extend: {
+                colors: { "gold": "#d4af37" },
+                fontFamily: { "display": ["Manrope", "sans-serif"] }
+            }
+        }
+    }
+</script>
 
-<div class="px-4 md:px-10 pb-8 max-w-[1440px] mx-auto w-full">
-    <!-- Stats Grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8" id="statsGrid">
-        <!-- Stats will be injected via JS -->
-         <div class="bg-surface-dark rounded-xl p-5 border border-border-dark flex flex-col gap-1 animate-pulse">
-             <div class="h-4 bg-white/10 rounded w-1/2 mb-2"></div>
-             <div class="h-8 bg-white/10 rounded w-3/4"></div>
+<div class="px-4 md:px-10 py-8 max-w-[1440px] mx-auto w-full text-white font-display">
+    
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
+        <div>
+            <h1 class="text-3xl md:text-4xl font-black tracking-tight flex items-center gap-3">
+                <span class="material-symbols-outlined text-gold text-4xl">receipt_long</span>
+                Booking Payments
+            </h1>
+            <p class="text-gray-400 mt-2">Manage rental payments, track revenue, and handle refunds.</p>
+        </div>
+        <button onclick="loadModal('/Payment/Add')" class="flex items-center gap-2 bg-gold hover:bg-[#b5952f] text-black px-6 py-3 rounded-xl font-bold shadow-lg shadow-gold/10 transition-all hover:scale-105 active:scale-95">
+            <span class="material-symbols-outlined text-[20px]">add_circle</span>
+            <span>Add Payment</span>
+        </button>
+    </div>
+
+    <!-- Stats Grid (Car Style) -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8 px-4 md:px-0" id="statsGrid">
+        <!-- Stats Injected via JS -->
+         <div class="bg-[#121212] border-t-2 border-gold rounded-xl p-8 shadow-2xl animate-pulse">
+             <div class="h-8 bg-white/10 rounded w-1/2 mb-2"></div>
          </div>
     </div>
 
-    <!-- Filters -->
-    <div class="bg-surface-dark rounded-xl border border-border-dark p-4 mb-6 shadow-xl">
+    <!-- Filters & Toolbar (Car Style) -->
+    <div class="bg-[#16181a] border border-[#262626] rounded-2xl p-4 mb-6 shadow-xl">
         <div class="flex flex-col lg:flex-row gap-4 items-end">
+            <!-- Search -->
             <label class="flex flex-col w-full lg:flex-[2]">
                 <span class="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Search</span>
                 <div class="relative">
                     <span class="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-gray-500">search</span>
-                    <input id="tableSearch" onchange="resetAndLoad()" class="w-full bg-[#0a0a0a] border border-border-dark rounded-lg py-3 pl-12 pr-4 text-white placeholder-gray-600 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all" placeholder="Search by ID, Booking, Customer..." type="text"/>
+                    <input id="tableSearch" oninput="debounceLoad()" class="w-full bg-[#0a0a0a] border border-[#262626] rounded-xl py-3 pl-12 pr-4 text-white placeholder-gray-600 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all" placeholder="Search ID, Customer..." type="text"/>
                 </div>
             </label>
-            <div class="flex gap-2 w-full lg:flex-[2]">
-                <label class="flex flex-col w-full">
-                    <span class="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">From</span>
-                    <input id="dateFrom" type="date" onchange="resetAndLoad()" class="w-full bg-[#0a0a0a] border border-border-dark rounded-lg py-3 px-4 text-white focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all"/>
-                </label>
-                <label class="flex flex-col w-full">
-                    <span class="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">To</span>
-                    <input id="dateTo" type="date" onchange="resetAndLoad()" class="w-full bg-[#0a0a0a] border border-border-dark rounded-lg py-3 px-4 text-white focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all"/>
-                </label>
-            </div>
+            
+            <!-- Dates -->
+             <label class="flex flex-col w-full lg:flex-1">
+                <span class="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">From</span>
+                <input id="dateFrom" type="date" onchange="resetAndLoad()" class="w-full bg-[#0a0a0a] border border-[#262626] rounded-xl py-3 px-4 text-white placeholder-gray-600 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all"/>
+            </label>
+             <label class="flex flex-col w-full lg:flex-1">
+                <span class="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">To</span>
+                <input id="dateTo" type="date" onchange="resetAndLoad()" class="w-full bg-[#0a0a0a] border border-[#262626] rounded-xl py-3 px-4 text-white placeholder-gray-600 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all"/>
+            </label>
+
+            <!-- Status Filter -->
             <label class="flex flex-col w-full lg:flex-1">
                 <span class="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Status</span>
                 <div class="relative">
-                    <span class="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-gray-500">filter_list</span>
-                    <select id="statusFilter" onchange="resetAndLoad()" class="w-full bg-[#0a0a0a] border border-border-dark rounded-lg py-3 pl-12 pr-4 text-white placeholder-gray-600 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold appearance-none cursor-pointer">
+                     <select id="statusFilter" onchange="resetAndLoad()" class="w-full bg-[#0a0a0a] bg-none border border-[#262626] rounded-xl py-3 pl-4 pr-10 text-white placeholder-gray-600 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold appearance-none cursor-pointer">
                         <option value="">All Statuses</option>
                         <option value="Paid">Paid</option>
                         <option value="Pending">Pending</option>
@@ -62,419 +79,391 @@
                     <span class="absolute right-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-gray-500 pointer-events-none">expand_more</span>
                 </div>
             </label>
-            <button onclick="exportTable()" class="w-full lg:w-auto bg-white/5 hover:bg-white/10 text-white border border-border-dark px-6 py-3 rounded-lg font-bold transition-colors flex items-center justify-center gap-2">
+            
+            <button onclick="exportTable()" class="w-full lg:w-auto h-[50px] bg-white/5 hover:bg-white/10 text-white border border-[#262626] px-6 rounded-xl font-bold transition-colors flex items-center justify-center gap-2">
                 <span class="material-symbols-outlined">download</span>
                 Export
             </button>
         </div>
     </div>
 
-    <!-- Table -->
-    <div class="bg-surface-dark rounded-xl border border-border-dark overflow-hidden flex flex-col flex-1 shadow-2xl relative min-h-[400px]">
-        <div class="overflow-x-auto">
-            <table class="w-full whitespace-nowrap text-left border-collapse">
+    <!-- Table Container (Car Style) -->
+    <div class="bg-[#16181a] border border-[#262626] rounded-2xl overflow-hidden shadow-2xl">
+        <div class="overflow-x-auto min-h-[400px]">
+             <table class="w-full text-left border-collapse whitespace-nowrap">
                 <thead>
-                    <tr class="bg-[#1a1a1a] border-b border-gold/20">
-                        <th class="px-6 py-4 text-xs font-bold text-gold uppercase tracking-wider cursor-pointer hover:bg-white/5 group" onclick="setSort('paymentId')">
-                            <div class="flex items-center justify-between gap-2">
-                                <span>ID</span>
-                                <span id="sort-paymentId" class="material-symbols-outlined text-sm text-gray-600 group-hover:text-gray-400 transition-colors">unfold_more</span>
-                            </div>
+                    <tr class="bg-white/5 border-b border-[#262626] text-gray-400 text-xs uppercase tracking-wider font-bold">
+                        <th class="px-6 py-4 cursor-pointer hover:text-white transition-colors" onclick="setSort('paymentId')">
+                            <div class="flex items-center gap-1">ID <span class="material-symbols-outlined text-[14px]" id="sort-paymentId">unfold_more</span></div>
                         </th>
-                        <th class="px-6 py-4 text-xs font-bold text-gold uppercase tracking-wider cursor-pointer hover:bg-white/5 group" onclick="setSort('paymentDate')">
-                            <div class="flex items-center justify-between gap-2">
-                                <span>Date</span>
-                                <span id="sort-paymentDate" class="material-symbols-outlined text-sm text-gray-600 group-hover:text-gray-400 transition-colors">unfold_more</span>
-                            </div>
+                        <th class="px-6 py-4 cursor-pointer hover:text-white transition-colors" onclick="setSort('paymentDate')">
+                            <div class="flex items-center gap-1">Date <span class="material-symbols-outlined text-[14px]" id="sort-paymentDate">unfold_more</span></div>
                         </th>
-                        <th class="px-6 py-4 text-xs font-bold text-gold uppercase tracking-wider cursor-pointer hover:bg-white/5 group" onclick="setSort('bookingId')">
-                            <div class="flex items-center justify-between gap-2">
-                                <span>Booking</span>
-                                <span id="sort-bookingId" class="material-symbols-outlined text-sm text-gray-600 group-hover:text-gray-400 transition-colors">unfold_more</span>
-                            </div>
+                        <th class="px-6 py-4 cursor-pointer hover:text-white transition-colors" onclick="setSort('bookingId')">
+                             <div class="flex items-center gap-1">Booking <span class="material-symbols-outlined text-[14px]" id="sort-bookingId">unfold_more</span></div>
                         </th>
-                        <th class="px-6 py-4 text-xs font-bold text-gold uppercase tracking-wider cursor-pointer hover:bg-white/5 group" onclick="setSort('customerName')">
-                            <div class="flex items-center justify-between gap-2">
-                                <span>Customer</span>
-                                <span id="sort-customerName" class="material-symbols-outlined text-sm text-gray-600 group-hover:text-gray-400 transition-colors">unfold_more</span>
-                            </div>
+                        <th class="px-6 py-4 cursor-pointer hover:text-white transition-colors" onclick="setSort('customerName')">
+                             <div class="flex items-center gap-1">Customer <span class="material-symbols-outlined text-[14px]" id="sort-customerName">unfold_more</span></div>
                         </th>
-                        <th class="px-6 py-4 text-xs font-bold text-gold uppercase tracking-wider text-right">Subtotal</th>
-                        <th class="px-6 py-4 text-xs font-bold text-gold uppercase tracking-wider">Promo</th>
-                        <th class="px-6 py-4 text-xs font-bold text-gold uppercase tracking-wider cursor-pointer hover:bg-white/5 group" onclick="setSort('amount')">
-                            <div class="flex items-center justify-end gap-2">
-                                <span>Total</span>
-                                <span id="sort-amount" class="material-symbols-outlined text-sm text-gray-600 group-hover:text-gray-400 transition-colors">unfold_more</span>
-                            </div>
+                         <th class="px-6 py-4 text-right">Subtotal</th>
+                        <th class="px-6 py-4">Promo</th>
+                        <th class="px-6 py-4 text-right cursor-pointer hover:text-white transition-colors" onclick="setSort('amount')">
+                             <div class="flex items-center justify-end gap-1">Total <span class="material-symbols-outlined text-[14px]" id="sort-amount">unfold_more</span></div>
                         </th>
-                        <th class="px-6 py-4 text-xs font-bold text-gold uppercase tracking-wider">Method</th>
-                        <th class="px-6 py-4 text-xs font-bold text-gold uppercase tracking-wider cursor-pointer hover:bg-white/5 group" onclick="setSort('status')">
-                            <div class="flex items-center justify-between gap-2">
-                                <span>Status</span>
-                                <span id="sort-status" class="material-symbols-outlined text-sm text-gray-600 group-hover:text-gray-400 transition-colors">unfold_more</span>
-                            </div>
+                        <th class="px-6 py-4">Method</th>
+                         <th class="px-6 py-4 cursor-pointer hover:text-white transition-colors" onclick="setSort('status')">
+                             <div class="flex items-center gap-1">Status <span class="material-symbols-outlined text-[14px]" id="sort-status">unfold_more</span></div>
                         </th>
-                        <th class="px-6 py-4 text-xs font-bold text-gold uppercase tracking-wider text-right">Actions</th>
+                        <th class="px-6 py-4 text-right">Actions</th>
                     </tr>
                 </thead>
-                <tbody id="paymentRows" class="divide-y divide-border-dark text-sm text-gray-300">
-                    <tr class="animate-pulse">
-                         <td colspan="10" class="p-8 text-center text-gray-500">Loading payments...</td>
-                    </tr>
+                <tbody id="paymentRows" class="divide-y divide-[#262626]">
+                    <!-- Rows injected via JS -->
                 </tbody>
             </table>
         </div>
-        
-        <!-- Pagination -->
-        <div class="border-t border-border-dark bg-[#1a1a1a] p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <span class="text-sm text-gray-400" id="showingText">Showing 0 payments</span>
+
+        <!-- Pagination Controls -->
+        <div class="border-t border-[#262626] p-4 flex items-center justify-between bg-[#0a0a0a]">
+            <span class="text-sm text-gray-500" id="showingText">Showing 0 payments</span>
             <div class="flex gap-2">
-                 <button id="prevBtn" onclick="changePage(-1)" class="px-3 py-1 text-sm border border-border-dark rounded bg-[#0a0a0a] text-gray-400 hover:text-white hover:border-gold transition-colors disabled:opacity-50">Previous</button>
-                 <span id="pageIndicator" class="px-3 py-1 text-sm bg-gold text-black rounded font-bold">1</span>
-                 <button id="nextBtn" onclick="changePage(1)" class="px-3 py-1 text-sm border border-border-dark rounded bg-[#0a0a0a] text-gray-400 hover:text-white hover:border-gold transition-colors disabled:opacity-50">Next</button>
+                 <button id="prevBtn" onclick="changePage(-1)" class="p-2 rounded-lg hover:bg-white/10 text-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                    <span class="material-symbols-outlined">chevron_left</span>
+                </button>
+                 <div class="flex items-center justify-center px-3 bg-[#16181a] border border-[#262626] rounded-lg text-sm text-gold font-bold" id="pageIndicator">1</div>
+                 <button id="nextBtn" onclick="changePage(1)" class="p-2 rounded-lg hover:bg-white/10 text-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                    <span class="material-symbols-outlined">chevron_right</span>
+                </button>
             </div>
         </div>
     </div>
+
 </div>
 
+<!-- Global Modal Placeholder -->
 <div id="modalPlaceholder"></div>
 
-@section Scripts {
-    <script>
-        // State
-        let currentPage = 1;
-        const pageSize = 10;
-        let totalPages = 1;
-        let sortColumn = 'paymentId';
-        let sortDirection = 'desc';
+<script>
+    // State
+    let currentPage = 1;
+    const pageSize = 10;
+    let totalPages = 1;
+    let sortColumn = 'paymentId';
+    let sortDirection = 'desc';
+    let timeout = null;
 
-        document.addEventListener('DOMContentLoaded', () => {
-             loadPageData();
-        });
+    document.addEventListener('DOMContentLoaded', () => {
+         loadPageData();
+    });
 
-        function resetAndLoad() {
+    function debounceLoad() {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => {
             currentPage = 1;
             loadPageData();
+        }, 400);
+    }
+
+    function resetAndLoad() {
+        currentPage = 1;
+        loadPageData();
+    }
+
+    function changePage(delta) {
+        const newPage = currentPage + delta;
+        if (newPage >= 1 && newPage <= totalPages) {
+            currentPage = newPage;
+            loadTableData();
         }
+    }
 
-        function changePage(delta) {
-            const newPage = currentPage + delta;
-            if (newPage >= 1 && newPage <= totalPages) {
-                currentPage = newPage;
-                loadTableData(); // Only reload table on page change
-            }
+    function setSort(col) {
+        if (sortColumn === col) {
+            sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            sortColumn = col;
+            sortDirection = 'asc';
         }
+        
+        // Update icons
+        document.querySelectorAll('[id^="sort-"]').forEach(el => el.textContent = 'unfold_more');
+        const active = document.getElementById('sort-' + col);
+        if(active) active.textContent = sortDirection === 'asc' ? 'keyboard_arrow_up' : 'keyboard_arrow_down';
 
-        function setSort(col) {
-            if (sortColumn === col) {
-                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
-            } else {
-                sortColumn = col;
-                sortDirection = 'asc';
-            }
-            // Update icons
-            document.querySelectorAll('[id^="sort-"]').forEach(i => {
-                i.className = 'material-symbols-outlined text-sm text-gray-600 group-hover:text-gray-400 transition-colors';
-                i.textContent = 'unfold_more';
-            });
-            const icon = document.getElementById(`sort-${col}`);
-            if(icon) {
-                icon.className = 'material-symbols-outlined text-sm text-gold transition-colors';
-                icon.textContent = sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward';
-            }
+        loadTableData();
+    }
 
-            loadTableData(); // Only reload table on sort
-        }
+    async function loadPageData() {
+        await loadTableData();
+        setTimeout(loadStatsData, 300);
+    }
 
-        async function loadPageData() {
-            // Load table first for immediate feedback, stats after 300ms delay
-            await loadTableData();
-            setTimeout(loadStatsData, 300);
-        }
+    function getFilterQuery() {
+        const search = document.getElementById('tableSearch').value;
+        const status = document.getElementById('statusFilter').value;
+        const start = document.getElementById('dateFrom').value;
+        const end = document.getElementById('dateTo').value;
 
-        function getFilterQuery() {
-            const search = document.getElementById('tableSearch').value;
-            const status = document.getElementById('statusFilter').value;
-            const start = document.getElementById('dateFrom').value;
-            const end = document.getElementById('dateTo').value;
+        return new URLSearchParams({
+            page: currentPage,
+            pageSize: pageSize,
+            searchTerm: search,
+            status: status,
+            startDate: start,
+            endDate: end,
+            sortColumn: sortColumn,
+            sortDirection: sortDirection
+        });
+    }
 
-            return new URLSearchParams({
-                page: currentPage,
-                pageSize: pageSize,
-                searchTerm: search,
-                status: status,
-                startDate: start,
-                endDate: end,
-                sortColumn: sortColumn,
-                sortDirection: sortDirection
-            });
-        }
-
-        async function loadTableData() {
-            const tbody = document.getElementById('paymentRows');
-            // Show loading state if needed, or keep existing rows until replacement
-            // tbody.innerHTML = `<tr class="animate-pulse"><td colspan="10" class="p-8 text-center text-gray-500">Loading...</td></tr>`; 
+    async function loadTableData() {
+        const tbody = document.getElementById('paymentRows');
+        tbody.closest('table').style.opacity = '0.5';
+        
+        try {
+            const qs = getFilterQuery();
+            const res = await fetch(`/api/Payment?${qs}`);
+            if(!res.ok) throw new Error("Failed to load");
+            const data = await res.json();
             
-            try {
-                const qs = getFilterQuery();
-                const res = await fetch(`/api/Payment?${qs}`);
-                if(!res.ok) throw new Error("Failed to load");
-                const data = await res.json();
-                
-                renderTable(data.items);
-                
-                // Update Pagination UI
-                totalPages = data.totalPages;
-                document.getElementById('showingText').innerText = `Showing page ${currentPage} of ${totalPages} (${data.totalCount} total)`;
-                document.getElementById('pageIndicator').innerText = currentPage;
-                document.getElementById('prevBtn').disabled = currentPage <= 1;
-                document.getElementById('nextBtn').disabled = currentPage >= totalPages;
+            tbody.closest('table').style.opacity = '1';
+            renderTable(data.items);
+            
+            totalPages = data.totalPages;
+            document.getElementById('showingText').innerText = `Showing page ${currentPage} of ${totalPages} (${data.totalCount} total)`;
+            document.getElementById('pageIndicator').innerText = currentPage;
+            document.getElementById('prevBtn').disabled = currentPage <= 1;
+            document.getElementById('nextBtn').disabled = currentPage >= totalPages;
 
-            } catch(e) {
-                console.error(e);
-                tbody.innerHTML = `<tr><td colspan="10" class="p-8 text-center text-red-500">Failed to load data.</td></tr>`;
-            }
+        } catch(e) {
+            console.error(e);
+            tbody.innerHTML = `<tr><td colspan="10" class="p-8 text-center text-red-500">Failed to load data.</td></tr>`;
+            tbody.closest('table').style.opacity = '1';
         }
+    }
 
-        async function loadStatsData() {
-             // Optional: Add loading state to stats cards if desired
-             try {
-                const qs = getFilterQuery();
-                const res = await fetch(`/api/Payment/Stats?${qs}`);
-                if(!res.ok) throw new Error("Failed to load stats");
-                const stats = await res.json();
-                renderStats(stats);
-             } catch(e) {
-                 console.error("Stats failed", e);
-             }
-        }
+    async function loadStatsData() {
+         try {
+            const qs = getFilterQuery();
+            const res = await fetch(`/api/Payment/Stats?${qs}`);
+            if(!res.ok) throw new Error("Failed to load stats");
+            const stats = await res.json();
+            renderStats(stats);
+         } catch(e) { console.error("Stats failed", e); }
+    }
 
-        function renderStats(stats) {
-            if(!stats) return;
-            const grid = document.getElementById('statsGrid');
-            grid.innerHTML = `
-                <div class="flex flex-col gap-3 rounded-xl p-8 bg-[#121212] border-t-2 border-gold shadow-2xl relative overflow-hidden group">
-                    <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                         <span class="material-symbols-outlined text-6xl text-gold">payments</span>
-                    </div>
-                    <p class="text-gray-400 text-sm font-semibold uppercase tracking-wider z-10">Total Revenue</p>
-                    <div class="flex items-center gap-3 z-10">
-                        <p class="text-white tracking-tight text-3xl font-bold">$${formatMoney(stats.totalRevenue)}</p>
-                    </div>
-                     <div class="flex items-center gap-2 z-10">
-                        <span class="text-[#0bda1d] text-sm font-bold flex items-center">
-                            <span class="material-symbols-outlined text-sm mr-1">trending_up</span>+12.5%
-                        </span>
-                        <span class="text-gray-500 text-xs tracking-wide">vs last month</span>
-                    </div>
+    function renderStats(stats) {
+        if(!stats) return;
+        const grid = document.getElementById('statsGrid');
+        grid.innerHTML = `
+            <div class="flex flex-col gap-3 rounded-xl p-8 bg-[#121212] border-t-2 border-gold shadow-2xl relative overflow-hidden group">
+                <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                     <span class="material-symbols-outlined text-6xl text-gold">payments</span>
                 </div>
-
-                <div class="flex flex-col gap-3 rounded-xl p-8 bg-[#121212] border-t-2 border-gold shadow-2xl relative overflow-hidden group">
-                     <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                         <span class="material-symbols-outlined text-6xl text-gold">pending_actions</span>
-                    </div>
-                    <p class="text-gray-400 text-sm font-semibold uppercase tracking-wider z-10">Pending</p>
-                    <div class="flex items-center gap-3 z-10">
-                         <p class="text-white tracking-tight text-3xl font-bold">$${formatMoney(stats.pendingAmount)}</p>
-                    </div>
-                    <div class="flex items-center gap-2 z-10">
-                        <span class="text-yellow-500 text-sm font-bold flex items-center">
-                            ${stats.pendingCount} payments
-                        </span>
-                        <span class="text-gray-500 text-xs tracking-wide">awaiting processing</span>
-                    </div>
+                <p class="text-gray-400 text-sm font-semibold uppercase tracking-wider z-10">Total Revenue</p>
+                <div class="flex items-center gap-3 z-10">
+                    <p class="text-white tracking-tight text-4xl font-bold">$${formatMoney(stats.totalRevenue)}</p>
                 </div>
-
-                <div class="flex flex-col gap-3 rounded-xl p-8 bg-[#121212] border-t-2 border-gold shadow-2xl relative overflow-hidden group">
-                     <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                         <span class="material-symbols-outlined text-6xl text-gold">check_circle</span>
-                    </div>
-                    <p class="text-gray-400 text-sm font-semibold uppercase tracking-wider z-10">Successful</p>
-                    <div class="flex items-center gap-3 z-10">
-                        <p class="text-white tracking-tight text-3xl font-bold">${stats.successCount}</p>
-                    </div>
-                     <div class="flex items-center gap-2 z-10">
-                        <div class="flex-1 h-1.5 bg-white/10 rounded-full w-24 overflow-hidden">
-                            <div class="bg-green-500 h-full" style="width: ${((stats.successCount/stats.totalCount)*100 || 0)}%"></div>
-                        </div>
-                        <span class="text-gray-500 text-xs tracking-wide">${((stats.successCount/stats.totalCount)*100 || 0).toFixed(1)}% rate</span>
-                    </div>
+                 <div class="flex items-center gap-2 z-10">
+                    <span class="text-[#0bda1d] text-sm font-bold flex items-center">
+                        <span class="material-symbols-outlined text-sm mr-1">trending_up</span>+12.5%
+                    </span>
+                    <span class="text-gray-500 text-xs tracking-wide">all time</span>
                 </div>
+            </div>
 
-                <div class="flex flex-col gap-3 rounded-xl p-8 bg-[#121212] border-t-2 border-gold shadow-2xl relative overflow-hidden group">
-                     <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                         <span class="material-symbols-outlined text-6xl text-gold">keyboard_return</span>
-                    </div>
-                    <p class="text-gray-400 text-sm font-semibold uppercase tracking-wider z-10">Refunds</p>
-                    <div class="flex items-center gap-3 z-10">
-                        <p class="text-white tracking-tight text-3xl font-bold">$${formatMoney(stats.refundAmount)}</p>
-                    </div>
-                     <div class="flex items-center gap-2 z-10">
-                        <span class="text-gray-500 text-xs tracking-wide">Processed refunds</span>
-                    </div>
+            <div class="flex flex-col gap-3 rounded-xl p-8 bg-[#121212] border-t-2 border-gold shadow-2xl relative overflow-hidden group">
+                 <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                     <span class="material-symbols-outlined text-6xl text-yellow-500">pending_actions</span>
                 </div>
-            `;
+                <p class="text-gray-400 text-sm font-semibold uppercase tracking-wider z-10">Pending</p>
+                <div class="flex items-center gap-3 z-10">
+                     <p class="text-white tracking-tight text-4xl font-bold">$${formatMoney(stats.pendingAmount)}</p>
+                </div>
+                <div class="flex items-center gap-2 z-10">
+                    <span class="text-yellow-500 text-xs font-bold tracking-wide flex items-center gap-1">
+                        <span class="material-symbols-outlined text-sm">schedule</span> ${stats.pendingCount} Waiting
+                    </span>
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-3 rounded-xl p-8 bg-[#121212] border-t-2 border-gold shadow-2xl relative overflow-hidden group">
+                 <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                     <span class="material-symbols-outlined text-6xl text-green-500">check_circle</span>
+                </div>
+                <p class="text-gray-400 text-sm font-semibold uppercase tracking-wider z-10">Successful</p>
+                <div class="flex items-center gap-3 z-10">
+                    <p class="text-white tracking-tight text-4xl font-bold">${stats.successCount}</p>
+                </div>
+                 <div class="flex items-center gap-2 z-10">
+                    <span class="text-green-500 text-xs font-bold tracking-wide flex items-center gap-1">
+                        <span class="material-symbols-outlined text-sm">verified</span> ${((stats.successCount/stats.totalCount)*100 || 0).toFixed(1)}% Rate
+                    </span>
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-3 rounded-xl p-8 bg-[#121212] border-t-2 border-gold shadow-2xl relative overflow-hidden group">
+                 <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                     <span class="material-symbols-outlined text-6xl text-purple-500">keyboard_return</span>
+                </div>
+                <p class="text-gray-400 text-sm font-semibold uppercase tracking-wider z-10">Refunds</p>
+                <div class="flex items-center gap-3 z-10">
+                    <p class="text-white tracking-tight text-4xl font-bold">$${formatMoney(stats.refundAmount)}</p>
+                </div>
+                 <div class="flex items-center gap-2 z-10">
+                    <span class="text-purple-500 text-xs font-bold tracking-wide flex items-center gap-1">
+                        <span class="material-symbols-outlined text-sm">replay</span> Processed
+                    </span>
+                </div>
+            </div>
+        `;
+    }
+
+    function renderTable(data) {
+        const tbody = document.getElementById('paymentRows');
+        if(!data || data.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="10" class="p-8 text-center text-gray-500">No payments found.</td></tr>`;
+            return;
         }
 
-        function renderTable(data) {
-            const tbody = document.getElementById('paymentRows');
-            if(!data || data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="10" class="p-8 text-center text-gray-500">No payments found matching your filters.</td></tr>`;
-                return;
-            }
+        tbody.innerHTML = data.map(p => `
+            <tr class="hover:bg-white/5 transition-colors group border-b border-[#262626] last:border-0 align-middle">
+                <td class="px-6 py-4 font-mono text-white">#${p.paymentId}</td>
+                <td class="px-6 py-4 text-gray-400 text-sm">${formatDate(p.paymentDate)}</td>
+                <td class="px-6 py-4 text-gray-400 text-sm">#${p.bookingId}</td>
+                <td class="px-6 py-4">
+                    <div class="flex flex-col">
+                        <span class="text-sm font-bold text-white">${p.customerName || 'Unknown'}</span>
+                        <span class="text-xs text-gray-500">${p.customerUsername || ''}</span>
+                    </div>
+                </td>
+                <td class="px-6 py-4 text-right text-gray-400 text-sm">$${formatMoney(p.bookingSubtotal)}</td>
+                <td class="px-6 py-4">
+                    ${p.promocodeName ? `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-green-500/10 text-green-500 border border-green-500/20">${p.promocodeName} (-${p.promocodeDiscountPercentage}%)</span>` : '<span class="text-gray-600">-</span>'}
+                </td>
+                <td class="px-6 py-4 text-right font-bold text-gold text-base">$${formatMoney(p.amount)}</td>
+                <td class="px-6 py-4">
+                    ${getMethodBadge(p.paymentMethodName)}
+                </td>
+                <td class="px-6 py-4">
+                    ${getStatusBadge(p.status)}
+                </td>
+                <td class="px-6 py-4 text-right">
+                    <div class="flex items-center justify-end gap-2 opacity-100 transition-opacity">
+                        <button onclick="loadModal('/Payment/Details/${p.paymentId}')" class="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors" title="View Details">
+                            <span class="material-symbols-outlined text-[20px]">visibility</span>
+                        </button>
+                        ${p.status !== 'Paid' && p.status !== 'Refunded' ? `
+                        <button onclick="loadModal('/Payment/Edit/${p.paymentId}')" class="p-2 text-gold hover:text-[#b5952f] hover:bg-gold/10 rounded-lg transition-colors" title="Edit">
+                            <span class="material-symbols-outlined text-[20px]">edit</span>
+                        </button>
+                        <button onclick="loadModal('/Payment/ApplyPromocode/${p.paymentId}')" class="p-2 text-green-500 hover:text-green-400 hover:bg-green-500/10 rounded-lg transition-colors" title="Apply Discount">
+                            <span class="material-symbols-outlined text-[20px]">percent</span>
+                        </button>
+                        ` : ''}
+                        <button onclick="window.open('/Payment/Receipt/${p.paymentId}', '_blank', 'width=500,height=700')" class="p-2 text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 rounded-lg transition-colors" title="Print Receipt">
+                            <span class="material-symbols-outlined text-[20px]">print</span>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    }
 
-            tbody.innerHTML = data.map(p => `
-                <tr class="hover:bg-white/5 transition-colors group border-b border-border-dark last:border-0">
-                    <td class="px-6 py-4 font-mono text-white">#${p.paymentId}</td>
-                    <td class="px-6 py-4 text-gray-400">${formatDate(p.paymentDate)}</td>
-                    <td class="px-6 py-4 text-gray-400">#${p.bookingId}</td>
-                    <td class="px-6 py-4">
-                        <div class="flex flex-col">
-                            <span class="text-sm font-medium text-white">${p.customerName || 'Unknown'}</span>
-                            <span class="text-xs text-gray-500">${p.customerUsername || ''}</span>
-                        </div>
-                    </td>
-                    <td class="px-6 py-4 text-right text-gray-400">$${formatMoney(p.bookingSubtotal)}</td>
-                    <td class="px-6 py-4">
-                        ${p.promocodeName ? `<span class="px-2 py-0.5 rounded bg-green-500/10 text-green-500 text-xs font-bold border border-green-500/20">${p.promocodeName} (-${p.promocodeDiscountPercentage}%)</span>` : '<span class="text-gray-600">-</span>'}
-                    </td>
-                    <td class="px-6 py-4 text-right font-bold text-gold">$${formatMoney(p.amount)}</td>
-                    <td class="px-6 py-4">
-                        ${getMethodBadge(p.paymentMethodName)}
-                    </td>
-                    <td class="px-6 py-4">
-                        ${getStatusBadge(p.status)}
-                    </td>
-                    <td class="px-6 py-4 text-right">
-                        <div class="grid grid-cols-2 gap-1 w-fit ml-auto">
-                            <button onclick="loadModal('/Payment/Details/${p.paymentId}')" class="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors" title="View Details">
-                                <span class="material-symbols-outlined text-[20px]">visibility</span>
-                            </button>
-                            ${p.status !== 'Paid' && p.status !== 'Refunded' ? `
-                            <button onclick="loadModal('/Payment/Edit/${p.paymentId}')" class="p-2 text-gold hover:text-gold-hover hover:bg-gold/10 rounded-lg transition-colors" title="Edit">
-                                <span class="material-symbols-outlined text-[20px]">edit</span>
-                            </button>
-                            <button onclick="loadModal('/Payment/ApplyPromocode/${p.paymentId}')" class="p-2 text-green-500 hover:text-green-400 hover:bg-green-500/10 rounded-lg transition-colors" title="Apply Discount">
-                                <span class="material-symbols-outlined text-[20px]">percent</span>
-                            </button>
-                            ` : ''}
-                            <button onclick="window.open('/Payment/Receipt/${p.paymentId}', '_blank', 'width=500,height=700')" class="p-2 text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 rounded-lg transition-colors" title="Print Receipt">
-                                <span class="material-symbols-outlined text-[20px]">print</span>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
-        }
+    function formatMoney(amount) {
+        return (amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    function formatDate(dateStr) {
+        return dateStr ? new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '-';
+    }
+    
+    function getMethodBadge(method) {
+        method = (method||"").toLowerCase();
+        let color = "text-gray-400 border-gray-500/20 bg-gray-500/10";
+        let icon = "attach_money";
 
-        // Helpers
-        function formatMoney(amount) {
-            return (amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        }
-        function formatDate(dateStr) {
-            if(!dateStr) return '-';
-            return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-        }
-        // Updated Color Logic for Method
-        function getMethodBadge(method) {
-            method = (method||"").toLowerCase();
-            let color = "text-gray-400 border-gray-500/20 bg-gray-500/10";
-            let icon = "attach_money";
+        if(method.includes("card")) { color = "text-blue-400 border-blue-500/20 bg-blue-500/10"; icon = "credit_card"; }
+        else if(method.includes("cash")) { color = "text-green-400 border-green-500/20 bg-green-500/10"; icon = "payments"; }
+        else if(method.includes("bank")) { color = "text-purple-400 border-purple-500/20 bg-purple-500/10"; icon = "account_balance"; }
 
-            if(method.includes("card")) {
-                color = "text-blue-400 border-blue-400/20 bg-blue-400/10";
-                icon = "credit_card";
-            }
-            else if(method.includes("cash")) {
-                color = "text-green-400 border-green-400/20 bg-green-400/10";
-                icon = "payments";
-            }
-            else if(method.includes("bank")) {
-                color = "text-purple-400 border-purple-400/20 bg-purple-400/10";
-                icon = "account_balance";
-            }
-             else if(method.includes("stripe")) {
-                color = "text-indigo-400 border-indigo-400/20 bg-indigo-400/10";
-                icon = "add_card";
-            }
-
-            return `
-             <div class="flex items-center gap-2 ${color} px-3 py-1 rounded-full border w-fit">
-                 <span class="material-symbols-outlined text-sm">${icon}</span>
+        return `<div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border ${color}">
+                 <span class="material-symbols-outlined text-[14px]">${icon}</span>
                  <span class="capitalize text-xs font-bold">${method || '-'}</span>
             </div>`;
-        }
-        function getStatusBadge(status) {
-            status = status || "Unknown";
-            const classes = {
-                'Paid': 'bg-green-500/10 text-green-500 border-green-500/20',
-                'Done': 'bg-green-500/10 text-green-500 border-green-500/20',
-                'Pending': 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20',
-                'Failed': 'bg-red-500/10 text-red-500 border-red-500/20',
-                'Refunded': 'bg-purple-500/10 text-purple-500 border-purple-500/20',
-                'Unpaid': 'bg-gray-500/10 text-gray-500 border-gray-500/20',
-                'Cancelled': 'bg-red-900/20 text-red-400 border-red-900/40'
-            };
-            const cls = classes[status] || 'bg-gray-500/10 text-gray-500 border-gray-500/20';
-            return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border ${cls}">${status}</span>`;
-        }
-        
-        async function loadModal(url) {
-             try {
-                const res = await fetch(url);
-                if (!res.ok) throw new Error('Failed to load modal');
-                const html = await res.text();
-                const placeholder = document.getElementById('modalPlaceholder');
-                 placeholder.innerHTML = `<div class="modal fade" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-lg text-left">${html}</div></div>`;
+    }
+    
+    function getStatusBadge(status) {
+        status = status || "Unknown";
+        const classes = {
+            'Paid': 'bg-green-500/10 text-green-500 border-green-500/20',
+            'Pending': 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20',
+            'Failed': 'bg-red-500/10 text-red-500 border-red-500/20',
+            'Refunded': 'bg-purple-500/10 text-purple-500 border-purple-500/20',
+            'Cancelled': 'bg-red-900/20 text-red-400 border-red-900/40'
+        };
+        const cls = classes[status] || 'bg-gray-500/10 text-gray-500 border-gray-500/20';
+        return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border ${cls}">${status}</span>`;
+    }
+    
+    async function loadModal(url) {
+         try {
+            const res = await fetch(url);
+            if (!res.ok) throw new Error('Failed to load modal');
+            const html = await res.text();
+            
+            const placeholder = document.getElementById('modalPlaceholder');
+             placeholder.innerHTML = `<div class="modal fade" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-lg text-left">${html}</div></div>`;
+            
+            // Execute scripts
+            placeholder.querySelectorAll('script').forEach(scr => {
+                const s = document.createElement('script');
+                s.textContent = scr.textContent;
+                document.body.appendChild(s);
+                document.body.removeChild(s);
+            });
+
+            const modalEl = placeholder.querySelector('.modal');
+            const modal = new bootstrap.Modal(modalEl);
+            modal.show();
+        } catch (e) { console.error(e); }
+    }
+    
+    function exportTable() {
+         const rows = [
+            ["ID", "Date", "Booking", "Customer", "Subtotal", "Promo", "Total", "Method", "Status"]
+        ];
+         
+         const qs = getFilterQuery();
+         // Override pageSize for full export
+         qs.set('page', 1);
+         qs.set('pageSize', 10000);
+
+         fetch(`/api/Payment?${qs}`)
+            .then(r => r.json())
+            .then(data => {
+                data.items.forEach(p => {
+                    rows.push([
+                        p.paymentId, 
+                        formatDate(p.paymentDate), 
+                        p.bookingId, 
+                        p.customerName || "Unknown", 
+                        p.bookingSubtotal, 
+                        p.promocodeName || "", 
+                        p.amount, 
+                        p.paymentMethodName || "Unknown", 
+                        p.status
+                    ]);
+                });
                 
-                // Execute scripts in partial
-                placeholder.querySelectorAll('script').forEach(scr => {
-                    const s = document.createElement('script');
-                    s.textContent = scr.textContent;
-                    document.body.appendChild(s);
-                });
-
-                const modalEl = placeholder.querySelector('.modal');
-                const modal = new bootstrap.Modal(modalEl);
-                modal.show();
-            } catch (e) {
-                console.error(e);
-                alert('Failed to load dialog.');
-            }
-        }
-        
-        function exportTable() {
-             const rows = [
-                ["ID", "Date", "Booking", "Customer", "Subtotal", "Promo", "Total", "Method", "Status"]
-            ];
-             // Let's fetch all for export
-             const qs = new URLSearchParams({
-                page: 1,
-                pageSize: 10000,
-                searchTerm: document.getElementById('tableSearch').value,
-                status: document.getElementById('statusFilter').value,
-                startDate: document.getElementById('dateFrom').value,
-                endDate: document.getElementById('dateTo').value,
-                sortColumn: sortColumn,
-                sortDirection: sortDirection
-             });
-             
-             fetch(`/api/Payment?${qs}`)
-                .then(r => r.json())
-                .then(data => {
-                    data.items.forEach(p => {
-                        rows.push([p.paymentId, p.paymentDate, p.bookingId, p.customerName, p.bookingSubtotal, p.promocodeName || "", p.amount, p.paymentMethodName, p.status]);
-                    });
-                    let csvContent = "data:text/csv;charset=utf-8," + rows.map(e => e.join(",")).join("\n");
-                    const encodedUri = encodeURI(csvContent);
-                    const link = document.createElement("a");
-                    link.setAttribute("href", encodedUri);
-                    link.setAttribute("download", "payments_export.csv");
-                    document.body.appendChild(link);
-                    link.click();
-                    link.remove();
-                });
-        }
-
-    </script>
-}
+                let csvContent = "data:text/csv;charset=utf-8," + rows.map(e => e.join(",")).join("\n");
+                const encodedUri = encodeURI(csvContent);
+                const link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                link.setAttribute("download", `payments_export_${new Date().toISOString().split('T')[0]}.csv`);
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+            })
+            .catch(e => console.error("Export failed", e));
+    }
+</script>
