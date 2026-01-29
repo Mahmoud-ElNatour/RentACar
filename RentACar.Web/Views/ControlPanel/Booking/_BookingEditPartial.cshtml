@@ -1,0 +1,134 @@
+@model RentACar.Application.DTOs.BookingDto
+@{
+    var statuses = new[] { "Pending", "Confirmed", "Booked", "InProgress", "AwaitingReturn", "Completed", "Cancelled", "Rejected" };
+}
+
+<div class="modal fade" id="editBookingModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content bg-[#141414] border border-[#262626] shadow-2xl rounded-2xl">
+            <!-- Header -->
+            <div class="modal-header border-b border-white/5 p-5">
+                <h5 class="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+                    <span class="material-symbols-outlined text-gold">edit_calendar</span>
+                    Edit Booking #@Model.BookingId
+                </h5>
+                <button type="button" class="text-gray-400 hover:text-white transition-colors" data-bs-dismiss="modal">
+                    <span class="material-symbols-outlined text-2xl">close</span>
+                </button>
+            </div>
+            
+            <form id="editBookingForm">
+                <input type="hidden" name="bookingId" value="@Model.BookingId" />
+                
+                <!-- Body -->
+                <div class="modal-body p-6 space-y-6">
+                    <div class="alert alert-danger d-none bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl p-4" id="editBookingError" role="alert"></div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Dates -->
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-gray-500 mb-2">Start Date</label>
+                            <input type="date" name="startdate" value="@Model.Startdate.ToString("yyyy-MM-dd")" class="w-full bg-[#0a0a0a] border border-[#262626] rounded-xl py-3 px-4 text-white focus:border-gold focus:ring-1 focus:ring-gold transition-all [color-scheme:dark]" required />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-gray-500 mb-2">End Date</label>
+                            <input type="date" name="enddate" value="@Model.Enddate.ToString("yyyy-MM-dd")" class="w-full bg-[#0a0a0a] border border-[#262626] rounded-xl py-3 px-4 text-white focus:border-gold focus:ring-1 focus:ring-gold transition-all [color-scheme:dark]" required />
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Status -->
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-gray-500 mb-2">Status</label>
+                            <div class="relative">
+                                <select name="bookingStatus" class="w-full bg-[#0a0a0a] border border-[#262626] rounded-xl py-3 px-4 text-white appearance-none focus:border-gold focus:ring-1 focus:ring-gold">
+                                    @foreach(var s in statuses)
+                                    {
+                                        if(Model.BookingStatus == s)
+                                        {
+                                            <option value="@s" selected>@s</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@s">@s</option>
+                                        }
+                                    }
+                                </select>
+                                <span class="absolute right-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-gray-500 pointer-events-none">expand_more</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Price -->
+                        <div>
+                             <label class="block text-xs font-bold uppercase text-gray-500 mb-2">Total Price ($)</label>
+                             <div class="relative">
+                                 <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gold font-bold">$</span>
+                                 <input type="number" step="0.01" name="totalPrice" value="@Model.TotalPrice" class="w-full bg-[#0a0a0a] border border-[#262626] rounded-xl py-3 pl-8 pr-4 text-white focus:border-gold focus:ring-1 focus:ring-gold transition-all" required />
+                             </div>
+                             <p class="text-[10px] text-gray-500 mt-1">Changing dates does not auto-calculate price here. Update manually if needed.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="modal-footer border-t border-white/5 p-5 flex gap-3">
+                    <button type="button" class="flex-1 bg-white/5 hover:bg-white/10 text-white font-medium py-2.5 rounded-xl transition-colors border border-white/10" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="flex-1 bg-gold hover:bg-[#b5952f] text-black font-bold py-2.5 rounded-xl transition-all shadow-lg shadow-gold/10">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('editBookingForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const id = this.querySelector('[name="bookingId"]').value;
+        const errorAlert = document.getElementById('editBookingError');
+        const btn = this.querySelector('button[type="submit"]');
+        const originalText = btn.innerHTML;
+        
+        btn.disabled = true;
+        btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-sm mr-2">sync</span> Saving...';
+        
+        if(errorAlert) errorAlert.classList.add('d-none');
+        
+        const dto = {
+            BookingId: parseInt(id),
+            Startdate: this.querySelector('[name="startdate"]').value,
+            Enddate: this.querySelector('[name="enddate"]').value,
+            BookingStatus: this.querySelector('[name="bookingStatus"]').value,
+            TotalPrice: parseFloat(this.querySelector('[name="totalPrice"]').value)
+        };
+        
+        try {
+            const res = await fetch('/api/Booking/' + id, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(dto)
+            });
+            
+            if(!res.ok) {
+                 throw new Error(await res.text() || 'Failed to update');
+            }
+            
+            const modalEl = document.getElementById('editBookingModal');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            modal.hide();
+            
+            if(window.showPopup) window.showPopup('Booking updated successfully', 'success');
+            if(window.loadBookings) loadBookings();
+            
+        } catch(err) {
+            console.error(err);
+             if(errorAlert) {
+                errorAlert.textContent = "Error: " + err.message;
+                errorAlert.classList.remove('d-none');
+            }
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    });
+</script>

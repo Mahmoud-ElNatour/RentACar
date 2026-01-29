@@ -36,7 +36,7 @@
     </div>
 
     <!-- Stats Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8 px-4 md:px-0">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-3 px-4 md:px-0">
         <!-- Total -->
         <div class="flex flex-col gap-3 rounded-xl p-8 bg-[#121212] border-t-2 border-gold shadow-2xl relative overflow-hidden group">
             <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
@@ -105,16 +105,24 @@
     </div>
 
     <!-- Lifecycle Flow Visual -->
-    <div class="mb-8 hidden md:block">
-        <h3 class="text-white text-lg font-bold mb-4 flex items-center gap-2">
+    <div class="mb-6 hidden md:block mx-auto max-w-[95%]">
+        <h3 class="text-white text-lg font-bold mb-3 flex items-center gap-1">
             <span class="material-symbols-outlined text-gold">sync_alt</span> Booking Lifecycle
         </h3>
-        <div class="bg-[#121212] border border-[#262626] rounded-xl p-6 flex items-center justify-between relative overflow-hidden">
+        <div class="bg-[#121212] border border-[#262626] rounded-xl p-6 flex items-center justify-between relative">
              <!-- Connector Line -->
              <div class="absolute top-[50%] left-16 right-16 h-0.5 bg-gray-800 -z-0 transform -translate-y-1/2"></div>
  
              <!-- Steps -->
-             <div class="flex flex-col items-center gap-2 z-10 relative group bg-[#121212] px-2">
+             <div class="flex flex-col items-center gap-2 z-10 relative group px-2">
+                 <!-- Tooltip -->
+                 <div class="absolute bottom-full mb-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-20 w-48 left-1/2 -translate-x-1/2">
+                     <div class="bg-[#121212] text-gray-300 text-[10px] font-medium rounded-lg py-2 px-3 shadow-2xl border border-yellow-500/30 relative text-center">
+                         Until payment is done successfully
+                         <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-yellow-500/30"></div>
+                     </div>
+                 </div>
+
                  <div class="w-10 h-10 rounded-full bg-[#121212] border-2 border-yellow-500 flex items-center justify-center text-yellow-500 shadow-lg shadow-yellow-500/10 transition-transform group-hover:scale-110">
                     <span class="material-symbols-outlined text-[20px]">pending_actions</span>
                  </div>
@@ -123,7 +131,15 @@
                  </div>
              </div>
              
-             <div class="flex flex-col items-center gap-2 z-10 relative group bg-[#121212] px-2">
+             <div class="flex flex-col items-center gap-2 z-10 relative group px-2">
+                 <!-- Tooltip -->
+                 <div class="absolute bottom-full mb-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-20 w-48 left-1/2 -translate-x-1/2">
+                     <div class="bg-[#121212] text-gray-300 text-[10px] font-medium rounded-lg py-2 px-3 shadow-2xl border border-sky-500/30 relative text-center">
+                         Paid but waiting customer to sign contract & take car
+                         <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-sky-500/30"></div>
+                     </div>
+                 </div>
+
                  <div class="w-10 h-10 rounded-full bg-[#121212] border-2 border-sky-500 flex items-center justify-center text-sky-500 shadow-lg shadow-sky-500/10 transition-transform group-hover:scale-110">
                     <span class="material-symbols-outlined text-[20px]">book_online</span>
                  </div>
@@ -132,7 +148,15 @@
                  </div>
              </div>
  
-             <div class="flex flex-col items-center gap-2 z-10 relative group bg-[#121212] px-2">
+             <div class="flex flex-col items-center gap-2 z-10 relative group px-2">
+                 <!-- Tooltip -->
+                 <div class="absolute bottom-full mb-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-20 w-48 left-1/2 -translate-x-1/2">
+                     <div class="bg-[#121212] text-gray-300 text-[10px] font-medium rounded-lg py-2 px-3 shadow-2xl border border-blue-500/30 relative text-center">
+                         Customer has taken the car
+                         <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-blue-500/30"></div>
+                     </div>
+                 </div>
+
                  <div class="w-10 h-10 rounded-full bg-[#121212] border-2 border-blue-500 flex items-center justify-center text-blue-500 shadow-lg shadow-blue-500/10 transition-transform group-hover:scale-110">
                     <span class="material-symbols-outlined text-[20px]">directions_car</span>
                  </div>
@@ -141,7 +165,15 @@
                  </div>
              </div>
  
-             <div class="flex flex-col items-center gap-2 z-10 relative group bg-[#121212] px-2">
+             <div class="flex flex-col items-center gap-2 z-10 relative group px-2">
+                 <!-- Tooltip -->
+                 <div class="absolute bottom-full mb-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-20 w-48 left-1/2 -translate-x-1/2">
+                     <div class="bg-[#121212] text-gray-300 text-[10px] font-medium rounded-lg py-2 px-3 shadow-2xl border border-orange-500/30 relative text-center">
+                         Booking is overdue, waiting for return
+                         <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-orange-500/30"></div>
+                     </div>
+                 </div>
+
                  <div class="w-10 h-10 rounded-full bg-[#121212] border-2 border-orange-500 flex items-center justify-center text-orange-500 shadow-lg shadow-orange-500/10 transition-transform group-hover:scale-110">
                     <span class="material-symbols-outlined text-[20px]">assignment_late</span>
                  </div>
@@ -150,7 +182,15 @@
                  </div>
              </div>
  
-             <div class="flex flex-col items-center gap-2 z-10 relative group bg-[#121212] px-2">
+             <div class="flex flex-col items-center gap-2 z-10 relative group px-2">
+                 <!-- Tooltip -->
+                 <div class="absolute bottom-full mb-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-20 w-48 left-1/2 -translate-x-1/2">
+                     <div class="bg-[#121212] text-gray-300 text-[10px] font-medium rounded-lg py-2 px-3 shadow-2xl border border-green-500/30 relative text-center">
+                         Customer returned car - End of cycle
+                         <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-green-500/30"></div>
+                     </div>
+                 </div>
+
                  <div class="w-10 h-10 rounded-full bg-[#121212] border-2 border-green-500 flex items-center justify-center text-green-500 shadow-lg shadow-green-500/10 transition-transform group-hover:scale-110">
                     <span class="material-symbols-outlined text-[20px]">task_alt</span>
                  </div>
@@ -161,8 +201,13 @@
         </div>
     </div>
 
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8 px-4 md:px-0 mx-auto max-w-[98%]">
+
+    </div>
+
     <!-- Filters & Toolbar -->
-    <div class="bg-[#16181a] border border-[#262626] rounded-2xl p-4 mb-6 shadow-xl">
+    <div class="bg-[#16181a] border border-[#262626] rounded-2xl p-4 mb-6 shadow-xl mx-auto max-w-[98%]">
         <form id="filterForm" class="flex flex-col lg:flex-row gap-4 items-end">
             <!-- Search -->
             <label class="flex flex-col w-full lg:flex-[2]">
@@ -216,7 +261,7 @@
     </div>
 
     <!-- Table Container -->
-    <div class="bg-[#16181a] border border-[#262626] rounded-2xl overflow-hidden shadow-2xl">
+    <div class="bg-[#16181a] border border-[#262626] rounded-2xl overflow-hidden shadow-2xl mx-auto max-w-[98%]">
         <div class="overflow-x-auto min-h-[400px]">
              <table class="w-full text-left border-collapse">
                 <thead>
@@ -464,6 +509,9 @@
                             <button class="view-details p-2 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 rounded-lg transition-colors" data-id="${b.bookingId}" title="View Details">
                                 <span class="material-symbols-outlined text-[20px]">visibility</span>
                             </button>
+                            <button class="edit-booking p-2 text-gold hover:text-[#b5952f] hover:bg-gold/10 rounded-lg transition-colors" data-id="${b.bookingId}" title="Edit Booking">
+                                <span class="material-symbols-outlined text-[20px]">edit</span>
+                            </button>
                             <a href="/Booking/Contract/${b.bookingId}" target="_blank" class="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors" title="Download Contract">
                                 <span class="material-symbols-outlined text-[20px]">picture_as_pdf</span>
                             </a>
@@ -548,9 +596,12 @@
     document.getElementById('bookingRows').addEventListener('click', e => {
         const view = e.target.closest('.view-details');
         const del = e.target.closest('.delete-booking');
+        const edit = e.target.closest('.edit-booking');
 
         if(view) {
              loadModal('/Booking/Details/' + view.dataset.id);
+        } else if(edit) {
+             loadModal('/Booking/Edit/' + edit.dataset.id); 
         } else if(del) {
              loadModal('/Booking/Delete/' + del.dataset.id);
         }

@@ -315,7 +315,7 @@
             loading.classList.add('hidden');
                 pagination.classList.remove('hidden');
 
-            const isAdmin = @User.IsInRole("Admin").ToString().ToLower();
+            const isAdmin = @((User.IsInRole("Admin") || User.IsInRole("Employee")).ToString().ToLower());
             
             // Render Table
             data.items.forEach(c => {

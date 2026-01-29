@@ -153,9 +153,9 @@
 
             <!-- Footer -->
             <div class="modal-footer border-t border-white/5 p-4 bg-[#1a1a1a] flex justify-end gap-3">
-                <a href="/Booking/Edit/@Model.BookingId" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-bold text-sm transition-colors shadow-lg shadow-blue-500/20 flex items-center gap-2">
+                <button onclick="loadModal('/Booking/Edit/@Model.BookingId')" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-bold text-sm transition-colors shadow-lg shadow-blue-500/20 flex items-center gap-2">
                     <span class="material-symbols-outlined text-[18px]">edit</span> Edit
-                </a>
+                </button>
                 @if(Model.BookingStatus == "Pending") {
                      <a href="/Booking/Approve/@Model.BookingId" class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-bold text-sm transition-colors shadow-lg shadow-green-500/20">
                         Approve Booking

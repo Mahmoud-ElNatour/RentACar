@@ -1,0 +1,95 @@
+@model RentACar.Application.DTOs.BookingDto
+
+<div class="modal fade" id="deleteBookingModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-[#141414] border border-red-500/20 shadow-2xl rounded-2xl">
+            <!-- Header -->
+            <div class="modal-header border-b border-white/5 p-5">
+                <h5 class="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+                    <span class="material-symbols-outlined text-red-500">warning</span>
+                    Delete Booking
+                </h5>
+                <button type="button" class="text-gray-400 hover:text-white transition-colors" data-bs-dismiss="modal">
+                    <span class="material-symbols-outlined text-2xl">close</span>
+                </button>
+            </div>
+            
+            <form id="deleteBookingForm">
+                <!-- Body -->
+                <div class="modal-body p-6">
+                    <div class="alert alert-danger d-none bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl p-4 mb-4" id="deleteBookingError" role="alert"></div>
+                    <input type="hidden" name="bookingId" value="@Model.BookingId" />
+                    
+                    <div class="text-center py-4">
+                        <div class="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <span class="material-symbols-outlined text-3xl text-red-500">delete_forever</span>
+                        </div>
+                        <p class="text-gray-300 text-lg">Are you sure you want to delete Booking <span class="font-bold text-white">#@Model.BookingId</span>?</p>
+                        <p class="text-sm text-gray-500 mt-2">This action permanently removes the booking record. It cannot be undone.</p>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="modal-footer border-t border-white/5 p-5 flex gap-3">
+                    <button type="button" class="flex-1 bg-white/5 hover:bg-white/10 text-white font-medium py-2.5 rounded-xl transition-colors border border-white/10" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="flex-1 bg-red-500 hover:bg-red-600 text-white font-semibold py-2.5 rounded-xl transition-all shadow-[0_0_15px_rgba(239,68,68,0.3)]">Delete Booking</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+    document.getElementById('deleteBookingForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const id = this.querySelector('[name="bookingId"]').value;
+        const errorAlert = this.querySelector('#deleteBookingError');
+        
+        // Button Loading State
+        const btn = this.querySelector('button[type="submit"]');
+        const originalText = btn.textContent;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-sm">sync</span> Deleting...';
+        
+        if (errorAlert) {
+            errorAlert.classList.add('d-none');
+            errorAlert.textContent = '';
+        }
+
+        try {
+            const response = await fetch('/api/Booking/' + id, { method: 'DELETE' });
+
+            if (!response.ok) {
+                let message = 'An error occurred while deleting the booking.';
+                try {
+                    const data = await response.json();
+                    if (data && data.message) message = data.message;
+                } catch { 
+                    try { message = await response.text(); } catch {} 
+                }
+
+                if (errorAlert) {
+                    errorAlert.textContent = message;
+                    errorAlert.classList.remove('d-none');
+                }
+                return;
+            }
+
+            const modalEl = document.getElementById('deleteBookingModal');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            modal.hide();
+            
+            if (window.showPopup) window.showPopup('Booking deleted successfully.', 'success');
+            if (window.loadBookings) loadBookings();
+            
+        } catch (err) {
+            console.error(err);
+            if (errorAlert) {
+                errorAlert.textContent = 'Unable to connect to the server.';
+                errorAlert.classList.remove('d-none');
+            }
+        } finally {
+            btn.disabled = false;
+            btn.textContent = originalText;
+        }
+    });
+</script>

@@ -13,7 +13,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace RentACar.Web.Controllers
 {
-    [Authorize(Roles = "Admin,Employee")]
+    [Authorize(Roles = "Admin")]
     [ApiController]
     [Route("api/[controller]")]
     public class EmployeeController : Controller
@@ -37,7 +37,6 @@ namespace RentACar.Web.Controllers
         }
 
         [HttpGet("~/Employee/Add")]
-        [Authorize(Roles = "Admin")]
         [ApiExplorerSettings(IgnoreApi = true)]
         public IActionResult AddForm()
         {
@@ -45,7 +44,6 @@ namespace RentACar.Web.Controllers
         }
 
         [HttpGet("~/Employee/Edit/{id}")]
-        [Authorize(Roles = "Admin")]
         [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> EditForm(int id)
         {
@@ -55,7 +53,6 @@ namespace RentACar.Web.Controllers
         }
 
         [HttpGet("~/Employee/Delete/{id}")]
-        [Authorize(Roles = "Admin")]
         [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> DeleteForm(int id)
         {
@@ -96,7 +93,6 @@ namespace RentACar.Web.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<EmployeeDto>> Create([FromBody] EmployeeCreateDTO dto)
         {
             if (!ModelState.IsValid)
@@ -118,7 +114,6 @@ namespace RentACar.Web.Controllers
         }
 
         [HttpPut("{id}")]
-        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Update(int id, [FromBody] EmployeeDto dto)
         {
             // ✅ Check if the model is valid
@@ -148,7 +143,6 @@ namespace RentACar.Web.Controllers
 
 
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)
         {
             _logger.LogInformation("Deleting employee {Id}", id);
@@ -177,7 +171,6 @@ namespace RentACar.Web.Controllers
         }
 
         [HttpPost("{id}/reset-password")]
-        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> ResetPassword(int id)
         {
             var success = await _employeeManager.ResetPassword(id);
@@ -186,3 +179,4 @@ namespace RentACar.Web.Controllers
         }
     }
 }
+

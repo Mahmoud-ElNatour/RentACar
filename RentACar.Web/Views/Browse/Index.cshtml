@@ -64,7 +64,7 @@
     <!-- Page Header (Mobile Only) -->
     <div class="md:hidden mb-6">
         <h1 class="text-3xl font-black tracking-tight text-white mb-2">Browse Cars</h1>
-        <button onclick="document.getElementById('mobileFilterModal').showModal()"
+        <button onclick="toggleFilters()"
                 class="w-full bg-[#16181a] border border-[#262626] text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-[#1a1c1e] transition-colors">
             <span class="material-symbols-outlined text-gold">filter_list</span>
             Filters & Search
@@ -73,12 +73,17 @@
 
     <div class="flex flex-col md:flex-row gap-8 items-start">
 
-        <!-- SIDEBAR FILTERS (Desktop) -->
-        <aside class="hidden md:block w-80 shrink-0">
-             <div class="bg-[#16181a] border border-[#262626] rounded-2xl p-6 shadow-2xl">
-                <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
-                    <span class="material-symbols-outlined text-gold">tune</span> Filters
-                </h2>
+        <!-- SIDEBAR FILTERS (Desktop & Mobile Drawer) -->
+        <aside id="filtersSidebar" class="fixed inset-y-0 left-0 z-50 w-80 bg-[#16181a] transform -translate-x-full transition-transform duration-300 md:relative md:translate-x-0 md:block md:w-80 md:shrink-0 md:bg-transparent md:z-auto overflow-y-auto md:overflow-visible">
+             <div class="bg-[#16181a] border border-[#262626] md:rounded-2xl p-6 shadow-2xl h-full md:h-auto">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl font-bold flex items-center gap-2">
+                        <span class="material-symbols-outlined text-gold">tune</span> Filters
+                    </h2>
+                    <button onclick="toggleFilters()" class="md:hidden text-gray-400 hover:text-white">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
 
                 <form method="get" id="filterForm" class="space-y-8">
                     <!-- Search -->
@@ -238,6 +243,11 @@
 </div>
 
 <script>
+    function toggleFilters() {
+        const sidebar = document.getElementById('filtersSidebar');
+        sidebar.classList.toggle('-translate-x-full');
+    }
+
     // --- Pagination Logic ---
     let currPage = @Model.CurrentPage;
     const totalPages = @Model.TotalPages;

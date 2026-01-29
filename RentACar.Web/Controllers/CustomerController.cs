@@ -243,7 +243,7 @@ namespace RentACar.Web.Controllers
         }
 
         [HttpGet("~/Customer/ResetPassword/{id}")]
-        [Authorize(Roles = "Admin")]
+
         [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> ResetPasswordForm(int id)
         {
@@ -253,7 +253,7 @@ namespace RentACar.Web.Controllers
         }
 
         [HttpPost("{id}/reset-password")]
-        [Authorize(Roles = "Admin")]
+
         public async Task<IActionResult> ResetPassword(int id, [FromBody] ResetPasswordRequest? request)
         {
             var success = await _customerManager.ResetPassword(id, request?.NewPassword);

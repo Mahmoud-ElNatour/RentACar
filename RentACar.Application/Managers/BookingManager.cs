@@ -658,7 +658,7 @@ namespace RentACar.Application.Managers
             _logger.LogInformation("Deleting booking {Id}", requestDto.BookingId);
 
             var booking = await _bookingRepository.GetBookingByIdAsync(requestDto.BookingId);
-            if (booking == null || booking.Startdate <= DateOnly.FromDateTime(DateTime.UtcNow))
+            if (booking == null)
                 return false;
 
             // 🔍 Fetch payments for this booking

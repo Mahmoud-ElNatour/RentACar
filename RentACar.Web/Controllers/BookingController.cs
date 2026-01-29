@@ -66,6 +66,26 @@ namespace RentACar.Web.Controllers
             return View("~/Views/ControlPanel/Booking/Index.cshtml");
         }
 
+        [HttpGet("~/Booking/Edit/{id}")]
+        [Authorize(Roles = "Admin,Employee")]
+        [ApiExplorerSettings(IgnoreApi = true)]
+        public async Task<IActionResult> EditForm(int id)
+        {
+            var booking = await _bookingManager.GetBookingByIdAsync(id);
+            if (booking == null) return NotFound();
+            return PartialView("~/Views/ControlPanel/Booking/_BookingEditPartial.cshtml", booking);
+        }
+
+        [HttpGet("~/Booking/Delete/{id}")]
+        [Authorize(Roles = "Admin,Employee")]
+        [ApiExplorerSettings(IgnoreApi = true)]
+        public async Task<IActionResult> DeleteForm(int id)
+        {
+            var booking = await _bookingManager.GetBookingByIdAsync(id);
+            if (booking == null) return NotFound();
+            return PartialView("~/Views/ControlPanel/Booking/_DeleteBookingPartial.cshtml", booking);
+        }
+
         [HttpGet("~/Booking/Employee/Add")]
         [Authorize(Roles = "Admin,Employee")]
         [ApiExplorerSettings(IgnoreApi = true)]
