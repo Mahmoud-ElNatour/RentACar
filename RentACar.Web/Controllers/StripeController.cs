@@ -113,8 +113,59 @@ namespace RentACar.Web.Controllers
 
         [HttpGet("Success")]
         [AllowAnonymous]
-        public IActionResult Success()
+        public async Task<IActionResult> Success(string session_id)
         {
+            if (string.IsNullOrWhiteSpace(session_id))
+            {
+                return BadRequest("Missing session_id");
+            }
+
+            try 
+            {
+                var session = await _stripePaymentService.GetSessionAsync(session_id);
+                if (session == null || (session.Status != "complete" && session.Status != "paid"))
+                {
+                    _logger.LogWarning("Stripe success page accessed with invalid/incomplete session: {SessionId} Status: {Status}", session_id, session?.Status);
+                    // Decide if we show success or error. Showing success might be confusing if not paid.
+                    // But if it's just delayed, maybe okay.
+                    // let's error if strictly not complete.
+                } 
+                else 
+                {
+                    // Update Status
+                    if (!string.IsNullOrWhiteSpace(session.PaymentIntentId))
+                    {
+                        // We need paymentId. It should be in metadata.
+                        // CreateCheckoutSessionAsync puts it in metadata["paymentId"]
+                        // But getting it from Session object requires parsing raw response again? 
+                        // The DTO doesn't have Metadata dict.
+                        // Let's rely on finding Payment by SessionId or PaymentIntentId in our DB?
+                        // Or we can parse raw response in DTO if needed.
+                        // Actually, Find Payment by specific Session ID is safer than trusting query params for ID.
+                        // PaymentRepository doesn't have GetBySessionId.
+                        // Let's add extraction of metadata to StripePaymentService or just rely on the fact we have the session ID.
+                    }
+                    
+                    // QUICK FIX: We don't have GetBySessionId easily without repository change.
+                    // But we can parse metadata from RawResponse in controller for now, or trust that GetSessionAsync verifies it.
+                    // Wait, `StripeCheckoutSessionDto` has `RawResponse`.
+                    // We can parse metadata from that.
+                    
+                    using var doc = JsonDocument.Parse(session.RawResponse);
+                    var root = doc.RootElement;
+                    if (root.TryGetProperty("metadata", out var meta) && 
+                        meta.TryGetProperty("paymentId", out var pIdElem) &&
+                        int.TryParse(pIdElem.GetString(), out var paymentId))
+                    {
+                         await _paymentManager.MarkPaymentPaidAsync(paymentId, session.PaymentIntentId, session.SessionId);
+                    }
+                }
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError(ex, "Error processing Stripe success for session {SessionId}", session_id);
+            }
+
             return View("~/Views/Stripe/Success.cshtml");
         }
 

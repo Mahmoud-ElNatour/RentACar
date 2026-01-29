@@ -12,6 +12,7 @@ using RentACar.Core.Entities;
 using RentACar.Core.Repositories;
 using AspNetUserEntity = RentACar.Core.Entities.AspNetUser;
 using Microsoft.AspNetCore.Http;
+using RentACar.Core.Constants;
 
 namespace RentACar.Application.Managers
 {
@@ -75,7 +76,7 @@ namespace RentACar.Application.Managers
                     .First();
 
                 // ✅ If already paid, don't redirect
-                if (string.Equals(latestPayment.Status, "paid", StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(latestPayment.Status, PaymentStatus.Paid, StringComparison.OrdinalIgnoreCase))
                 {
                     var paidDto = _mapper.Map<PaymentDto>(latestPayment);
 
@@ -107,7 +108,7 @@ namespace RentACar.Application.Managers
                     Amount = paymentDto.Amount,
                     PaymentDate = DateOnly.FromDateTime(DateTime.UtcNow),
                     PaymentMethod = paymentMethod.PaymentMethodName,
-                    Status = "Unpaid",
+                    Status = PaymentStatus.Pending,
                     PaymentProvider = "Stripe"
                 };
 
@@ -141,7 +142,7 @@ namespace RentACar.Application.Managers
                     Amount = paymentDto.Amount,
                     PaymentDate = DateOnly.FromDateTime(DateTime.UtcNow),
                     PaymentMethod = paymentMethod.PaymentMethodName,
-                    Status = "Paid"
+                    Status = PaymentStatus.Paid
                 };
                 await _paymentRepository.AddAsync(payment);
                 await _auditLogManager.LogEventAsync("Payment.Created", "Payment", payment.PaymentId.ToString(), $"Customer payment of {payment.Amount:C} via {payment.PaymentMethod}", null, "Success");
@@ -211,7 +212,7 @@ namespace RentACar.Application.Managers
                     PaymentDate = DateOnly.FromDateTime(DateTime.UtcNow),
                     CreditcardId = paymentDto.CreditcardId,
                     PaymentMethod = paymentMethod.PaymentMethodName,
-                    Status = "Paid"
+                    Status = PaymentStatus.Paid
                 };
 
                 await _paymentRepository.AddAsync(payment);
@@ -255,7 +256,7 @@ namespace RentACar.Application.Managers
                     Amount = paymentDto.Amount,
                     PaymentDate = DateOnly.FromDateTime(DateTime.UtcNow),
                     PaymentMethod = paymentMethod.PaymentMethodName,
-                    Status = "Paid"
+                    Status = PaymentStatus.Paid
                 };
 
                 await _paymentRepository.AddAsync(payment);
@@ -279,13 +280,13 @@ namespace RentACar.Application.Managers
                 return false;
             }
 
-            if (string.Equals(payment.Status, "paid", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(payment.Status, PaymentStatus.Paid, StringComparison.OrdinalIgnoreCase))
             {
                 _logger.LogInformation("Stripe webhook received for already completed payment {PaymentId}", paymentId);
                 return true;
             }
 
-            payment.Status = "Paid";
+            payment.Status = PaymentStatus.Paid;
             payment.PaymentProvider = "Stripe";
             if (!string.IsNullOrWhiteSpace(paymentIntentId))
             {
@@ -438,11 +439,11 @@ namespace RentACar.Application.Managers
 
             return new PaymentStatsDto
             {
-                TotalRevenue = statsGroup.Where(x => string.Equals(x.Status, "Paid", StringComparison.OrdinalIgnoreCase) || string.Equals(x.Status, "Done", StringComparison.OrdinalIgnoreCase)).Sum(x => x.Sum),
-                PendingAmount = statsGroup.Where(x => string.Equals(x.Status, "Pending", StringComparison.OrdinalIgnoreCase) || string.Equals(x.Status, "Unpaid", StringComparison.OrdinalIgnoreCase)).Sum(x => x.Sum),
-                PendingCount = statsGroup.Where(x => string.Equals(x.Status, "Pending", StringComparison.OrdinalIgnoreCase) || string.Equals(x.Status, "Unpaid", StringComparison.OrdinalIgnoreCase)).Sum(x => x.Count),
-                SuccessCount = statsGroup.Where(x => string.Equals(x.Status, "Paid", StringComparison.OrdinalIgnoreCase) || string.Equals(x.Status, "Done", StringComparison.OrdinalIgnoreCase)).Sum(x => x.Count),
-                RefundAmount = statsGroup.Where(x => string.Equals(x.Status, "Refunded", StringComparison.OrdinalIgnoreCase)).Sum(x => x.Sum),
+                TotalRevenue = statsGroup.Where(x => string.Equals(x.Status, PaymentStatus.Paid, StringComparison.OrdinalIgnoreCase)).Sum(x => x.Sum),
+                PendingAmount = statsGroup.Where(x => string.Equals(x.Status, PaymentStatus.Pending, StringComparison.OrdinalIgnoreCase)).Sum(x => x.Sum),
+                PendingCount = statsGroup.Where(x => string.Equals(x.Status, PaymentStatus.Pending, StringComparison.OrdinalIgnoreCase)).Sum(x => x.Count),
+                SuccessCount = statsGroup.Where(x => string.Equals(x.Status, PaymentStatus.Paid, StringComparison.OrdinalIgnoreCase)).Sum(x => x.Count),
+                RefundAmount = statsGroup.Where(x => string.Equals(x.Status, PaymentStatus.Refunded, StringComparison.OrdinalIgnoreCase)).Sum(x => x.Sum),
                 TotalCount = statsGroup.Sum(x => x.Count)
             };
         }
@@ -469,9 +470,9 @@ namespace RentACar.Application.Managers
 
             if (!string.IsNullOrWhiteSpace(filter.Status))
             {
-                if (filter.Status.Equals("Paid", StringComparison.OrdinalIgnoreCase))
+                if (filter.Status.Equals(PaymentStatus.Paid, StringComparison.OrdinalIgnoreCase))
                 {
-                    query = query.Where(p => p.Status == "Paid" || p.Status == "Done");
+                    query = query.Where(p => p.Status == PaymentStatus.Paid);
                 }
                 else
                 {
@@ -729,18 +730,23 @@ namespace RentACar.Application.Managers
                 return;
             }
 
-            if (paymentStatus.Equals("cancelled", StringComparison.OrdinalIgnoreCase) ||
-                paymentStatus.Equals("unpaid", StringComparison.OrdinalIgnoreCase))
+            if (paymentStatus.Equals(PaymentStatus.Cancelled, StringComparison.OrdinalIgnoreCase) ||
+                paymentStatus.Equals(PaymentStatus.Pending, StringComparison.OrdinalIgnoreCase))
             {
                 return;
             }
 
-            if (paymentStatus.Equals("paid", StringComparison.OrdinalIgnoreCase))
+            if (paymentStatus.Equals(PaymentStatus.Paid, StringComparison.OrdinalIgnoreCase))
             {
-                const string targetStatus = "Booked";
-                if (!string.Equals(booking.BookingStatus, targetStatus, StringComparison.OrdinalIgnoreCase))
+                // Logic: If Today is start date -> InProgress, Else -> Confirmed
+                var today = DateOnly.FromDateTime(DateTime.UtcNow);
+                string newStatus = (booking.Startdate <= today) ? BookingStatus.InProgress : BookingStatus.Confirmed;
+                
+                // Only update if current status is Pending (or we want to re-confirm?)
+                // Assuming we move from Pending -> Confirmed/InProgress
+                if (string.Equals(booking.BookingStatus, BookingStatus.Pending, StringComparison.OrdinalIgnoreCase))
                 {
-                    booking.BookingStatus = targetStatus;
+                    booking.BookingStatus = newStatus;
                     await _bookingRepository.UpdateAsync(booking);
                 }
             }
@@ -755,12 +761,12 @@ namespace RentACar.Application.Managers
                 return false;
             }
 
-            if (string.Equals(payment.Status, "cancelled", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(payment.Status, PaymentStatus.Cancelled, StringComparison.OrdinalIgnoreCase))
             {
                 return true;
             }
 
-            payment.Status = "Cancelled";
+            payment.Status = PaymentStatus.Cancelled;
             await _paymentRepository.UpdateAsync(payment);
             
             // 📨 Send Payment Cancelled Email
@@ -780,9 +786,9 @@ namespace RentACar.Application.Managers
             var payment = await _paymentRepository.GetByIdAsync(paymentId);
             if (payment == null) return false;
 
-            if (string.Equals(payment.Status, "Failed", StringComparison.OrdinalIgnoreCase)) return true;
+            if (string.Equals(payment.Status, PaymentStatus.Failed, StringComparison.OrdinalIgnoreCase)) return true;
 
-            payment.Status = "Failed";
+            payment.Status = PaymentStatus.Failed;
             await _paymentRepository.UpdateAsync(payment);
 
             // 📨 Send Payment Failed Email
@@ -838,25 +844,37 @@ namespace RentACar.Application.Managers
 
         public async Task<StripeCheckoutSessionDto> CreateCheckoutSessionForPaymentAsync(Payment payment)
         {
-            var session = await CreateStripeCheckoutSessionAsync(payment);
-
-            if (!string.IsNullOrWhiteSpace(session.SessionId))
+            try
             {
-                payment.PaymentProviderSessionId = session.SessionId;
-            }
+                var session = await CreateStripeCheckoutSessionAsync(payment);
 
-            if (!string.IsNullOrWhiteSpace(session.PaymentIntentId))
+                if (!string.IsNullOrWhiteSpace(session.SessionId))
+                {
+                    payment.PaymentProviderSessionId = session.SessionId;
+                }
+
+                if (!string.IsNullOrWhiteSpace(session.PaymentIntentId))
+                {
+                    payment.PaymentProviderPaymentIntentId = session.PaymentIntentId;
+                }
+
+                if (!string.IsNullOrWhiteSpace(session.SessionId) || !string.IsNullOrWhiteSpace(session.PaymentIntentId))
+                {
+                    payment.PaymentProvider = "Stripe";
+                    await _paymentRepository.UpdateAsync(payment);
+                }
+
+                return session;
+            }
+            catch (Exception ex)
             {
-                payment.PaymentProviderPaymentIntentId = session.PaymentIntentId;
+                _logger.LogError(ex, "Failed to create Stripe Checkout Session for Payment {PaymentId}", payment.PaymentId);
+                return new StripeCheckoutSessionDto
+                {
+                    CheckoutUrl = null,
+                    RawResponse = $"Error: {ex.Message}"
+                };
             }
-
-            if (!string.IsNullOrWhiteSpace(session.SessionId) || !string.IsNullOrWhiteSpace(session.PaymentIntentId))
-            {
-                payment.PaymentProvider = "Stripe";
-                await _paymentRepository.UpdateAsync(payment);
-            }
-
-            return session;
         }
 
         private static string? NormalizePaymentStatus(string? status)

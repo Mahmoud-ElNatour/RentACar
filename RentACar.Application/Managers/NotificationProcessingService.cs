@@ -14,19 +14,22 @@ namespace RentACar.Application.Managers
         private readonly EmailManager _emailManager;
         private readonly EmployeeManager _employeeManager;
         private readonly DistributionListManager _distListManager;
+        private readonly BookingManager _bookingManager;
 
         public NotificationProcessingService(
             ApplicationDbContext context,
             RentACarDbContext appContext,
             EmailManager emailManager,
             EmployeeManager employeeManager,
-            DistributionListManager distListManager)
+            DistributionListManager distListManager,
+            BookingManager bookingManager)
         {
             _context = context;
             _appContext = appContext;
             _emailManager = emailManager;
             _employeeManager = employeeManager;
             _distListManager = distListManager;
+            _bookingManager = bookingManager;
         }
 
         public async Task<NotificationSettings> GetSettingsAsync()
@@ -369,6 +372,16 @@ namespace RentACar.Application.Managers
                          }
                      }
                 }
+            }
+            // 5. Check Overdue Bookings (AwaitingReturn)
+            try 
+            {
+               await _bookingManager.ProcessOverdueBookingsAsync();
+               runRecord.Summary += " | Processed Overdue Bookings.";
+            } 
+            catch (Exception ex)
+            {
+                 _context.NotificationLogs.Add(new NotificationLog { EventType = "OverdueCheck", TargetType = "System", Result = "Failed", Details = ex.Message, Actor = "System", CreatedAt = DateTime.UtcNow });
             }
 
             await _appContext.SaveChangesAsync();

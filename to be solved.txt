@@ -1,38 +1,20 @@
-changing design all pages in control panel --> done(promocode, categories, )
+remaining:
+finalize add booking --> with driver later
+finalize driver
+login redesign
+signup redisign
+Report index page
 
-Done -stripe payments
-
-email:
-	- email services (send notifications, reset password, confirm email, send offers,...)
-Done	- 2fa (otp, google uthenticator, recovey codes)
-Done	- reset pass from settings (pin email --> send otp email --> reset pass)
-Done	- Forgot pass(check if email reg --> send email to reset)
-Done	- create acc --> verify email
-	- booking status update 
-	- payment (invoice) to the customer
-	- car/category/promocode crude (email to all emploies to keep them updated in work)
-	- Doc. status update +  notification to resubmit doc to verify.
-	- blocklist/unverify notify the customer + admin with reason
-
- 
- 
-promocode:
-- add attr maxNbUsedByACustomer, isForNewCustomers 
-
-Payments :
-- fix apply promocode (design + backend)
-- stripe payment should contain for each payment the card owner name and last 4 digits
-
-- when pressing logout, it should took the user to page logout to press are yu sure...
-
-Also:
--request panel for canceling the booking from employee nso the admin can approve or deny + - refunded panel -- if stripe shta8alet
-
-- theme panel
-- customer reviews page for customer for each booking , and table in control panel for employees to view
-- reports (logs, financials,...)
-- - add search and sort for each column by pressing the header of column in all tables
-
-- HR Platfrom to manage employees
-- Driver platform (adding new role driver, assign bookings to drivers (3la talab as a service) , dashboard for the driver in location map and duration and dates,...)
-
+---------------------------------------
+change logic of signup !important
+notification if not verified.
+-----------------------------------------
+major new features:
+- customer support with AI chatbot (and customer - employee chat) !important
+- HR
+- Accouting
+- Reports 
+-----------------------------------
+Maybe (mesh medtarin 3laya hl2):
+- cancelation / refunded for requests to be done onlie by Customers
+- theme panel 

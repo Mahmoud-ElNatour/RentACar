@@ -43,6 +43,65 @@
          </div>
     </div>
 
+    </div>
+
+    <!-- Lifecycle Flow Visual -->
+    <div class="mb-8 hidden md:block">
+        <h3 class="text-white text-lg font-bold mb-4 flex items-center gap-2">
+            <span class="material-symbols-outlined text-gold">sync_alt</span> Payment Lifecycle
+        </h3>
+        <div class="bg-[#121212] border border-[#262626] rounded-xl p-6 flex items-center justify-between relative overflow-hidden">
+             <!-- Connector Line -->
+             <div class="absolute top-[50%] left-16 right-16 h-0.5 bg-gray-800 -z-0 transform -translate-y-1/2"></div>
+ 
+             <!-- Steps -->
+             <div class="flex flex-col items-center gap-2 z-10 relative group bg-[#121212] px-2">
+                 <div class="w-10 h-10 rounded-full bg-[#121212] border-2 border-yellow-500 flex items-center justify-center text-yellow-500 shadow-lg shadow-yellow-500/10 transition-transform group-hover:scale-110">
+                    <span class="material-symbols-outlined text-[20px]">pending</span>
+                 </div>
+                 <div class="text-center">
+                     <p class="text-[10px] font-bold text-yellow-500 uppercase tracking-wider">Pending</p>
+                 </div>
+             </div>
+             
+             <div class="flex flex-col items-center gap-2 z-10 relative group bg-[#121212] px-2">
+                 <div class="w-10 h-10 rounded-full bg-[#121212] border-2 border-green-500 flex items-center justify-center text-green-500 shadow-lg shadow-green-500/10 transition-transform group-hover:scale-110">
+                    <span class="material-symbols-outlined text-[20px]">payments</span>
+                 </div>
+                 <div class="text-center">
+                     <p class="text-[10px] font-bold text-green-500 uppercase tracking-wider">Paid</p>
+                 </div>
+             </div>
+ 
+             <div class="flex flex-col items-center gap-2 z-10 relative group bg-[#121212] px-2">
+                 <div class="w-10 h-10 rounded-full bg-[#121212] border-2 border-red-500 flex items-center justify-center text-red-500 shadow-lg shadow-red-500/10 transition-transform group-hover:scale-110">
+                    <span class="material-symbols-outlined text-[20px]">cancel</span>
+                 </div>
+                 <div class="text-center">
+                     <p class="text-[10px] font-bold text-red-500 uppercase tracking-wider">Cancelled</p>
+                 </div>
+             </div>
+ 
+             <div class="flex flex-col items-center gap-2 z-10 relative group bg-[#121212] px-2">
+                 <div class="w-10 h-10 rounded-full bg-[#121212] border-2 border-purple-500 flex items-center justify-center text-purple-500 shadow-lg shadow-purple-500/10 transition-transform group-hover:scale-110">
+                    <span class="material-symbols-outlined text-[20px]">replay</span>
+                 </div>
+                 <div class="text-center">
+                     <p class="text-[10px] font-bold text-purple-500 uppercase tracking-wider">Refunded</p>
+                 </div>
+             </div>
+ 
+             <div class="flex flex-col items-center gap-2 z-10 relative group bg-[#121212] px-2">
+                 <div class="w-10 h-10 rounded-full bg-[#121212] border-2 border-gray-500 flex items-center justify-center text-gray-500 shadow-lg shadow-gray-500/10 transition-transform group-hover:scale-110">
+                    <span class="material-symbols-outlined text-[20px]">error_outline</span>
+                 </div>
+                 <div class="text-center">
+                     <p class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Failed</p>
+                 </div>
+             </div>
+        </div>
+    </div>
+
     <!-- Filters & Toolbar (Car Style) -->
     <div class="bg-[#16181a] border border-[#262626] rounded-2xl p-4 mb-6 shadow-xl">
         <div class="flex flex-col lg:flex-row gap-4 items-end">
@@ -71,10 +130,11 @@
                 <div class="relative">
                      <select id="statusFilter" onchange="resetAndLoad()" class="w-full bg-[#0a0a0a] bg-none border border-[#262626] rounded-xl py-3 pl-4 pr-10 text-white placeholder-gray-600 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold appearance-none cursor-pointer">
                         <option value="">All Statuses</option>
-                        <option value="Paid">Paid</option>
                         <option value="Pending">Pending</option>
-                        <option value="Failed">Failed</option>
+                        <option value="Paid">Paid</option>
+                        <option value="Cancelled">Cancelled</option>
                         <option value="Refunded">Refunded</option>
+                        <option value="Failed">Failed</option>
                     </select>
                     <span class="absolute right-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-gray-500 pointer-events-none">expand_more</span>
                 </div>

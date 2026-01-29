@@ -1,144 +1,518 @@
-﻿@inject UserManager<IdentityUser> UserManager
-@inject SignInManager<IdentityUser> SignInManager
-@inject PaymentMethodManager PaymentMethodManager
-
-@using Microsoft.AspNetCore.Identity
-@using RentACar.Application.Managers
-
-@model RentACar.Application.DTOs.BookingDto
+﻿@model RentACar.Application.DTOs.BookingDto
 @{
-    ViewData["Title"] = "Add Booking";
-    Layout = null;
-    var user = await UserManager.GetUserAsync(User);
-    var isCustomer = user != null && await UserManager.IsInRoleAsync(user, "Customer");
-    var carIdParam = Context.Request.Query["carId"].ToString();
-    if (string.IsNullOrEmpty(carIdParam) && ViewBag.CarId != null)
-    {
-        carIdParam = ViewBag.CarId;
-    }
-    var startValue = ViewBag.StartDate ?? DateTime.Today.ToString("yyyy-MM-dd");
-    var endValue = ViewBag.EndDate ?? DateTime.Today.AddDays(1).ToString("yyyy-MM-dd");
-    var backUrl = isCustomer ? "/Bookings/MyBookings" : "/Booking";
-
+    ViewData["Title"] = "New Walk-in Booking";
+    Layout = "_Layout";
+    var car = ViewBag.Car as RentACar.Application.DTOs.CarDto;
 }
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"]</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/bookings.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
-</head>
-<body>
-    @await Html.PartialAsync("_PopupNotifications")
-    <div class="booking-container container">
-        <a href="@backUrl" class="btn btn-outline-warning rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:40px;height:40px" title="Back">
-            <i class="fas fa-arrow-left"></i>
+<!-- Libraries -->
+<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<!-- Tom Select -->
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+
+<script>
+    tailwind.config = {
+        darkMode: "class",
+        theme: {
+            extend: {
+                colors: { "gold": "#d4af37" },
+                fontFamily: { "display": ["Manrope", "sans-serif"] }
+            }
+        }
+    }
+</script>
+
+<style>
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #16181a; }
+    ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #d4af37; }
+    
+    /* Tom Select Dark Theme Overrides */
+    .ts-control {
+        background-color: #0a0a0a !important;
+        border: 1px solid #262626 !important;
+        color: white !important;
+        border-radius: 0.75rem !important;
+        padding: 0.75rem 1rem !important;
+    }
+    .ts-dropdown {
+        background-color: #16181a !important;
+        border: 1px solid #262626 !important;
+        color: white !important;
+    }
+    .ts-dropdown .active {
+        background-color: #d4af37 !important;
+        color: black !important;
+    }
+    .ts-dropdown .option {
+        padding: 8px 12px;
+    }
+</style>
+
+<div class="px-4 md:px-10 py-8 max-w-7xl mx-auto w-full text-white font-display">
+    
+    <!-- Header -->
+    <div class="mb-8 flex items-center gap-4">
+        <a href="/Booking" class="p-2 rounded-lg bg-[#262626] text-gray-400 hover:text-white transition-colors">
+            <span class="material-symbols-outlined">arrow_back</span>
         </a>
-
-        <h2 class="text-center mb-4">Add Booking</h2>
-        <form id="bookingForm">
-            @if (!isCustomer)
-            {
-                <div class="mb-3">
-                    <label class="form-label">Customer ID</label>
-                    <input class="form-control" type="number" id="CustomerId" name="CustomerId" min="1" required />
-                </div>
-            }
-            else
-            {
-
-            }
-            <div class="mb-3">
-                <label class="form-label">Car ID</label>
-                <input class="form-control" type="number" id="CarId" name="CarId" min="1" value="@carIdParam" @(string.IsNullOrEmpty(carIdParam) ? "" : "readonly") required />
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Start Date</label>
-                <input type="date" class="form-control" id="Startdate" name="Startdate" value="@startValue" required />
-            </div>
-            <div class="mb-3">
-                <label class="form-label">End Date</label>
-                <input type="date" class="form-control" id="Enddate" name="Enddate" value="@endValue" required />
-            </div>
-         
-            @{
-            var methods = await PaymentMethodManager.GetAllActivePaymentMethodsAsync();
-            }
-            <div class="mb-3">
-                <p>Found @methods.Count payment methods.</p>
-
-                <label class="form-label">Payment Method</label>
-
-                <select id="paymentMethod" class="form-select" required>
-                    <option disabled selected>Select a payment method</option>
-                    @foreach (var method in methods)
-                    {
-                        <option value="@method.Id">@method.PaymentMethodName</option>
-                    }
-                </select>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label">Promocode</label>
-                <input type="text" id="promocode" class="form-control" />
-            </div>
-            <button type="submit" class="btn btn-primary">Save</button>
-        </form>
+        <div>
+            <h1 class="text-3xl font-black tracking-tight flex items-center gap-2">
+                <span class="material-symbols-outlined text-gold">storefront</span>
+                New Booking
+            </h1>
+            <p class="text-gray-400">Smart booking system with automated pricing.</p>
+        </div>
     </div>
 
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    <script>
-        document.getElementById('bookingForm').addEventListener('submit', async function (e) {
-            e.preventDefault();
-
-            const form = e.target;
-            const customerIdInput = document.getElementById('CustomerId');
-            const data = {
-                carId: parseInt(document.getElementById('CarId').value),
-                startdate: document.getElementById('Startdate').value,
-                enddate: document.getElementById('Enddate').value,
-                paymentMethodId: parseInt(document.getElementById('paymentMethod').value),
-                promocode: document.getElementById('promocode').value || null,
-            };
-
-            if (customerIdInput) {
-                data.customerId = parseInt(customerIdInput.value);
-            }
-
-            try {
-                const resp = await fetch('/api/Booking', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-
-                if (resp.ok) {
-                    const result = await resp.json();
-                    if (result.redirectUrl) {
-                        window.location.href = result.redirectUrl;
-                        return;
-                    }
-                    showPopup('Booking created successfully.', 'success');
-                    const fallbackUrl = '@(isCustomer ? "/Bookings/MyBookings" : "/Booking")';
-                    setTimeout(() => { window.location.href = fallbackUrl; }, 1000);
-                } else {
-                    const errorText = await resp.text();
-                    showPopup(`Error creating booking:\n${errorText}`, 'error');
-                    console.error('Booking error:', errorText);
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <!-- Left: Car & Summary -->
+        <div class="lg:col-span-1 space-y-6">
+            <!-- Car Card -->
+            <div class="bg-[#16181a] border border-[#262626] rounded-2xl overflow-hidden shadow-2xl relative group">
+                @if (car != null)
+                {
+                    <div class="aspect-video w-full bg-[#0a0a0a] relative overflow-hidden">
+                         @if (car.CarImage != null && car.CarImage.Length > 0)
+                         {
+                            <img src="data:image/jpeg;base64,@Convert.ToBase64String(car.CarImage)" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt="@car.ModelName">
+                         }
+                         else
+                         {
+                            <div class="w-full h-full flex items-center justify-center text-gray-600">
+                                <span class="material-symbols-outlined text-6xl">directions_car</span>
+                            </div>
+                         }
+                         <div class="absolute top-4 right-4 bg-black/80 backdrop-blur-md px-3 py-1 rounded-full border border-gold/30">
+                             <div class="text-gold font-bold text-sm tracking-wider">@car.PlateNumber</div>
+                         </div>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 class="text-2xl font-bold text-white leading-tight">@car.ModelName</h3>
+                                <div class="text-sm text-gray-400 mt-1">@car.Color • @car.ModelYear</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-2xl font-black text-gold">$@car.PricePerDay</div>
+                                <div class="text-xs text-gray-500 uppercase tracking-widest">per day</div>
+                            </div>
+                        </div>
+                         <div class="flex justify-between text-sm py-2 border-t border-[#262626]">
+                            <span class="text-gray-400">Category</span>
+                            <span class="text-white font-medium">@car.CategoryName</span>
+                        </div>
+                    </div>
                 }
-            } catch (err) {
-                showPopup('Unexpected error occurred while submitting booking.', 'error');
-                console.error(err);
-            }
-        });
+                else
+                {
+                    <div class="p-10 text-center text-gray-500">
+                        <span class="material-symbols-outlined text-4xl mb-2">no_crash</span>
+                        <p>No car selected.</p>
+                        <a href="/Browse" class="text-gold text-sm underline hover:text-white mt-2 block">Browse Cars</a>
+                    </div>
+                }
+            </div>
 
-    </script>
-</body>
-</html>
+            <!-- Price Breakdown (Live) -->
+            <div class="bg-[#16181a] border border-[#262626] rounded-2xl p-6 shadow-2xl">
+                <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-gold">receipt_long</span>
+                    Price Breakdown
+                </h3>
+                
+                <div id="priceLoading" class="hidden text-center py-4 text-gold animate-pulse">
+                    Calculating...
+                </div>
+
+                <div id="priceContent" class="space-y-3 text-sm">
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Duration</span>
+                        <span class="text-white font-bold" id="summDays">0 Days</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Rate</span>
+                        <span class="text-white" id="summRate">$@car?.PricePerDay / day</span>
+                    </div>
+                     <div class="flex justify-between text-gray-300 pt-2 border-t border-[#262626]">
+                        <span>Subtotal</span>
+                        <span id="summSubtotal">$0.00</span>
+                    </div>
+                    
+                    <div id="summPromoRow" class="flex justify-between text-green-500 hidden">
+                        <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">sell</span> <span id="summPromoName">Promo</span></span>
+                        <span id="summDiscount">-$0.00</span>
+                    </div>
+
+                    <div class="pt-3 mt-2 border-t border-[#262626] flex justify-between items-end">
+                        <span class="text-gray-400 font-bold text-xs uppercase tracking-widest leading-none mb-1">Total Estimated</span>
+                        <span class="text-3xl font-black text-gold leading-none" id="summTotal">$0.00</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Form -->
+        <div class="lg:col-span-2">
+            <form id="bookingForm" class="bg-[#16181a] border border-[#262626] rounded-2xl p-6 md:p-8 space-y-8 shadow-2xl relative">
+                 <input type="hidden" id="CarId" value="@car?.CarId" />
+                
+                <!-- 1. Customer Selection -->
+                <section>
+                    <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                        <span class="flex items-center justify-center w-8 h-8 rounded-full bg-gold/10 text-gold border border-gold/20 font-bold text-sm">1</span>
+                        Customer Details
+                    </h3>
+                    <div>
+                        <input id="customerSelect" placeholder="Search name, email, or phone..." autocomplete="off">
+                        <input type="hidden" id="CustomerId" required />
+                    </div>
+                </section>
+
+                <hr class="border-[#262626]" />
+
+                <!-- 2. Custom Gold Calendar -->
+                <section>
+                    <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                        <span class="flex items-center justify-center w-8 h-8 rounded-full bg-gold/10 text-gold border border-gold/20 font-bold text-sm">2</span>
+                        Dates
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Calendar Widget -->
+                        <div class="bg-[#0a0a0a] border border-[#262626] rounded-2xl p-4 select-none">
+                            <div class="flex items-center justify-between mb-4">
+                                <h4 id="calMonthYear" class="font-bold text-white">Loading...</h4>
+                                <div class="flex gap-2">
+                                    <button type="button" onclick="changeMonth(-1)" class="text-gold hover:text-white"><span class="material-symbols-outlined">chevron_left</span></button>
+                                    <button type="button" onclick="changeMonth(1)" class="text-gold hover:text-white"><span class="material-symbols-outlined">chevron_right</span></button>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-7 gap-1 mb-2 text-center text-xs text-gray-500 font-bold">
+                                <div>S</div><div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>S</div>
+                            </div>
+                            <div id="calGrid" class="grid grid-cols-7 gap-1 text-center text-sm"></div>
+                        </div>
+                        
+                        <!-- Date Inputs Show -->
+                        <div class="flex flex-col justify-center space-y-4">
+                             <div>
+                                <label class="block text-xs font-bold uppercase text-gray-500 mb-2">Start Date</label>
+                                <input type="text" id="Startdate" readonly class="w-full bg-[#0a0a0a] border border-[#262626] rounded-xl py-3 px-4 text-white font-mono text-center" placeholder="--/--/----" />
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold uppercase text-gray-500 mb-2">End Date</label>
+                                 <input type="text" id="Enddate" readonly class="w-full bg-[#0a0a0a] border border-[#262626] rounded-xl py-3 px-4 text-white font-mono text-center" placeholder="--/--/----" />
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                 <hr class="border-[#262626]" />
+
+                <!-- 3. Payment & Promo -->
+                <section>
+                    <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                        <span class="flex items-center justify-center w-8 h-8 rounded-full bg-gold/10 text-gold border border-gold/20 font-bold text-sm">3</span>
+                        Payment
+                    </h3>
+                    <div class="grid grid-cols-1 gap-6">
+                         <!-- Promo -->
+                        <div>
+                             <label class="block text-xs font-bold uppercase text-gray-500 mb-2">Promocode</label>
+                             <div class="flex gap-2">
+                                <div class="relative flex-1">
+                                    <span class="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-gray-500">sell</span>
+                                    <input type="text" id="promocode" class="w-full bg-[#0a0a0a] border border-[#262626] rounded-xl py-3 pl-12 pr-4 text-white focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-all placeholder-gray-700 uppercase" placeholder="PROMOCODE" />
+                                </div>
+                                <button type="button" id="btnApplyPromo" class="px-5 py-3 rounded-xl bg-[#262626] text-white font-bold hover:bg-[#333] transition-all border border-[#404040]">Apply</button>
+                             </div>
+                        </div>
+
+                         <!-- Methods -->
+                         <div>
+                            <label class="block text-xs font-bold uppercase text-gray-500 mb-2">Payment Method</label>
+                            <div class="grid grid-cols-2 gap-4">
+                                <label class="cursor-pointer group">
+                                    <input type="radio" name="paymentType" value="Cash" class="peer sr-only" checked>
+                                    <div class="flex flex-col items-center justify-center p-4 rounded-xl border border-[#262626] bg-[#0a0a0a] peer-checked:border-gold peer-checked:bg-gold/10 transition-all group-hover:bg-[#1f1f1f]">
+                                        <span class="material-symbols-outlined text-green-500 text-3xl mb-1 group-hover:scale-110 transition-transform">payments</span>
+                                        <span class="font-bold text-sm">Cash</span>
+                                    </div>
+                                </label>
+                                <label class="cursor-pointer group">
+                                    <input type="radio" name="paymentType" value="Card" class="peer sr-only">
+                                     <div class="flex flex-col items-center justify-center p-4 rounded-xl border border-[#262626] bg-[#0a0a0a] peer-checked:border-gold peer-checked:bg-gold/10 transition-all group-hover:bg-[#1f1f1f]">
+                                        <span class="material-symbols-outlined text-blue-500 text-3xl mb-1 group-hover:scale-110 transition-transform">credit_card</span>
+                                        <span class="font-bold text-sm">Credit Card (Stripe)</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="pt-6 border-t border-[#262626] flex justify-end gap-3">
+                    <a href="/Booking" class="px-6 py-4 rounded-xl border border-[#262626] text-gray-400 font-bold hover:bg-white/5 transition-all">Cancel</a>
+                    <button type="submit" class="px-10 py-4 rounded-xl bg-gold text-black font-black shadow-xl shadow-gold/10 hover:shadow-gold/30 hover:bg-[#b5952f] transition-all transform hover:-translate-y-1 active:translate-y-0 flex items-center gap-2 text-lg">
+                        <span class="material-symbols-outlined filled">check_circle</span>
+                        Confirm Booking
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    const carId = @car?.CarId;
+    let blockedDates = []; // List of YYYY-MM-DD
+    
+    // --- Autocomplete ---
+    new TomSelect("#customerSelect", {
+        valueField: 'id',
+        labelField: 'text',
+        searchField: 'text',
+        placeholder: 'Search for a customer...',
+        load: function(query, callback) {
+            const url = '/api/Customer/Search?query=' + encodeURIComponent(query);
+            fetch(url).then(r => r.json()).then(callback).catch(()=>{callback()});
+        },
+        onChange: function(value) { document.getElementById('CustomerId').value = value; },
+        render: {
+            option: function(item, escape) {
+                return `<div class="p-2 border-b border-gray-800 hover:bg-gray-800">
+                            <div class="font-bold text-white">${escape(item.name)}</div>
+                            <div class="text-xs text-gray-400">ID: ${escape(item.id)} • ${escape(item.email || 'No Email')}</div>
+                        </div>`;
+            }
+        }
+    });
+
+    // --- Custom Calendar Logic ---
+    let currDate = new Date(); // View pointer
+    let selStart = null;       // Date obj
+    let selEnd = null;         // Date obj
+    let blockedDatesSet = new Set(); // Stores "YYYY-MM-DD"
+    
+    function toISODate(d) {
+        if(!d) return '';
+        const y = d.getFullYear();
+        const m = String(d.getMonth()+1).padStart(2,'0');
+        const day = String(d.getDate()).padStart(2,'0');
+        return `${y}-${m}-${day}`;
+    }
+
+    async function fetchMonthDates(year, month) {
+        const calTitle = document.getElementById('calMonthYear');
+        const originalTitle = calTitle.innerText;
+        calTitle.innerText = "Loading...";
+        calTitle.classList.add('animate-pulse', 'text-gold');
+
+        try {
+            // Month is 0-indexed in JS, but API expects 1-12
+            const apiMonth = month + 1;
+            const url = `/api/Booking/GetBookedDates?carId=${carId}&year=${year}&month=${apiMonth}`;
+            const resp = await fetch(url);
+            if(resp.ok) {
+                const dates = await resp.json();
+                dates.forEach(d => blockedDatesSet.add(d));
+            }
+        } catch(e) { console.error(e); }
+        finally {
+            calTitle.classList.remove('animate-pulse', 'text-gold');
+        }
+    }
+
+    async function initCalendar() {
+        await fetchMonthDates(currDate.getFullYear(), currDate.getMonth());
+        renderGrid();
+    }
+
+    function renderGrid() {
+        const year = currDate.getFullYear();
+        const month = currDate.getMonth();
+        
+        document.getElementById('calMonthYear').innerText = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(currDate);
+        
+        const firstDay = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0);
+        const daysInMonth = lastDay.getDate();
+        const startDay = firstDay.getDay(); 
+        
+        const grid = document.getElementById('calGrid');
+        grid.innerHTML = '';
+        
+        for(let i=0; i<startDay; i++) {
+            grid.innerHTML += '<div></div>';
+        }
+        
+        const today = new Date();
+        today.setHours(0,0,0,0);
+
+        for(let i=1; i<=daysInMonth; i++) {
+            const date = new Date(year, month, i);
+            const iso = toISODate(date);
+            const isPast = date < today;
+            const isBlocked = blockedDatesSet.has(iso);
+            
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.innerText = i;
+            btn.className = 'w-8 h-8 rounded-lg flex items-center justify-center transition-all text-gray-300 mx-auto font-medium';
+            
+            if(isPast || isBlocked) {
+                btn.classList.add('opacity-30', 'cursor-not-allowed');
+                if(isBlocked) btn.classList.add('bg-red-900/50', 'text-red-300'); // Blocked style
+                btn.disabled = true;
+            } else {
+                btn.className += ' hover:bg-white/10';
+                btn.onclick = () => selectDate(date);
+            }
+
+            // Selection styles
+            const sTime = selStart ? selStart.getTime() : 0;
+            const eTime = selEnd ? selEnd.getTime() : 0;
+            const cTime = date.getTime();
+
+            if(sTime && cTime === sTime) btn.className = 'w-8 h-8 rounded-lg flex items-center justify-center mx-auto bg-gold text-black font-bold shadow-lg shadow-gold/20';
+            else if(eTime && cTime === eTime) btn.className = 'w-8 h-8 rounded-lg flex items-center justify-center mx-auto bg-gold text-black font-bold shadow-lg shadow-gold/20';
+            else if(sTime && eTime && cTime > sTime && cTime < eTime) btn.className = 'w-8 h-8 rounded-lg flex items-center justify-center mx-auto bg-gold/20 text-gold font-bold';
+            
+            grid.appendChild(btn);
+        }
+    }
+
+    async function changeMonth(dir) {
+        currDate.setMonth(currDate.getMonth() + dir);
+        // Fetch new month data before rendering (or render then fetch? User asked for "while load display loading")
+        // "make it load month by month like on each click next moth load the dates... while load display loading"
+        await fetchMonthDates(currDate.getFullYear(), currDate.getMonth());
+        renderGrid();
+    }
+
+    function selectDate(date) {
+        if(selStart && selEnd) {
+            selStart = date;
+            selEnd = null;
+        } else if (!selStart) {
+            selStart = date;
+        } else if (date < selStart) {
+            selStart = date;
+        } else if (date.getTime() === selStart.getTime()) {
+            // Keep start
+        } else {
+            // Check range for blocking
+            let valid = true;
+            let check = new Date(selStart);
+            while(check <= date) {
+                if(blockedDatesSet.has(toISODate(check))) {
+                    valid = false;
+                    break;
+                }
+                check.setDate(check.getDate() + 1);
+            }
+            
+            if(valid) selEnd = date;
+            else {
+                alert("Selected range includes unavailable dates.");
+                selEnd = null; // Enforce re-select
+                return;
+            }
+        }
+        
+        // Update inputs
+        document.getElementById('Startdate').value = toISODate(selStart);
+        document.getElementById('Enddate').value = toISODate(selEnd);
+        
+        renderGrid();
+        if(selStart && selEnd) calculatePrice();
+    }
+    
+    initCalendar();
+
+    // --- Pricing ---
+    async function calculatePrice() {
+        const start = document.getElementById('Startdate').value;
+        const end = document.getElementById('Enddate').value;
+        const promo = document.getElementById('promocode').value;
+        
+        if(!start || !end) return;
+        
+        document.getElementById('priceLoading').classList.remove('hidden');
+        try {
+            const resp = await fetch('/api/Booking/CalculatePrice', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ carId, startDate: start, endDate: end, promocode: promo })
+            });
+
+            if(resp.ok) {
+                const data = await resp.json();
+                document.getElementById('summDays').innerText = data.days + " Days";
+                document.getElementById('summSubtotal').innerText = "$" + data.subtotal.toFixed(2);
+                document.getElementById('summTotal').innerText = "$" + data.total.toFixed(2);
+                
+                if (data.discountAmount > 0) {
+                    document.getElementById('summPromoRow').classList.remove('hidden');
+                    document.getElementById('summDiscount').innerText = "-$" + data.discountAmount.toFixed(2);
+                } else {
+                    document.getElementById('summPromoRow').classList.add('hidden');
+                }
+            }
+        } catch(e) { console.error(e); }
+        finally { document.getElementById('priceLoading').classList.add('hidden'); }
+    }
+    
+    document.getElementById('btnApplyPromo').addEventListener('click', calculatePrice);
+
+    // --- Submit ---
+    document.getElementById('bookingForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const cid = document.getElementById('CustomerId').value;
+        const s = document.getElementById('Startdate').value;
+        const end = document.getElementById('Enddate').value;
+        
+        if(!cid) { alert("Select a customer"); return; }
+        if(!s || !end) { alert("Select dates"); return; }
+        
+        const btn = e.submitter;
+        const orig = btn.innerHTML;
+        btn.disabled = true;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-sm mr-2">progress_activity</span>Processing...';
+
+        try {
+            const res = await fetch('/Booking/Employee/Create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    CustomerId: parseInt(cid),
+                    CarId: parseInt(document.getElementById('CarId').value),
+                    Startdate: s,
+                    Enddate: end,
+                    PaymentMethod: document.querySelector('input[name="paymentType"]:checked').value,
+                    Promocode: document.getElementById('promocode').value || null
+                })
+            });
+            
+            if(res.ok) {
+                const data = await res.json();
+                if(data.redirectUrl) window.location.href = data.redirectUrl;
+                else window.location.href = '/Booking';
+            } else {
+                alert("Error: " + await res.text());
+                btn.disabled = false;
+                btn.innerHTML = orig;
+            }
+        } catch(err) {
+            console.error(err);
+            btn.disabled = false;
+            btn.innerHTML = orig;
+        }
+    });
+</script>

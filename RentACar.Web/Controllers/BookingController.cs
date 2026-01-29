@@ -15,6 +15,7 @@ using Microsoft.EntityFrameworkCore;
 using RentACar.Web.Models;
 using System.Security.Claims;
 using System.Linq;
+using RentACar.Core.Repositories;
 
 namespace RentACar.Web.Controllers
 {
@@ -32,6 +33,7 @@ namespace RentACar.Web.Controllers
         private readonly UserManager<IdentityUser> _userManager;
         private readonly IMapper _mapper;
         private readonly ILogger<BookingController> _logger;
+        private readonly IPaymentMethodRepository _paymentMethodRepository;
 
         public BookingController(
             BookingManager bookingManager,
@@ -42,7 +44,8 @@ namespace RentACar.Web.Controllers
             EmployeeManager employeeManager,
             UserManager<IdentityUser> userManager,
             IMapper mapper,
-            ILogger<BookingController> logger)
+            ILogger<BookingController> logger,
+            IPaymentMethodRepository paymentMethodRepository)
         {
             _bookingManager = bookingManager;
             _paymentManager = paymentManager;
@@ -53,6 +56,7 @@ namespace RentACar.Web.Controllers
             _userManager = userManager;
             _mapper = mapper;
             _logger = logger;
+            _paymentMethodRepository = paymentMethodRepository;
         }
 
         [HttpGet("~/Booking")]
@@ -62,119 +66,178 @@ namespace RentACar.Web.Controllers
             return View("~/Views/ControlPanel/Booking/Index.cshtml");
         }
 
-        [HttpGet("~/Booking/Add")]
-        //[Authorize(Roles = "Admin,Employee")]
+        [HttpGet("~/Booking/Employee/Add")]
+        [Authorize(Roles = "Admin,Employee")]
         [ApiExplorerSettings(IgnoreApi = true)]
-        public async Task<IActionResult> Add(int? carId = null)
+        public async Task<IActionResult> AddForEmployee(int? carId = null)
         {
             if (carId.HasValue)
             {
-                var (start, end) = await _bookingManager.SuggestBookingDatesAsync(carId.Value);
-                ViewBag.StartDate = start.ToDateTime(TimeOnly.MinValue).ToString("yyyy-MM-dd");
-                ViewBag.EndDate = end.ToDateTime(TimeOnly.MinValue).ToString("yyyy-MM-dd");
-                ViewBag.CarId = carId.Value.ToString();
+                var car = await _carManager.GetCarByIdAsync(carId.Value);
+                if (car != null)
+                {
+                    ViewBag.Car = car;
+                    var (start, end) = await _bookingManager.SuggestBookingDatesAsync(carId.Value);
+                    ViewBag.StartDate = start.ToDateTime(TimeOnly.MinValue).ToString("yyyy-MM-dd");
+                    ViewBag.EndDate = end.ToDateTime(TimeOnly.MinValue).ToString("yyyy-MM-dd");
+                    ViewBag.CarId = carId.Value.ToString();
+                }
             }
 
             return View("~/Views/ControlPanel/Booking/Add.cshtml", new BookingDto());
         }
 
-        [HttpGet("~/Booking/Edit/{id}")]
-       // [Authorize(Roles = "Admin,Employee")]
+        [HttpGet("~/Booking/Add")]
+        [Authorize(Roles = "Customer")]
         [ApiExplorerSettings(IgnoreApi = true)]
-        public async Task<IActionResult> Edit(int id)
+        public async Task<IActionResult> AddForCustomer(int? carId = null)
         {
-            var booking = await _bookingManager.GetBookingByIdAsync(id);
-            if (booking == null)
-                return NotFound();
+            if (!carId.HasValue) return RedirectToAction("Index", "Browse");
 
-            // Fetch details for pre-filling the search inputs
-            var customer = await _customerManager.GetCustomerById(booking.CustomerId);
-            ViewBag.CustomerName = customer?.Name ?? string.Empty;
+            var car = await _carManager.GetCarByIdAsync(carId.Value);
+            if (car == null) return NotFound();
 
-            var car = await _carManager.GetCarByIdAsync(booking.CarId);
-            ViewBag.CarName = car != null ? $"{car.ModelName} - {car.PlateNumber}" : string.Empty;
-
-            return View("~/Views/ControlPanel/Booking/Edit.cshtml", booking);
-        }
-
-        [HttpGet("~/Booking/Delete/{id}")]
-        //[Authorize(Roles = "Admin,Employee")]
-        [ApiExplorerSettings(IgnoreApi = true)]
-        public async Task<IActionResult> DeleteForm(int id)
-        {
-            var booking = await _bookingManager.GetBookingByIdAsync(id);
-            if (booking == null)
-                return NotFound();
-
-            return View("~/Views/ControlPanel/Booking/Delete.cshtml", booking);
-        }
-
-        [HttpGet("~/Booking/Approve/{id}")]
-        public async Task<IActionResult> Approve(int id)
-        {
-            var booking = await _bookingManager.GetBookingByIdAsync(id);
-            if (booking == null) return NotFound();
-
-            var editDto = _mapper.Map<BookingEditDto>(booking);
-            editDto.BookingStatus = "Booked"; // Setting status to Booked
+            var (start, end) = await _bookingManager.SuggestBookingDatesAsync(carId.Value);
             
-            await _bookingManager.UpdateBookingAsync(editDto);
-
-            // Redirect to Edit page as requested ("took me the edit page of this booking")
-            return RedirectToAction("Edit", new { id = booking.BookingId }); 
-        }
-
-        [HttpGet("~/Booking/Details/{id}")]
-        [ApiExplorerSettings(IgnoreApi = true)]
-        public async Task<IActionResult> Details(int id)
-        {
-            var booking = await _bookingManager.GetBookingByIdAsync(id);
-            if (booking == null)
+            var viewModel = new CustomerBookingViewModel
             {
-                return NotFound();
-            }
-            var customer = await _customerManager.GetCustomerById(booking.CustomerId);
-            var car = await _carManager.GetCarByIdAsync(booking.CarId);
-            var employee = booking.EmployeebookerId.HasValue
-                ? await _employeeManager.GetEmployeeById(booking.EmployeebookerId.Value)
-                : null;
-            var payments = await _paymentManager.GetPaymentsByBookingIdAsync(booking.BookingId);
-            var payment = payments
-                .OrderByDescending(p => p.PaymentDate)
-                .ThenByDescending(p => p.PaymentId)
-                .FirstOrDefault();
-            var promo = booking.PromocodeId.HasValue
-                ? await _promocodeManager.GetPromocodeByIdAsync(booking.PromocodeId.Value)
-                : null;
-
-            var dto = new BookingDetailsDto
-            {
-                BookingId = booking.BookingId,
-                BookingStatus = booking.BookingStatus,
-                StartDate = booking.Startdate,
-                EndDate = booking.Enddate,
-                TotalPrice = booking.TotalPrice,
-                Subtotal = booking.Subtotal,
-                CustomerName = customer?.Name,
-                CustomerUsername = customer?.username,
-                CustomerEmail = customer?.Email,
-                CustomerPhone = customer?.PhoneNumber,
-                EmployeeName = employee?.Name,
-                CarModel = car?.ModelName,
-                CarPlateNumber = car?.PlateNumber,
-                CarCategory = car?.CategoryName,
-                CarColor = car?.Color,
-                CarModelYear = car?.ModelYear,
-                CarPricePerDay = car?.PricePerDay,
-                CarImageUrl = car?.CarImage != null ? $"data:image/jpeg;base64,{Convert.ToBase64String(car.CarImage)}" : null,
-                PaymentId = payment?.PaymentId,
-                PaymentAmount = payment?.Amount,
-                PromocodeName = promo?.Name,
-                PromocodeDiscount = promo?.DiscountPercentage
+                 CarId = car.CarId,
+                 CarModel = car.ModelName,
+                 CarImage = car.CarImage,
+                 PricePerDay = car.PricePerDay ?? 0,
+                 SuggestedStart = start,
+                 SuggestedEnd = end
             };
 
-            return PartialView("~/Views/ControlPanel/Booking/_BookingDetailsPartial.cshtml", dto);
+            return View("~/Views/Booking/Add.cshtml", viewModel);
+        }
 
+        [HttpPost("~/Booking/Employee/Create")]
+        [Authorize(Roles = "Admin,Employee")]
+        public async Task<ActionResult<BookingCreationResultDto>> CreateForEmployee([FromBody] MakeBookingRequestDto dto)
+        {
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+
+            var userId = _userManager.GetUserId(User) ?? string.Empty;
+            _logger.LogInformation("Creating booking by user {UserId} with data: {@Dto}", userId, dto);
+
+            // Logic moved to CreateForCustomer primarily, but kept here if needed for string input.
+            // Map Payment Method string to ID (if provided)
+            if (!string.IsNullOrEmpty(dto.PaymentMethod))
+            {
+               var methods = await _paymentMethodRepository.GetAllAsync();
+               string target = dto.PaymentMethod.Equals("Card", StringComparison.OrdinalIgnoreCase) ? "CreditCard" : dto.PaymentMethod;
+               var method = methods.FirstOrDefault(m => m.PaymentMethodName.Equals(target, StringComparison.OrdinalIgnoreCase));
+               if (method != null) dto.PaymentMethodId = method.Id;
+            }
+
+            try
+            {
+                var created = await _bookingManager.MakeBookingAsync(dto, userId);
+                if (created == null) return BadRequest("Booking failed.");
+
+                return CreatedAtAction("Get", new { id = created.Booking.BookingId }, created);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating booking");
+                return StatusCode(500, "Internal Server Error");
+            }
+        }
+
+        [HttpPost("~/Booking/Create")]
+        [Authorize(Roles = "Customer")]
+        public async Task<IActionResult> CreateForCustomer([FromBody] MakeBookingRequestDto dto)
+        {
+             if (!ModelState.IsValid) return BadRequest(ModelState);
+             
+             // Security: Enforce Stripe Only
+             if (dto.PaymentMethod?.ToLower() == "cash")
+             {
+                 return BadRequest("Cash payments are not allowed for online bookings.");
+             }
+
+             // Map Payment Method string to ID (Required for Manager)
+             if (!string.IsNullOrEmpty(dto.PaymentMethod) && dto.PaymentMethodId == 0)
+             {
+                var methods = await _paymentMethodRepository.GetAllAsync();
+                var searchName = dto.PaymentMethod.Trim();
+                var method = methods.FirstOrDefault(m => m.PaymentMethodName.Equals(searchName, StringComparison.OrdinalIgnoreCase));
+                
+                if (method == null && searchName.Equals("Card", StringComparison.OrdinalIgnoreCase))
+                {
+                     method = methods.FirstOrDefault(m => 
+                        m.PaymentMethodName.Equals("CreditCard", StringComparison.OrdinalIgnoreCase) ||
+                        m.PaymentMethodName.Equals("Credit Card", StringComparison.OrdinalIgnoreCase) ||
+                        m.PaymentMethodName.Equals("Stripe", StringComparison.OrdinalIgnoreCase) ||
+                        m.PaymentMethodName.Contains("Credit", StringComparison.OrdinalIgnoreCase)
+                     );
+                }
+                
+                if (method != null) dto.PaymentMethodId = method.Id;
+             }
+
+             var userId = _userManager.GetUserId(User);
+             if(string.IsNullOrEmpty(userId)) return Unauthorized();
+
+             try 
+             {
+                 var created = await _bookingManager.MakeBookingAsync(dto, userId);
+                 
+                 if (created == null) return BadRequest("Booking failed. Please check availability.");
+                 
+                if (!string.IsNullOrEmpty(created.RedirectUrl))
+                 {
+                     // Since this is called via fetch/axios mostly, we return the URL in JSON
+                     // But if form submit? We'll assume JSON API style for now as indicated by [FromBody]
+                     return Ok(new { redirectUrl = created.RedirectUrl });
+                 }
+
+                 return Ok(new { success = true, bookingId = created.Booking.BookingId });
+             }
+             catch (Exception ex)
+             {
+                  _logger.LogError(ex, "Error creating customer booking");
+                  return StatusCode(500, "An error occurred.");
+             }
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(int id, [FromBody] BookingEditDto dto)
+        {
+            if (id != dto.BookingId)
+                return BadRequest();
+
+            var updated = await _bookingManager.UpdateBookingAsync(dto);
+            if (updated == null)
+                return NotFound();
+
+            return NoContent();
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            try
+            {
+                var success = await _bookingManager.DeleteBookingAsync(new DeleteBookingRequestDto { BookingId = id });
+                if (!success)
+                    return NotFound();
+
+                return NoContent();
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database constraint prevented deleting booking {Id}", id);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Unable to delete booking because related records exist. Remove the related data before deleting the booking.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error while deleting booking {Id}", id);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "An unexpected error occurred while deleting the booking. Please try again later.");
+            }
         }
 
         [HttpGet("GetFilteredBookings")]
@@ -253,77 +316,59 @@ namespace RentACar.Web.Controllers
             return Ok(booking);
         }
 
-        [HttpPost]
-        public async Task<ActionResult<BookingCreationResultDto>> Create([FromBody] MakeBookingRequestDto dto)
+        [HttpGet("~/Booking/Details/{id}")]
+        [ApiExplorerSettings(IgnoreApi = true)]
+        public async Task<IActionResult> Details(int id)
         {
-            if (!User.Identity?.IsAuthenticated ?? true)
-                return Unauthorized();
+            var booking = await _bookingManager.GetBookingByIdAsync(id);
+            if (booking == null) return NotFound();
 
-            if (!ModelState.IsValid)
+            var customer = await _customerManager.GetCustomerById(booking.CustomerId);
+            var car = await _carManager.GetCarByIdAsync(booking.CarId);
+            var employee = booking.EmployeebookerId.HasValue ? await _employeeManager.GetEmployeeById(booking.EmployeebookerId.Value) : null;
+            var payments = await _paymentManager.GetPaymentsByBookingIdAsync(booking.BookingId);
+            var payment = payments.OrderByDescending(p => p.PaymentDate).ThenByDescending(p => p.PaymentId).FirstOrDefault();
+            var promo = booking.PromocodeId.HasValue ? await _promocodeManager.GetPromocodeByIdAsync(booking.PromocodeId.Value) : null;
+
+            var dto = new BookingDetailsDto
             {
-                // Log and return detailed validation errors
-                _logger.LogWarning("Invalid booking DTO: {@ModelState}", ModelState);
-                return BadRequest(ModelState);
-            }
+                BookingId = booking.BookingId,
+                BookingStatus = booking.BookingStatus,
+                StartDate = booking.Startdate,
+                EndDate = booking.Enddate,
+                TotalPrice = booking.TotalPrice,
+                Subtotal = booking.Subtotal,
+                CustomerName = customer?.Name,
+                CustomerUsername = customer?.username,
+                CustomerEmail = customer?.Email,
+                CustomerPhone = customer?.PhoneNumber,
+                EmployeeName = employee?.Name,
+                CarModel = car?.ModelName,
+                CarPlateNumber = car?.PlateNumber,
+                CarCategory = car?.CategoryName,
+                CarColor = car?.Color,
+                CarModelYear = car?.ModelYear,
+                CarPricePerDay = car?.PricePerDay,
+                CarImageUrl = car?.CarImage != null ? $"data:image/jpeg;base64,{Convert.ToBase64String(car.CarImage)}" : null,
+                PaymentId = payment?.PaymentId,
+                PaymentAmount = payment?.Amount,
+                PromocodeName = promo?.Name,
+                PromocodeDiscount = promo?.DiscountPercentage
+            };
 
-            var userId = _userManager.GetUserId(User) ?? string.Empty;
-            _logger.LogInformation("Creating booking by user {UserId} with data: {@Dto}", userId, dto);
-
-            try
-            {
-                var created = await _bookingManager.MakeBookingAsync(dto, userId);
-
-                if (created == null)
-                {
-                    _logger.LogWarning("BookingManager returned null for user {UserId}", userId);
-                    return BadRequest("Booking could not be created. Please check availability, customer status, or payment info.");
-                }
-
-                return CreatedAtAction(nameof(Get), new { id = created.Booking.BookingId }, created);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Unhandled exception while creating booking");
-                return StatusCode(500, "Internal server error while processing booking.");
-            }
+            return PartialView("~/Views/ControlPanel/Booking/_BookingDetailsPartial.cshtml", dto);
         }
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] BookingEditDto dto)
+        [HttpGet("~/Booking/Approve/{id}")]
+        public async Task<IActionResult> Approve(int id)
         {
-            if (id != dto.BookingId)
-                return BadRequest();
+            var booking = await _bookingManager.GetBookingByIdAsync(id);
+            if (booking == null) return NotFound();
 
-            var updated = await _bookingManager.UpdateBookingAsync(dto);
-            if (updated == null)
-                return NotFound();
-
-            return NoContent();
-        }
-
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
-        {
-            try
-            {
-                var success = await _bookingManager.DeleteBookingAsync(new DeleteBookingRequestDto { BookingId = id });
-                if (!success)
-                    return NotFound();
-
-                return NoContent();
-            }
-            catch (DbUpdateException ex)
-            {
-                _logger.LogError(ex, "Database constraint prevented deleting booking {Id}", id);
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    "Unable to delete booking because related records exist. Remove the related data before deleting the booking.");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Unexpected error while deleting booking {Id}", id);
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    "An unexpected error occurred while deleting the booking. Please try again later.");
-            }
+            var editDto = _mapper.Map<BookingEditDto>(booking);
+            editDto.BookingStatus = "Booked"; 
+            await _bookingManager.UpdateBookingAsync(editDto);
+            return RedirectToAction("Index"); // Redirect to Index instead of Edit as flow might simpler
         }
 
         [HttpGet("~/Booking/Contract/{id}")]
@@ -348,6 +393,52 @@ namespace RentACar.Web.Controllers
 
             var bytes = GenerateContractPdf(booking, car, customer, payment, promo);
             return File(bytes, "application/pdf", $"booking_contract_{id}.pdf");
+        }
+
+        [HttpGet("GetBookedDates")]
+        public async Task<ActionResult<List<string>>> GetBookedDates([FromQuery] int carId, [FromQuery] int? year = null, [FromQuery] int? month = null)
+        {
+            var dates = await _bookingManager.GetBookedDatesForCarAsync(carId, year, month);
+            return Ok(dates);
+        }
+
+        [HttpPost("CalculatePrice")]
+        public async Task<ActionResult<object>> CalculatePrice([FromBody] CalculatePriceRequestDto dto)
+        {
+            if (dto.StartDate >= dto.EndDate)
+                return BadRequest("End date must be after start date.");
+
+            var car = await _carManager.GetCarByIdAsync(dto.CarId);
+            if (car == null) return NotFound("Car not found.");
+
+            var days = (dto.EndDate.ToDateTime(TimeOnly.MinValue) - dto.StartDate.ToDateTime(TimeOnly.MinValue)).Days;
+            var pricePerDay = car.PricePerDay ?? 0;
+            var subtotal = pricePerDay * days;
+            
+            decimal discountAmount = 0;
+            string? promoName = null;
+
+            if (!string.IsNullOrWhiteSpace(dto.Promocode))
+            {
+                var promo = await _promocodeManager.GetByCodeAsync(dto.Promocode);
+                if (promo != null && promo.IsActive && promo.ValidUntil >= DateOnly.FromDateTime(DateTime.UtcNow))
+                {
+                    discountAmount = subtotal * (promo.DiscountPercentage / 100);
+                    promoName = promo.Name;
+                }
+            }
+
+            var total = subtotal - discountAmount;
+
+            return Ok(new 
+            {
+                Days = days,
+                PricePerDay = pricePerDay,
+                Subtotal = subtotal,
+                DiscountAmount = discountAmount,
+                Total = total,
+                PromoName = promoName
+            });
         }
 
         private byte[] GenerateContractPdf(BookingDto booking, CarDto? car, CustomerDTO? customer, PaymentDto? payment, PromocodeDto? promo)
@@ -527,5 +618,13 @@ namespace RentACar.Web.Controllers
             });
             return document.GeneratePdf();
         }
+    }
+
+    public class CalculatePriceRequestDto
+    {
+        public int CarId { get; set; }
+        public DateOnly StartDate { get; set; }
+        public DateOnly EndDate { get; set; }
+        public string? Promocode { get; set; }
     }
 }

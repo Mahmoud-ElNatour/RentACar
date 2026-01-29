@@ -10,6 +10,8 @@ using RentACar.Core.Entities;
 using RentACar.Core.Repositories;
 using Microsoft.EntityFrameworkCore;
 
+using RentACar.Core.Constants;
+
 namespace RentACar.Application.Managers
 {
     public class BookingManager
@@ -145,10 +147,36 @@ namespace RentACar.Application.Managers
             decimal totalPrice = promocode != null ? ApplyPromocode(subtotal, promocode) : subtotal;
 
             // 🔹 Validate payment method
-            var paymentMethod = await _paymentMethodRepository.GetByIdAsync(requestDto.PaymentMethodId);
+            PaymentMethod? paymentMethod = null;
+            if (requestDto.PaymentMethodId > 0)
+            {
+                paymentMethod = await _paymentMethodRepository.GetByIdAsync(requestDto.PaymentMethodId);
+            }
+
+            if (paymentMethod == null && !string.IsNullOrWhiteSpace(requestDto.PaymentMethod))
+            {
+                 var allMethods = await _paymentMethodRepository.GetAllAsync();
+                 var searchName = requestDto.PaymentMethod.Trim();
+                 
+                 // Try finding direct match first
+                 paymentMethod = allMethods.FirstOrDefault(m => m.PaymentMethodName.Equals(searchName, StringComparison.OrdinalIgnoreCase));
+
+                 // If 'Card', try aliases
+                 if (paymentMethod == null && searchName.Equals("Card", StringComparison.OrdinalIgnoreCase))
+                 {
+                     paymentMethod = allMethods.FirstOrDefault(m => 
+                        m.PaymentMethodName.Equals("CreditCard", StringComparison.OrdinalIgnoreCase) ||
+                        m.PaymentMethodName.Equals("Credit Card", StringComparison.OrdinalIgnoreCase) ||
+                        m.PaymentMethodName.Equals("Stripe", StringComparison.OrdinalIgnoreCase) ||
+                        m.PaymentMethodName.Contains("Credit", StringComparison.OrdinalIgnoreCase)
+                     );
+                 }
+            }
+
             if (paymentMethod == null)
             {
-                _logger.LogWarning("Booking failed: Payment method not found.");
+                var allNames = string.Join(", ", (await _paymentMethodRepository.GetAllAsync()).Select(m => m.PaymentMethodName));
+                _logger.LogWarning("Booking failed: MATCH_FAIL ID:{Id} Name:'{Name}'. Available: [{Available}]", requestDto.PaymentMethodId, requestDto.PaymentMethod, allNames);
                 return null;
             }
 
@@ -167,6 +195,32 @@ namespace RentACar.Application.Managers
             }
 
             // 🔹 Create booking entity (without payment yet)
+            var initialStatus = BookingStatus.Pending;
+
+            // Cash Logic check
+            bool isCash = paymentMethod.PaymentMethodName.Equals("cash", StringComparison.OrdinalIgnoreCase);
+
+            if (isCash)
+            {
+                if (!isEmployee && !isAdmin)
+                {
+                    _logger.LogWarning("Booking failed: Cash payment only allowed for employees.");
+                    return null;
+                }
+                
+                // If today is start date -> InProgress
+                // Else -> Confirmed
+                var today = DateOnly.FromDateTime(DateTime.UtcNow);
+                if (requestDto.Startdate <= today)
+                {
+                    initialStatus = BookingStatus.InProgress;
+                }
+                else
+                {
+                    initialStatus = BookingStatus.Confirmed;
+                }
+            }
+
             var booking = new Booking
             {
                 CustomerId = requestDto.CustomerId,
@@ -175,7 +229,7 @@ namespace RentACar.Application.Managers
                 Enddate = requestDto.Enddate,
                 PromocodeId = promocode?.PromocodeId,
                 TotalPrice = totalPrice,
-                BookingStatus = "Pending",
+                BookingStatus = initialStatus,
                 Subtotal = subtotal,
                 IsBookedByEmployee = isBookedByEmployee,
                 EmployeebookerId = isBookedByEmployee ? employeeBookerIntId : null
@@ -187,14 +241,17 @@ namespace RentACar.Application.Managers
             var payableAmount = CalculatePayableAmount(totalPrice, paymentMethod.PaymentMethodName);
 
             // 🔹 Create payment linked to the newly created booking
+            // 🔹 Create payment linked to the newly created booking
+            // isCash already defined above
+
             var payment = new Payment
             {
                 BookingId = addedBooking.BookingId,
                 Amount = payableAmount,
                 PaymentDate = DateOnly.FromDateTime(DateTime.UtcNow),
                 PaymentMethod = paymentMethod.PaymentMethodName,
-                Status = "Unpaid",
-                PaymentProvider = "Stripe",
+                Status = isCash ? PaymentStatus.Paid : PaymentStatus.Pending, 
+                PaymentProvider = isCash ? "Cash" : "Stripe",
                 CreditcardId = paymentMethod.PaymentMethodName.Equals("creditcard", StringComparison.OrdinalIgnoreCase)
                     ? requestDto.CreditcardId
                     : null
@@ -202,9 +259,9 @@ namespace RentACar.Application.Managers
 
             var addedPayment = await _paymentRepository.AddAsync(payment);
 
-            _logger.LogInformation("✅ Booking created with ID: {BookingId}", addedBooking.BookingId);
+            _logger.LogInformation("✅ Booking created with ID: {BookingId} Status: {Status}", addedBooking.BookingId, addedBooking.BookingStatus);
             
-            await _auditLogManager.LogEventAsync("Booking.Created", "Booking", addedBooking.BookingId.ToString(), $"Created new booking for Car {addedBooking.CarId}", null, "Success");
+            await _auditLogManager.LogEventAsync("Booking.Created", "Booking", addedBooking.BookingId.ToString(), $"Created new booking for Car {addedBooking.CarId}. Status: {addedBooking.BookingStatus}", null, "Success");
             
             // 📨 Send Booking Status Email (Pending)
             if (isCustomer) 
@@ -222,16 +279,21 @@ namespace RentACar.Application.Managers
                  }
             }
             
-            var session = await _paymentManager.CreateCheckoutSessionForPaymentAsync(addedPayment);
-            if (string.IsNullOrWhiteSpace(session.CheckoutUrl))
+            string? checkoutUrl = null;
+            if (!isCash)
             {
-                _logger.LogWarning("Stripe checkout session missing URL for booking {BookingId}", addedBooking.BookingId);
+                var session = await _paymentManager.CreateCheckoutSessionForPaymentAsync(addedPayment);
+                if (string.IsNullOrWhiteSpace(session.CheckoutUrl))
+                {
+                    _logger.LogWarning("Stripe checkout session missing URL for booking {BookingId}", addedBooking.BookingId);
+                }
+                checkoutUrl = session.CheckoutUrl;
             }
 
             return new BookingCreationResultDto
             {
                 Booking = _mapper.Map<BookingDto>(addedBooking),
-                RedirectUrl = session.CheckoutUrl,
+                RedirectUrl = checkoutUrl,
                 PaymentId = addedPayment.PaymentId
             };
         }
@@ -249,8 +311,10 @@ namespace RentACar.Application.Managers
                 return true;
             }
 
-            return !status.Equals("returned", StringComparison.OrdinalIgnoreCase)
-                && !status.Equals("rejected", StringComparison.OrdinalIgnoreCase);
+            return !status.Equals(BookingStatus.Completed, StringComparison.OrdinalIgnoreCase)
+                && !status.Equals("Returned", StringComparison.OrdinalIgnoreCase) // Legacy status support
+                && !status.Equals(BookingStatus.Rejected, StringComparison.OrdinalIgnoreCase)
+                && !status.Equals(BookingStatus.Cancelled, StringComparison.OrdinalIgnoreCase);
         }
 
         private static decimal CalculatePayableAmount(decimal totalPrice, string? paymentMethodName)
@@ -262,7 +326,8 @@ namespace RentACar.Application.Managers
 
             if (paymentMethodName.Equals("cash", StringComparison.OrdinalIgnoreCase))
             {
-                return Math.Round(totalPrice * 0.30m, 2, MidpointRounding.AwayFromZero);
+                // No extra charge for cash anymore
+                return totalPrice;
             }
 
             return totalPrice;
@@ -568,9 +633,9 @@ namespace RentACar.Application.Managers
                 .Select(g => new 
                 {
                     Total = g.Count(),
-                    Active = g.Count(b => b.BookingStatus == "Active"),
-                    Pending = g.Count(b => b.BookingStatus == "Pending"),
-                    Revenue = g.Where(b => b.BookingStatus == "Completed" || b.BookingStatus == "Active").Sum(b => b.TotalPrice)
+                    Active = g.Count(b => b.BookingStatus == BookingStatus.InProgress || b.BookingStatus == BookingStatus.Confirmed),
+                    Pending = g.Count(b => b.BookingStatus == BookingStatus.Pending),
+                    Revenue = g.Where(b => b.BookingStatus == BookingStatus.Completed || b.BookingStatus == BookingStatus.InProgress || b.BookingStatus == BookingStatus.AwaitingReturn).Sum(b => b.TotalPrice) // Include AwaitingReturn/InProgress as likely revenue
                 })
                 .FirstOrDefaultAsync();
 
@@ -613,6 +678,41 @@ namespace RentACar.Application.Managers
         }
 
 
+        public async Task<List<string>> GetBookedDatesForCarAsync(int carId, int? year = null, int? month = null)
+        {
+            var bookings = await _bookingRepository.GetBookingsByCarIdAsync(carId);
+            var blocking = bookings.Where(b => IsBlockingStatus(b.BookingStatus)).ToList();
+            
+            // Filter by overlap if month is specified
+            if (year.HasValue && month.HasValue)
+            {
+                var monthStart = new DateOnly(year.Value, month.Value, 1);
+                var monthEnd = monthStart.AddMonths(1).AddDays(-1);
+                blocking = blocking.Where(b => b.Startdate <= monthEnd && b.Enddate >= monthStart).ToList();
+            }
+
+            var dates = new HashSet<string>();
+            foreach (var b in blocking)
+            {
+                for (var dt = b.Startdate; dt <= b.Enddate; dt = dt.AddDays(1))
+                {
+                    // Only add if inside requested month (optimization)
+                    if (year.HasValue && month.HasValue)
+                    {
+                        if (dt.Year == year.Value && dt.Month == month.Value)
+                        {
+                            dates.Add(dt.ToString("yyyy-MM-dd"));
+                        }
+                    }
+                    else
+                    {
+                        dates.Add(dt.ToString("yyyy-MM-dd"));
+                    }
+                }
+            }
+            return dates.ToList();
+        }
+
         public async Task<(DateOnly startDate, DateOnly endDate)> SuggestBookingDatesAsync(int carId)
         {
             var bookings = await _bookingRepository.GetBookingsByCarIdAsync(carId);
@@ -650,6 +750,42 @@ namespace RentACar.Application.Managers
         public Task<bool> PrintBookingDocumentAsync(int bookingId)
         {
             return Task.FromResult(true);
+        }
+
+        public async Task ProcessOverdueBookingsAsync()
+        {
+           _logger.LogInformation("Checking for overdue bookings...");
+           var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+           // Find InProgress bookings where EndDate < Today
+           var overdue = await _bookingRepository.Query()
+               .Include(b => b.Customer).ThenInclude(c => c.User)
+               .Where(b => b.BookingStatus == BookingStatus.InProgress && b.Enddate < today)
+               .ToListAsync();
+
+           foreach (var booking in overdue)
+           {
+               _logger.LogInformation("Booking {Id} is overdue. Moving to AwaitingReturn.", booking.BookingId);
+               booking.BookingStatus = BookingStatus.AwaitingReturn;
+               await _bookingRepository.UpdateAsync(booking);
+               
+               await _auditLogManager.LogEventAsync("Booking.Overdue", "Booking", booking.BookingId.ToString(), "Auto-moved to AwaitingReturn", null, "System");
+
+               // Notify
+                var custUser = booking.Customer?.User;
+                if (custUser != null)
+                {
+                    try 
+                    {
+                        // We can reuse SendBookingStatusEmail or a specific one. Use StatusEmail for now.
+                        await _emailManager.SendBookingStatusEmail(custUser.Email, booking.Customer.Name, booking); 
+                    }
+                    catch(Exception ex)
+                    {
+                        _logger.LogError(ex, "Failed to send overdue email for booking {Id}", booking.BookingId);
+                    }
+                }
+           }
         }
     }
 

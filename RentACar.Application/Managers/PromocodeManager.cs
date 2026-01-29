@@ -73,6 +73,11 @@ namespace RentACar.Application.Managers
             return _mapper.Map<PromocodeDto>(promocode);
         }
 
+        public async Task<PromocodeDto?> GetByCodeAsync(string code)
+        {
+            return await GetPromocodeByNameAsync(code);
+        }
+
         public async Task<List<PromocodeDto>> GetAllPromocodesAsync(string userId)
         {
             var user = await _userManager.FindByIdAsync(userId);

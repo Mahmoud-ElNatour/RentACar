@@ -15,19 +15,18 @@ namespace RentACar.Application.Services
 {
     public class StripePaymentService : IStripePaymentService
     {
-        private const string StripeSecretKeyEnv = "STRIPE_PRIVATE_KEY";
-        private const string StripeWebhookSecretEnv = "STRIPE_WEBHOOK_SECRET";
         private readonly HttpClient _httpClient;
         private readonly ILogger<StripePaymentService> _logger;
-        private readonly string? _secretKey;
-        private readonly string? _webhookSecret;
+        private readonly Microsoft.Extensions.Configuration.IConfiguration _configuration;
 
-        public StripePaymentService(HttpClient httpClient, ILogger<StripePaymentService> logger)
+        public StripePaymentService(
+            HttpClient httpClient, 
+            ILogger<StripePaymentService> logger,
+            Microsoft.Extensions.Configuration.IConfiguration configuration)
         {
             _httpClient = httpClient;
             _logger = logger;
-            _secretKey = Environment.GetEnvironmentVariable(StripeSecretKeyEnv);
-            _webhookSecret = Environment.GetEnvironmentVariable(StripeWebhookSecretEnv);
+            _configuration = configuration;
         }
 
         public async Task<StripeCheckoutSessionDto> CreateCheckoutSessionAsync(
@@ -138,24 +137,44 @@ namespace RentACar.Application.Services
 
         private string RequireSecretKey()
         {
-            if (string.IsNullOrWhiteSpace(_secretKey))
+            // Try Configuration (UserSecrets, AppSettings, EnvVars via Config Provider)
+            var key = _configuration["Stripe:SecretKey"] ?? _configuration["STRIPE_PRIVATE_KEY"];
+            
+            if (string.IsNullOrWhiteSpace(key))
             {
-                throw new InvalidOperationException(
-                    $"Stripe secret key missing. Set environment variable {StripeSecretKeyEnv}.");
+                // Fallback to direct Environment Variable (just in case provider missed it)
+                key = Environment.GetEnvironmentVariable("STRIPE_PRIVATE_KEY");
             }
 
-            return _secretKey;
+            if (string.IsNullOrWhiteSpace(key))
+            {
+                _logger.LogError("Stripe Secret Key is MISSING. Checked 'Stripe:SecretKey', 'STRIPE_PRIVATE_KEY' in Config, and 'STRIPE_PRIVATE_KEY' in Env.");
+                throw new InvalidOperationException(
+                    "Stripe secret key missing. Please set 'Stripe:SecretKey' in appsettings.json or 'STRIPE_PRIVATE_KEY' environment variable.");
+            }
+
+            return key;
         }
 
         private string RequireWebhookSecret()
         {
-            if (string.IsNullOrWhiteSpace(_webhookSecret))
+             // Try Configuration (UserSecrets, AppSettings, EnvVars via Config Provider)
+            var key = _configuration["Stripe:WebhookSecret"] ?? _configuration["STRIPE_WEBHOOK_SECRET"];
+
+            if (string.IsNullOrWhiteSpace(key))
             {
-                throw new InvalidOperationException(
-                    $"Stripe webhook secret missing. Set environment variable {StripeWebhookSecretEnv}.");
+                 // Fallback to direct Environment Variable
+                key = Environment.GetEnvironmentVariable("STRIPE_WEBHOOK_SECRET");
             }
 
-            return _webhookSecret;
+            if (string.IsNullOrWhiteSpace(key))
+            {
+                _logger.LogError("Stripe Webhook Secret is MISSING. Checked 'Stripe:WebhookSecret', 'STRIPE_WEBHOOK_SECRET' in Config, and 'STRIPE_WEBHOOK_SECRET' in Env.");
+                throw new InvalidOperationException(
+                    "Stripe webhook secret missing. Please set 'Stripe:WebhookSecret' in appsettings.json or 'STRIPE_WEBHOOK_SECRET' environment variable.");
+            }
+
+            return key;
         }
 
         private static long ConvertToStripeAmount(decimal amount, string currency)
@@ -258,6 +277,24 @@ namespace RentACar.Application.Services
             public long? Timestamp { get; set; }
 
             public List<string> Signatures { get; } = new();
+        }
+
+        public async Task<StripeCheckoutSessionDto> GetSessionAsync(string sessionId, CancellationToken cancellationToken = default)
+        {
+            var secretKey = RequireSecretKey();
+            using var message = new HttpRequestMessage(HttpMethod.Get, $"v1/checkout/sessions/{sessionId}");
+            message.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey);
+
+            using var response = await _httpClient.SendAsync(message, cancellationToken);
+            var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning("Stripe get session failed for {SessionId}: {Status} {Response}", sessionId, response.StatusCode, responseContent);
+                return new StripeCheckoutSessionDto { RawResponse = responseContent };
+            }
+
+            return ParseCheckoutSession(responseContent);
         }
     }
 }

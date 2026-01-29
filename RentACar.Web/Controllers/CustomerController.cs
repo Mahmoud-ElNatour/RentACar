@@ -126,6 +126,23 @@ namespace RentACar.Web.Controllers
             }
         }
 
+        [HttpGet("Search")]
+        [Authorize(Roles = "Admin,Employee")]
+        public async Task<ActionResult<IEnumerable<object>>> Search([FromQuery] string query)
+        {
+            if (string.IsNullOrWhiteSpace(query)) return Ok(new List<object>());
+
+            var customers = await _customerManager.GetCustomersPagedAsync(query, null, null, 1, 10, "Name", "asc");
+            var result = customers.Items.Select(c => new 
+            {
+                id = c.UserId,
+                text = $"{c.Name} (ID: {c.UserId}) - {c.PhoneNumber}",
+                email = c.Email,
+                name = c.Name
+            });
+            return Ok(result);
+        }
+
 
         [HttpGet("Document/{id}/{type}")]
         [AllowAnonymous]
