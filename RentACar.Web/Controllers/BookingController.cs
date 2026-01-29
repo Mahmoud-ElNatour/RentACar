@@ -61,6 +61,7 @@ namespace RentACar.Web.Controllers
 
         [HttpGet("~/Booking")]
         [ApiExplorerSettings(IgnoreApi = true)]
+        [Authorize(Roles = "Admin,Employee")]
         public IActionResult Index()
         {
             return View("~/Views/ControlPanel/Booking/Index.cshtml");
@@ -223,6 +224,7 @@ namespace RentACar.Web.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin,Employee")]
         public async Task<IActionResult> Update(int id, [FromBody] BookingEditDto dto)
         {
             if (id != dto.BookingId)
@@ -236,6 +238,7 @@ namespace RentACar.Web.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin,Employee")]
         public async Task<IActionResult> Delete(int id)
         {
             try
@@ -261,6 +264,7 @@ namespace RentACar.Web.Controllers
         }
 
         [HttpGet("GetFilteredBookings")]
+        [Authorize(Roles = "Admin,Employee")]
         public async Task<ActionResult<PagedResultDto<BookingListDto>>> GetFilteredBookings(
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 10,
@@ -279,6 +283,7 @@ namespace RentACar.Web.Controllers
         }
 
         [HttpGet("GetStats")]
+        [Authorize(Roles = "Admin,Employee")]
         public async Task<ActionResult<object>> GetStats(
             [FromQuery] string? search = null,
             [FromQuery] string? status = null,
@@ -327,6 +332,7 @@ namespace RentACar.Web.Controllers
         }
 
         [HttpGet("{id}")]
+        [Authorize(Roles = "Admin,Employee")]
         public async Task<ActionResult<BookingDto>> Get(int id)
         {
             var booking = await _bookingManager.GetBookingByIdAsync(id);
@@ -338,6 +344,7 @@ namespace RentACar.Web.Controllers
 
         [HttpGet("~/Booking/Details/{id}")]
         [ApiExplorerSettings(IgnoreApi = true)]
+        [Authorize(Roles = "Admin,Employee")]
         public async Task<IActionResult> Details(int id)
         {
             var booking = await _bookingManager.GetBookingByIdAsync(id);
@@ -380,6 +387,7 @@ namespace RentACar.Web.Controllers
         }
 
         [HttpGet("~/Booking/Approve/{id}")]
+        [Authorize(Roles = "Admin,Employee")]
         public async Task<IActionResult> Approve(int id)
         {
             var booking = await _bookingManager.GetBookingByIdAsync(id);
@@ -393,6 +401,7 @@ namespace RentACar.Web.Controllers
 
         [HttpGet("~/Booking/Contract/{id}")]
         [ApiExplorerSettings(IgnoreApi = true)]
+        [Authorize(Roles = "Admin,Employee")]
         public async Task<IActionResult> Contract(int id)
         {
             var booking = await _bookingManager.GetBookingByIdAsync(id);

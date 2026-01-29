@@ -1,80 +1,88 @@
-﻿<!-- Rating Popup Modal -->
-<!-- Using Bootstrap Modal Wrapper for compatibility with existing triggers, but styled with Tailwind/Custom CSS -->
-<div class="modal fade" id="ratingModal" tabindex="-1" aria-labelledby="ratingModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <!-- Glassmorphism Card Style -->
-        <div class="modal-content overflow-hidden rounded-2xl border border-white/10 bg-[#121212] shadow-2xl relative">
-            
-            <!-- Background Decoration -->
-            <div class="absolute top-0 right-0 -z-10 w-32 h-32 bg-[#edbc1d]/10 blur-[50px] rounded-full pointer-events-none"></div>
-            
-            <div class="modal-header border-b border-white/5 px-6 py-5 flex flex-col items-center justify-center relative">
-                <h5 class="modal-title font-display text-2xl font-bold text-white tracking-tight" id="ratingModalLabel">
-                    Rate Your <span class="text-[#edbc1d] italic">Experience</span>
-                </h5>
-                <p class="text-xs text-white/40 uppercase tracking-[0.2em] font-bold mt-1">We value your feedback</p>
-                <button type="button" class="absolute top-4 right-4 size-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 text-white/50 hover:text-white transition-all border-0 focus:outline-none" data-bs-dismiss="modal" aria-label="Close">
-                    <span class="material-symbols-outlined text-sm">close</span>
-                </button>
-            </div>
-            
-            <div class="modal-body px-6 py-6">
-                <!-- Star Rating -->
-                <div class="flex flex-col items-center gap-2 mb-6">
-                    <div class="rating-stars flex gap-2 p-3 rounded-full bg-white/5 border border-white/5" id="starRating">
-                        <span class="material-symbols-outlined star text-3xl cursor-pointer text-white/20 transition-all hover:scale-110" data-rating="1">star</span>
-                        <span class="material-symbols-outlined star text-3xl cursor-pointer text-white/20 transition-all hover:scale-110" data-rating="2">star</span>
-                        <span class="material-symbols-outlined star text-3xl cursor-pointer text-white/20 transition-all hover:scale-110" data-rating="3">star</span>
-                        <span class="material-symbols-outlined star text-3xl cursor-pointer text-white/20 transition-all hover:scale-110" data-rating="4">star</span>
-                        <span class="material-symbols-outlined star text-3xl cursor-pointer text-white/20 transition-all hover:scale-110" data-rating="5">star</span>
-                    </div>
-                    <p class="text-sm text-white/50 h-5" id="ratingLabel">Select a rating</p>
-                </div>
+﻿<!-- Rating Popup Modal (Tailwind Refactor) -->
+<div id="ratingModal" class="fixed inset-0 z-50 hidden" aria-labelledby="ratingModalLabel" role="dialog" aria-modal="true">
+    <!-- Backdrop -->
+    <div class="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity opacity-0" id="ratingModalBackdrop"></div>
 
-                <!-- Feedback Textarea -->
-                <div class="space-y-2 group">
-                    <label for="feedbackText" class="text-xs font-bold text-white/40 uppercase tracking-wider pl-1">Feedback</label>
-                    <div class="relative">
-                        <textarea class="w-full bg-[#050505] border border-white/10 rounded-xl p-4 text-white placeholder:text-white/20 focus:border-[#edbc1d] focus:ring-1 focus:ring-[#edbc1d] outline-none transition-all resize-none text-sm leading-relaxed" 
-                            id="feedbackText" rows="4" placeholder="How was your trip? Tell us what you liked or what we can improve..." maxlength="500"></textarea>
-                        <div class="absolute bottom-3 right-3 text-[10px] font-mono text-white/30">
-                            <span id="charCount" class="text-[#edbc1d]">0</span>/500
+    <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+        <div class="flex min-h-full items-center justify-center p-4 text-center">
+            
+             <!-- Glassmorphism Card Style -->
+            <div id="ratingModalPanel" class="relative transform overflow-hidden rounded-2xl border border-white/10 bg-[#121212] shadow-2xl transition-all w-full max-w-md opacity-0 translate-y-4 sm:scale-95 text-left">
+                
+                <!-- Background Decoration -->
+                <div class="absolute top-0 right-0 -z-10 w-32 h-32 bg-[#edbc1d]/10 blur-[50px] rounded-full pointer-events-none"></div>
+                
+                <div class="border-b border-white/5 px-6 py-5 flex flex-col items-center justify-center relative">
+                    <h5 class="font-display text-2xl font-bold text-white tracking-tight" id="ratingModalLabel">
+                        Rate Your <span class="text-[#edbc1d] italic">Experience</span>
+                    </h5>
+                    <p class="text-xs text-white/40 uppercase tracking-[0.2em] font-bold mt-1">We value your feedback</p>
+                    <button type="button" onclick="closeRatingModal()" class="absolute top-4 right-4 size-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 text-white/50 hover:text-white transition-all border-0 focus:outline-none">
+                        <span class="material-symbols-outlined text-sm">close</span>
+                    </button>
+                </div>
+                
+                <div class="px-6 py-6">
+                    <!-- Star Rating -->
+                    <div class="flex flex-col items-center gap-2 mb-6">
+                        <div class="rating-stars flex gap-2 p-3 rounded-full bg-white/5 border border-white/5" id="starRating">
+                            <span class="material-symbols-outlined star text-3xl cursor-pointer text-white/20 transition-all hover:scale-110" data-rating="1">star</span>
+                            <span class="material-symbols-outlined star text-3xl cursor-pointer text-white/20 transition-all hover:scale-110" data-rating="2">star</span>
+                            <span class="material-symbols-outlined star text-3xl cursor-pointer text-white/20 transition-all hover:scale-110" data-rating="3">star</span>
+                            <span class="material-symbols-outlined star text-3xl cursor-pointer text-white/20 transition-all hover:scale-110" data-rating="4">star</span>
+                            <span class="material-symbols-outlined star text-3xl cursor-pointer text-white/20 transition-all hover:scale-110" data-rating="5">star</span>
+                        </div>
+                        <p class="text-sm text-white/50 h-5" id="ratingLabel">Select a rating</p>
+                    </div>
+
+                    <!-- Feedback Textarea -->
+                    <div class="space-y-2 group">
+                        <label for="feedbackText" class="text-xs font-bold text-white/40 uppercase tracking-wider pl-1">Feedback</label>
+                        <div class="relative">
+                            <textarea class="w-full bg-[#050505] border border-white/10 rounded-xl p-4 text-white placeholder:text-white/20 focus:border-[#edbc1d] focus:ring-1 focus:ring-[#edbc1d] outline-none transition-all resize-none text-sm leading-relaxed" 
+                                id="feedbackText" rows="4" placeholder="How was your trip? Tell us what you liked or what we can improve..." maxlength="500"></textarea>
+                            <div class="absolute bottom-3 right-3 text-[10px] font-mono text-white/30">
+                                <span id="charCount" class="text-[#edbc1d]">0</span>/500
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Hidden fields for booking/employee data -->
-                <input type="hidden" id="ratingBookingId" value="" />
-                <input type="hidden" id="ratingEmployeeId" value="" />
-            </div>
-            
-            <div class="modal-footer border-t border-white/5 px-6 py-5 flex justify-end gap-3 bg-white/[0.02]">
-                <button type="button" class="px-5 py-2.5 rounded-lg text-white/60 hover:text-white hover:bg-white/5 text-sm font-bold transition-all border-0" data-bs-dismiss="modal">
-                    Cancel
-                </button>
-                <button type="button" id="sendRatingBtn" class="px-8 py-2.5 rounded-lg bg-[#edbc1d] hover:bg-[#edbc1d]/90 text-black font-extrabold text-sm transition-all shadow-[0_4px_15px_rgba(237,188,29,0.2)] hover:shadow-[0_4px_20px_rgba(237,188,29,0.4)] hover:-translate-y-0.5 border-0">
-                    Submit Review
-                </button>
+                    <!-- Hidden fields for booking/employee data -->
+                    <input type="hidden" id="ratingBookingId" value="" />
+                    <input type="hidden" id="ratingEmployeeId" value="" />
+                </div>
+                
+                <div class="border-t border-white/5 px-6 py-5 flex justify-end gap-3 bg-white/[0.02]">
+                    <button type="button" onclick="closeRatingModal()" class="px-5 py-2.5 rounded-lg text-white/60 hover:text-white hover:bg-white/5 text-sm font-bold transition-all border-0">
+                        Cancel
+                    </button>
+                    <button type="button" id="sendRatingBtn" class="px-8 py-2.5 rounded-lg bg-[#edbc1d] hover:bg-[#edbc1d]/90 text-black font-extrabold text-sm transition-all shadow-[0_4px_15px_rgba(237,188,29,0.2)] hover:shadow-[0_4px_20px_rgba(237,188,29,0.4)] hover:-translate-y-0.5 border-0">
+                        Submit Review
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Success Message Modal -->
-<div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-sm">
-        <div class="modal-content overflow-hidden rounded-2xl border border-white/10 bg-[#121212] shadow-2xl relative text-center">
-            <div class="modal-body p-8 flex flex-col items-center gap-4">
-                <div class="size-16 rounded-full bg-[#edbc1d]/10 flex items-center justify-center border border-[#edbc1d]/20 mb-2">
-                    <span class="material-symbols-outlined text-3xl text-[#edbc1d]">check</span>
+<!-- Success Message Modal (Tailwind) -->
+<div id="successModal" class="fixed inset-0 z-[60] hidden" aria-labelledby="successModalLabel" role="dialog" aria-modal="true">
+    <div class="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity opacity-0" id="successModalBackdrop"></div>
+    <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+         <div class="flex min-h-full items-center justify-center p-4 text-center">
+             <div id="successModalPanel" class="relative transform overflow-hidden rounded-2xl border border-white/10 bg-[#121212] shadow-2xl transition-all w-full max-w-sm opacity-0 translate-y-4 sm:scale-95">
+                 <div class="p-8 flex flex-col items-center gap-4">
+                    <div class="size-16 rounded-full bg-[#edbc1d]/10 flex items-center justify-center border border-[#edbc1d]/20 mb-2">
+                        <span class="material-symbols-outlined text-3xl text-[#edbc1d]">check</span>
+                    </div>
+                    <div>
+                        <h5 class="text-xl font-bold text-white mb-1">Thank You!</h5>
+                        <p class="text-sm text-white/50">Your feedback preserves our quality.</p>
+                    </div>
+                    <button type="button" onclick="closeSuccessModal()" class="w-full py-2 rounded-lg border border-white/10 text-xs font-bold text-white/60 hover:text-white hover:border-white/30 transition-all uppercase tracking-wider">Close</button>
                 </div>
-                <div>
-                    <h5 class="text-xl font-bold text-white mb-1">Thank You!</h5>
-                    <p class="text-sm text-white/50">Your feedback preserves our quality.</p>
-                </div>
-                <button type="button" class="w-full py-2 rounded-lg border border-white/10 text-xs font-bold text-white/60 hover:text-white hover:border-white/30 transition-all uppercase tracking-wider" data-bs-dismiss="modal">Close</button>
-            </div>
-        </div>
+             </div>
+         </div>
     </div>
 </div>
 
@@ -91,28 +99,69 @@
         transform: scale(1.15);
         filter: drop-shadow(0 0 12px rgba(255, 215, 0, 0.8));
     }
-    
-    /* Ensure modal backdrop is dark enough */
-    .modal-backdrop.show {
-        opacity: 0.8;
-        background-color: #000;
-        backdrop-filter: blur(4px);
-    }
 </style>
 
 <script>
-    // Ensure font variation settings are applied correctly
-    // (Existing JS logic preserved but updated for new class names/structure if needed)
-    
+    // --- Vanilla JS Modal Logic ---
+    function openRatingModal() {
+        const modal = document.getElementById('ratingModal');
+        const backdrop = document.getElementById('ratingModalBackdrop');
+        const panel = document.getElementById('ratingModalPanel');
+
+        modal.classList.remove('hidden');
+        setTimeout(() => {
+            backdrop.classList.remove('opacity-0');
+            panel.classList.remove('opacity-0', 'translate-y-4', 'sm:scale-95');
+            panel.classList.add('opacity-100', 'translate-y-0', 'sm:scale-100');
+        }, 10);
+    }
+
+    function closeRatingModal() {
+        const modal = document.getElementById('ratingModal');
+        const backdrop = document.getElementById('ratingModalBackdrop');
+        const panel = document.getElementById('ratingModalPanel');
+
+        backdrop.classList.add('opacity-0');
+        panel.classList.remove('opacity-100', 'translate-y-0', 'sm:scale-100');
+        panel.classList.add('opacity-0', 'translate-y-4', 'sm:scale-95');
+        
+        setTimeout(() => modal.classList.add('hidden'), 300);
+    }
+
+    function openSuccessModal() {
+        const modal = document.getElementById('successModal');
+        const backdrop = document.getElementById('successModalBackdrop');
+        const panel = document.getElementById('successModalPanel');
+
+        modal.classList.remove('hidden');
+        setTimeout(() => {
+            backdrop.classList.remove('opacity-0');
+            panel.classList.remove('opacity-0', 'translate-y-4', 'sm:scale-95');
+            panel.classList.add('opacity-100', 'translate-y-0', 'sm:scale-100');
+        }, 10);
+    }
+
+     function closeSuccessModal() {
+        const modal = document.getElementById('successModal');
+        const backdrop = document.getElementById('successModalBackdrop');
+        const panel = document.getElementById('successModalPanel');
+
+        backdrop.classList.add('opacity-0');
+        panel.classList.remove('opacity-100', 'translate-y-0', 'sm:scale-100');
+        panel.classList.add('opacity-0', 'translate-y-4', 'sm:scale-95');
+        
+        setTimeout(() => modal.classList.add('hidden'), 300);
+    }
+
+
     let selectedRating = 0;
     const ratingLabels = ["Select a rating", "Poor", "Fair", "Good", "Very Good", "Excellent"];
 
+    // NOTE: This global function is called by the parent view
     function showRatingPopup(bookingId) {
         document.getElementById('ratingBookingId').value = bookingId || '';
-
-        const ratingModal = new bootstrap.Modal(document.getElementById('ratingModal'));
-        ratingModal.show();
         resetRatingForm();
+        openRatingModal();
     }
 
     function resetRatingForm() {
@@ -198,18 +247,12 @@
                     });
 
                     if (response.ok) {
-                        // Close rating modal
-                        const modalEl = document.getElementById('ratingModal');
-                        const modal = bootstrap.Modal.getInstance(modalEl);
-                        modal.hide();
-
-                        // Show success modal
-                        const successModal = new bootstrap.Modal(document.getElementById('successModal'));
-                        successModal.show();
+                        closeRatingModal();
+                        openSuccessModal();
 
                         // Auto close success modal
                         setTimeout(() => {
-                            successModal.hide();
+                            closeSuccessModal();
                             // Optional: Reload page or update UI row
                             // location.reload(); 
                         }, 2500);

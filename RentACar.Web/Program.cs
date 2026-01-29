@@ -140,6 +140,8 @@ else
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
+app.UseStatusCodePagesWithReExecute("/Home/NotFound");
+
 app.UseRouting();
 
 app.UseSerilogRequestLogging();

@@ -1,0 +1,30 @@
+@{
+    ViewData["Title"] = "Page Not Found";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["BodyClass"] = "bg-background-dark";
+}
+
+<div class="flex items-center justify-center min-h-[calc(100vh-300px)] py-16 px-4">
+    <div class="w-full max-w-md space-y-8 bg-[#171717] p-10 rounded-2xl shadow-xl border border-white/5 text-center">
+        <!-- Icon -->
+        <div class="flex justify-center">
+            <div class="h-24 w-24 rounded-full bg-gold/10 flex items-center justify-center border border-gold/20 animate-pulse">
+                <span class="material-symbols-outlined text-gold text-5xl">search_off</span>
+            </div>
+        </div>
+        
+        <!-- Text -->
+        <div class="space-y-4">
+             <h1 class="text-6xl font-black text-white tracking-tighter">404</h1>
+             <h2 class="text-2xl font-bold text-white">Page Not Found</h2>
+             <p class="text-gray-400 text-lg">The page you are looking for might have been removed, had its name changed, or is temporarily unavailable.</p>
+        </div>
+
+        <!-- Button -->
+        <div class="mt-8">
+             <a asp-area="" asp-controller="Home" asp-action="Index" class="inline-flex w-full items-center justify-center px-6 py-3.5 border border-transparent text-base font-bold rounded-lg text-black bg-gold hover:bg-gold-hover transition-all duration-300 shadow-[0_4px_15px_rgba(237,188,29,0.3)] hover:shadow-[0_4px_20px_rgba(237,188,29,0.5)] transform hover:-translate-y-0.5">
+                <span class="material-symbols-outlined mr-2">home</span> Return Home
+            </a>
+        </div>
+    </div>
+</div>

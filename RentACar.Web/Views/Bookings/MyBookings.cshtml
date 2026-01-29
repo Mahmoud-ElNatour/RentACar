@@ -2,193 +2,303 @@
     ViewData["Title"] = "My Bookings";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
-<link rel="stylesheet" href="~/css/mybookings.css" />
-<div class="d-flex justify-content-center mt-4">
-    <div class="history-container w-100">
-        <h2 class="text-center mb-4">My Bookings</h2>
-        <div class="table-responsive">
-            <table class="table table-dark table-striped align-middle">
-                <thead>
-                    <tr>
-                        <th>Booking ID</th>
-                        <th>Car</th>
-                        <th>Payment Status</th>
-                        <th>Start</th>
-                        <th>End</th>
-                        <th>Price</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody id="bookingRows"></tbody>
-            </table>
-        </div>
-    </div>
-</div>
-<div class="modal fade" id="payModal" tabindex="-1" aria-labelledby="payModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content bg-dark text-light">
-            <div class="modal-header border-secondary">
-                <h5 class="modal-title" id="payModalLabel">Pay for Booking</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                    aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <label class="form-label">Total Amount</label>
-                    <div id="paymentAmount" class="fw-bold"></div>
-                </div>
-                <div class="mb-3">
-                    <label for="paymentMethodSelect" class="form-label">Payment Method</label>
-                    <select id="paymentMethodSelect" class="form-select"></select>
-                </div>
-                <div id="paymentError" class="text-danger small d-none"></div>
-            </div>
-            <div class="modal-footer border-secondary">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="confirmPayBtn">Pay Now</button>
-            </div>
-        </div>
-    </div>
-</div>
-@await Html.PartialAsync("_RatingPopup")
-@section Scripts{
-    <script>
-        let selectedBookingId = null;
-        let selectedAmount = null;
-        let paymentMethods = [];
-        let payModal;
 
-      
+<!-- Main Container -->
+<div class="bg-[#121212] min-h-screen py-12">
+    <div class="max-w-7xl mx-auto px-6 lg:px-8">
+        
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
+            <div>
+                <h1 class="text-4xl font-black text-white tracking-tight border-l-8 border-gold pl-6 mb-2">
+                    MY BOOKINGS
+                </h1>
+                <p class="text-gray-400 pl-8 text-lg font-light">
+                    Manage your reservations and payments
+                </p>
+            </div>
+        </div>
+
+        <!-- Filter Tabs -->
+        <div class="flex border-b border-[#262626] mb-8 overflow-x-auto">
+            <button onclick="filterBookings('all')" id="tab-all" class="filter-tab active px-6 py-4 text-sm font-bold uppercase tracking-wider text-white border-b-2 border-gold transition-colors whitespace-nowrap">
+                All Rentals
+            </button>
+            <button onclick="filterBookings('active')" id="tab-active" class="filter-tab px-6 py-4 text-sm font-bold uppercase tracking-wider text-gray-500 hover:text-white border-b-2 border-transparent hover:border-white/20 transition-colors whitespace-nowrap">
+                Active
+            </button>
+            <button onclick="filterBookings('pending')" id="tab-pending" class="filter-tab px-6 py-4 text-sm font-bold uppercase tracking-wider text-gray-500 hover:text-white border-b-2 border-transparent hover:border-white/20 transition-colors whitespace-nowrap">
+                Pending
+            </button>
+            <button onclick="filterBookings('past')" id="tab-past" class="filter-tab px-6 py-4 text-sm font-bold uppercase tracking-wider text-gray-500 hover:text-white border-b-2 border-transparent hover:border-white/20 transition-colors whitespace-nowrap">
+                Past
+            </button>
+        </div>
+
+        <!-- Table Container -->
+        <div class="bg-[#16181a] border border-[#262626] rounded-2xl overflow-hidden shadow-2xl">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse whitespace-nowrap">
+                    <thead>
+                        <tr class="bg-white/5 border-b border-[#262626] text-gray-400 text-xs uppercase tracking-wider font-bold">
+                            <th class="px-6 py-4">Vehicle</th>
+                            <th class="px-6 py-4">Dates</th>
+                            <th class="px-6 py-4">Status</th>
+                            <th class="px-6 py-4">Price</th>
+                            <th class="px-6 py-4 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bookingRows" class="divide-y divide-[#262626]">
+                        <!-- Rows injected via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Details Modal Placeholder -->
+<div id="detailsModalContainer"></div>
+
+@await Html.PartialAsync("_RatingPopup")
+
+@section Scripts {
+    <script>
+        let allBookings = [];
+        let currentFilter = 'all';
+        let creditCardMethodId = null;
+
+        // --- Details Modal Logic ---
+        async function openDetailsModal(id) {
+            try {
+                const res = await fetch(`/Bookings/Details/${id}`);
+                if (!res.ok) throw new Error("Failed to load details");
+                
+                const html = await res.text();
+                const container = document.getElementById('detailsModalContainer');
+                container.innerHTML = html;
+
+                const modalEl = document.getElementById('customerBookingDetailsModal');
+                const bsModal = new bootstrap.Modal(modalEl);
+                bsModal.show();
+            } catch (err) {
+                console.error("Error loading details:", err);
+            }
+        }
 
         async function loadPaymentMethods() {
-            const res = await fetch('/api/PaymentMethod/active');
-            if (!res.ok) return;
-
-            paymentMethods = await res.json();
-            const select = document.getElementById('paymentMethodSelect');
-            select.innerHTML = '';
-
-            paymentMethods.forEach(method => {
-                const option = document.createElement('option');
-                option.value = method.id;
-                option.textContent = method.paymentMethodName;
-                select.appendChild(option);
-            });
+            try {
+                const res = await fetch('/api/PaymentMethod/active');
+                if (!res.ok) return;
+                const methods = await res.json();
+                // Find "Credit Card" or similar
+                const cc = methods.find(m => m.paymentMethodName.toLowerCase().includes('card') || m.paymentMethodName.toLowerCase().includes('stripe'));
+                if(cc) creditCardMethodId = cc.id;
+                else if(methods.length > 0) creditCardMethodId = methods[0].id; // Fallback
+            } catch (err) {
+                console.error("Error loading payment methods:", err);
+            }
         }
 
         async function loadBookings() {
-            const res = await fetch('/api/Bookings');
-            const data = await res.json();
+            try {
+                const res = await fetch('/api/Bookings');
+                const data = await res.json();
+                allBookings = data;
+                renderBookings();
+            } catch (err) {
+                 console.error("Error loading bookings:", err);
+            }
+        }
+
+        function filterBookings(filter) {
+            currentFilter = filter;
+            
+            // Update tabs UI
+            document.querySelectorAll('.filter-tab').forEach(t => {
+                t.classList.remove('text-white', 'border-gold', 'active');
+                t.classList.add('text-gray-500', 'border-transparent');
+                
+                if (t.id === `tab-${filter}`) {
+                    t.classList.remove('text-gray-500', 'border-transparent');
+                    t.classList.add('text-white', 'border-gold', 'active');
+                }
+            });
+
+            renderBookings();
+        }
+
+        function renderBookings() {
             const tbody = document.getElementById('bookingRows');
             tbody.innerHTML = '';
 
-            data.forEach(b => {
-                const paymentStatus = (b.paymentStatus ?? 'unpaid')
-                    .toString()
-                    .trim()
-                    .toLowerCase();
+            let filtered = allBookings;
 
-                const statusLabel =
-                    paymentStatus === 'paid'
-                        ? 'Paid'
-                        : paymentStatus === 'cancelled'
-                            ? 'Cancelled'
-                            : 'Unpaid';
+            if (currentFilter === 'active') {
+                filtered = allBookings.filter(b => b.bookingStatus === 'Confirmed' || b.bookingStatus === 'InProgress' || b.bookingStatus === 'AwaitingReturn');
+            } else if (currentFilter === 'pending') {
+                filtered = allBookings.filter(b => b.bookingStatus === 'Pending');
+            } else if (currentFilter === 'past') {
+                filtered = allBookings.filter(b => b.bookingStatus === 'Completed' || b.bookingStatus === 'Cancelled' || b.bookingStatus === 'Rejected');
+            }
 
-                const payDisabled = paymentStatus === 'unpaid';
-                const showPayButton = paymentStatus !== 'paid';
+            if (filtered.length === 0) {
+                 tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="p-16 text-center text-gray-500">
+                            <div class="flex flex-col items-center gap-4">
+                                <span class="material-symbols-outlined text-6xl opacity-20">no_crash</span>
+                                <p class="text-xl">No rentals found in this category.</p>
+                            </div>
+                        </td>
+                    </tr>`;
+                return;
+            }
+
+            filtered.forEach(b => {
+                const paymentStatus = (b.paymentStatus ?? 'unpaid').toString().trim().toLowerCase();
+                const bookingStatus = (b.bookingStatus ?? 'Unknown').toString();
+                
+                // --- Vehicle Column ---
+                let carImageHtml = '';
+                if(b.carImage) {
+                    carImageHtml = `<img src="${b.carImage}" loading="lazy" class="w-16 h-10 object-cover rounded-md border border-white/10" alt="Car">`;
+                } else {
+                    carImageHtml = `<div class="w-16 h-10 bg-white/5 rounded-md flex items-center justify-center border border-white/10"><span class="material-symbols-outlined text-gray-600">directions_car</span></div>`;
+                }
+
+                const vehicleHtml = `
+                    <div class="flex items-center gap-4">
+                        ${carImageHtml}
+                        <div class="flex flex-col">
+                            <span class="text-white font-bold text-lg">${b.carName ?? 'Unknown Car'}</span>
+                        </div>
+                    </div>
+                `;
+
+                // --- Dates Column ---
+                const start = new Date(b.startdate);
+                const end = new Date(b.enddate);
+                const dateOptions = { month: 'short', day: '2-digit' };
+                const datesHtml = `
+                    <div class="flex flex-col">
+                        <span class="text-white font-medium text-sm">
+                            ${start.toLocaleDateString('en-US', dateOptions)} - ${end.toLocaleDateString('en-US', dateOptions)}
+                        </span>
+                        <span class="text-xs text-gray-500">${end.getFullYear()}</span>
+                    </div>
+                `;
+
+                // --- Status Column (Badge) ---
+                let statusBadgeClass = '';
+                if(bookingStatus === 'Confirmed') statusBadgeClass = "bg-green-500/10 text-green-500 border-green-500/20";
+                else if(bookingStatus === 'Pending') statusBadgeClass = "bg-yellow-500/10 text-yellow-500 border-yellow-500/20";
+                else if(bookingStatus === 'InProgress') statusBadgeClass = "bg-blue-500/10 text-blue-500 border-blue-500/20";
+                else if(bookingStatus === 'AwaitingReturn') statusBadgeClass = "bg-orange-500/10 text-orange-500 border-orange-500/20";
+                else if(bookingStatus === 'Completed') statusBadgeClass = "bg-gray-500/10 text-gray-400 border-gray-500/20";
+                else statusBadgeClass = "bg-red-500/10 text-red-500 border-red-500/20";
+                
+                const statusHtml = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border ${statusBadgeClass}">${bookingStatus}</span>`;
+
+                // --- Price Column ---
+                const priceHtml = `<span class="text-gold font-bold text-base">$${Number(b.totalPrice ?? 0).toFixed(2)}</span>`;
+
+                // --- Actions Column ---
+                const showPayButton = paymentStatus !== 'paid' && paymentStatus !== 'cancelled' && paymentStatus !== 'refunded';
+                const showRateButton = bookingStatus === 'InProgress' || bookingStatus === 'Completed';
+                const showReceiptButton = paymentStatus === 'paid';
+
+                const actionsHtml = `
+                    <div class="flex items-center justify-end gap-2">
+                        <button onclick="openDetailsModal(${b.bookingId})" title="View Details"
+                                class="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors">
+                            <span class="material-symbols-outlined text-[20px]">visibility</span>
+                        </button>
+                    
+                        ${showPayButton ? `
+                            <button onclick="processDirectPay(${b.bookingId}, ${b.totalPrice})" title="Pay Now"
+                                    class="p-2 text-gold hover:text-[#b5952f] hover:bg-gold/10 rounded-lg transition-colors">
+                                <span class="material-symbols-outlined text-[20px]">credit_card</span>
+                            </button>
+                        ` : ''}
+
+                        ${showReceiptButton && b.paymentId ? `
+                            <button onclick="window.open('/Bookings/Receipt/${b.paymentId}', '_blank', 'width=500,height=700')" title="Download Receipt"
+                               class="p-2 text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 rounded-lg transition-colors">
+                                <span class="material-symbols-outlined text-[20px]">receipt_long</span>
+                            </button>
+                        ` : ''}
+
+                         ${showRateButton ? `
+                            <button onclick="showRatingPopup(${b.bookingId})" title="Rate Experience"
+                                    class="p-2 text-yellow-400 hover:text-yellow-300 hover:bg-yellow-400/10 rounded-lg transition-colors">
+                                <span class="material-symbols-outlined text-[20px]">star</span>
+                            </button>
+                        ` : '' }
+                    </div>
+                `;
 
                 const tr = document.createElement('tr');
-                tr.innerHTML =
-                    `<td>${b.bookingId}</td>` +
-                    `<td>${b.carName ?? ''} (${b.plateNumber ?? ''})</td>` +
-                    `<td>${b.paymentId ?? ''}</td>` +
-                    `<td>${statusLabel}</td>` +
-                    `<td>${b.startdate}</td>` +
-                    `<td>${b.enddate}</td>` +
-                    `<td>${Number(b.totalPrice ?? 0).toFixed(2)}</td>` +
-                    `<td>
-                                ${showPayButton ? `
-                                    <button class="btn btn-primary btn-sm me-2 pay-btn"
-                                            data-booking-id="${b.bookingId}"
-                                            data-amount="${Number(b.totalPrice ?? 0)}"
-                                            ${payDisabled ? 'disabled' : ''}>
-                                        Pay
-                                    </button>
-                                ` : ''}
-                                <a class="btn btn-secondary btn-sm"
-                                   href="/Bookings/Ticket/${b.bookingId}"
-                                   target="_blank">
-                                    Ticket
-                                </a>
-                                    ${
-                                        (new Date(b.enddate) <= new Date() ||
-                                         (b.bookingStatus && b.bookingStatus.toLowerCase() === 'returned'))
-                                      ? `
-                                    <button class="btn btn-warning btn-sm"
-                                            onclick="showRatingPopup(${b.bookingId})">
-                                        <i class="fas fa-star"></i> Rate
-                                    </button>
-                                    ` : ''}
-                            </td>`;
-
+                tr.className = "hover:bg-white/5 transition-colors group border-b border-[#262626] last:border-0 align-middle";
+                tr.innerHTML = `
+                    <td class="px-6 py-4">${vehicleHtml}</td>
+                    <td class="px-6 py-4">${datesHtml}</td>
+                    <td class="px-6 py-4">${statusHtml}</td>
+                    <td class="px-6 py-4">${priceHtml}</td>
+                    <td class="px-6 py-4 text-right">${actionsHtml}</td>`;
                 tbody.appendChild(tr);
-            });
-
-            document.querySelectorAll('.pay-btn').forEach(button => {
-                button.addEventListener('click', () => {
-                    selectedBookingId = Number(button.dataset.bookingId);
-                    selectedAmount = Number(button.dataset.amount);
-
-                    document.getElementById('paymentAmount').textContent =
-                        selectedAmount.toFixed(2);
-
-                    document.getElementById('paymentError').classList.add('d-none');
-                    payModal.show();
-                });
             });
         }
 
-        async function submitPayment() {
-            const paymentMethodId =
-                Number(document.getElementById('paymentMethodSelect').value);
-
-            if (!selectedBookingId || !paymentMethodId) return;
-
-            const res = await fetch('/api/Bookings/Pay', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    bookingId: selectedBookingId,
-                    amount: selectedAmount,
-                    paymentMethodId: paymentMethodId
-                })
-            });
-
-            if (!res.ok) {
-                const errorEl = document.getElementById('paymentError');
-                errorEl.textContent = 'Unable to process payment. Please try again.';
-                errorEl.classList.remove('d-none');
+        async function processDirectPay(bookingId, amount) {
+            if(!creditCardMethodId) {
+                alert("Online payment is currently unavailable.");
                 return;
             }
 
-            const result = await res.json();
+            // Create a temporary overlay to show processing
+            const overlay = document.createElement('div');
+            overlay.className = "fixed inset-0 z-50 bg-black/80 flex items-center justify-center";
+            overlay.innerHTML = `
+                <div class="bg-[#16181a] p-8 rounded-2xl border border-[#262626] text-center">
+                    <span class="material-symbols-outlined text-4xl text-gold animate-spin mb-4">progress_activity</span>
+                    <h3 class="text-xl font-bold text-white">Redirecting to Payment...</h3>
+                </div>
+            `;
+            document.body.appendChild(overlay);
 
-            if (result.requiresRedirect && result.redirectUrl) {
-                window.location.href = result.redirectUrl;
-                return;
+            try {
+                const res = await fetch('/api/Bookings/Pay', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        bookingId: bookingId,
+                        amount: amount,
+                        paymentMethodId: creditCardMethodId
+                    })
+                });
+
+                if (!res.ok) throw new Error("Payment init failed");
+
+                const result = await res.json();
+
+                if (result.requiresRedirect && result.redirectUrl) {
+                    window.location.href = result.redirectUrl;
+                } else {
+                    document.body.removeChild(overlay);
+                    alert("Unexpected payment state.");
+                }
+
+            } catch (err) {
+                document.body.removeChild(overlay);
+                console.error(err);
+                alert("Unable to process payment. Please try again.");
             }
-
-            payModal.hide();
-            await loadBookings();
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
-            payModal = new bootstrap.Modal(document.getElementById('payModal'));
             await loadPaymentMethods();
             await loadBookings();
-            document.getElementById('confirmPayBtn')
-                .addEventListener('click', submitPayment);
         });
     </script>
 }

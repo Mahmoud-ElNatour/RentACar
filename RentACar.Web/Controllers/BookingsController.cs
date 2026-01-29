@@ -70,6 +70,7 @@ namespace RentACar.Web.Controllers
                     bookingId = b.BookingId,
                     carName = car?.ModelName,
                     plateNumber = car?.PlateNumber,
+                    carImage = car?.CarImage != null ? $"data:image/jpeg;base64,{Convert.ToBase64String(car.CarImage)}" : null,
                     paymentId = latestPayment?.PaymentId,
                     paymentStatus = latestPayment?.Status,
                     startdate = b.Startdate.ToString("yyyy-MM-dd"),
@@ -146,6 +147,56 @@ namespace RentACar.Web.Controllers
                 });
             });
             return document.GeneratePdf();
+        }
+        [HttpGet("~/Bookings/Details/{id}")]
+        public async Task<IActionResult> Details(int id)
+        {
+            var customerId = await GetCurrentCustomerId();
+            if (customerId == null) return Unauthorized();
+
+            var booking = await _bookingManager.GetBookingByIdAsync(id);
+            if (booking == null || booking.CustomerId != customerId.Value) return NotFound();
+
+            var car = await _carManager.GetCarByIdAsync(booking.CarId);
+            var payments = await _paymentManager.GetPaymentsByBookingIdAsync(booking.BookingId);
+            var payment = payments.OrderByDescending(p => p.PaymentDate).ThenByDescending(p => p.PaymentId).FirstOrDefault();
+            
+            // Re-using the same DTO as admin panel is fine since it's just data transfer
+            var dto = new BookingDetailsDto
+            {
+                BookingId = booking.BookingId,
+                BookingStatus = booking.BookingStatus,
+                StartDate = booking.Startdate,
+                EndDate = booking.Enddate,
+                TotalPrice = booking.TotalPrice,
+                Subtotal = booking.Subtotal,
+                CarModel = car?.ModelName,
+                CarPlateNumber = car?.PlateNumber,
+                CarCategory = car?.CategoryName,
+                CarColor = car?.Color,
+                CarModelYear = car?.ModelYear,
+                CarPricePerDay = car?.PricePerDay,
+                CarImageUrl = car?.CarImage != null ? $"data:image/jpeg;base64,{Convert.ToBase64String(car.CarImage)}" : null,
+                PaymentId = payment?.PaymentId,
+                PaymentAmount = payment?.Amount
+            };
+
+            return PartialView("~/Views/Bookings/_CustomerBookingDetailsPartial.cshtml", dto);
+        }
+        [HttpGet("~/Bookings/Receipt/{id}")]
+        public async Task<IActionResult> Receipt(int id)
+        {
+            var customerId = await GetCurrentCustomerId();
+            if (customerId == null) return Unauthorized();
+
+            var payment = await _paymentManager.GetPaymentDetailsByIdAsync(id);
+            if (payment == null) return NotFound();
+
+            // Verify ownership via Booking
+            var booking = await _bookingManager.GetBookingByIdAsync(payment.BookingId);
+            if (booking == null || booking.CustomerId != customerId.Value) return NotFound();
+
+            return View("~/Views/ControlPanel/Payment/Receipt.cshtml", payment);
         }
     }
 }

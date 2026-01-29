@@ -1,0 +1,140 @@
+@model RentACar.Application.DTOs.BookingDetailsDto
+
+<div class="modal fade" id="customerBookingDetailsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content bg-[#141414] border border-white/10 shadow-2xl rounded-2xl overflow-hidden font-display">
+            <!-- Header -->
+            <div class="modal-header border-b border-white/5 p-6 flex justify-between items-center bg-[#1a1a1a]">
+                <div class="flex items-center gap-4">
+                    <div class="h-12 w-12 rounded-xl bg-gold/10 flex items-center justify-center border border-gold/20">
+                        <span class="material-symbols-outlined text-gold text-2xl">receipt_long</span>
+                    </div>
+                    <div>
+                        <h5 class="text-xl font-bold text-white">Booking Details</h5>
+                        <p class="text-sm text-gray-400 font-mono">#@Model.BookingId</p>
+                    </div>
+                </div>
+                <button type="button" class="text-gray-400 hover:text-white transition-colors" data-bs-dismiss="modal">
+                    <span class="material-symbols-outlined text-2xl">close</span>
+                </button>
+            </div>
+            
+            <!-- Body -->
+            <div class="modal-body p-0">
+                <div class="grid grid-cols-1 md:grid-cols-2">
+                    
+                    <!-- Left Column: Car Info -->
+                    <div class="p-6 space-y-8 border-r border-white/5">
+                        <!-- Status Banner -->
+                        <div class="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10">
+                            <span class="text-gray-400 text-sm font-semibold uppercase">Status</span>
+                            @{
+                                var statusClass = "bg-gray-500/10 text-gray-500 border-gray-500/20";
+                                if(Model.BookingStatus == "Confirmed" || Model.BookingStatus == "Booked") statusClass = "bg-green-500/10 text-green-500 border-green-500/20";
+                                else if(Model.BookingStatus == "Pending") statusClass = "bg-yellow-500/10 text-yellow-500 border-yellow-500/20";
+                                else if(Model.BookingStatus == "Active" || Model.BookingStatus == "InProgress") statusClass = "bg-blue-500/10 text-blue-500 border-blue-500/20";
+                                else if(Model.BookingStatus == "Cancelled") statusClass = "bg-red-500/10 text-red-500 border-red-500/20";
+                            }
+                            <span class="px-3 py-1 rounded-full text-xs font-bold border @statusClass">@Model.BookingStatus</span>
+                        </div>
+
+                        <!-- Car -->
+                        <div>
+                            <h6 class="text-gold text-xs font-bold uppercase tracking-wider mb-4 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-sm">directions_car</span> Vehicle Info
+                            </h6>
+                            <div class="bg-[#0a0a0a] rounded-xl p-4 border border-white/10 overflow-hidden">
+                                @if(!string.IsNullOrEmpty(Model.CarImageUrl))
+                                {
+                                    <div class="mb-4 rounded-lg overflow-hidden border border-white/5 bg-[#121212] aspect-video relative group">
+                                        <img src="@Model.CarImageUrl" alt="@Model.CarModel" loading="lazy" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                                    </div>
+                                }
+                                <div class="flex justify-between items-start mb-2">
+                                    <div>
+                                        <div class="text-white font-bold text-lg">@Model.CarModel</div>
+                                        <div class="text-xs text-gray-500">@Model.CarCategory • @Model.CarModelYear</div>
+                                    </div>
+
+                                </div>
+                                <div class="flex items-center gap-2 text-xs text-gray-400 mt-2">
+                                    <span class="w-2 h-2 rounded-full" style="background-color: @(Model.CarColor ?? "white")"></span>
+                                    @Model.CarColor
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Timeline & Payment -->
+                    <div class="p-6 space-y-8 bg-[#181818]">
+                        <!-- Dates -->
+                        <div>
+                            <h6 class="text-gold text-xs font-bold uppercase tracking-wider mb-4 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-sm">date_range</span> Schedule
+                            </h6>
+                            <div class="relative pl-4 border-l-2 border-white/10 space-y-6">
+                                <div class="relative">
+                                    <div class="absolute -left-[21px] top-1 w-3 h-3 rounded-full bg-gold ring-4 ring-[#181818]"></div>
+                                    <div class="text-xs text-gray-400 uppercase">Pick-up</div>
+                                    <div class="text-white font-bold">@Model.StartDate.ToShortDateString()</div>
+                                </div>
+                                <div class="relative">
+                                    <div class="absolute -left-[21px] top-1 w-3 h-3 rounded-full bg-gray-600 ring-4 ring-[#181818]"></div>
+                                    <div class="text-xs text-gray-400 uppercase">Return</div>
+                                    <div class="text-white font-bold">@Model.EndDate.ToShortDateString()</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Payment Breakdown -->
+                        <div>
+                            <h6 class="text-gold text-xs font-bold uppercase tracking-wider mb-4 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-sm">payments</span> Payment Summary
+                            </h6>
+                            <div class="space-y-3 text-sm">
+                                <div class="flex justify-between text-gray-400">
+                                    <span>Rate per day</span>
+                                    <span>@Model.CarPricePerDay?.ToString("C")</span>
+                                </div>
+                                <div class="flex justify-between text-gray-400">
+                                    <span>Subtotal</span>
+                                    <span>@Model.Subtotal?.ToString("C")</span>
+                                </div>
+                                <div class="pt-3 border-t border-white/10 flex justify-between items-center">
+                                    <span class="text-white font-bold">Total</span>
+                                    <span class="text-xl font-bold text-gold">@Model.TotalPrice.ToString("C")</span>
+                                </div>
+                                <div class="mt-2 text-right">
+                                    @if(Model.PaymentId.HasValue)
+                                    {
+                                        <span class="text-green-500 text-xs font-bold flex items-center justify-end gap-1">
+                                            <span class="material-symbols-outlined text-[14px]">check_circle</span> Paid
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-red-400 text-xs font-bold flex items-center justify-end gap-1">
+                                            <span class="material-symbols-outlined text-[14px]">error</span> Payment Pending
+                                        </span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="modal-footer border-t border-white/5 p-4 bg-[#1a1a1a] flex justify-end gap-3">
+                @if(Model.PaymentId.HasValue)
+                {
+                    <button onclick="window.open('/Bookings/Receipt/@Model.PaymentId', '_blank', 'width=500,height=700')" class="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg font-bold text-sm transition-colors border border-white/10 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[18px]">receipt</span> View Receipt
+                    </button>
+                }
+                <button type="button" class="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg font-bold text-sm transition-colors border border-white/10" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
