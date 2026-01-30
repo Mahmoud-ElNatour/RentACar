@@ -17,6 +17,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
+using RentACar.Application.Managers;
+using RentACar.Application.DTOs;
+using System.IO;
+using Microsoft.AspNetCore.Http;
 
 namespace RentACar.Web.Areas.Identity.Pages.Account
 {
@@ -29,13 +33,15 @@ namespace RentACar.Web.Areas.Identity.Pages.Account
         private readonly IUserEmailStore<IdentityUser> _emailStore;
         private readonly IEmailSender _emailSender;
         private readonly ILogger<ExternalLoginModel> _logger;
+        private readonly CustomerManager _customerManager;
 
         public ExternalLoginModel(
             SignInManager<IdentityUser> signInManager,
             UserManager<IdentityUser> userManager,
             IUserStore<IdentityUser> userStore,
             ILogger<ExternalLoginModel> logger,
-            IEmailSender emailSender)
+            IEmailSender emailSender,
+            CustomerManager customerManager)
         {
             _signInManager = signInManager;
             _userManager = userManager;
@@ -43,6 +49,7 @@ namespace RentACar.Web.Areas.Identity.Pages.Account
             _emailStore = GetEmailStore();
             _logger = logger;
             _emailSender = emailSender;
+            _customerManager = customerManager;
         }
 
         /// <summary>
@@ -84,6 +91,34 @@ namespace RentACar.Web.Areas.Identity.Pages.Account
             [Required]
             [EmailAddress]
             public string Email { get; set; }
+
+            [Required]
+            [Display(Name = "Full Name")]
+            public string FullName { get; set; } = default!;
+
+            [Required]
+            [Phone]
+            [Display(Name = "Phone Number")]
+            public string PhoneNumber { get; set; } = default!;
+
+            [Required]
+            public string Address { get; set; } = default!;
+
+            [Required]
+            [Display(Name = "Driving License (Front)")]
+            public IFormFile DrivingLicenseFront { get; set; } = default!;
+
+            [Required]
+            [Display(Name = "Driving License (Back)")]
+            public IFormFile DrivingLicenseBack { get; set; } = default!;
+
+            [Required]
+            [Display(Name = "National ID (Front)")]
+            public IFormFile NationalIdFront { get; set; } = default!;
+
+            [Required]
+            [Display(Name = "National ID (Back)")]
+            public IFormFile NationalIdBack { get; set; } = default!;
         }
         
         public IActionResult OnGet() => RedirectToPage("./Login");
@@ -131,7 +166,8 @@ namespace RentACar.Web.Areas.Identity.Pages.Account
                 {
                     Input = new InputModel
                     {
-                        Email = info.Principal.FindFirstValue(ClaimTypes.Email)
+                        Email = info.Principal.FindFirstValue(ClaimTypes.Email),
+                        FullName = info.Principal.FindFirstValue(ClaimTypes.Name)
                     };
                 }
                 return Page();
@@ -155,6 +191,7 @@ namespace RentACar.Web.Areas.Identity.Pages.Account
 
                 await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
                 await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
+                user.PhoneNumber = Input.PhoneNumber; // Set phone number on user
 
                 var result = await _userManager.CreateAsync(user);
                 if (result.Succeeded)
@@ -162,6 +199,23 @@ namespace RentACar.Web.Areas.Identity.Pages.Account
                     result = await _userManager.AddLoginAsync(user, info);
                     if (result.Succeeded)
                     {
+                        // ✅ Create Customer Record
+                        var customerDto = new CustomerCreateDTO
+                        {
+                            Name = Input.FullName,
+                            Email = Input.Email,
+                            PhoneNumber = Input.PhoneNumber,
+                            Address = Input.Address,
+                            Username = Input.Email,
+                            DrivingLicenseFront = await ConvertToByteArray(Input.DrivingLicenseFront),
+                            DrivingLicenseBack = await ConvertToByteArray(Input.DrivingLicenseBack),
+                            NationalIdfront = await ConvertToByteArray(Input.NationalIdFront),
+                            NationalIdback = await ConvertToByteArray(Input.NationalIdBack)
+                        };
+
+                        await _customerManager.CreateCustomerForExternalUser(user, customerDto);
+
+
                         _logger.LogInformation("User created an account using {Name} provider.", info.LoginProvider);
 
                         var userId = await _userManager.GetUserIdAsync(user);
@@ -195,6 +249,14 @@ namespace RentACar.Web.Areas.Identity.Pages.Account
             ProviderDisplayName = info.ProviderDisplayName;
             ReturnUrl = returnUrl;
             return Page();
+        }
+
+        private async Task<byte[]> ConvertToByteArray(IFormFile file)
+        {
+            if (file == null) return null;
+            using var ms = new MemoryStream();
+            await file.CopyToAsync(ms);
+            return ms.ToArray();
         }
 
         private IdentityUser CreateUser()

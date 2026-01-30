@@ -57,6 +57,36 @@ builder.Services.Configure<DataProtectionTokenProviderOptions>(options =>
     options.TokenLifespan = TimeSpan.FromHours(3);
 });
 
+// ✅ Configure External Authentication (Google & Facebook)
+// ✅ Configure External Authentication (Google & Facebook)
+var authenticationBuilder = builder.Services.AddAuthentication();
+
+var googleAuthNSection = builder.Configuration.GetSection("Authentication:Google");
+var googleClientId = googleAuthNSection["ClientId"];
+var googleClientSecret = googleAuthNSection["ClientSecret"];
+
+if (!string.IsNullOrEmpty(googleClientId) && !string.IsNullOrEmpty(googleClientSecret))
+{
+    authenticationBuilder.AddGoogle(options =>
+    {
+        options.ClientId = googleClientId;
+        options.ClientSecret = googleClientSecret;
+    });
+}
+
+var fbAuthNSection = builder.Configuration.GetSection("Authentication:Facebook");
+var fbAppId = fbAuthNSection["AppId"];
+var fbAppSecret = fbAuthNSection["AppSecret"];
+
+if (!string.IsNullOrEmpty(fbAppId) && !string.IsNullOrEmpty(fbAppSecret))
+{
+    authenticationBuilder.AddFacebook(options =>
+    {
+        options.AppId = fbAppId;
+        options.AppSecret = fbAppSecret;
+    });
+}
+
 builder.Services.AddRazorPages();
 builder.Services.AddControllersWithViews();
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());

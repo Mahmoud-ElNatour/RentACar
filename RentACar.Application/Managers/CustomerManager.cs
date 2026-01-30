@@ -118,6 +118,42 @@ namespace RentACar.Application.Managers
             return _mapper.Map<CustomerDTO>(customer);
         }
 
+        public async Task<CustomerDTO?> CreateCustomerForExternalUser(IdentityUser user, CustomerCreateDTO createDto)
+        {
+            _logger.LogInformation("Creating customer profile for external user {Email}", user.Email);
+
+            // Ensure "Customer" role exists and assign
+            if (!await _roleManager.RoleExistsAsync("Customer"))
+            {
+                await _roleManager.CreateAsync(new IdentityRole("Customer"));
+            }
+            if (!await _userManager.IsInRoleAsync(user, "Customer"))
+            {
+                await _userManager.AddToRoleAsync(user, "Customer");
+            }
+
+            var customer = new Customer
+            {
+                aspNetUserId = user.Id,
+                Name = createDto.Name,
+                Address = createDto.Address,
+                DrivingLicenseFront = createDto.DrivingLicenseFront,
+                DrivingLicenseBack = createDto.DrivingLicenseBack,
+                NationalIdfront = createDto.NationalIdfront,
+                NationalIdback = createDto.NationalIdback,
+                IsVerified = false,
+                Isactive = true
+            };
+
+            await _customerRepository.AddAsync(customer);
+
+            _logger.LogInformation("Customer profile created for external user {Id}", customer.UserId);
+
+            await _auditLogManager.LogEventAsync("Customer.RegisteredExternal", "Customer", customer.UserId.ToString(), $"Registered new external customer: {customer.Name} ({user.Email})", null, "Success");
+
+            return _mapper.Map<CustomerDTO>(customer);
+        }
+
         public async Task<IdentityUser?> GetIdentityUserByEmail(string email)
         {
             return await _userManager.FindByEmailAsync(email);

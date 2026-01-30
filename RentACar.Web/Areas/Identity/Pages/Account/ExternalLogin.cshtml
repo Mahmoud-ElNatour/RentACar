@@ -10,50 +10,321 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - CarRental</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/login-style.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
+    <title>@ViewData["Title"] - LBRentDrive</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#D4AF37', // Gold
+                        'primary-hover': '#B5952F',
+                        'background-dark': '#0a0c0e',
+                        'brand-dark': '#050505',
+                        'surface-dark': '#141618',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --primary-bg: #141414;
+            --secondary-bg: #1e1e1e;
+            --accent-yellow: #ffcc00;
+            --text-light: #f5f5f5;
+        }
+
+        body {
+            font-family: "Plus Jakarta Sans", sans-serif;
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .luxury-gradient {
+            background: linear-gradient(to bottom, rgba(10, 12, 14, 0.4), rgba(10, 12, 14, 0.9));
+        }
+
+        /* Ensure validation errors are visible */
+        .text-danger {
+            color: #ef4444;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+            display: block;
+        }
+
+        /* Custom File Input Styling */
+        .file-upload-wrapper {
+            position: relative;
+            width: 100%;
+            height: 50px;
+            border: 1px solid #404040;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            padding: 0 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .file-upload-wrapper:hover {
+            border-color: #D4AF37;
+            background: rgba(212, 175, 55, 0.05);
+        }
+        .file-upload-wrapper input[type="file"] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+        .file-upload-label {
+            color: #a3a3a3;
+            font-size: 0.875rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 90%;
+        }
+
+        /* Scrollbar for right section */
+        .custom-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+            background: #0a0c0e;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 3px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* --- Notification Toast Styles --- */
+        .notification-container {
+            position: fixed;
+            top: 1.5rem;
+            right: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            z-index: 2050;
+            pointer-events: none;
+        }
+        .notification-toast {
+            min-width: 280px;
+            max-width: 360px;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            background: rgba(30, 30, 30, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.4);
+            padding: 0.9rem 1rem 0.9rem 1.1rem;
+            color: #f5f5f5;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            pointer-events: auto;
+            position: relative;
+            overflow: hidden;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+        .notification-toast.show { opacity: 1; transform: translateY(0); }
+        .notification-toast.hiding { opacity: 0; transform: translateY(-10px); }
+        .notification-toast .notification-icon { font-size: 1.5rem; margin-top: 0.1rem; }
+        .notification-toast .notification-content { flex: 1; }
+        .notification-toast .notification-title { font-weight: 600; margin-bottom: 0.15rem; }
+        .notification-toast .notification-message { font-size: 0.95rem; color: rgba(245, 245, 245, 0.85); }
+        .notification-toast .notification-close { background: transparent; border: none; color: rgba(245, 245, 245, 0.6); cursor: pointer; font-size: 1.25rem; line-height: 1; }
+        .notification-toast.notification-success { border-left: 4px solid #4ade80; }
+        .notification-toast.notification-success .notification-icon { color: #4ade80; }
+        .notification-toast.notification-error { border-left: 4px solid #f87171; }
+        .notification-toast.notification-error .notification-icon { color: #f87171; }
+        .notification-toast.notification-warning { border-left: 4px solid #facc15; }
+        .notification-toast.notification-warning .notification-icon { color: #facc15; }
+        .notification-toast.notification-info { border-left: 4px solid #60a5fa; }
+        .notification-toast.notification-info .notification-icon { color: #60a5fa; }
+
+        /* Hide modal artifacts */
+        .modal { display: none; }
+    </style>
 </head>
-<body>
-    @await Html.PartialAsync("_PopupNotifications")
-    <div class="container1">
-        <div class="login-container">
-            <div class="logo-text">
-                <i class="fas fa-car-side"></i>
-                <div>CarRental</div>
+<body class="bg-background-light dark:bg-background-dark min-h-screen flex items-stretch">
+    <!-- Split Screen Layout Container -->
+    <main class="flex w-full min-h-screen">
+        <!-- Left Section: Visual & Branding (40% width on desktop) -->
+        <section class="hidden lg:flex relative w-[40%] flex-col justify-between p-12 overflow-hidden bg-brand-dark fixed h-full left-0 top-0">
+            <!-- Background Image with Overlay -->
+            <div class="absolute inset-0 bg-cover bg-center z-0" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAnJp39nhlFijmwfjWCSTAKDOV-NWmwx7SEx_VaPxtP9bVdjsS3_McSM7LNdGY68mWahYpQ45SGX4Whzx-wyLqwyhs8WC03bZ1-LSMawhFncfrWSyp75jesKREJ85uvWSEhPHcSaAXA0vJGl62BgoaK-Z8YmmkX33ReQ5kXswOr6SDpHDF1CAwYFIwonYoP-PqolCOd9iyvUmd-rFcMc0bHNp4_Lo3I3H41SJTck4IvryWG2GL0o-7v7RZXh6IDJlZotoEqbsWSr6Uq');">
             </div>
+            <div class="absolute inset-0 luxury-gradient z-10"></div>
+            <!-- Content Layer -->
+            <div class="relative z-20 flex flex-col h-full justify-between">
+                <div class="flex items-center gap-3 text-white">
+                    <div class="size-10 bg-primary flex items-center justify-center rounded-lg">
+                        <span class="material-symbols-outlined text-background-dark text-2xl" data-icon="directions_car">directions_car</span>
+                    </div>
+                    <h2 class="text-2xl font-extrabold tracking-tight">LBRentDrive</h2>
+                </div>
+                <div class="max-w-md">
+                     <h1 class="text-white text-4xl font-extrabold leading-tight mb-4">
+                        Almost There. <br />
+                        <span class="text-primary italic">Complete Profile.</span>
+                    </h1>
+                    <p class="text-white/80">Identify yourself to unlock the premium experience.</p>
+                </div>
+                <div class="flex gap-4 text-white/50 text-sm">
+                    <span>&copy; 2026 LBRentDrive</span>
+                </div>
+            </div>
+        </section>
 
-            <h2 id="external-login-title">Finish Signing Up</h2>
-            <p id="external-login-description" style="color: var(--text-secondary); text-align: center;">
-                You've authenticated with <strong>@Model.ProviderDisplayName</strong>. Enter your email to finish connecting your account.
-            </p>
-
-            <form asp-page-handler="Confirmation" asp-route-returnUrl="@Model.ReturnUrl" method="post" autocomplete="off">
-                <div asp-validation-summary="ModelOnly" class="validation-summary-errors text-danger" role="alert"></div>
-
-                <div class="input mb-3">
-                    <input asp-for="Input.Email" class="form-control" autocomplete="email" placeholder="Email" aria-required="true" />
-                    <span asp-validation-for="Input.Email" class="text-danger"></span>
+        <!-- Right Section: Form (60% width on desktop, 100% on mobile - Scrollable) -->
+        <section class="w-full lg:w-[60%] lg:ml-[40%] flex flex-col justify-start items-center px-6 sm:px-12 xl:px-20 py-12 bg-background-light dark:bg-background-dark custom-scroll overflow-y-auto min-h-screen">
+            <div class="w-full max-w-lg mb-10">
+                <!-- Mobile Branding -->
+                <div class="lg:hidden flex items-center justify-center gap-3 text-white mb-8">
+                    <div class="size-8 bg-primary flex items-center justify-center rounded-lg">
+                        <span class="material-symbols-outlined text-background-dark text-xl" data-icon="directions_car">directions_car</span>
+                    </div>
+                    <h2 class="text-xl font-bold dark:text-white text-background-dark">LBRentDrive</h2>
                 </div>
 
-                <button type="submit" class="login-btn w-100">Register</button>
-            </form>
+                <div class="mb-8 text-left">
+                    <h2 class="text-3xl font-extrabold text-background-dark dark:text-white mb-2">Final Step</h2>
+                    <p class="text-neutral-500 dark:text-neutral-400">
+                        You've authenticated with <strong class="text-primary">@Model.ProviderDisplayName</strong>. 
+                        Please complete your profile details and upload necessary documents.
+                    </p>
+                </div>
 
-            <hr class="my-4" />
+                @await Html.PartialAsync("_PopupNotifications")
 
-            <div class="signup-prompt text-center">
-                <span>Already have an account?</span>
-                <a class="traverse" asp-page="./Login">Log In</a>
+                <form asp-page-handler="Confirmation" asp-route-returnUrl="@Model.ReturnUrl" method="post" enctype="multipart/form-data" class="space-y-6">
+                    <div asp-validation-summary="ModelOnly" class="validation-summary-errors text-danger" role="alert"></div>
+
+                    <!-- Personal Info Grid -->
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Full Name -->
+                            <div class="space-y-1">
+                                <label class="block text-xs font-bold text-neutral-400 uppercase tracking-wider" asp-for="Input.FullName">Full Name</label>
+                                <input asp-for="Input.FullName" class="w-full bg-transparent border-neutral-700 rounded-lg px-4 py-3 text-white focus:ring-primary focus:border-primary placeholder:text-neutral-600 transition-colors" placeholder="John Doe" />
+                                <span asp-validation-for="Input.FullName" class="text-danger"></span>
+                            </div>
+                            <!-- Email -->
+                            <div class="space-y-1">
+                                <label class="block text-xs font-bold text-neutral-400 uppercase tracking-wider" asp-for="Input.Email">Email</label>
+                                <input asp-for="Input.Email" class="w-full bg-transparent border-neutral-700 rounded-lg px-4 py-3 text-white focus:ring-primary focus:border-primary placeholder:text-neutral-600 transition-colors" readonly />
+                                <span asp-validation-for="Input.Email" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <!-- Phone -->
+                        <div class="space-y-1">
+                            <label class="block text-xs font-bold text-neutral-400 uppercase tracking-wider" asp-for="Input.PhoneNumber">Phone Number</label>
+                            <input asp-for="Input.PhoneNumber" class="w-full bg-transparent border-neutral-700 rounded-lg px-4 py-3 text-white focus:ring-primary focus:border-primary placeholder:text-neutral-600 transition-colors" placeholder="+1 234 567 890" />
+                            <span asp-validation-for="Input.PhoneNumber" class="text-danger"></span>
+                        </div>
+
+                        <!-- Address -->
+                        <div class="space-y-1">
+                            <label class="block text-xs font-bold text-neutral-400 uppercase tracking-wider" asp-for="Input.Address">Address</label>
+                            <input asp-for="Input.Address" class="w-full bg-transparent border-neutral-700 rounded-lg px-4 py-3 text-white focus:ring-primary focus:border-primary placeholder:text-neutral-600 transition-colors" placeholder="123 Luxury Lane, Elite City" />
+                            <span asp-validation-for="Input.Address" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="h-px bg-white/10 my-6"></div>
+
+                    <!-- Document Uploads -->
+                    <h3 class="text-lg font-bold text-white mb-4">Required Documents</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Driving License Front -->
+                        <div class="space-y-2">
+                             <label class="block text-xs font-bold text-neutral-400 uppercase tracking-wider">Driving License (Front)</label>
+                             <div class="file-upload-wrapper">
+                                <span class="material-symbols-outlined text-neutral-500 mr-2" data-icon="badge">badge</span>
+                                <span class="file-upload-label" id="label-dl-front">Choose file...</span>
+                                <input asp-for="Input.DrivingLicenseFront" type="file" onchange="updateFileName(this, 'label-dl-front')" accept="image/*" />
+                             </div>
+                             <span asp-validation-for="Input.DrivingLicenseFront" class="text-danger"></span>
+                        </div>
+                        <!-- Driving License Back -->
+                        <div class="space-y-2">
+                             <label class="block text-xs font-bold text-neutral-400 uppercase tracking-wider">Driving License (Back)</label>
+                             <div class="file-upload-wrapper">
+                                <span class="material-symbols-outlined text-neutral-500 mr-2" data-icon="badge">badge</span>
+                                <span class="file-upload-label" id="label-dl-back">Choose file...</span>
+                                <input asp-for="Input.DrivingLicenseBack" type="file" onchange="updateFileName(this, 'label-dl-back')" accept="image/*" />
+                             </div>
+                             <span asp-validation-for="Input.DrivingLicenseBack" class="text-danger"></span>
+                        </div>
+
+                        <!-- National ID Front -->
+                        <div class="space-y-2">
+                             <label class="block text-xs font-bold text-neutral-400 uppercase tracking-wider">National ID (Front)</label>
+                             <div class="file-upload-wrapper">
+                                <span class="material-symbols-outlined text-neutral-500 mr-2" data-icon="id_card">id_card</span>
+                                <span class="file-upload-label" id="label-id-front">Choose file...</span>
+                                <input asp-for="Input.NationalIdFront" type="file" onchange="updateFileName(this, 'label-id-front')" accept="image/*" />
+                             </div>
+                             <span asp-validation-for="Input.NationalIdFront" class="text-danger"></span>
+                        </div>
+                        <!-- National ID Back -->
+                        <div class="space-y-2">
+                             <label class="block text-xs font-bold text-neutral-400 uppercase tracking-wider">National ID (Back)</label>
+                             <div class="file-upload-wrapper">
+                                <span class="material-symbols-outlined text-neutral-500 mr-2" data-icon="id_card">id_card</span>
+                                <span class="file-upload-label" id="label-id-back">Choose file...</span>
+                                <input asp-for="Input.NationalIdBack" type="file" onchange="updateFileName(this, 'label-id-back')" accept="image/*" />
+                             </div>
+                             <span asp-validation-for="Input.NationalIdBack" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full bg-primary hover:bg-primary/90 text-background-dark font-bold py-4 rounded-lg transition-all active:scale-[0.98] shadow-lg shadow-primary/10 mt-8">
+                        Complete Registration
+                    </button>
+                    
+                    <div class="text-center mt-4">
+                         <a asp-page="./Login" class="text-neutral-500 hover:text-white text-sm">Cancel and return to login</a>
+                    </div>
+                </form>
             </div>
-        </div>
-    </div>
+        </section>
+    </main>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        function updateFileName(input, labelId) {
+            const label = document.getElementById(labelId);
+            if (input.files && input.files.length > 0) {
+                label.textContent = input.files[0].name;
+                label.style.color = '#fff';
+            } else {
+                label.textContent = 'Choose file...';
+                label.style.color = '#a3a3a3';
+            }
+        }
+    </script>
 </body>
 </html>
