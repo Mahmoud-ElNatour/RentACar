@@ -2,7 +2,7 @@
 @model LoginModel
 
 @{
-    ViewData["Title"] = "Premium Login";
+    ViewData["Title"] = "LuxeDrive - Premium Login";
     Layout = null;
 }
 
@@ -11,81 +11,86 @@
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>LBRentDrive | @ViewData["Title"]</title>
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet" />
+    <title>@ViewData["Title"]</title>
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&amp;family=Inter:wght@300;400;500;600&amp;family=Manrope:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
-    <script id="tailwind-config">
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    colors: {
-                        "primary": "#edbc1d",
-                        "primary-hover": "#d9ac1b",
-                        "background-light": "#f8f8f6",
-                        "background-dark": "#0a0c0e", 
-                        "surface-dark": "#16181a",
-                        "brand-dark": "#221e10",
-                    },
-                    fontFamily: {
-                        "display": ["Plus Jakarta Sans", "sans-serif"]
-                    },
-                    borderRadius: {
-                        "DEFAULT": "0.25rem",
-                        "lg": "0.5rem",
-                        "xl": "0.75rem",
-                        "2xl": "1rem",
-                        "full": "9999px"
-                    },
-                    backdropBlur: {
-                        xs: '2px',
-                    }
-                },
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+                primary: "#D4AF37", // Elegant Gold
+                "background-light": "#F8FAFC",
+                "background-dark": "#0B0E14",
+                "card-dark": "#161B22",
+                "input-dark": "#0D1117",
+
+                // Colors required by _Footer and _Navbar partials (synced with _Layout)
+                "gold": "#d4af35",
+                "gold-light": "#fce186",
+                "gold-hover": "#d9a60c",
+                "border-dark": "#2a2d30",
+                "surface-dark": "#16181a",
+                "footer-bg": "#0a0a0a",
+                "footer-surface": "#171717",
+                "footer-border": "#f2b90d33",
             },
-        }
+            fontFamily: {
+              display: ["Playfair Display", "serif"],
+              body: ["Inter", "sans-serif"],
+              sans: ["Inter", "sans-serif"],
+            },
+            borderRadius: {
+              DEFAULT: "12px",
+            },
+             boxShadow: {
+                "glow": "0 0 20px rgba(212, 175, 55, 0.15)"
+            },
+          },
+        },
+      };
     </script>
     <style>
-        :root {
-            --primary-bg: #141414;
-            --secondary-bg: #1e1e1e;
-            --accent-yellow: #ffcc00;
-            --text-light: #f5f5f5;
-            --text-muted: #aaa;
-            --border-color: #333;
-            --shadow-color: rgba(0, 0, 0, 0.5);
-        }
-
         body {
-            font-family: "Plus Jakarta Sans", sans-serif;
+            font-family: 'Inter', sans-serif;
+        }
+        /* Hide Validation Summary in favor of Popups */
+        .validation-summary-errors { display: none !important; }
+        [asp-validation-summary] { display: none !important; }
+
+        .luxury-text {
+            font-family: 'Playfair Display', serif;
         }
 
-        .material-symbols-outlined {
-            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        .glow-button {
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
         }
 
-        .luxury-gradient {
-            background: linear-gradient(to bottom, rgba(10, 12, 14, 0.4), rgba(10, 12, 14, 0.9));
+        .divider-line {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #30363d, transparent);
         }
 
-        /* Glassmorphism for Mobile Card */
-        .glass-card {
-            background: rgba(10, 12, 14, 0.70);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-        }
-        
-        /* Ensure validation errors are visible */
-        .text-danger {
-            color: #ef4444;
-            font-size: 0.875rem;
-            margin-top: 0.25rem;
+        /* Ensure screen reader text is hidden */
+        .visually-hidden {
+            position: absolute !important;
+            width: 1px !important;
+            height: 1px !important;
+            padding: 0 !important;
+            margin: -1px !important;
+            overflow: hidden !important;
+            clip: rect(0, 0, 0, 0) !important;
+            white-space: nowrap !important;
+            border: 0 !important;
         }
 
-        /* --- Notification Toast Styles (Ported from site.css) --- */
+        /* Notification Toast Styles */
         .notification-container {
             position: fixed;
             top: 1.5rem;
@@ -93,29 +98,28 @@
             display: flex;
             flex-direction: column;
             gap: 0.75rem;
-            z-index: 2050;
+            z-index: 10000; /* Extremely high z-index */
             pointer-events: none;
         }
 
         .notification-toast {
-            min-width: 280px;
-            max-width: 360px;
+            min-width: 300px;
+            max-width: 400px;
             display: flex;
             align-items: flex-start;
             gap: 0.75rem;
-            background: rgba(30, 30, 30, 0.95); /* Dark background */
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 14px;
-            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.4);
-            padding: 0.9rem 1rem 0.9rem 1.1rem;
-            color: var(--text-light);
+            background: rgba(30, 30, 30, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            padding: 1rem;
+            color: #ffffff;
             opacity: 0;
-            transform: translateY(-10px);
+            transform: translateY(-20px);
             transition: opacity 0.3s ease, transform 0.3s ease;
             pointer-events: auto;
             position: relative;
-            overflow: hidden;
-            font-family: system-ui, -apple-system, sans-serif;
+            backdrop-filter: blur(10px);
         }
 
         .notification-toast.show {
@@ -125,281 +129,240 @@
 
         .notification-toast.hiding {
             opacity: 0;
-            transform: translateY(-10px);
+            transform: translateY(-20px);
         }
 
-        .notification-toast .notification-icon {
-            font-size: 1.5rem;
-            margin-top: 0.1rem;
+        .notification-wrapper {
+            display: flex;
+            gap: 12px;
+            width: 100%;
         }
 
-        .notification-toast .notification-content {
-            flex: 1;
-        }
-
-        .notification-toast .notification-title {
-            font-weight: 600;
-            margin-bottom: 0.15rem;
-        }
-
-        .notification-toast .notification-message {
-            font-size: 0.95rem;
-            color: rgba(245, 245, 245, 0.85);
-        }
-
-        .notification-toast .notification-close {
-            background: transparent;
-            border: none;
-            color: rgba(245, 245, 245, 0.6);
-            cursor: pointer;
+        .notification-icon {
             font-size: 1.25rem;
-            line-height: 1;
+            margin-top: 2px;
         }
 
-        /* Toast Colors */
-        .notification-toast.notification-success { border-left: 4px solid #4ade80; }
-        .notification-toast.notification-success .notification-icon { color: #4ade80; }
-
-        .notification-toast.notification-error { border-left: 4px solid #f87171; }
-        .notification-toast.notification-error .notification-icon { color: #f87171; }
-
-        .notification-toast.notification-warning { border-left: 4px solid #facc15; }
-        .notification-toast.notification-warning .notification-icon { color: #facc15; }
-
-        .notification-toast.notification-info { border-left: 4px solid #60a5fa; }
-        .notification-toast.notification-info .notification-icon { color: #60a5fa; }
-
-        /* Hide the Bootstrap Modal by default so 'Please Confirm' doesn't show statically */
-        /* Bootstrap JS will toggle this to 'display: block' when needed */
-        .modal {
-            display: none;
+        .notification-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
         }
+
+        .notification-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            line-height: 1.3;
+        }
+
+        .notification-message {
+            font-size: 0.85rem;
+            color: #d1d5db;
+            line-height: 1.4;
+        }
+
+        .notification-close {
+            background: none;
+            border: none;
+            color: #9ca3af;
+            cursor: pointer;
+            padding: 4px;
+            margin: -4px -4px 0 0;
+            transition: color 0.2s;
+        }
+
+        .notification-close:hover {
+            color: #ffffff;
+        }
+
+        /* Type variants */
+        .notification-success { border-left: 4px solid #10b981; }
+        .notification-success .notification-icon { color: #10b981; }
+
+        .notification-error { border-left: 4px solid #ef4444; }
+        .notification-error .notification-icon { color: #ef4444; }
+
+        .notification-warning { border-left: 4px solid #f59e0b; }
+        .notification-warning .notification-icon { color: #f59e0b; }
+
+        .notification-info { border-left: 4px solid #3b82f6; }
+        .notification-info .notification-icon { color: #3b82f6; }
     </style>
 </head>
-<body class="bg-background-dark min-h-screen text-white font-display">
-
-    <!-- Mobile Background Image (Fixed) -->
-    <div class="fixed inset-0 lg:hidden z-0">
-        <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAnJp39nhlFijmwfjWCSTAKDOV-NWmwx7SEx_VaPxtP9bVdjsS3_McSM7LNdGY68mWahYpQ45SGX4Whzx-wyLqwyhs8WC03bZ1-LSMawhFncfrWSyp75jesKREJ85uvWSEhPHcSaAXA0vJGl62BgoaK-Z8YmmkX33ReQ5kXswOr6SDpHDF1CAwYFIwonYoP-PqolCOd9iyvUmd-rFcMc0bHNp4_Lo3I3H41SJTck4IvryWG2GL0o-7v7RZXh6IDJlZotoEqbsWSr6Uq');"></div>
-        <div class="absolute inset-0 bg-black/80 backdrop-blur-xs"></div> <!-- Dark Overlay -->
-    </div>
-
-    <!-- Main Container -->
-    <main class="relative z-10 flex min-h-screen w-full">
-        
-        <!-- Left Section: Visual & Branding (Desktop Only) -->
-        <section class="hidden lg:flex relative w-[60%] flex-col justify-between p-12 overflow-hidden bg-brand-dark">
-            <!-- Background Image with Overlay -->
-            <div class="absolute inset-0 bg-cover bg-center z-0" data-alt="Sleek black luxury sports car in moody lighting" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAnJp39nhlFijmwfjWCSTAKDOV-NWmwx7SEx_VaPxtP9bVdjsS3_McSM7LNdGY68mWahYpQ45SGX4Whzx-wyLqwyhs8WC03bZ1-LSMawhFncfrWSyp75jesKREJ85uvWSEhPHcSaAXA0vJGl62BgoaK-Z8YmmkX33ReQ5kXswOr6SDpHDF1CAwYFIwonYoP-PqolCOd9iyvUmd-rFcMc0bHNp4_Lo3I3H41SJTck4IvryWG2GL0o-7v7RZXh6IDJlZotoEqbsWSr6Uq');">
+<body class="bg-background-light dark:bg-background-dark min-h-screen">
+    <partial name="_LoginPopupNotifications" />
+    
+    <div class="flex min-h-screen w-full">
+        <!-- Left Section (Image) -->
+        <div class="hidden lg:flex lg:w-1/2 relative flex-col justify-between p-12 overflow-hidden border-r border-primary/30">
+            <div class="absolute inset-0 z-0">
+                <img alt="Luxury car on a mountain road at night" class="w-full h-full object-cover" src="~/img/categories/car.jpg" />
+                <div class="absolute inset-0 bg-black/50"></div>
+                <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/30"></div>
             </div>
-            <div class="absolute inset-0 luxury-gradient z-10"></div>
-            <!-- Content Layer -->
-            <div class="relative z-20 flex flex-col h-full justify-between">
-                <!-- Top: Branding -->
-                <div class="flex items-center gap-3 text-white">
-                    <div class="size-10 bg-primary flex items-center justify-center rounded-lg shadow-lg shadow-primary/20">
-                        <span class="material-symbols-outlined text-background-dark text-2xl" data-icon="directions_car">directions_car</span>
-                    </div>
-                    <h2 class="text-2xl font-extrabold tracking-tight">LBRentDrive</h2>
-                </div>
-                <!-- Middle: Hero Text & Features -->
-                <div class="max-w-xl">
-                    <h1 class="text-white text-6xl xl:text-7xl font-extrabold leading-[1.1] mb-8">
-                        Rent. Drive. <br />
-                        <span class="text-primary italic">Enjoy.</span>
-                    </h1>
-                    <div class="space-y-5">
-                        <div class="flex items-center gap-4 group">
-                            <div class="h-6 w-6 rounded-full border border-primary/50 flex items-center justify-center bg-primary/10">
-                                <span class="material-symbols-outlined text-primary text-sm" data-icon="check">check</span>
-                            </div>
-                            <p class="text-white/90 text-lg font-medium">Instant confirmation</p>
-                        </div>
-                        <div class="flex items-center gap-4 group">
-                            <div class="h-6 w-6 rounded-full border border-primary/50 flex items-center justify-center bg-primary/10">
-                                <span class="material-symbols-outlined text-primary text-sm" data-icon="check">check</span>
-                            </div>
-                            <p class="text-white/90 text-lg font-medium">24/7 premium support</p>
-                        </div>
-                        <div class="flex items-center gap-4 group">
-                            <div class="h-6 w-6 rounded-full border border-primary/50 flex items-center justify-center bg-primary/10">
-                                <span class="material-symbols-outlined text-primary text-sm" data-icon="check">check</span>
-                            </div>
-                            <p class="text-white/90 text-lg font-medium">Best price guarantee</p>
-                        </div>
-                    </div>
-                </div>
-                <!-- Bottom: Stats Row -->
-                <div class="flex items-center gap-12 pt-10 border-t border-white/10">
-                    <div class="flex items-center gap-12 pt-10 border-t border-white/10">
-                    <div class="flex flex-col">
-                        <span class="text-primary text-3xl font-bold">50K+</span>
-                        <span class="text-white/60 text-sm font-medium uppercase tracking-wider">Customers</span>
-                    </div>
-                    <div class="w-px h-10 bg-white/10"></div>
-                    <div class="flex flex-col">
-                        <span class="text-primary text-3xl font-bold">4.9/5</span>
-                        <span class="text-white/60 text-sm font-medium uppercase tracking-wider">Rating</span>
-                    </div>
-                    <div class="w-px h-10 bg-white/10"></div>
-                    <div class="flex flex-col">
-                        <span class="text-primary text-3xl font-bold">500+</span>
-                        <span class="text-white/60 text-sm font-medium uppercase tracking-wider">Vehicles</span>
-                    </div>
-                </div>
+            <div class="relative z-10 flex items-center gap-4">
+                <a asp-controller="Home" asp-action="Index" class="group flex items-center justify-center w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/10 transition-all duration-300">
+                    <span class="material-icons-outlined text-white group-hover:-translate-x-1 transition-transform">arrow_back</span>
+                </a>
+                <h1 class="text-primary luxury-text text-3xl font-bold tracking-tight">LB Drive</h1>
             </div>
-        </section>
-
-        <!-- Right Section: Authentication Form -->
-        <section class="flex-1 flex flex-col justify-center items-center px-4 sm:px-16 xl:px-24 py-12 lg:bg-gradient-to-br lg:from-[#131517] lg:to-[#050607]">
-            
-            <div class="w-full max-w-[440px] glass-card lg:glass-card-none lg:bg-transparent lg:border-none lg:shadow-none p-8 lg:p-0 rounded-2xl lg:rounded-none">
-                
-                <!-- Mobile Logo -->
-                <div class="lg:hidden flex justify-center mb-8">
-                    <div class="size-12 bg-primary flex items-center justify-center rounded-xl shadow-lg shadow-primary/20">
-                        <span class="material-symbols-outlined text-background-dark text-3xl" data-icon="directions_car">directions_car</span>
-                    </div>
-                </div>
-
-                <!-- Form Header -->
-                <div class="mb-8 text-center lg:text-left">
-                    <h2 class="text-3xl font-bold text-white mb-2">Welcome Back</h2>
-                    <p class="text-neutral-400">Enter your details to access your account.</p>
-                </div>
-                
-                @await Html.PartialAsync("_PopupNotifications")
-                
-                <!-- Login Form -->
-                <form id="account" method="post" class="space-y-5">
-                    <div asp-validation-summary="ModelOnly" class="validation-summary-errors text-danger text-center lg:text-left" role="alert"></div>
-                    
-                    <!-- Email Address -->
-                    <div class="space-y-1.5">
-                        <label class="block text-xs font-bold text-neutral-400 uppercase tracking-wider pl-1" asp-for="Input.Email">
-                            Email / Username
-                        </label>
-                        <div class="relative group">
-                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                <span class="material-symbols-outlined text-neutral-500 group-focus-within:text-primary transition-colors text-[20px]">mail</span>
-                            </div>
-                            <input asp-for="Input.Email" 
-                                class="w-full bg-white/5 border border-white/5 focus:border-primary/50 rounded-xl pl-11 pr-4 py-3.5 text-white placeholder:text-neutral-600 focus:ring-1 focus:ring-primary/50 focus:bg-white/10 transition-all duration-300" 
-                                placeholder="name@example.com" autocomplete="username" aria-required="true" />
-                        </div>
-                        <span asp-validation-for="Input.Email" class="text-danger text-xs pl-1"></span>
-                    </div>
-
-                    <!-- Password -->
-                    <div class="space-y-1.5">
-                        <div class="flex justify-between items-center pl-1 pr-1">
-                            <label class="block text-xs font-bold text-neutral-400 uppercase tracking-wider" asp-for="Input.Password">
-                                Password
-                            </label>
-                            <a class="text-xs font-semibold text-primary hover:text-primary-hover hover:underline transition-all" asp-page="./ForgotPassword">Forgot Password?</a>
-                        </div>
-                        <div class="relative group">
-                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                <span class="material-symbols-outlined text-neutral-500 group-focus-within:text-primary transition-colors text-[20px]">lock</span>
-                            </div>
-                            <input asp-for="Input.Password" 
-                                class="w-full bg-white/5 border border-white/5 focus:border-primary/50 rounded-xl pl-11 pr-12 py-3.5 text-white placeholder:text-neutral-600 focus:ring-1 focus:ring-primary/50 focus:bg-white/10 transition-all duration-300" 
-                                placeholder="••••••••" autocomplete="current-password" aria-required="true" id="password_input" />
-                            <button class="absolute right-0 inset-y-0 pr-4 flex items-center text-neutral-500 hover:text-white transition-colors" type="button" onclick="togglePassword()">
-                                <span class="material-symbols-outlined text-[20px]" data-icon="visibility" id="password_icon">visibility</span>
-                            </button>
-                        </div>
-                        <span asp-validation-for="Input.Password" class="text-danger text-xs pl-1"></span>
-                    </div>
-
-                    <!-- Remember Me -->
-                    <div class="flex items-center gap-3 pl-1">
-                        <input asp-for="Input.RememberMe" class="h-4 w-4 rounded border-neutral-700 bg-white/5 text-primary focus:ring-primary/50 focus:ring-offset-0 transition-all cursor-pointer" />
-                        <label class="text-sm text-neutral-400 cursor-pointer select-none" asp-for="Input.RememberMe">Remember me for 30 days</label>
-                    </div>
-
-                    <!-- Submit Button -->
-                    <button type="submit" class="w-full bg-primary hover:bg-primary-hover text-background-dark font-bold text-lg py-3.5 rounded-xl transition-all active:scale-[0.98] shadow-lg shadow-primary/20 hover:shadow-primary/30 mt-2">
-                        Sign In
-                    </button>
-                </form>
-
-                <!-- Divider -->
-                <div class="relative my-8">
-                    <div class="absolute inset-0 flex items-center">
-                        <div class="w-full border-t border-white/10"></div>
-                    </div>
-                    <div class="relative flex justify-center text-xs uppercase">
-                        <span class="bg-transparent lg:bg-[#0e0f11] px-4 text-neutral-500 font-bold tracking-widest backdrop-blur-sm lg:backdrop-blur-none">Or continue with</span>
-                    </div>
-                </div>
-
-                <!-- Social Login Buttons -->
-                @if (Model.ExternalLogins != null && Model.ExternalLogins.Count > 0)
-                {
-                    <form id="external-account" asp-page="./ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post" class="grid grid-cols-2 gap-3">
-                        @foreach (var provider in Model.ExternalLogins)
-                        {
-                            <button type="submit" name="provider" value="@provider.Name" title="Log in using your @provider.DisplayName account"
-                                    class="flex items-center justify-center gap-3 bg-white/5 border border-white/10 py-3 rounded-xl hover:bg-white/10 hover:border-white/20 transition-all group shadow-sm">
-                                @if (provider.Name == "Google")
-                                {
-                                    <svg class="h-5 w-5" viewBox="0 0 24 24">
-                                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path>
-                                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"></path>
-                                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.26.81-.58z" fill="#FBBC05"></path>
-                                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 12-4.53z" fill="#EA4335"></path>
-                                    </svg>
-                                }
-                                else if (provider.Name == "Facebook")
-                                {
-                                    <svg class="h-5 w-5 text-[#1877F2] fill-current" viewBox="0 0 24 24">
-                                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"></path>
-                                    </svg>
-                                }
-                                <span class="text-sm font-medium text-white group-hover:text-primary transition-colors">@provider.DisplayName</span>
-                            </button>
-                        }
-                    </form>
-                }
-
-                <!-- Footer Link -->
-                <p class="mt-8 text-center text-neutral-400 text-sm">
-                    Don't have an account? 
-                    <a class="text-primary font-bold hover:text-primary-hover hover:underline" asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl">Sign Up Now</a>
+            <div class="relative z-10 max-w-lg">
+                <div class="w-16 h-1 bg-primary mb-8"></div>
+                <p class="luxury-text text-white text-5xl leading-tight mb-4">
+                    "Drive your dreams, arrive in style."
+                </p>
+                <p class="text-gray-400 text-lg font-light tracking-wide italic">
+                    — Where elegance meets the open road
                 </p>
             </div>
-        </section>
-    </main>
+        </div>
+        
+        <!-- Right Section (Form) -->
+        <div class="w-full lg:w-1/2 flex items-center justify-center p-6 bg-background-light dark:bg-background-dark relative">
+             <!-- Mobile Back Button removed from absolute position -->
 
+            <div class="w-full max-w-md">
+                <div class="lg:hidden text-center mb-10">
+                    <h1 class="text-primary luxury-text text-4xl font-bold"></h1>
+                </div>
+                
+                <div class="bg-white dark:bg-card-dark p-8 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 my-10">
+                    <header class="flex items-center justify-center gap-4 mb-10">
+                        <!-- Mobile Back Button (Integrated) -->
+                        <a asp-controller="Home" asp-action="Index" class="lg:hidden group flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-300">
+                             <span class="material-icons-outlined text-gray-600 dark:text-gray-300 group-hover:-translate-x-1 transition-transform">arrow_back</span>
+                        </a>
+                        <h2 class="text-primary luxury-text text-4xl font-bold">Sign In</h2>
+                    </header>
+                    
+                    <form id="account" method="post" class="space-y-6">
+                        <!-- Validation Summary removed to prevent duplicate text with popups -->
+
+                        <!-- Username/Email -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" asp-for="Input.Email">Username</label>
+                            <div class="relative group">
+                                <span class="material-icons-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors">person</span>
+                                <input asp-for="Input.Email" class="w-full pl-12 pr-4 py-4 bg-gray-50 dark:bg-input-dark border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all" placeholder="Enter your username" autocomplete="username" aria-required="true" />
+                            </div>
+                            <span asp-validation-for="Input.Email" class="text-red-500 text-xs mt-1 block"></span>
+                        </div>
+                        
+                        <!-- Password -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" asp-for="Input.Password">Password</label>
+                            <div class="relative group">
+                                <span class="material-icons-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors">lock</span>
+                                <input asp-for="Input.Password" id="password-input" class="w-full pl-12 pr-12 py-4 bg-gray-50 dark:bg-input-dark border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all" placeholder="Enter your password" autocomplete="current-password" aria-required="true" />
+                                <button class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200" type="button" onclick="togglePassword()">
+                                    <span class="material-icons-outlined text-[20px]" id="password-icon">visibility</span>
+                                </button>
+                            </div>
+                            <span asp-validation-for="Input.Password" class="text-red-500 text-xs mt-1 block"></span>
+                            
+                            <div class="text-right mt-3">
+                                <a class="text-sm text-primary hover:text-yellow-600 font-medium transition-colors" asp-page="./ForgotPassword">Forgot password?</a>
+                            </div>
+                        </div>
+
+                        <button class="w-full py-4 bg-primary text-background-dark font-bold rounded-xl glow-button hover:bg-yellow-500 transition-all duration-300 transform active:scale-[0.98]" type="submit">
+                            Sign In
+                        </button>
+                    </form>
+                    
+                    <div class="relative flex items-center justify-center my-10">
+                        <div class="flex-grow border-t border-gray-200 dark:border-gray-800"></div>
+                        <span class="mx-4 text-[10px] font-bold tracking-[0.2em] text-gray-400 uppercase">Or continue with</span>
+                        <div class="flex-grow border-t border-gray-200 dark:border-gray-800"></div>
+                    </div>
+                    
+                    @if (Model.ExternalLogins != null && Model.ExternalLogins.Count > 0)
+                    {
+                        <form id="external-account" asp-page="./ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post" class="grid grid-cols-2 gap-4">
+                            @foreach (var provider in Model.ExternalLogins)
+                            {
+                                <button type="submit" name="provider" value="@provider.Name" title="Log in using your @provider.DisplayName account"
+                                        class="flex items-center justify-center gap-3 py-3 px-4 bg-gray-50 dark:bg-input-dark border border-gray-200 dark:border-gray-800 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-all">
+                                    @if (provider.Name == "Google")
+                                    {
+                                        <svg class="w-5 h-5" viewBox="0 0 24 24">
+                                            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path>
+                                            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"></path>
+                                            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"></path>
+                                            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"></path>
+                                        </svg>
+                                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Google</span>
+                                    }
+                                    else if (provider.Name == "Facebook")
+                                    {
+                                        <svg class="w-5 h-5" fill="#1877F2" viewBox="0 0 24 24">
+                                            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"></path>
+                                        </svg>
+                                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Facebook</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">@provider.DisplayName</span>
+                                    }
+                                </button>
+                            }
+                        </form>
+                    }
+                    
+                    <div class="mt-12 text-center">
+                        <p class="text-gray-500 dark:text-gray-400 text-sm">
+                            Don't have an account? 
+                            <a class="text-primary hover:text-yellow-600 font-semibold ml-1 transition-colors" asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl">Create account</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="fixed bottom-6 right-6 z-50">
+        <button class="p-3 bg-white dark:bg-card-dark text-gray-800 dark:text-white rounded-full shadow-lg border border-gray-200 dark:border-gray-800 hover:scale-110 transition-transform" onclick="document.documentElement.classList.toggle('dark')">
+            <span class="material-icons-outlined block dark:hidden">dark_mode</span>
+            <span class="material-icons-outlined hidden dark:block">light_mode</span>
+        </button>
+    </div>
+
+    <!-- Scripts -->
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/site.js"></script>
     <partial name="_ValidationScriptsPartial" />
-    @if (TempData["LoginError"] != null)
-    {
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                if (typeof showPopup === 'function') {
-                    showPopup('@Html.Raw(TempData["LoginError"])', 'error');
-                }
-            });
-        </script>
-    }
+
     <script>
         function togglePassword() {
-            var input = document.getElementById("password_input");
-            var icon = document.getElementById("password_icon");
+            var input = document.getElementById("password-input");
+            var icon = document.getElementById("password-icon");
             if (input.type === "password") {
                 input.type = "text";
                 icon.textContent = "visibility_off";
-                icon.setAttribute("data-icon", "visibility_off");
             } else {
                 input.type = "password";
                 icon.textContent = "visibility";
-                icon.setAttribute("data-icon", "visibility");
             }
         }
+
+        $(document).ready(function () {
+            var loginError = '@TempData["LoginError"]';
+            if (loginError) {
+                showPopup(loginError, 'error');
+            }
+            
+            var genericError = '@TempData["Error"]';
+            if (genericError) {
+                showPopup(genericError, 'error');
+            }
+            
+            var successMessage = '@TempData["Success"]';
+            if (successMessage) {
+                showPopup(successMessage, 'success');
+            }
+        });
     </script>
 </body>
 </html>
