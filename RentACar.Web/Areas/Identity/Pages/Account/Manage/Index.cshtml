@@ -331,7 +331,6 @@
                             bool isCustomer = User.IsInRole("Customer");
                             if (isCustomer)
                             {
-                                baseNavItems.Add(new { Id = "payment-methods", Icon = "credit_card", Label = "Saved Cards" });
                                 baseNavItems.Add(new { Id = "identity-verification", Icon = "verified_user", Label = "Verification" });
                             }
                         }
@@ -942,46 +941,6 @@
         </div>
     </main>
 
-    <!-- View Card Details Modal -->
-    <div id="viewCardModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-black/80 backdrop-blur-md transition-opacity duration-300" id="viewCardBackdrop"></div>
-        <div class="w-full max-w-md bg-[#1a1a1a] rounded-3xl border border-white/10 shadow-2xl relative z-10 overflow-hidden">
-            <div class="p-8">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-white font-bold text-lg">Card Preview</h3>
-                    <button id="btnCloseViewCard" class="size-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/50 hover:text-white transition-colors border-0 outline-none">
-                        <span class="material-symbols-outlined text-lg">close</span>
-                    </button>
-                </div>
-
-                <div class="relative w-full aspect-[1.586/1] rounded-2xl overflow-hidden shadow-2xl mb-6">
-                    <div class="absolute inset-0 bg-gradient-to-bl from-zinc-800 to-black p-6 flex flex-col justify-between border border-white/10">
-                        <div class="flex justify-between items-start">
-                            <span class="material-symbols-outlined text-4xl text-white/80">contactless</span>
-                            <span class="text-[#d4af35] font-bold italic tracking-wide">PREMIUM</span>
-                        </div>
-                        <div class="space-y-4">
-                            <div class="text-white font-mono text-xl sm:text-2xl tracking-widest" id="viewCardNumber">0000 0000 0000 0000</div>
-                            <div class="flex justify-between items-end">
-                                <div>
-                                    <div class="text-[9px] uppercase text-white/30 font-bold mb-0.5">Card Holder</div>
-                                    <div class="text-white font-medium tracking-wider uppercase text-sm truncate max-w-[150px]" id="viewCardHolder">NAME SURNAME</div>
-                                </div>
-                                <div class="text-right">
-                                    <div class="text-[9px] uppercase text-white/30 font-bold mb-0.5">Expires</div>
-                                    <div class="text-white font-medium tracking-widest text-sm" id="viewCardExpiry">MM/YY</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-black/30 rounded-xl p-4 border border-white/5 flex justify-between items-center">
-                    <span class="text-sm font-medium text-white/50">Security Code (CVV)</span>
-                    <span class="text-white font-mono font-bold tracking-[0.2em] text-lg text-[#d4af35]" id="viewCardCvv">•••</span>
-                </div>
-            </div>
-        </div>
-    </div>
+    
 
      </div>

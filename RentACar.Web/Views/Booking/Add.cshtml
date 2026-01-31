@@ -130,7 +130,14 @@
                 <!-- Car Card -->
                 <div class="bg-[#16181a] border border-[#262626] rounded-3xl overflow-hidden shadow-2xl">
                     <div class="aspect-video relative bg-[#0a0a0a]">
-                        <img src="@carImg" class="w-full h-full object-cover" />
+                        <!-- Skeleton placeholder -->
+                        <div id="imgSkeleton" class="absolute inset-0 bg-gradient-to-r from-[#1a1a1a] via-[#262626] to-[#1a1a1a] animate-pulse"></div>
+                        <!-- Lazy loaded image -->
+                        <img src="@carImg" 
+                             loading="lazy" 
+                             decoding="async"
+                             class="w-full h-full object-cover opacity-0 transition-opacity duration-500" 
+                             onload="this.classList.remove('opacity-0'); document.getElementById('imgSkeleton').classList.add('hidden');" />
                         <div class="absolute inset-0 bg-gradient-to-t from-[#16181a] to-transparent opacity-80"></div>
                         <div class="absolute bottom-4 left-6">
                             <h3 class="text-2xl font-black text-white">@Model.CarModel</h3>
