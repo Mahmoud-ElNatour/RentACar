@@ -373,6 +373,7 @@ namespace RentACar.Application.Managers
                 {
                     throw new InvalidOperationException("Email address is already registered to another user.");
                 }
+                
 
                 var existingByUsername = await _userManager.FindByNameAsync(dto.username);
                 if (existingByUsername != null && existingByUsername.Id != user.Id)
