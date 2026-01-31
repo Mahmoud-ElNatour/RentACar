@@ -124,8 +124,10 @@ jobs:
           $migName = "${{ env.MIGRATION_PREFIX }}_$stamp"
 
           $output = & dotnet tool run dotnet-ef migrations add $migName `
-            --project "${{ env.INFRA_CSPROJ }}" `
-            --startup-project "${{ env.WEB_CSPROJ }}" 2>&1
+          --context RentACarDbContext `
+          --project "${{ env.INFRA_CSPROJ }}" `
+          --startup-project "${{ env.WEB_CSPROJ }}"
+           2>&1
 
           $output | Out-String | Write-Host
 
@@ -152,9 +154,11 @@ jobs:
       - name: Update Database
         shell: powershell
         run: |
-          dotnet tool run dotnet-ef database update `
-            --project "${{ env.INFRA_CSPROJ }}" `
-            --startup-project "${{ env.WEB_CSPROJ }}"
+         dotnet tool run dotnet-ef database update `
+          --context RentACarDbContext `
+          --project "${{ env.INFRA_CSPROJ }}" `
+          --startup-project "${{ env.WEB_CSPROJ }}"
+
 
       # ---------------------------
       # Publish
