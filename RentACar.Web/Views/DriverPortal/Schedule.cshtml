@@ -471,10 +471,26 @@
     function getStatusClass(status) {
         if (!status) return 'status-default';
         const normalized = status.toLowerCase();
-        if (normalized.includes('confirm')) return 'status-confirmed';
+        if (normalized.includes('completed')) return 'status-confirmed';
         if (normalized.includes('cancel')) return 'status-cancelled';
-        if (normalized.includes('pending') || normalized.includes('schedule')) return 'status-pending';
+        if (normalized.includes('on the way') || normalized.includes('ontheway') || normalized.includes('arrived') || normalized.includes('intrip') || normalized.includes('in trip')) {
+            return 'status-confirmed';
+        }
+        if (normalized.includes('pending') || normalized.includes('schedule') || normalized.includes('assigned')) return 'status-pending';
         return 'status-default';
+    }
+
+    function formatStatusLabel(status) {
+        if (!status) return status;
+        const normalized = status.toLowerCase();
+        if (normalized === 'ontheway') return 'On the way';
+        if (normalized === 'intrip') return 'In Trip';
+        return status;
+    }
+
+    function getDisplayStatus(booking) {
+        const status = booking.tripStatus || booking.bookingStatus || 'Pending';
+        return formatStatusLabel(status);
     }
 
     function getBookingsForDate(date) {
@@ -588,7 +604,7 @@
                         <p class="text-xs text-white/50">${booking.customerName || 'Customer'} • ${booking.pickupLocationLabel || 'Pickup location'}</p>
                         <p class="text-xs text-white/40">${booking.startDate} → ${booking.endDate}</p>
                     </div>
-                    <span class="status-badge ${getStatusClass(booking.bookingStatus)}">${booking.bookingStatus || 'Pending'}</span>
+                    <span class="status-badge ${getStatusClass(getDisplayStatus(booking))}">${getDisplayStatus(booking)}</span>
                 </div>
             `;
 
@@ -599,8 +615,8 @@
 
     function openBookingSheet(booking) {
         bookingSheetTitle.textContent = `Booking #${booking.bookingId}`;
-        bookingSheetStatus.textContent = booking.bookingStatus || 'Pending';
-        bookingSheetStatus.className = `status-badge ${getStatusClass(booking.bookingStatus)}`;
+        bookingSheetStatus.textContent = getDisplayStatus(booking);
+        bookingSheetStatus.className = `status-badge ${getStatusClass(getDisplayStatus(booking))}`;
         bookingSheetCustomer.textContent = booking.customerName || 'Customer';
         bookingSheetFrom.textContent = booking.pickupLocationLabel || 'Pickup location';
         bookingSheetTo.textContent = 'Dropoff not specified';

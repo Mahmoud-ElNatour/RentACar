@@ -28,6 +28,7 @@ public class DriverBookingDetailsViewModel
 {
     public int BookingId { get; set; }
     public string BookingStatus { get; set; } = string.Empty;
+    public string TripStatus { get; set; } = string.Empty;
     public string CarName { get; set; } = string.Empty;
     public string CarPlate { get; set; } = string.Empty;
     public string CustomerName { get; set; } = string.Empty;
@@ -51,6 +52,7 @@ public class DriverPortalBookingViewModel
     public DateOnly StartDate { get; set; }
     public DateOnly EndDate { get; set; }
     public string BookingStatus { get; set; } = string.Empty;
+    public string? TripStatus { get; set; }
 }
 
 public class DriverScheduleDayViewModel
@@ -73,6 +75,7 @@ public class DriverScheduleBookingItemViewModel
     public DateTime? PickupDateTime { get; set; }
     public string PickupLocationLabel { get; set; } = string.Empty;
     public string BookingStatus { get; set; } = string.Empty;
+    public string? TripStatus { get; set; }
 }
 
 public class DriverAvailabilityItemViewModel

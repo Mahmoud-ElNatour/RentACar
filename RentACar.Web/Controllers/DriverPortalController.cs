@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
@@ -18,7 +19,7 @@ public class DriverPortalController : Controller
     private readonly DriverManager _driverManager;
     private readonly BookingManager _bookingManager;
     private readonly CustomerManager _customerManager;
-    private readonly CarManager _carManager;
+    private readonly TripManager _tripManager;
     private readonly UserManager<IdentityUser> _userManager;
     private readonly RentACarDbContext _dbContext;
     private readonly IConfiguration _config;
@@ -27,7 +28,7 @@ public class DriverPortalController : Controller
         DriverManager driverManager,
         BookingManager bookingManager,
         CustomerManager customerManager,
-        CarManager carManager,
+        TripManager tripManager,
         UserManager<IdentityUser> userManager,
         RentACarDbContext dbContext,
         IConfiguration config)
@@ -35,7 +36,7 @@ public class DriverPortalController : Controller
         _driverManager = driverManager;
         _bookingManager = bookingManager;
         _customerManager = customerManager;
-        _carManager = carManager;
+        _tripManager = tripManager;
         _userManager = userManager;
         _dbContext = dbContext;
         _config = config;
@@ -53,6 +54,9 @@ public class DriverPortalController : Controller
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
         var todayBookings = await (from booking in _dbContext.Bookings.AsNoTracking()
+            join trip in _dbContext.Trips.AsNoTracking()
+                on booking.BookingId equals trip.BookingId into tripGroup
+            from trip in tripGroup.DefaultIfEmpty()
             join customer in _dbContext.Customers.AsNoTracking()
                 on booking.CustomerId equals customer.UserId into customerGroup
             from customer in customerGroup.DefaultIfEmpty()
@@ -69,7 +73,8 @@ public class DriverPortalController : Controller
                 PickupLongitude = booking.PickupLongitude,
                 StartDate = booking.Startdate,
                 EndDate = booking.Enddate,
-                BookingStatus = booking.BookingStatus ?? "Scheduled"
+                BookingStatus = booking.BookingStatus ?? "Scheduled",
+                TripStatus = trip != null ? trip.TripStatus.ToString() : null
             }).ToListAsync();
 
         var model = new DriverDashboardViewModel
@@ -102,6 +107,8 @@ public class DriverPortalController : Controller
 
         var availability = await _driverManager.GetDriverAvailabilityAsync(driver.DriverId);
         var bookings = await _bookingManager.GetBookingsByDriverIdAsync(driver.DriverId);
+        var trips = await _tripManager.GetTripsByDriverIdAsync(driver.DriverId);
+        var tripLookup = trips.ToDictionary(t => t.BookingId, t => t.TripStatus, EqualityComparer<int>.Default);
 
         var availabilityItems = availability.Select(a => new DriverAvailabilityItemViewModel
         {
@@ -124,7 +131,8 @@ public class DriverPortalController : Controller
                 EndDate = booking.Enddate,
                 PickupDateTime = booking.PickupDateTime,
                 PickupLocationLabel = booking.PickupLocationLabel ?? booking.PickupLocationName ?? booking.PickupAddress ?? "Pickup location",
-                BookingStatus = booking.BookingStatus ?? "Pending"
+                BookingStatus = booking.BookingStatus ?? "Pending",
+                TripStatus = tripLookup.TryGetValue(booking.BookingId, out var tripStatus) ? tripStatus : null
             });
         }
 
@@ -171,7 +179,8 @@ public class DriverPortalController : Controller
                     PickupLocationLabel = b.PickupLocationLabel,
                     StartDate = b.StartDate,
                     EndDate = b.EndDate,
-                    BookingStatus = b.BookingStatus
+                    BookingStatus = b.BookingStatus,
+                    TripStatus = b.TripStatus
                 })
                 .ToList()
         };
@@ -205,32 +214,31 @@ public class DriverPortalController : Controller
             return Forbid();
         }
 
-        var booking = await _bookingManager.GetBookingByIdAsync(id);
+        var booking = await _dbContext.Bookings.AsNoTracking()
+            .Include(b => b.Trip)
+            .Include(b => b.Car)
+            .Include(b => b.Customer)
+            .FirstOrDefaultAsync(b => b.BookingId == id);
         if (booking == null || booking.DriverId != driver.DriverId)
         {
             return NotFound();
         }
 
-        var car = await _carManager.GetCarByIdAsync(booking.CarId);
-        var customer = await _customerManager.GetCustomerById(booking.CustomerId);
-
-        var lastPing = await _dbContext.DriverLocationPings.AsNoTracking()
-            .Where(p => p.BookingId == booking.BookingId)
-            .OrderByDescending(p => p.CreatedAt)
-            .FirstOrDefaultAsync();
+        var tripStatus = booking.Trip?.TripStatus.ToString() ?? "Assigned";
 
         var model = new DriverBookingDetailsViewModel
         {
             BookingId = booking.BookingId,
-            BookingStatus = booking.BookingStatus,
-            CarName = car?.ModelName ?? "Vehicle",
-            CarPlate = car?.PlateNumber ?? "N/A",
-            CustomerName = customer?.Name ?? "Customer",
+            BookingStatus = booking.BookingStatus ?? string.Empty,
+            TripStatus = tripStatus,
+            CarName = booking.Car?.ModelName ?? "Vehicle",
+            CarPlate = booking.Car?.PlateNumber ?? "N/A",
+            CustomerName = booking.Customer?.Name ?? "Customer",
             PickupLocationLabel = booking.PickupLocationLabel ?? booking.PickupAddress ?? "Pickup pin",
             PickupLatitude = booking.PickupLatitude,
             PickupLongitude = booking.PickupLongitude,
-            DriverLatitude = lastPing != null ? (double?)lastPing.Latitude : null,
-            DriverLongitude = lastPing != null ? (double?)lastPing.Longitude : null,
+            DriverLatitude = booking.Trip?.LastDriverLatitude != null ? (double?)booking.Trip.LastDriverLatitude : null,
+            DriverLongitude = booking.Trip?.LastDriverLongitude != null ? (double?)booking.Trip.LastDriverLongitude : null,
             PickupDateTime = booking.PickupDateTime,
             DriverCode = driver.DriverCode,
             DriverId = driver.DriverId
@@ -242,6 +250,41 @@ public class DriverPortalController : Controller
         return View("~/Views/DriverPortal/BookingDetails.cshtml", model);
     }
 
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> StartTracking(int bookingId)
+    {
+        return await HandleTripActionAsync(bookingId, driverId => _tripManager.StartTrackingAsync(bookingId, driverId));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> MarkArrived(int bookingId)
+    {
+        return await HandleTripActionAsync(bookingId, driverId => _tripManager.MarkArrivedAsync(bookingId, driverId));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> StartTrip(int bookingId)
+    {
+        return await HandleTripActionAsync(bookingId, driverId => _tripManager.StartTripAsync(bookingId, driverId));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CompleteTrip(int bookingId)
+    {
+        return await HandleTripActionAsync(bookingId, driverId => _tripManager.CompleteTripAsync(bookingId, driverId));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CancelTrip(int bookingId, string? reason)
+    {
+        return await HandleTripActionAsync(bookingId, driverId => _tripManager.CancelTripAsync(bookingId, driverId, reason));
+    }
+
     private async Task<DriverDto?> GetCurrentDriverAsync()
     {
         var user = await _userManager.GetUserAsync(User);
@@ -251,6 +294,33 @@ public class DriverPortalController : Controller
         }
 
         return await _driverManager.GetDriverByUserIdAsync(user.Id);
+    }
+
+    private async Task<IActionResult> HandleTripActionAsync(int bookingId, Func<int, Task<TripActionResult>> action)
+    {
+        var driver = await GetCurrentDriverAsync();
+        if (driver == null)
+        {
+            return Forbid();
+        }
+
+        var result = await action(driver.DriverId);
+        if (!result.Success)
+        {
+            if (result.Error == TripActionError.Forbidden)
+            {
+                return Forbid();
+            }
+
+            if (result.Error == TripActionError.NotFound)
+            {
+                return NotFound();
+            }
+
+            TempData["TripError"] = result.Message;
+        }
+
+        return RedirectToAction(nameof(BookingDetails), new { id = bookingId });
     }
 
     private static bool IsAvailabilityOnDate(DriverAvailabilityItemViewModel availability, DateOnly date, DateTime dayStart, DateTime dayEnd)

@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
+using RentACar.Application.Managers;
 using RentACar.Core.Entities;
 using RentACar.Core.Repositories;
 using RentACar.Infrastructure.Data;
@@ -20,6 +21,7 @@ public class DriverLocationController : ControllerBase
 {
     private readonly IDriverRepository _driverRepository;
     private readonly IBookingRepository _bookingRepository;
+    private readonly TripManager _tripManager;
     private readonly RentACarDbContext _dbContext;
     private readonly IHubContext<DriverTrackingHub> _hubContext;
     private readonly UserManager<IdentityUser> _userManager;
@@ -27,12 +29,14 @@ public class DriverLocationController : ControllerBase
     public DriverLocationController(
         IDriverRepository driverRepository,
         IBookingRepository bookingRepository,
+        TripManager tripManager,
         RentACarDbContext dbContext,
         IHubContext<DriverTrackingHub> hubContext,
         UserManager<IdentityUser> userManager)
     {
         _driverRepository = driverRepository;
         _bookingRepository = bookingRepository;
+        _tripManager = tripManager;
         _dbContext = dbContext;
         _hubContext = hubContext;
         _userManager = userManager;
@@ -81,6 +85,17 @@ public class DriverLocationController : ControllerBase
             BatteryPercent = request.Battery,
             CreatedAt = DateTime.UtcNow
         };
+
+        var tripResult = await _tripManager.UpdateDriverLocationAsync(
+            booking.BookingId,
+            driver.DriverId,
+            request.Latitude,
+            request.Longitude,
+            DateTime.UtcNow);
+        if (!tripResult.Success)
+        {
+            return BadRequest(tripResult.Message);
+        }
 
         _dbContext.DriverLocationPings.Add(ping);
         await _dbContext.SaveChangesAsync();

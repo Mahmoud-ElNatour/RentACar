@@ -5,18 +5,24 @@
     var pickupLng = Model.PickupLongitude?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "";
     var driverLat = Model.DriverLatitude?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "";
     var driverLng = Model.DriverLongitude?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "";
-    var statusLabel = Model.BookingStatus?.ToLowerInvariant() switch
+    var statusLabel = Model.TripStatus?.ToLowerInvariant() switch
     {
+        "assigned" => "Assigned",
         "pending" => "Scheduled",
         "booked" => "Scheduled",
+        "ontheway" => "On the way",
         "on the way" => "On the way",
         "on_the_way" => "On the way",
         "arrived" => "Arrived",
+        "intrip" => "In Trip",
         "in trip" => "In Trip",
         "in_trip" => "In Trip",
         "completed" => "Completed",
-        _ => string.IsNullOrWhiteSpace(Model.BookingStatus) ? "Scheduled" : Model.BookingStatus
+        "cancelled" => "Cancelled",
+        _ => string.IsNullOrWhiteSpace(Model.TripStatus) ? "Assigned" : Model.TripStatus
     };
+    var normalizedTripStatus = (Model.TripStatus ?? "Assigned").Trim().ToLowerInvariant();
+    var isTerminal = normalizedTripStatus == "completed" || normalizedTripStatus == "cancelled";
 }
 <style>
     .glass-card {
@@ -131,11 +137,71 @@
                     Trip Actions
                 </h3>
                 <div class="flex flex-col gap-3">
-                    <button id="startTrip" class="h-12 rounded-xl bg-primary text-background-dark text-sm font-black tracking-wider shadow-[0_0_20px_-5px_#f4c325] hover:brightness-110 transition-all">Start Trip</button>
-                    <button id="arrivedButton" class="h-12 rounded-xl border border-white/10 text-white font-semibold hover:bg-white/10 transition-all">I Arrived</button>
-                    <button id="completeTrip" class="h-12 rounded-xl border border-green-500/40 text-green-400 font-semibold hover:bg-green-500/10 transition-all">Complete Trip</button>
+                    @if (normalizedTripStatus == "assigned")
+                    {
+                        <form method="post" asp-action="StartTracking">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="bookingId" value="@Model.BookingId" />
+                            <button class="h-12 w-full rounded-xl bg-primary text-background-dark text-sm font-black tracking-wider shadow-[0_0_20px_-5px_#f4c325] hover:brightness-110 transition-all">
+                                Start Tracking / On the way
+                            </button>
+                        </form>
+                    }
+                    else if (normalizedTripStatus == "ontheway" || normalizedTripStatus == "on_the_way" || normalizedTripStatus == "on the way")
+                    {
+                        <form method="post" asp-action="MarkArrived">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="bookingId" value="@Model.BookingId" />
+                            <button class="h-12 w-full rounded-xl border border-white/10 text-white font-semibold hover:bg-white/10 transition-all">I Arrived</button>
+                        </form>
+                    }
+                    else if (normalizedTripStatus == "arrived")
+                    {
+                        <form method="post" asp-action="StartTrip">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="bookingId" value="@Model.BookingId" />
+                            <button class="h-12 w-full rounded-xl bg-primary text-background-dark text-sm font-black tracking-wider shadow-[0_0_20px_-5px_#f4c325] hover:brightness-110 transition-all">
+                                Start Trip
+                            </button>
+                        </form>
+                    }
+                    else if (normalizedTripStatus == "intrip" || normalizedTripStatus == "in_trip" || normalizedTripStatus == "in trip")
+                    {
+                        <form method="post" asp-action="CompleteTrip">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="bookingId" value="@Model.BookingId" />
+                            <button class="h-12 w-full rounded-xl border border-green-500/40 text-green-400 font-semibold hover:bg-green-500/10 transition-all">Complete Trip</button>
+                        </form>
+                    }
+                    else if (normalizedTripStatus == "completed")
+                    {
+                        <button class="h-12 rounded-xl border border-green-500/40 text-green-400 font-semibold opacity-70 cursor-not-allowed" disabled>
+                            Trip Completed
+                        </button>
+                    }
+                    else if (normalizedTripStatus == "cancelled")
+                    {
+                        <button class="h-12 rounded-xl border border-red-500/40 text-red-400 font-semibold opacity-70 cursor-not-allowed" disabled>
+                            Trip Cancelled
+                        </button>
+                    }
                 </div>
-                <div id="statusMessage" class="text-xs text-white/60"></div>
+                @if (!isTerminal)
+                {
+                    <form method="post" asp-action="CancelTrip" class="mt-2">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="bookingId" value="@Model.BookingId" />
+                        <input type="text" name="reason" placeholder="Cancel reason (optional)"
+                               class="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/80 placeholder:text-white/40" />
+                        <button class="mt-2 h-10 w-full rounded-xl border border-red-500/30 text-red-400 font-semibold hover:bg-red-500/10 transition-all">
+                            Cancel Trip
+                        </button>
+                    </form>
+                }
+                @if (TempData["TripError"] != null)
+                {
+                    <div id="statusMessage" class="text-xs text-red-400">@TempData["TripError"]</div>
+                }
             </div>
         </div>
 
@@ -176,7 +242,6 @@
     const initialDriverLng = '@driverLng';
 
     const statusPill = document.getElementById('statusPill');
-    const statusMessage = document.getElementById('statusMessage');
     const trackingStatus = document.getElementById('trackingStatus');
     const trackingError = document.getElementById('trackingError');
     const retryTracking = document.getElementById('retryTracking');
@@ -199,26 +264,6 @@
     let pickupMarker;
     let directionsService;
     let directionsRenderer;
-
-    function formatStatusLabel(status) {
-        switch (status.toLowerCase()) {
-            case 'pending':
-            case 'booked':
-                return 'Scheduled';
-            case 'on the way':
-            case 'on_the_way':
-                return 'On the way';
-            case 'arrived':
-                return 'Arrived';
-            case 'in trip':
-            case 'in_trip':
-                return 'In Trip';
-            case 'completed':
-                return 'Completed';
-            default:
-                return status;
-        }
-    }
 
     function haversineMeters(a, b) {
         if (!a || !b) return 0;
@@ -353,24 +398,6 @@
         gpsSignal.textContent = 'GPS: Stopped';
     }
 
-    async function updateBookingStatus(status) {
-        const response = await fetch(`/api/driver/bookings/${bookingId}/status`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status })
-        });
-
-        if (!response.ok) {
-            const text = await response.text();
-            statusMessage.textContent = `Unable to update status: ${text}`;
-            return;
-        }
-
-        const label = formatStatusLabel(status);
-        statusPill.textContent = label;
-        statusMessage.textContent = `Status updated to ${label}.`;
-    }
-
     function updateDriverMarker(position) {
         if (!map || !driverMarker) return;
         driverMarker.setPosition(position);
@@ -446,19 +473,9 @@
     document.getElementById('stopTracking').addEventListener('click', stopWatching);
     retryTracking.addEventListener('click', startWatching);
 
-    document.getElementById('startTrip').addEventListener('click', async () => {
-        await updateBookingStatus('On the way');
-        startWatching();
-    });
-
-    document.getElementById('arrivedButton').addEventListener('click', async () => {
-        await updateBookingStatus('Arrived');
-    });
-
-    document.getElementById('completeTrip').addEventListener('click', async () => {
-        await updateBookingStatus('Completed');
-        stopWatching();
-    });
+    if (statusPill && statusPill.textContent.toLowerCase().includes('on the way')) {
+        updateTrackingStatus('Live: Tracking available');
+    }
 </script>
 
 @if (!string.IsNullOrWhiteSpace(ViewBag.GoogleMapsKey))
