@@ -20,10 +20,8 @@ jobs:
       PUBLISH_PATH: "C:\\deploy\\MyApp\\publish"
       APP_POOL: "MyAppPool"
 
-      # Adjust to your solution structure
       WEB_CSPROJ: ".\\RentACar.Web\\RentACar.Web.csproj"
       INFRA_CSPROJ: ".\\RentACar.Infrastructure\\RentACar.Infrastructure.csproj"
-
       MIGRATION_PREFIX: "Auto"
 
     steps:
@@ -32,7 +30,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Install .NET 8 to a writable folder (avoids Program Files permission issues)
       - name: Setup .NET 8 (no admin)
         uses: actions/setup-dotnet@v4
         with:
@@ -40,39 +37,31 @@ jobs:
         env:
           DOTNET_INSTALL_DIR: ${{ runner.temp }}\dotnet
 
-      # Put installed dotnet on PATH for all following steps
       - name: Add dotnet to PATH
         shell: powershell
         run: |
           Add-Content -Path $env:GITHUB_PATH -Value "${{ runner.temp }}\dotnet"
 
-      # Ensure DOTNET_ROOT points to the installed SDK
       - name: Set DOTNET_ROOT
         shell: powershell
         run: |
           "DOTNET_ROOT=${{ runner.temp }}\dotnet" | Out-File -FilePath $env:GITHUB_ENV -Append
 
-      # Diagnostics (now dotnet should be visible)
       - name: Check dotnet visible to runner
         shell: powershell
         run: |
           where.exe dotnet
           dotnet --info
 
-      # ✅ Reliable EF tooling: local tool manifest (avoids PATH/user issues on self-hosted runners)
+      # Reliable EF tooling (local tool manifest) - avoids PATH/user issues on self-hosted runners
       - name: Setup dotnet-ef (local tool)
         shell: powershell
         run: |
-          # Create tool-manifest if missing
           if (!(Test-Path ".config")) { New-Item -ItemType Directory -Path ".config" | Out-Null }
           if (!(Test-Path ".config\dotnet-tools.json")) {
             dotnet new tool-manifest
           }
-
-          # Install or update EF tool
           dotnet tool update dotnet-ef
-
-          # Show tools (debug)
           dotnet tool list
 
       - name: Restore
@@ -83,12 +72,12 @@ jobs:
         shell: powershell
         run: dotnet build -c Release --no-restore
 
-      # ✅ Auto-create migration (only if there are model changes), then commit/push it back to master
       - name: Auto Add Migration (only if there are changes)
         shell: powershell
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config core.autocrlf false
 
           $stamp = Get-Date -Format "yyyyMMdd_HHmmss"
           $migName = "${{ env.MIGRATION_PREFIX }}_$stamp"
@@ -100,20 +89,22 @@ jobs:
           $output | Out-String | Write-Host
 
           if ($output -match "No changes were found") {
-            Write-Host "✅ No model changes. Skipping migration commit."
+            Write-Host "No model changes. Skipping migration commit."
             exit 0
           }
+
+          Write-Host "Git status after migration:"
+          git status --porcelain
 
           if ((git status --porcelain).Length -gt 0) {
             git add .
             git commit -m "chore(db): auto migration $migName [skip ci]"
             git push
-            Write-Host "✅ Migration committed and pushed."
+            Write-Host "Migration committed and pushed."
           } else {
-            Write-Host "ℹ️ EF ran but no files changed. Skipping push."
+            Write-Host "EF ran but no files changed. Skipping push."
           }
 
-      # ✅ Update DB (no-op if nothing pending)
       - name: Update Database
         shell: powershell
         run: |
@@ -121,7 +112,6 @@ jobs:
             --project "${{ env.INFRA_CSPROJ }}" `
             --startup-project "${{ env.WEB_CSPROJ }}"
 
-      # Ensure publish folder exists
       - name: Ensure publish folder exists
         shell: powershell
         run: |
@@ -142,14 +132,12 @@ jobs:
           try { Stop-WebAppPool -Name $appPool } catch { }
           Start-Sleep -Seconds 2
 
-          # Put the site offline during file copy (prevents locked DLL issues)
           "offline" | Out-File (Join-Path $sitePath "app_offline.htm") -Encoding ASCII -Force
 
           robocopy $publishPath $sitePath /MIR /R:2 /W:2 /NFL /NDL /NP
           $rc = $LASTEXITCODE
           if ($rc -ge 8) { throw "Robocopy failed with exit code $rc" }
 
-          # Reset robocopy exit code so the step doesn't fail
           $global:LASTEXITCODE = 0
 
           Remove-Item (Join-Path $sitePath "app_offline.htm") -ErrorAction SilentlyContinue
