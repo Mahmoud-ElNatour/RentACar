@@ -2,20 +2,43 @@
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
+
 <style>
-    .calendar-shell {
-        background: rgba(255, 255, 255, 0.03);
-        backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.08);
+    .schedule-container {
+        max-width: 980px;
+        margin: 0 auto;
     }
 
-    .day-cell {
-        min-height: 110px;
-        border: 1px solid rgba(255, 255, 255, 0.04);
-        padding: 0.6rem;
-        position: relative;
+    .calendar-card {
+        background: linear-gradient(180deg, rgba(19, 26, 42, 0.95), rgba(12, 18, 32, 0.95));
+        border: 1px solid rgba(148, 163, 184, 0.15);
+        border-radius: 28px;
+        padding: 20px;
+        box-shadow: 0 25px 55px rgba(0, 0, 0, 0.35);
+    }
+
+    .calendar-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .calendar-nav {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .calendar-nav button {
+        width: 36px;
+        height: 36px;
+        border-radius: 999px;
+        background: rgba(148, 163, 184, 0.12);
+        color: #e2e8f0;
+        border: 1px solid rgba(148, 163, 184, 0.2);
         transition: all 0.2s ease;
-        cursor: pointer;
     }
 
     .calendar-nav button:hover,
@@ -106,16 +129,11 @@
         border-radius: 999px;
         background: rgba(251, 113, 133, 0.95);
     }
-</style>
 
-<div class="flex flex-col min-h-screen">
-    <div class="flex flex-1">
-        <main class="flex-1 flex">
-            <div class="flex-1 flex flex-col p-6 md:p-8 overflow-y-auto">
-                <div class="flex flex-col gap-1 mb-6">
-                    <h1 class="text-4xl font-black tracking-tight text-white">Driver Schedule</h1>
-                    <p class="text-white/50 text-base">Monthly overview for @Model.DriverName.</p>
-                </div>
+    .status-default {
+        background: rgba(148, 163, 184, 0.2);
+        color: rgba(226, 232, 240, 0.8);
+    }
 
     .legend span {
         display: inline-flex;
@@ -223,16 +241,10 @@
         letter-spacing: 0.08em;
     }
 
-                <div class="mt-6 flex items-center gap-4 text-xs text-white/60">
-                    <div class="flex items-center gap-2">
-                        <span class="availability-bar" style="width:24px;"></span>
-                        <span>Available</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <span class="booking-dot"></span>
-                        <span>Booking</span>
-                    </div>
-                </div>
+    @@media (max-width: 768px) {
+        .calendar-card {
+            padding: 16px;
+        }
 
                 <div class="mt-8">
                     <h3 class="text-lg font-bold text-white mb-3">Upcoming Bookings</h3>
@@ -264,6 +276,14 @@
                         <span class="material-symbols-outlined">chevron_right</span>
                     </button>
                 </div>
+                <div class="calendar-nav">
+                    <button type="button" id="prevMonth" aria-label="Previous month">
+                        <span class="material-symbols-outlined">chevron_left</span>
+                    </button>
+                    <button type="button" id="nextMonth" aria-label="Next month">
+                        <span class="material-symbols-outlined">chevron_right</span>
+                    </button>
+                </div>
             </div>
 
             <div class="calendar-weekdays">
@@ -283,10 +303,16 @@
             </div>
         </div>
 
+        <div class="mt-10">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
                 <div>
-                    <h3 class="text-sm font-bold text-white/40 uppercase tracking-widest mb-3">Bookings</h3>
-                    <div id="bookingList" class="space-y-3 text-sm text-white/70"></div>
+                    <h3 class="text-lg font-bold text-white">Upcoming Bookings</h3>
+                    <p class="text-sm text-white/50" id="bookingSubtitle">Showing the next 10 bookings.</p>
                 </div>
+                <button type="button" id="toggleUpcoming" class="toggle-pill">Show all upcoming</button>
+            </div>
+            <div id="upcomingList" class="space-y-3"></div>
+        </div>
 
         <div class="mt-10 calendar-card">
             <div class="flex items-center gap-2 mb-4">
@@ -316,6 +342,39 @@
                     Save Availability
                 </button>
             </form>
+        </div>
+    </div>
+</div>
+
+<div class="booking-sheet-overlay" id="bookingOverlay"></div>
+<div class="booking-sheet" id="bookingSheet" role="dialog" aria-modal="true" aria-labelledby="bookingSheetTitle">
+    <div class="flex items-start justify-between">
+        <div>
+            <p class="text-xs uppercase tracking-[0.3em] text-white/40">Booking</p>
+            <h3 class="text-xl font-bold text-white" id="bookingSheetTitle">Booking #</h3>
+        </div>
+        <button class="booking-sheet-close" type="button" id="closeBookingSheet" aria-label="Close booking details">
+            <span class="material-symbols-outlined">close</span>
+        </button>
+    </div>
+    <div class="mt-4 flex items-center gap-2">
+        <span id="bookingSheetStatus" class="status-badge status-default">Pending</span>
+        <span class="text-sm text-white/60" id="bookingSheetCustomer">Customer</span>
+    </div>
+
+    <div class="mt-6 space-y-4 text-sm text-white/70">
+        <div>
+            <p class="text-xs uppercase tracking-[0.25em] text-white/40">Trip</p>
+            <p class="text-white mt-2"><span class="text-white/50">From:</span> <span id="bookingSheetFrom">Pickup location</span></p>
+            <p class="text-white mt-1"><span class="text-white/50">To:</span> <span id="bookingSheetTo">Dropoff not specified</span></p>
+        </div>
+        <div>
+            <p class="text-xs uppercase tracking-[0.25em] text-white/40">Dates</p>
+            <p class="text-white mt-2" id="bookingSheetDates">Start → End</p>
+        </div>
+        <div>
+            <p class="text-xs uppercase tracking-[0.25em] text-white/40">Vehicle</p>
+            <p class="text-white mt-2" id="bookingSheetCar">Vehicle info not available</p>
         </div>
     </div>
 </div>
