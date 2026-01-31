@@ -52,7 +52,11 @@ namespace RentACar.Web.Controllers
                 return NotFound();
             }
 
+<<<<<<< HEAD
             return PartialView("~/Views/ControlPanel/Payment/_EditPayment.cshtml", payment);
+=======
+            return View("~/Views/ControlPanel/Payment/Edit.cshtml", payment);
+>>>>>>> Mahmoud-V3
         }
 
         [HttpGet("~/Payment/Details/{id}")]
@@ -65,6 +69,7 @@ namespace RentACar.Web.Controllers
                 return NotFound();
             }
 
+<<<<<<< HEAD
             return PartialView("~/Views/ControlPanel/Payment/_ViewPayment.cshtml", payment);
         }
 
@@ -91,6 +96,16 @@ namespace RentACar.Web.Controllers
         {
             var stats = await _paymentManager.GetPaymentStatsAsync(filter);
             return Ok(stats);
+=======
+            return View("~/Views/ControlPanel/Payment/Details.cshtml", payment);
+        }
+
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<PaymentDetailsDto>>> Get()
+        {
+            var payments = await _paymentManager.GetAllPaymentsWithDetailsAsync();
+            return Ok(payments);
+>>>>>>> Mahmoud-V3
         }
 
         [HttpGet("{id}")]
@@ -140,6 +155,7 @@ namespace RentACar.Web.Controllers
             return NoContent();
         }
 
+<<<<<<< HEAD
         [HttpGet("~/Payment/ApplyPromocode/{id}")]
         [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> ApplyPromocodeView(int id)
@@ -172,11 +188,35 @@ namespace RentACar.Web.Controllers
                  _logger.LogError(ex, "Error in ApplyPromocodeView");
                  return StatusCode(500, "Internal Server Error");
             }
+=======
+        [HttpGet("ApplyPromocode/{id}")]
+        [ApiExplorerSettings(IgnoreApi = true)]
+        public async Task<IActionResult> ApplyPromocodeView(int id)
+        {
+            var payment = await _paymentManager.GetPaymentDetailsByIdAsync(id);
+            if (payment == null) return NotFound();
+
+            // Get current user ID to fetch visible promocodes
+            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var allPromos = await _promocodeManager.GetAllPromocodesAsync(userId);
+            // Filter only active ones for the dropdown
+            var activePromos = allPromos.Where(p => p.IsActive).ToList();
+
+            ViewBag.PaymentId = id;
+            var model = new PromocodeDto(); // Using PromocodeDto as model for key selection, or just Vie
+                                            // Better to pass a ViewModel, but for speed I'll use ViewBag for the list and an empty DTO or similar.
+                                            // Actually, the partial probably expects a specific model?
+                                            // User said: "_applypromocode, contains form which have dropdown list contains all the names of the active promocodes ... and submit button"
+
+            ViewBag.ActivePromocodes = activePromos;
+            return PartialView("~/Views/ControlPanel/Payment/_ApplyPromocode.cshtml");
+>>>>>>> Mahmoud-V3
         }
 
         [HttpPost("ApplyPromocode/{id}")]
         public async Task<IActionResult> ApplyPromocode(int id, [FromForm] int promocodeId)
         {
+<<<<<<< HEAD
             try
             {
                 // Fetch payment to verify (Manager validation checks exists, but we can double check or just call)
@@ -190,6 +230,19 @@ namespace RentACar.Web.Controllers
                 {
                      return BadRequest("Failed to apply promocode (Invalid code or payment not found).");
                 }
+=======
+
+
+            try
+            {
+
+                // Fetch payment to verify existencece
+                var payment = await _paymentManager.GetPaymentDetailsByIdAsync(id);
+                if (payment == null) return NotFound();
+
+                var promo = await _promocodeManager.GetPromocodeByIdAsync(promocodeId);
+                return Ok(new { message = "Promocode applied successfully (Simulation)" });
+>>>>>>> Mahmoud-V3
             }
             catch (Exception ex)
             {

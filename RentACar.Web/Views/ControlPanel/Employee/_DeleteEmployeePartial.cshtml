@@ -1,4 +1,5 @@
 @model RentACar.Application.DTOs.EmployeeDto
+<<<<<<< HEAD
 
 <div class="modal fade" id="deleteEmployeeModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -46,10 +47,34 @@
     </div>
 </div>
 
+=======
+<div class="modal fade" id="deleteEmployeeModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content dark-modal">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete Employee</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="deleteEmployeeForm">
+                <div class="modal-body">
+                    <div class="alert alert-danger d-none" id="deleteEmployeeError" role="alert"></div>
+                    <input type="hidden" name="employeeId" value="@Model.EmployeeId" />
+                    <p>Are you sure you want to delete employee <strong>@Model.Name</strong>?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+>>>>>>> Mahmoud-V3
 <script>
     document.getElementById('deleteEmployeeForm').addEventListener('submit', async function (e) {
         e.preventDefault();
         const id = this.querySelector('[name="employeeId"]').value;
+<<<<<<< HEAD
         const errorAlert = document.getElementById('deleteEmployeeError');
         
         // Button Loading State
@@ -60,6 +85,11 @@
         
         if (errorAlert) {
             errorAlert.classList.add('hidden');
+=======
+        const errorAlert = this.querySelector('#deleteEmployeeError');
+        if (errorAlert) {
+            errorAlert.classList.add('d-none');
+>>>>>>> Mahmoud-V3
             errorAlert.textContent = '';
         }
 
@@ -67,6 +97,7 @@
             const response = await fetch('/api/Employee/' + id, { method: 'DELETE' });
 
             if (!response.ok) {
+<<<<<<< HEAD
                  let message = 'Failed to delete employee.';
                  try {
                     const payload = await response.json();
@@ -91,6 +122,42 @@
         } finally {
             btn.disabled = false;
             btn.textContent = originalText;
+=======
+                let message = 'An error occurred while deleting the employee.';
+                const contentType = response.headers.get('Content-Type') || '';
+
+                try {
+                    if (contentType.includes('application/json')) {
+                        const data = await response.json();
+                        if (data && typeof data === 'object') {
+                            message = data.message || message;
+                        }
+                    } else {
+                        const text = await response.text();
+                        if (text) {
+                            message = text;
+                        }
+                    }
+                } catch {
+                    // ignore
+                }
+
+                if (errorAlert) {
+                    errorAlert.textContent = message;
+                    errorAlert.classList.remove('d-none');
+                }
+                return;
+            }
+
+            const modalEl = this.closest('.modal');
+            bootstrap.Modal.getInstance(modalEl).hide();
+            if (window.loadEmployees) loadEmployees();
+        } catch (err) {
+            if (errorAlert) {
+                errorAlert.textContent = 'Unable to connect to the server. Please try again.';
+                errorAlert.classList.remove('d-none');
+            }
+>>>>>>> Mahmoud-V3
         }
     });
 </script>

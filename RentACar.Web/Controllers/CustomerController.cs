@@ -102,6 +102,7 @@ namespace RentACar.Web.Controllers
             return PartialView("~/Views/ControlPanel/Customer/_CustomerSummaryPartial.cshtml", customer);
         }
 
+<<<<<<< HEAD
 
         [HttpGet("GetFilteredCustomers")]
         [Authorize(Roles = "Admin,Employee")]
@@ -144,6 +145,28 @@ namespace RentACar.Web.Controllers
         }
 
 
+=======
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<CustomerListDto>>> Get([FromQuery] string? search, [FromQuery] bool? verified, [FromQuery] bool? active)
+        {
+            // Note: Since search is done in memory (Customers.Where...), we should ideally have a method in Manager that does filtering on DB or returns ListDto.
+            // But existing GetAllCustomers returns full DTOs.
+            // We need to use GetAllCustomersForListAsync but we lose the specific filtering logic if we don't move it to Manager or replicate it here.
+            // The existing code fetched ALL then filtered in memory. We can do the same with ListDto.
+            var customers = await _customerManager.GetAllCustomersForListAsync();
+            
+            if (!string.IsNullOrEmpty(search))
+            {
+                customers = customers.Where(c => (c.Name != null && c.Name.Contains(search, System.StringComparison.OrdinalIgnoreCase)) || c.UserId.ToString() == search).ToList();
+            }
+            if (verified.HasValue)
+                customers = customers.Where(c => c.IsVerified == verified.Value).ToList();
+            if (active.HasValue)
+                customers = customers.Where(c => c.Isactive == active.Value).ToList();
+            return Ok(customers);
+        }
+
+>>>>>>> Mahmoud-V3
         [HttpGet("Document/{id}/{type}")]
         [AllowAnonymous]
         public async Task<IActionResult> GetDocument(int id, string type)
@@ -242,6 +265,7 @@ namespace RentACar.Web.Controllers
             }
         }
 
+<<<<<<< HEAD
         [HttpGet("~/Customer/ResetPassword/{id}")]
 
         [ApiExplorerSettings(IgnoreApi = true)]
@@ -273,6 +297,34 @@ namespace RentACar.Web.Controllers
         public class ResetPasswordRequest
         {
             public string? NewPassword { get; set; }
+=======
+        [HttpPost("{id}/reset-password")]
+        public async Task<IActionResult> ResetPassword(int id)
+        {
+            var success = await _customerManager.ResetPassword(id, "C@c123456");
+            if (!success) return NotFound();
+            return NoContent();
+        }
+
+        [HttpPut("{id}/documents")]
+        public async Task<IActionResult> UpdateDocuments(int id, [FromBody] CustomerDocumentsDto dto)
+        {
+            await _customerManager.UpdateCustomerDocuments(id, dto);
+            return NoContent();
+        }
+        [HttpGet("~/Customer/Verify/{id}")]
+        public async Task<IActionResult> Verify(int id)
+        {
+            await _customerManager.UpdateVerificationStatus(id, true);
+            
+            // Return to the previous page (likely the dashboard or customer list)
+            var returnUrl = Request.Headers["Referer"].ToString();
+            if (string.IsNullOrEmpty(returnUrl))
+            {
+                return RedirectToAction("Index", "Dashboard");
+            }
+            return Redirect(returnUrl);
+>>>>>>> Mahmoud-V3
         }
 
         [HttpPost("{id}/resend-confirmation")]
@@ -297,7 +349,11 @@ namespace RentACar.Web.Controllers
                 values: new { area = "Identity", userId = userId, code = code },
                 protocol: Request.Scheme);
 
+<<<<<<< HEAD
             await _emailManager.SendConfirmationEmailAsync(user.Email ?? string.Empty, callbackUrl, customer.Name);
+=======
+            await _emailManager.SendConfirmationEmailAsync(user.Email, callbackUrl, customer.Name);
+>>>>>>> Mahmoud-V3
 
             return Ok(new { message = "Confirmation email sent successfully." });
         }

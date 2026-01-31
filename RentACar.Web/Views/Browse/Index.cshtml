@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 @model RentACar.Application.DTOs.BrowseViewDTO
 @{
     ViewData["Title"] = "Browse Cars";
@@ -454,3 +455,112 @@
     initDualSlider();
 </script>
 
+=======
+@using Microsoft.IdentityModel.Tokens
+@model RentACar.Application.DTOs.BrowseViewDTO
+
+@{
+    ViewData["Title"] = "Browse Cars";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="~/css/browse.css" />
+
+<div class="browse-container container my-4">
+    <h2 class="mb-4 text-white">Browse Cars</h2>
+
+    <form method="get" class="row g-3 mb-4 align-items-end">
+        <div class="col">
+            <label class="form-label text-white">Name</label>
+            <input type="text" name="name" class="form-control" placeholder="Model name" value="@Model.FilterName" />
+        </div>
+        <div class="col">
+            <label class="form-label text-white">Category</label>
+            <select name="categoryId" class="form-select">
+                <option value="">All Categories</option>
+                @foreach (var cat in Model.Categories)
+                {
+                    if (cat.CategoryId == Model.FilterCategoryId)
+                    {
+                        <option value="@cat.CategoryId" selected>@cat.Name</option>
+                    }
+                    else
+                    {
+                        <option value="@cat.CategoryId">@cat.Name</option>
+                    }
+                }
+            </select>
+        </div>
+        <div class="col">
+            <label class="form-label text-white">Max Price</label>
+            <input type="number" name="maxPrice" class="form-control" placeholder="Max" min="0" value="@(Model.FilterMaxPrice?.ToString() ?? "")" />
+        </div>
+        <div class="col">
+            <label class="form-label text-white">Start Date</label>
+            <input type="date" name="startDate" class="form-control" value="@(Model.FilterStartDate?.ToString("yyyy-MM-dd") ?? "")" />
+        </div>
+        <div class="col">
+            <label class="form-label text-white">End Date</label>
+            <input type="date" name="endDate" class="form-control" value="@(Model.FilterEndDate?.ToString("yyyy-MM-dd") ?? "")" />
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-primary">Filter</button>
+        </div>
+    </form>
+
+    <div class="mb-3">
+        <input type="text" id="localSearch" class="form-control search-input" placeholder="Search cars..." />
+    </div>
+
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-4">
+        @foreach (var car in Model.Cars.Where(c => c.IsAvailable))
+        {
+            string imgSrc;
+            if (car.CarImage != null && car.CarImage.Length > 0)
+            {
+                var base64 = Convert.ToBase64String(car.CarImage);
+                imgSrc = $"data:image;base64,{base64}";
+            }
+            else
+            {
+                imgSrc = Url.Content("~/images/default-car.png");
+            }
+
+            <div class="col car-card-container">
+                <div class="car-gallery-item">
+                    <img src="@imgSrc" alt="@car.ModelName" class="img-fluid">
+                    <div class="car-overlay">
+                        <div class="car-content">
+                            <h5>@car.ModelName (@car.ModelYear)</h5>
+                            <p class="mb-1">Plate #: @car.PlateNumber</p>
+                            <p class="mb-1">Price/Day: @(car.PricePerDay?.ToString("F2") ?? "N/A") $</p>
+                            <p class="mb-3">Category: @(string.IsNullOrEmpty(car.CategoryName) ? "N/A" : car.CategoryName)</p>
+                            @if (User.Identity.IsAuthenticated)
+                            {
+                                <a asp-controller="Booking" asp-action="Add" asp-route-carId="@car.CarId" class="btn btn-book @(car.IsAvailable ? "" : "unavailable")">Book</a>
+                            }
+                            else
+                            {
+                                <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-book @(car.IsAvailable ? "" : "unavailable")">Book</a>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+<script>
+    document.getElementById('localSearch').addEventListener('input', function () {
+        const val = this.value.toLowerCase();
+        document.querySelectorAll('.car-card-container').forEach(c => {
+            c.style.display = c.textContent.toLowerCase().includes(val) ? '' : 'none';
+        });
+    });
+</script>
+>>>>>>> Mahmoud-V3

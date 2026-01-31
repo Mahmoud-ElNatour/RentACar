@@ -70,13 +70,21 @@ namespace RentACar.Web.Controllers
                     bookingId = b.BookingId,
                     carName = car?.ModelName,
                     plateNumber = car?.PlateNumber,
+<<<<<<< HEAD
                     carImage = car?.CarImage != null ? $"data:image/jpeg;base64,{Convert.ToBase64String(car.CarImage)}" : null,
+=======
+>>>>>>> Mahmoud-V3
                     paymentId = latestPayment?.PaymentId,
                     paymentStatus = latestPayment?.Status,
                     startdate = b.Startdate.ToString("yyyy-MM-dd"),
                     enddate = b.Enddate.ToString("yyyy-MM-dd"),
                     totalPrice = b.TotalPrice,
+<<<<<<< HEAD
                     employeeId = b.EmployeebookerId,
+=======
+                    hasDriver = b.HasDriver,
+                    driverId = b.DriverId,
+>>>>>>> Mahmoud-V3
                     bookingStatus = b.BookingStatus
                 });
             }
@@ -148,6 +156,7 @@ namespace RentACar.Web.Controllers
             });
             return document.GeneratePdf();
         }
+<<<<<<< HEAD
         [HttpGet("~/Bookings/Details/{id}")]
         public async Task<IActionResult> Details(int id)
         {
@@ -198,5 +207,7 @@ namespace RentACar.Web.Controllers
 
             return View("~/Views/ControlPanel/Payment/Receipt.cshtml", payment);
         }
+=======
+>>>>>>> Mahmoud-V3
     }
 }

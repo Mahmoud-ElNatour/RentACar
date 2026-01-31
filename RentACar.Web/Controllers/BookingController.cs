@@ -8,14 +8,21 @@ using RentACar.Application.Managers;
 using AutoMapper;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
+<<<<<<< HEAD
 using QuestPDF.Infrastructure;
+=======
+>>>>>>> Mahmoud-V3
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using RentACar.Web.Models;
 using System.Security.Claims;
 using System.Linq;
+<<<<<<< HEAD
 using RentACar.Core.Repositories;
+=======
+using Microsoft.Extensions.Configuration;
+>>>>>>> Mahmoud-V3
 
 namespace RentACar.Web.Controllers
 {
@@ -33,7 +40,11 @@ namespace RentACar.Web.Controllers
         private readonly UserManager<IdentityUser> _userManager;
         private readonly IMapper _mapper;
         private readonly ILogger<BookingController> _logger;
+<<<<<<< HEAD
         private readonly IPaymentMethodRepository _paymentMethodRepository;
+=======
+        private readonly IConfiguration _config;
+>>>>>>> Mahmoud-V3
 
         public BookingController(
             BookingManager bookingManager,
@@ -45,7 +56,11 @@ namespace RentACar.Web.Controllers
             UserManager<IdentityUser> userManager,
             IMapper mapper,
             ILogger<BookingController> logger,
+<<<<<<< HEAD
             IPaymentMethodRepository paymentMethodRepository)
+=======
+            IConfiguration config)
+>>>>>>> Mahmoud-V3
         {
             _bookingManager = bookingManager;
             _paymentManager = paymentManager;
@@ -56,17 +71,25 @@ namespace RentACar.Web.Controllers
             _userManager = userManager;
             _mapper = mapper;
             _logger = logger;
+<<<<<<< HEAD
             _paymentMethodRepository = paymentMethodRepository;
+=======
+            _config = config;
+>>>>>>> Mahmoud-V3
         }
 
         [HttpGet("~/Booking")]
         [ApiExplorerSettings(IgnoreApi = true)]
+<<<<<<< HEAD
         [Authorize(Roles = "Admin,Employee")]
+=======
+>>>>>>> Mahmoud-V3
         public IActionResult Index()
         {
             return View("~/Views/ControlPanel/Booking/Index.cshtml");
         }
 
+<<<<<<< HEAD
         [HttpGet("~/Booking/Edit/{id}")]
         [Authorize(Roles = "Admin,Employee")]
         [ApiExplorerSettings(IgnoreApi = true)]
@@ -320,6 +343,171 @@ namespace RentACar.Web.Controllers
             return Ok(stats);
         }
 
+=======
+        [HttpGet("~/Booking/Add")]
+        //[Authorize(Roles = "Admin,Employee")]
+        [ApiExplorerSettings(IgnoreApi = true)]
+        public async Task<IActionResult> Add(int? carId = null)
+        {
+            if (carId.HasValue)
+            {
+                var (start, end) = await _bookingManager.SuggestBookingDatesAsync(carId.Value);
+                ViewBag.StartDate = start.ToDateTime(TimeOnly.MinValue).ToString("yyyy-MM-dd");
+                ViewBag.EndDate = end.ToDateTime(TimeOnly.MinValue).ToString("yyyy-MM-dd");
+                ViewBag.CarId = carId.Value.ToString();
+            }
+
+            ViewBag.GoogleMapsKey = _config["GOOGLE_MAPS_API_KEY"];
+
+            return View("~/Views/ControlPanel/Booking/Add.cshtml", new BookingDto());
+        }
+
+        [HttpGet("~/Booking/Edit/{id}")]
+       // [Authorize(Roles = "Admin,Employee")]
+        [ApiExplorerSettings(IgnoreApi = true)]
+        public async Task<IActionResult> Edit(int id)
+        {
+            var booking = await _bookingManager.GetBookingByIdAsync(id);
+            if (booking == null)
+                return NotFound();
+
+            return View("~/Views/ControlPanel/Booking/Edit.cshtml", booking);
+        }
+
+        [HttpGet("~/Booking/Delete/{id}")]
+        //[Authorize(Roles = "Admin,Employee")]
+        [ApiExplorerSettings(IgnoreApi = true)]
+        public async Task<IActionResult> DeleteForm(int id)
+        {
+            var booking = await _bookingManager.GetBookingByIdAsync(id);
+            if (booking == null)
+                return NotFound();
+
+            return View("~/Views/ControlPanel/Booking/Delete.cshtml", booking);
+        }
+
+        [HttpGet("~/Booking/Approve/{id}")]
+        public async Task<IActionResult> Approve(int id)
+        {
+            var booking = await _bookingManager.GetBookingByIdAsync(id);
+            if (booking == null) return NotFound();
+
+            var editDto = _mapper.Map<BookingEditDto>(booking);
+            editDto.BookingStatus = "Booked"; // Setting status to Booked
+            
+            await _bookingManager.UpdateBookingAsync(editDto);
+
+            // Redirect to Edit page as requested ("took me the edit page of this booking")
+            return RedirectToAction("Edit", new { id = booking.BookingId }); 
+        }
+
+        [HttpGet("~/Booking/Details/{id}")]
+        [ApiExplorerSettings(IgnoreApi = true)]
+        public async Task<IActionResult> Details(int id)
+        {
+            var booking = await _bookingManager.GetBookingByIdAsync(id);
+            if (booking == null)
+            {
+                return NotFound();
+            }
+            var customer = await _customerManager.GetCustomerById(booking.CustomerId);
+            var car = await _carManager.GetCarByIdAsync(booking.CarId);
+            var employee = booking.EmployeebookerId.HasValue
+                ? await _employeeManager.GetEmployeeById(booking.EmployeebookerId.Value)
+                : null;
+            var payments = await _paymentManager.GetPaymentsByBookingIdAsync(booking.BookingId);
+            var payment = payments
+                .OrderByDescending(p => p.PaymentDate)
+                .ThenByDescending(p => p.PaymentId)
+                .FirstOrDefault();
+            var promo = booking.PromocodeId.HasValue
+                ? await _promocodeManager.GetPromocodeByIdAsync(booking.PromocodeId.Value)
+                : null;
+
+            var viewModel = new BookingDetailsViewModel
+            {
+                BookingId = booking.BookingId,
+                BookingStatus = booking.BookingStatus,
+                StartDate = booking.Startdate,
+                EndDate = booking.Enddate,
+                TotalPrice = booking.TotalPrice,
+                Subtotal = booking.Subtotal,
+                CustomerName = customer?.Name,
+                CustomerUsername = customer?.username,
+                CustomerEmail = customer?.Email,
+                CustomerPhone = customer?.PhoneNumber,
+                EmployeeName = employee?.Name,
+                CarModel = car?.ModelName,
+                CarPlateNumber = car?.PlateNumber,
+                CarCategory = car?.CategoryName,
+                CarColor = car?.Color,
+                CarModelYear = car?.ModelYear,
+                CarPricePerDay = car?.PricePerDay,
+                PaymentId = payment?.PaymentId,
+                PaymentAmount = payment?.Amount,
+                PromocodeName = promo?.Name,
+                PromocodeDiscount = promo?.DiscountPercentage
+            };
+
+            return PartialView("~/Views/ControlPanel/Booking/_BookingDetailsPartial.cshtml", viewModel);
+
+        }
+
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<object>>> Get()
+        {
+            var bookings = await _bookingManager.GetAllBookingsAsync();
+
+            var result = new List<object>(bookings.Count);
+            foreach (var b in bookings)
+            {
+                var customer = await _customerManager.GetCustomerById(b.CustomerId);
+                var car = await _carManager.GetCarByIdAsync(b.CarId);
+                var employee = b.EmployeebookerId.HasValue
+                    ? await _employeeManager.GetEmployeeById(b.EmployeebookerId.Value)
+                    : null;
+                var payments = await _paymentManager.GetPaymentsByBookingIdAsync(b.BookingId);
+                var payment = payments
+                    .OrderByDescending(p => p.PaymentDate)
+                    .ThenByDescending(p => p.PaymentId)
+                    .FirstOrDefault();
+                var promo = b.PromocodeId.HasValue
+                    ? await _promocodeManager.GetPromocodeByIdAsync(b.PromocodeId.Value)
+                    : null;
+
+
+                result.Add(new
+                {
+                    bookingId = b.BookingId,
+                    customerId = b.CustomerId,
+                    customerName = customer?.Name,
+                    customerUsername = customer?.username,
+                    customerEmail = customer?.Email,
+                    carId = b.CarId,
+                    carModel = car?.ModelName,
+                    carPlate = car?.PlateNumber,
+                    carYear = car?.ModelYear,
+                    carColor = car?.Color,
+                    carPricePerDay = car?.PricePerDay,
+                    employeebookerId = b.EmployeebookerId,
+                    employeeName = employee?.Name,
+                    paymentId = payment?.PaymentId,
+                    paymentAmount = payment?.Amount,
+                    subtotal = b.Subtotal,
+                    totalPrice = b.TotalPrice,
+                    promocodeId = b.PromocodeId,
+                    promocodeName = promo?.Name,
+                    promocodeDiscount = promo?.DiscountPercentage,
+                    startdate = b.Startdate.ToString("yyyy-MM-dd"),
+                    enddate = b.Enddate.ToString("yyyy-MM-dd"),
+                    bookingStatus = b.BookingStatus
+                });
+            }
+
+            return Ok(result);
+        }
+
+>>>>>>> Mahmoud-V3
         [HttpPost("Pay")]
         public async Task<IActionResult> Pay([FromBody] MakePaymentRequestDto dto)
         {
@@ -355,7 +543,10 @@ namespace RentACar.Web.Controllers
         }
 
         [HttpGet("{id}")]
+<<<<<<< HEAD
         [Authorize(Roles = "Admin,Employee")]
+=======
+>>>>>>> Mahmoud-V3
         public async Task<ActionResult<BookingDto>> Get(int id)
         {
             var booking = await _bookingManager.GetBookingByIdAsync(id);
@@ -365,6 +556,7 @@ namespace RentACar.Web.Controllers
             return Ok(booking);
         }
 
+<<<<<<< HEAD
         [HttpGet("~/Booking/Details/{id}")]
         [ApiExplorerSettings(IgnoreApi = true)]
         [Authorize(Roles = "Admin,Employee")]
@@ -420,11 +612,96 @@ namespace RentACar.Web.Controllers
             editDto.BookingStatus = "Booked"; 
             await _bookingManager.UpdateBookingAsync(editDto);
             return RedirectToAction("Index"); // Redirect to Index instead of Edit as flow might simpler
+=======
+        [HttpPost]
+        public async Task<ActionResult<BookingCreationResultDto>> Create([FromBody] MakeBookingRequestDto dto)
+        {
+            if (!User.Identity?.IsAuthenticated ?? true)
+                return Unauthorized();
+
+            if (!ModelState.IsValid)
+            {
+                // Log and return detailed validation errors
+                _logger.LogWarning("Invalid booking DTO: {@ModelState}", ModelState);
+                return BadRequest(ModelState);
+            }
+
+            var userId = _userManager.GetUserId(User);
+            _logger.LogInformation("Creating booking by user {UserId} with data: {@Dto}", userId, dto);
+
+            try
+            {
+                var created = await _bookingManager.MakeBookingAsync(dto, userId);
+
+                if (created == null)
+                {
+                    _logger.LogWarning("BookingManager returned null for user {UserId}", userId);
+                    return BadRequest("Booking could not be created. Please check availability, customer status, or payment info.");
+                }
+
+                return CreatedAtAction(nameof(Get), new { id = created.Booking.BookingId }, created);
+            }
+            catch (InvalidOperationException ex) when (ex.Message == "GEOCODING_FAILED")
+            {
+                return UnprocessableEntity("Pickup address couldn't be located. Please provide a more specific address or pin the location on the map.");
+            }
+            catch (InvalidOperationException ex) when (ex.Message == "MISSING_PICKUP_PIN")
+            {
+                return UnprocessableEntity("Please drop a pickup pin.");
+            }
+
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unhandled exception while creating booking");
+                return StatusCode(500, "Internal server error while processing booking.");
+            }
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(int id, [FromBody] BookingEditDto dto)
+        {
+            if (id != dto.BookingId)
+                return BadRequest();
+
+            var updated = await _bookingManager.UpdateBookingAsync(dto);
+            if (updated == null)
+                return NotFound();
+
+            return NoContent();
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            try
+            {
+                var success = await _bookingManager.DeleteBookingAsync(new DeleteBookingRequestDto { BookingId = id });
+                if (!success)
+                    return NotFound();
+
+                return NoContent();
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database constraint prevented deleting booking {Id}", id);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Unable to delete booking because related records exist. Remove the related data before deleting the booking.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error while deleting booking {Id}", id);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "An unexpected error occurred while deleting the booking. Please try again later.");
+            }
+>>>>>>> Mahmoud-V3
         }
 
         [HttpGet("~/Booking/Contract/{id}")]
         [ApiExplorerSettings(IgnoreApi = true)]
+<<<<<<< HEAD
         [Authorize(Roles = "Admin,Employee")]
+=======
+>>>>>>> Mahmoud-V3
         public async Task<IActionResult> Contract(int id)
         {
             var booking = await _bookingManager.GetBookingByIdAsync(id);
@@ -447,6 +724,7 @@ namespace RentACar.Web.Controllers
             return File(bytes, "application/pdf", $"booking_contract_{id}.pdf");
         }
 
+<<<<<<< HEAD
         [HttpGet("GetBookedDates")]
         public async Task<ActionResult<List<string>>> GetBookedDates([FromQuery] int carId, [FromQuery] int? year = null, [FromQuery] int? month = null)
         {
@@ -498,10 +776,15 @@ namespace RentACar.Web.Controllers
             var gold = "#d4af37";
             var dark = "#16181a";
 
+=======
+        private byte[] GenerateContractPdf(BookingDto booking, CarDto? car, CustomerDTO? customer, PaymentDto? payment, PromocodeDto? promo)
+        {
+>>>>>>> Mahmoud-V3
             var document = Document.Create(container =>
             {
                 container.Page(page =>
                 {
+<<<<<<< HEAD
                     page.Margin(40);
                     page.Size(PageSizes.A4);
                     //page.Background(dark); // Contracts usually white for print, let's keep white but use Dark/Gold text.
@@ -665,12 +948,41 @@ namespace RentACar.Web.Controllers
                         x.CurrentPageNumber();
                         x.Span(" / ");
                         x.TotalPages();
+=======
+                    page.Margin(20);
+                    page.Size(PageSizes.A4);
+                    page.Content().Column(col =>
+                    {
+                        col.Item().AlignCenter().Text("Rental Contract").FontSize(20).Bold();
+                        col.Item().Text($"Booking ID: {booking.BookingId}");
+                        if (customer != null)
+                            col.Item().Text($"Customer: {customer.Name} (ID: {customer.UserId})");
+                        if (car != null)
+                            col.Item().Text($"Car: {car.ModelName} - {car.PlateNumber}");
+                        if (payment != null)
+                            col.Item().Text($"Payment ID: {payment.PaymentId} Amount: {payment.Amount:C}");
+                        if (promo != null)
+                            col.Item().Text($"Promocode: {promo.Name} ({promo.DiscountPercentage}% off)");
+                        col.Item().Text($"Start Date: {booking.Startdate:yyyy-MM-dd}");
+                        col.Item().Text($"End Date: {booking.Enddate:yyyy-MM-dd}");
+                        if (booking.Subtotal != null)
+                            col.Item().Text($"Subtotal: {booking.Subtotal:C}");
+                        else
+                            col.Item().Text($"Total Price: {booking.TotalPrice:C}");
+                        col.Item().PaddingVertical(20).Text("I, the renter, accept responsibility for the rental vehicle.");
+                        col.Item().Row(row =>
+                        {
+                            row.RelativeItem().Text("Customer Signature: ___________________");
+                            row.RelativeItem().AlignRight().Text("Company Signature: ___________________");
+                        });
+>>>>>>> Mahmoud-V3
                     });
                 });
             });
             return document.GeneratePdf();
         }
     }
+<<<<<<< HEAD
 
     public class CalculatePriceRequestDto
     {
@@ -679,4 +991,6 @@ namespace RentACar.Web.Controllers
         public DateOnly EndDate { get; set; }
         public string? Promocode { get; set; }
     }
+=======
+>>>>>>> Mahmoud-V3
 }

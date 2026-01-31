@@ -10,6 +10,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<<<<<<< HEAD
     <title>@ViewData["Title"] - LBRentDrive</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -309,11 +310,54 @@
             </div>
         </section>
     </main>
+=======
+    <title>@ViewData["Title"] - CarRental</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/login-style.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
+</head>
+<body>
+    @await Html.PartialAsync("_PopupNotifications")
+    <div class="container1">
+        <div class="login-container">
+            <div class="logo-text">
+                <i class="fas fa-car-side"></i>
+                <div>CarRental</div>
+            </div>
+
+            <h2 id="external-login-title">Finish Signing Up</h2>
+            <p id="external-login-description" style="color: var(--text-secondary); text-align: center;">
+                You've authenticated with <strong>@Model.ProviderDisplayName</strong>. Enter your email to finish connecting your account.
+            </p>
+
+            <form asp-page-handler="Confirmation" asp-route-returnUrl="@Model.ReturnUrl" method="post" autocomplete="off">
+                <div asp-validation-summary="ModelOnly" class="validation-summary-errors text-danger" role="alert"></div>
+
+                <div class="input mb-3">
+                    <input asp-for="Input.Email" class="form-control" autocomplete="email" placeholder="Email" aria-required="true" />
+                    <span asp-validation-for="Input.Email" class="text-danger"></span>
+                </div>
+
+                <button type="submit" class="login-btn w-100">Register</button>
+            </form>
+
+            <hr class="my-4" />
+
+            <div class="signup-prompt text-center">
+                <span>Already have an account?</span>
+                <a class="traverse" asp-page="./Login">Log In</a>
+            </div>
+        </div>
+    </div>
+>>>>>>> Mahmoud-V3
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     <partial name="_ValidationScriptsPartial" />
+<<<<<<< HEAD
     <script>
         function updateFileName(input, labelId) {
             const label = document.getElementById(labelId);
@@ -326,5 +370,7 @@
             }
         }
     </script>
+=======
+>>>>>>> Mahmoud-V3
 </body>
 </html>

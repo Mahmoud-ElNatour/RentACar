@@ -2,9 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+<<<<<<< HEAD
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+=======
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
+>>>>>>> Mahmoud-V3
 using Microsoft.AspNetCore.Mvc;
 using RentACar.Application.DTOs;
 using RentACar.Application.Managers;
@@ -13,12 +19,17 @@ using Microsoft.EntityFrameworkCore;
 
 namespace RentACar.Web.Controllers
 {
+<<<<<<< HEAD
     [Authorize(Roles = "Admin")]
+=======
+    [Authorize(Roles = "Admin,Employee")]
+>>>>>>> Mahmoud-V3
     [ApiController]
     [Route("api/[controller]")]
     public class EmployeeController : Controller
     {
         private readonly EmployeeManager _employeeManager;
+<<<<<<< HEAD
         private readonly IMapper _mapper;
         private readonly ILogger<EmployeeController> _logger;
 
@@ -27,6 +38,16 @@ namespace RentACar.Web.Controllers
             _employeeManager = employeeManager;
             _mapper = mapper;
             _logger = logger;
+=======
+        private readonly ILogger<EmployeeController> _logger;
+        private readonly RoleManager<IdentityRole> _roleManager;
+
+        public EmployeeController(EmployeeManager employeeManager, RoleManager<IdentityRole> roleManager, ILogger<EmployeeController> logger)
+        {
+            _employeeManager = employeeManager;
+            _logger = logger;
+            _roleManager = roleManager;
+>>>>>>> Mahmoud-V3
         }
 
         [HttpGet("~/Employee")]
@@ -37,6 +58,7 @@ namespace RentACar.Web.Controllers
         }
 
         [HttpGet("~/Employee/Add")]
+<<<<<<< HEAD
         [ApiExplorerSettings(IgnoreApi = true)]
         public IActionResult AddForm()
         {
@@ -44,15 +66,35 @@ namespace RentACar.Web.Controllers
         }
 
         [HttpGet("~/Employee/Edit/{id}")]
+=======
+        [Authorize(Roles = "Admin")]
+        [ApiExplorerSettings(IgnoreApi = true)]
+        public IActionResult AddForm()
+        {
+            ViewBag.Roles = _roleManager.Roles.Select(r => r.Name).ToList();
+            return PartialView("~/Views/ControlPanel/Employee/_EmployeeFormPartial.cshtml", new EmployeeDto { IsActive = true, DriverIsActive = true });
+        }
+
+        [HttpGet("~/Employee/Edit/{id}")]
+        [Authorize(Roles = "Admin")]
+>>>>>>> Mahmoud-V3
         [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> EditForm(int id)
         {
             var emp = await _employeeManager.GetEmployeeById(id);
             if (emp == null) return NotFound();
+<<<<<<< HEAD
+=======
+            ViewBag.Roles = _roleManager.Roles.Select(r => r.Name).ToList();
+>>>>>>> Mahmoud-V3
             return PartialView("~/Views/ControlPanel/Employee/_EmployeeFormPartial.cshtml", emp);
         }
 
         [HttpGet("~/Employee/Delete/{id}")]
+<<<<<<< HEAD
+=======
+        [Authorize(Roles = "Admin")]
+>>>>>>> Mahmoud-V3
         [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> DeleteForm(int id)
         {
@@ -62,6 +104,7 @@ namespace RentACar.Web.Controllers
         }
 
         [HttpGet]
+<<<<<<< HEAD
         public async Task<ActionResult<PagedResultDto<EmployeeDisplayDto>>> Get(
             [FromQuery] string? search, 
             [FromQuery] bool? active, 
@@ -81,6 +124,46 @@ namespace RentACar.Web.Controllers
                 _logger.LogError(ex, "Failed to load employees paged");
                 return StatusCode(500, new { message = ex.Message });
             }
+=======
+        public async Task<ActionResult<IEnumerable<EmployeeDisplayDto>>> Get([FromQuery] string? search, [FromQuery] bool? active, [FromQuery] string? role)
+        {
+            var employees = await _employeeManager.GetAllEmployeesWithRoles();
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                employees = employees.Where(e =>
+                    (!string.IsNullOrEmpty(e.Name) && e.Name.Contains(search, System.StringComparison.OrdinalIgnoreCase)) ||
+                    (!string.IsNullOrEmpty(e.Email) && e.Email.Contains(search, System.StringComparison.OrdinalIgnoreCase)) ||
+                    (!string.IsNullOrEmpty(e.DriverCode) && e.DriverCode.Contains(search, System.StringComparison.OrdinalIgnoreCase))
+                ).ToList();
+            }
+            if (active.HasValue)
+            {
+                employees = employees.Where(e => e.IsActive == active.Value).ToList();
+            }
+            if (!string.IsNullOrWhiteSpace(role))
+            {
+                if (role.Equals("Employee", System.StringComparison.OrdinalIgnoreCase))
+                {
+                    employees = employees
+                        .Where(e => e.Roles.Any(r => r.Equals("Employee", System.StringComparison.OrdinalIgnoreCase))
+                                    && !e.Roles.Any(r => r.Equals("Driver", System.StringComparison.OrdinalIgnoreCase)))
+                        .ToList();
+                }
+                else if (role.Equals("Driver", System.StringComparison.OrdinalIgnoreCase))
+                {
+                    employees = employees
+                        .Where(e => e.Roles.Any(r => r.Equals("Driver", System.StringComparison.OrdinalIgnoreCase)) && e.DriverId.HasValue)
+                        .ToList();
+                }
+                else
+                {
+                    employees = employees
+                        .Where(e => e.Roles.Any(r => r.Equals(role, System.StringComparison.OrdinalIgnoreCase)))
+                        .ToList();
+                }
+            }
+            return Ok(employees);
+>>>>>>> Mahmoud-V3
         }
 
 
@@ -93,6 +176,10 @@ namespace RentACar.Web.Controllers
         }
 
         [HttpPost]
+<<<<<<< HEAD
+=======
+        [Authorize(Roles = "Admin")]
+>>>>>>> Mahmoud-V3
         public async Task<ActionResult<EmployeeDto>> Create([FromBody] EmployeeCreateDTO dto)
         {
             if (!ModelState.IsValid)
@@ -114,6 +201,10 @@ namespace RentACar.Web.Controllers
         }
 
         [HttpPut("{id}")]
+<<<<<<< HEAD
+=======
+        [Authorize(Roles = "Admin")]
+>>>>>>> Mahmoud-V3
         public async Task<IActionResult> Update(int id, [FromBody] EmployeeDto dto)
         {
             // ✅ Check if the model is valid
@@ -143,6 +234,10 @@ namespace RentACar.Web.Controllers
 
 
         [HttpDelete("{id}")]
+<<<<<<< HEAD
+=======
+        [Authorize(Roles = "Admin")]
+>>>>>>> Mahmoud-V3
         public async Task<IActionResult> Delete(int id)
         {
             _logger.LogInformation("Deleting employee {Id}", id);
@@ -171,12 +266,22 @@ namespace RentACar.Web.Controllers
         }
 
         [HttpPost("{id}/reset-password")]
+<<<<<<< HEAD
         public async Task<IActionResult> ResetPassword(int id)
         {
             var success = await _employeeManager.ResetPassword(id);
+=======
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> ResetPassword(int id)
+        {
+            var success = await _employeeManager.ResetPassword(id, "E@e123456");
+>>>>>>> Mahmoud-V3
             if (!success) return NotFound();
             return NoContent();
         }
     }
 }
+<<<<<<< HEAD
 
+=======
+>>>>>>> Mahmoud-V3

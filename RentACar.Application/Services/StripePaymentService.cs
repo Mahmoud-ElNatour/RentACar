@@ -15,6 +15,7 @@ namespace RentACar.Application.Services
 {
     public class StripePaymentService : IStripePaymentService
     {
+<<<<<<< HEAD
         private readonly HttpClient _httpClient;
         private readonly ILogger<StripePaymentService> _logger;
         private readonly Microsoft.Extensions.Configuration.IConfiguration _configuration;
@@ -27,6 +28,21 @@ namespace RentACar.Application.Services
             _httpClient = httpClient;
             _logger = logger;
             _configuration = configuration;
+=======
+        private const string StripeSecretKeyEnv = "STRIPE_PRIVATE_KEY";
+        private const string StripeWebhookSecretEnv = "STRIPE_WEBHOOK_SECRET";
+        private readonly HttpClient _httpClient;
+        private readonly ILogger<StripePaymentService> _logger;
+        private readonly string? _secretKey;
+        private readonly string? _webhookSecret;
+
+        public StripePaymentService(HttpClient httpClient, ILogger<StripePaymentService> logger)
+        {
+            _httpClient = httpClient;
+            _logger = logger;
+            _secretKey = Environment.GetEnvironmentVariable(StripeSecretKeyEnv);
+            _webhookSecret = Environment.GetEnvironmentVariable(StripeWebhookSecretEnv);
+>>>>>>> Mahmoud-V3
         }
 
         public async Task<StripeCheckoutSessionDto> CreateCheckoutSessionAsync(
@@ -137,6 +153,7 @@ namespace RentACar.Application.Services
 
         private string RequireSecretKey()
         {
+<<<<<<< HEAD
             // Try Configuration (UserSecrets, AppSettings, EnvVars via Config Provider)
             var key = _configuration["Stripe:SecretKey"] ?? _configuration["STRIPE_PRIVATE_KEY"];
             
@@ -154,10 +171,20 @@ namespace RentACar.Application.Services
             }
 
             return key;
+=======
+            if (string.IsNullOrWhiteSpace(_secretKey))
+            {
+                throw new InvalidOperationException(
+                    $"Stripe secret key missing. Set environment variable {StripeSecretKeyEnv}.");
+            }
+
+            return _secretKey;
+>>>>>>> Mahmoud-V3
         }
 
         private string RequireWebhookSecret()
         {
+<<<<<<< HEAD
              // Try Configuration (UserSecrets, AppSettings, EnvVars via Config Provider)
             var key = _configuration["Stripe:WebhookSecret"] ?? _configuration["STRIPE_WEBHOOK_SECRET"];
 
@@ -175,6 +202,15 @@ namespace RentACar.Application.Services
             }
 
             return key;
+=======
+            if (string.IsNullOrWhiteSpace(_webhookSecret))
+            {
+                throw new InvalidOperationException(
+                    $"Stripe webhook secret missing. Set environment variable {StripeWebhookSecretEnv}.");
+            }
+
+            return _webhookSecret;
+>>>>>>> Mahmoud-V3
         }
 
         private static long ConvertToStripeAmount(decimal amount, string currency)
@@ -278,6 +314,7 @@ namespace RentACar.Application.Services
 
             public List<string> Signatures { get; } = new();
         }
+<<<<<<< HEAD
 
         public async Task<StripeCheckoutSessionDto> GetSessionAsync(string sessionId, CancellationToken cancellationToken = default)
         {
@@ -296,5 +333,7 @@ namespace RentACar.Application.Services
 
             return ParseCheckoutSession(responseContent);
         }
+=======
+>>>>>>> Mahmoud-V3
     }
 }

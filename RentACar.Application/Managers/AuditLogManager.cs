@@ -98,6 +98,7 @@ namespace RentACar.Application.Managers
                     }
                 }
 
+<<<<<<< HEAD
                 string? userId = null;
                 if (user != null && user.Identity?.IsAuthenticated == true)
                 {
@@ -108,6 +109,11 @@ namespace RentACar.Application.Managers
                 {
                     Timestamp = DateTime.UtcNow,
                     UserId = userId,
+=======
+                var log = new AuditLog
+                {
+                    Timestamp = DateTime.UtcNow,
+>>>>>>> Mahmoud-V3
                     ActorName = actorName,
                     ActorRole = actorRole,
                     Action = action,

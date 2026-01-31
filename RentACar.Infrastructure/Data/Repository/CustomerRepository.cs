@@ -16,6 +16,19 @@ namespace RentACar.Infrastructure.Repositories
         {
             _dbContext = dbContext;
         }
+<<<<<<< HEAD
+=======
+        public async Task<List<Customer>> GetByIdsAsync(List<int> ids)
+        {
+            if (ids == null || ids.Count == 0) return new List<Customer>();
+
+            return await _dbContext.Set<Customer>()
+                .AsNoTracking()
+                .Include(c => c.User)
+                .Where(c => ids.Contains(c.UserId))
+                .ToListAsync();
+        }
+>>>>>>> Mahmoud-V3
 
         public async Task<Customer?> GetByIdAsync(int id)
         {
@@ -39,11 +52,14 @@ namespace RentACar.Infrastructure.Repositories
                                    .ToListAsync();
         }
 
+<<<<<<< HEAD
         public IQueryable<Customer> Query()
         {
             return _dbContext.Set<Customer>();
         }
 
+=======
+>>>>>>> Mahmoud-V3
         public async Task AddAsync(Customer customer)
         {
             await _dbContext.Set<Customer>().AddAsync(customer);
@@ -52,10 +68,13 @@ namespace RentACar.Infrastructure.Repositories
 
         public async Task UpdateAsync(Customer customer)
         {
+<<<<<<< HEAD
             if (_dbContext.Entry(customer).State == EntityState.Detached)
             {
                 _dbContext.Customers.Attach(customer);
             }
+=======
+>>>>>>> Mahmoud-V3
             _dbContext.Entry(customer).State = EntityState.Modified;
             await _dbContext.SaveChangesAsync();
         }

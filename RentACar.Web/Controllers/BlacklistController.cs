@@ -62,6 +62,7 @@ namespace RentACar.Web.Controllers
         }
 
         [HttpGet]
+<<<<<<< HEAD
         public async Task<ActionResult<PagedResultDto<BlacklistDisplayDto>>> Get(
             [FromQuery] string? search, 
             [FromQuery] string? type, 
@@ -80,6 +81,12 @@ namespace RentACar.Web.Controllers
                 _logger.LogError(ex, "Failed to load blacklist paged");
                 return StatusCode(500, new { message = ex.Message });
             }
+=======
+        public async Task<ActionResult<IEnumerable<BlacklistDisplayDto>>> Get([FromQuery] string? type, [FromQuery] string? search, [FromQuery] int? offset)
+        {
+            var list = await _blacklistManager.GetAllAsync(type, search, offset ?? 0);
+            return Ok(list);
+>>>>>>> Mahmoud-V3
         }
 
         [HttpGet("{id}")]
@@ -150,8 +157,13 @@ namespace RentACar.Web.Controllers
                 Salary = empEntity.Salary,
                 Address = empEntity.Address,
                 IsActive = empEntity.IsActive,
+<<<<<<< HEAD
                 Email = empEntity.User.Email ?? string.Empty,
                 username = empEntity.User.UserName ?? string.Empty,
+=======
+                Email = empEntity.User.Email,
+                username = empEntity.User.UserName,
+>>>>>>> Mahmoud-V3
                 PhoneNumber = empEntity.User.PhoneNumber,
                 aspNetUserId = empEntity.aspNetUserId
             };

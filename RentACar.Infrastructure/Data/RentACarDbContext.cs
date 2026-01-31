@@ -31,11 +31,17 @@ public partial class RentACarDbContext : DbContext
     public virtual DbSet<Booking> Bookings { get; set; }
     public virtual DbSet<Car> Cars { get; set; }
     public virtual DbSet<Category> Categories { get; set; }
+    public virtual DbSet<CreditCard> CreditCards { get; set; }
     public virtual DbSet<Customer> Customers { get; set; }
+    public virtual DbSet<CustomerCreditCard> CustomerCreditCards { get; set; }
+    public virtual DbSet<Driver> Drivers { get; set; }
+    public virtual DbSet<DriverAvailability> DriverAvailabilities { get; set; }
+    public virtual DbSet<DriverLocationPing> DriverLocationPings { get; set; }
     public virtual DbSet<Employee> Employees { get; set; }
     public virtual DbSet<Payment> Payments { get; set; }
     public virtual DbSet<PaymentMethod> PaymentMethods { get; set; }
     public virtual DbSet<Promocode> Promocodes { get; set; }
+    public virtual DbSet<Trip> Trips { get; set; }
     public virtual DbSet<AuditLog> AuditLogs { get; set; }
     public virtual DbSet<CustomerRating> CustomerRatings { get; set; }
     public virtual DbSet<DistributionList> DistributionLists { get; set; }
@@ -48,7 +54,6 @@ public partial class RentACarDbContext : DbContext
     public virtual DbSet<NotificationLog> NotificationLogs { get; set; }
     public virtual DbSet<SenderIdentity> SenderIdentities { get; set; }
     public virtual DbSet<EmailFeatureConfig> EmailFeatureConfigs { get; set; }
-
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -92,7 +97,7 @@ public partial class RentACarDbContext : DbContext
             // Indexes for Performance
             entity.HasIndex(e => e.Status).HasDatabaseName("IX_Payments_Status");
             entity.HasIndex(e => e.PaymentDate).HasDatabaseName("IX_Payments_PaymentDate");
-            entity.HasIndex(e => e.BookingId).HasDatabaseName("IX_Payments_BookingId"); // often automatic for FK, but ensuring it
+            entity.HasIndex(e => e.BookingId).HasDatabaseName("IX_Payments_BookingId"); 
             entity.HasIndex(e => new { e.Status, e.PaymentDate }).HasDatabaseName("IX_Payments_Status_PaymentDate");
         });
 
@@ -112,6 +117,7 @@ public partial class RentACarDbContext : DbContext
         modelBuilder.Entity<Booking>(entity =>
         {
             entity.Property(e => e.IsBookedByEmployee).HasDefaultValue(false);
+            entity.Property(e => e.HasDriver).HasDefaultValue(false);
 
             entity.HasOne(d => d.Car).WithMany(p => p.Bookings)
                 .OnDelete(DeleteBehavior.ClientSetNull)
@@ -123,6 +129,9 @@ public partial class RentACarDbContext : DbContext
 
             entity.HasOne(d => d.Employeebooker).WithMany(p => p.Bookings)
                 .HasConstraintName("FK_Bookings_Employees");
+
+            entity.HasOne(d => d.Driver).WithMany(p => p.Bookings)
+                .HasConstraintName("FK_Bookings_Drivers");
 
              entity.HasOne(d => d.Promocode).WithMany(p => p.Bookings)
                 .HasConstraintName("FK_Bookings_Promocodes1");
@@ -136,9 +145,89 @@ public partial class RentACarDbContext : DbContext
             entity.HasOne(d => d.Category).WithMany(p => p.Cars)
                 .HasConstraintName("FK_Cars_Categories1");
         });
+        
+        // Driver Entitites Configuration
+        modelBuilder.Entity<CreditCard>(entity =>
+        {
+            entity.HasKey(e => e.CreditCardId).HasName("PK_CreditCard_1");
 
-        // CreditCard and CustomerCreditCard configurations removed - Stripe handles payments
+            entity.Property(e => e.CardHolderName).IsFixedLength();
+            entity.Property(e => e.Cvv).IsFixedLength();
+        });
 
+        modelBuilder.Entity<CustomerCreditCard>(entity =>
+        {
+            entity.HasKey(e => new { e.UserId, e.CreditCardId });
+
+            entity.HasOne(e => e.User)
+                .WithMany(c => c.CustomerCreditCards)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_CustomerCreditCard_Customers");
+
+            entity.HasOne(e => e.CreditCard)
+                .WithMany(cc => cc.CustomerCreditCards)
+                .HasForeignKey(e => e.CreditCardId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_CustomerCreditCard_CreditCard");
+        });
+
+        modelBuilder.Entity<Driver>(entity =>
+        {
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+
+            entity.HasOne(d => d.User).WithMany(p => p.Drivers)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Drivers_AspNetUsers");
+
+            entity.HasOne(d => d.Employee).WithOne(p => p.Driver)
+                .HasForeignKey<Driver>(d => d.EmployeeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Drivers_Employees");
+
+            entity.HasIndex(d => d.EmployeeId).IsUnique();
+        });
+
+        modelBuilder.Entity<DriverAvailability>(entity =>
+        {
+            entity.HasOne(d => d.Driver).WithMany(p => p.DriverAvailabilities)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_DriverAvailability_Drivers");
+        });
+
+        modelBuilder.Entity<DriverLocationPing>(entity =>
+        {
+            entity.HasOne(d => d.Booking).WithMany(p => p.DriverLocationPings)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_DriverLocationPings_Bookings");
+
+            entity.HasOne(d => d.Driver).WithMany(p => p.LocationPings)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_DriverLocationPings_Drivers");
+        });
+        
+        // Trip config
+        modelBuilder.Entity<Trip>(entity =>
+        {
+            entity.HasIndex(e => e.BookingId).IsUnique();
+
+            entity.Property(e => e.TripStatus)
+                .HasConversion<string>()
+                .HasMaxLength(30);
+
+            entity.HasOne(d => d.Booking)
+                .WithOne(p => p.Trip)
+                .HasForeignKey<Trip>(d => d.BookingId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_Trips_Bookings");
+
+            entity.HasOne(d => d.Driver)
+                .WithMany(p => p.Trips)
+                .HasForeignKey(d => d.DriverId)
+                .HasConstraintName("FK_Trips_Drivers");
+        });
+
+        // Email / Distribution Lists
         modelBuilder.Entity<DistributionList>(entity =>
         {
             entity.HasIndex(e => e.Name).IsUnique();
@@ -215,6 +304,7 @@ public partial class RentACarDbContext : DbContext
     {
         ChangeTracker.DetectChanges();
         var auditEntries = new List<AuditLog>();
+<<<<<<< HEAD
         
         var user = _httpContextAccessor?.HttpContext?.User;
         var userName = user?.Identity?.Name ?? "System"; 
@@ -222,6 +312,15 @@ public partial class RentACarDbContext : DbContext
         if (user?.Identity?.IsAuthenticated == true && string.IsNullOrEmpty(userName))
         {
              userName = user.FindFirst(ClaimTypes.Email)?.Value ?? user.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "Unknown User";
+=======
+
+        var user = _httpContextAccessor?.HttpContext?.User;
+        var userName = user?.Identity?.Name ?? "System";
+
+        if (user?.Identity?.IsAuthenticated == true && string.IsNullOrEmpty(userName))
+        {
+            userName = user.FindFirst(ClaimTypes.Email)?.Value ?? user.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "Unknown User";
+>>>>>>> Mahmoud-V3
         }
 
         var userRole = "Unknown";
@@ -233,7 +332,11 @@ public partial class RentACarDbContext : DbContext
                 userRole = string.Join(", ", roles.Select(r => r.Value));
             }
         }
+<<<<<<< HEAD
         
+=======
+
+>>>>>>> Mahmoud-V3
         var ipAddress = _httpContextAccessor?.HttpContext?.Connection?.RemoteIpAddress?.ToString() ?? "Unknown";
         var userAgent = _httpContextAccessor?.HttpContext?.Request?.Headers["User-Agent"].ToString();
 
@@ -242,12 +345,18 @@ public partial class RentACarDbContext : DbContext
             if (entry.Entity is AuditLog || entry.State == EntityState.Detached || entry.State == EntityState.Unchanged)
                 continue;
 
+<<<<<<< HEAD
             var userId = user?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             var auditEntry = new AuditLog
             {
                 Timestamp = DateTime.UtcNow,
                 UserId = userId,
+=======
+            var auditEntry = new AuditLog
+            {
+                Timestamp = DateTime.UtcNow,
+>>>>>>> Mahmoud-V3
                 ActorName = userName,
                 ActorRole = userRole,
                 IpAddress = ipAddress,
@@ -296,7 +405,11 @@ public partial class RentACarDbContext : DbContext
                             // Only log if effectively different
                             var strOriginal = originalVal?.ToString();
                             var strCurrent = currentVal?.ToString();
+<<<<<<< HEAD
                             
+=======
+
+>>>>>>> Mahmoud-V3
                             if (strOriginal != strCurrent)
                             {
                                 oldValues[propertyName] = MaskSensitiveData(propertyName, originalVal);
@@ -307,11 +420,6 @@ public partial class RentACarDbContext : DbContext
                         break;
                 }
             }
-            
-            // Serialize
-            if (oldValues.Count > 0) 
-                auditEntry.OldValuesJson = System.Text.Json.JsonSerializer.Serialize(oldValues);
-            
             if (newValues.Count > 0) 
                 auditEntry.NewValuesJson = System.Text.Json.JsonSerializer.Serialize(newValues);
 

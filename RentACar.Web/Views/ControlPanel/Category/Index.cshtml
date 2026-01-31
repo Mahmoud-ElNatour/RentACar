@@ -4,7 +4,41 @@
     ViewData["BodyClass"] = "bg-background-dark text-white font-display overflow-x-hidden";
 }
 
+<<<<<<< HEAD
 
+=======
+<script id="tailwind-config">
+    tailwind.config = {
+        important: true, /* FORCE OVERRIDE OF BOOTSTRAP STYLES */
+        blocklist: ['collapse'],
+        corePlugins: {
+            preflight: false,
+        },
+        darkMode: "class",
+        theme: {
+            extend: {
+                colors: {
+                    "primary": "#edbc1d",
+                    "background-dark": "#0a0a0a", // Almost black
+                    "surface-dark": "#171717", // Dark neutral gray for cards
+                    "surface-accent": "#262626", // Lighter neutral gray for borders/inputs
+                    // Footer & Brand Colors (Inherited from Layout)
+                    "gold": "#f2b90d",
+                    "gold-light": "#fce186", 
+                    "gold-hover": "#d9a60c",
+                    "footer-bg": "#0a0a0a",
+                    "footer-surface": "#171717",
+                    "footer-border": "#f2b90d33",
+                },
+                fontFamily: {
+                    "display": ["Manrope", "sans-serif"]
+                },
+                borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+            },
+        },
+    }
+</script>
+>>>>>>> Mahmoud-V3
 
 <style>
     ::-webkit-scrollbar {
@@ -49,13 +83,19 @@
             </h1>
             <p class="text-[#a3a3a3] text-lg font-normal max-w-2xl">Manage vehicle classifications, pricing rules, and fleet availability.</p>
         </div>
+<<<<<<< HEAD
         @if (User.IsInRole("Admin"))
         {
+=======
+>>>>>>> Mahmoud-V3
         <button class="add-category flex-shrink-0 flex items-center justify-center gap-2 rounded-lg bg-primary hover:bg-[#dcae1b] text-background-dark h-12 px-8 font-bold text-sm tracking-wide shadow-[0_0_15px_rgba(237,188,29,0.3)] transition-all">
             <span class="material-symbols-outlined text-[20px]">add</span>
             <span>Add New Category</span>
         </button>
+<<<<<<< HEAD
         }
+=======
+>>>>>>> Mahmoud-V3
     </div>
 
     <div class="mb-10">
@@ -167,6 +207,7 @@
                 grid.appendChild(card);
             });
 
+<<<<<<< HEAD
             // "Create New" Card appended to grid (Admin only)
             if (isAdmin) {
                 const createCard = document.createElement('button');
@@ -180,6 +221,19 @@
                 `;
                 grid.appendChild(createCard);
             }
+=======
+            // "Create New" Card appended to grid
+            const createCard = document.createElement('button');
+            createCard.className = 'add-category group flex flex-col items-center justify-center min-h-[400px] bg-surface-dark/30 rounded-xl border-2 border-dashed border-surface-accent hover:border-primary hover:bg-surface-dark/50 transition-all duration-300';
+            createCard.innerHTML = `
+                <div class="flex items-center justify-center size-20 rounded-full bg-surface-accent group-hover:bg-primary mb-6 transition-colors shadow-lg">
+                    <span class="material-symbols-outlined text-[#a3a3a3] group-hover:text-background-dark text-4xl">add</span>
+                </div>
+                <h3 class="text-xl font-bold text-white group-hover:text-primary transition-colors">Create New Category</h3>
+                <p class="text-[#a3a3a3] text-sm mt-2 font-medium">Add a new vehicle class to fleet</p>
+            `;
+            grid.appendChild(createCard);
+>>>>>>> Mahmoud-V3
 
             attachEventListeners();
         }

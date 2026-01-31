@@ -3,7 +3,10 @@ using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+<<<<<<< HEAD
 using System.Linq;
+=======
+>>>>>>> Mahmoud-V3
 using RentACar.Core.Repositories;
 
 namespace RentACar.Infrastructure.Data.Repository
@@ -17,7 +20,11 @@ namespace RentACar.Infrastructure.Data.Repository
             _httpClient = httpClient;
         }
 
+<<<<<<< HEAD
         public async Task SendEmailAsync(string toEmail, string subject, string message, System.Collections.Generic.Dictionary<string, byte[]> attachments = null, string? fromEmail = null, string? fromName = null)
+=======
+        public async Task SendEmailAsync(string toEmail, string subject, string message)
+>>>>>>> Mahmoud-V3
         {
             var apiKey = Environment.GetEnvironmentVariable("MAILJET_API_KEY") ?? Environment.GetEnvironmentVariable("MAILJET_API_KEY", EnvironmentVariableTarget.User);
             var secretKey = Environment.GetEnvironmentVariable("MAILJET_SECRET_KEY") ?? Environment.GetEnvironmentVariable("MAILJET_SECRET_KEY", EnvironmentVariableTarget.User);
@@ -35,8 +42,13 @@ namespace RentACar.Infrastructure.Data.Repository
                     {
                         From = new
                         {
+<<<<<<< HEAD
                             Email = !string.IsNullOrEmpty(fromEmail) ? fromEmail : "info@rentacarmohammadmahmoud.shop",
                             Name = !string.IsNullOrEmpty(fromName) ? fromName : "Rent A Car"
+=======
+                            Email = "info@rentacarmohammadmahmoud.shop",
+                            Name = "Rent A Car"
+>>>>>>> Mahmoud-V3
                         },
                         To = new[]
                         {
@@ -47,6 +59,7 @@ namespace RentACar.Infrastructure.Data.Repository
                             }
                         },
                         Subject = subject,
+<<<<<<< HEAD
                         HTMLPart = message,
                         Attachments = attachments != null ? attachments.Select(a => new
                         {
@@ -54,6 +67,9 @@ namespace RentACar.Infrastructure.Data.Repository
                             Filename = a.Key,
                             Base64Content = Convert.ToBase64String(a.Value)
                         }).ToArray() : null
+=======
+                        HTMLPart = message
+>>>>>>> Mahmoud-V3
                     }
                 }
             };

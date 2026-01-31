@@ -29,7 +29,10 @@
 
         [InverseProperty("Promocode")]
         public virtual ICollection<Booking> Bookings { get; set; } = new List<Booking>();
+<<<<<<< HEAD
 
         [Column("isExpiredNotificationSent")]
         public bool IsExpiredNotificationSent { get; set; }
+=======
+>>>>>>> Mahmoud-V3
     }

@@ -1,4 +1,5 @@
 @model RentACar.Application.DTOs.CarDto
+<<<<<<< HEAD
 <div class="modal fade" id="deleteCarModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content !bg-[#121212] !border !border-red-900/50 shadow-2xl rounded-2xl overflow-hidden">
@@ -36,3 +37,80 @@
         </div>
     </div>
 </div>
+=======
+<div class="modal fade" id="deleteCarModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content dark-modal">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete Car</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="deleteCarForm">
+                <div class="modal-body">
+                    <div class="alert alert-danger d-none" id="deleteCarError" role="alert"></div>
+                    <input type="hidden" name="carId" value="@Model.CarId" />
+                    <p>Are you sure you want to delete car <strong>@Model.PlateNumber</strong>?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+    document.getElementById('deleteCarForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const id = this.querySelector('[name="carId"]').value;
+        const errorAlert = this.querySelector('#deleteCarError');
+        if (errorAlert) {
+            errorAlert.classList.add('d-none');
+            errorAlert.textContent = '';
+        }
+
+        try {
+            const response = await fetch('/api/Car/' + id, { method: 'DELETE' });
+
+            if (!response.ok) {
+                let message = 'An error occurred while deleting the car.';
+                const contentType = response.headers.get('Content-Type') || '';
+
+                try {
+                    if (contentType.includes('application/json')) {
+                        const data = await response.json();
+                        if (data && typeof data === 'object') {
+                            message = data.message || message;
+                        }
+                    } else {
+                        const text = await response.text();
+                        if (text) {
+                            message = text;
+                        }
+                    }
+                } catch {
+                    // Ignore parsing errors
+                }
+
+                if (errorAlert) {
+                    errorAlert.textContent = message;
+                    errorAlert.classList.remove('d-none');
+                }
+                showPopup(message, 'error');
+                return;
+            }
+
+            const modalEl = this.closest('.modal');
+            bootstrap.Modal.getInstance(modalEl).hide();
+            showPopup('Car deleted successfully.', 'success');
+            if (window.loadCars) loadCars();
+        } catch (err) {
+            if (errorAlert) {
+                errorAlert.textContent = 'Unable to connect to the server. Please try again.';
+                errorAlert.classList.remove('d-none');
+            }
+            showPopup('Unable to delete car right now.', 'error');
+        }
+    });
+</script>
+>>>>>>> Mahmoud-V3

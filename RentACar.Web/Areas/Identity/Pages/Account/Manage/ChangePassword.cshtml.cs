@@ -9,7 +9,10 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
+<<<<<<< HEAD
 using RentACar.Application.Managers; // Added
+=======
+>>>>>>> Mahmoud-V3
 
 namespace RentACar.Web.Areas.Identity.Pages.Account.Manage
 {
@@ -18,18 +21,28 @@ namespace RentACar.Web.Areas.Identity.Pages.Account.Manage
         private readonly UserManager<IdentityUser> _userManager;
         private readonly SignInManager<IdentityUser> _signInManager;
         private readonly ILogger<ChangePasswordModel> _logger;
+<<<<<<< HEAD
         private readonly EmailManager _emailManager; // Added
+=======
+>>>>>>> Mahmoud-V3
 
         public ChangePasswordModel(
             UserManager<IdentityUser> userManager,
             SignInManager<IdentityUser> signInManager,
+<<<<<<< HEAD
             ILogger<ChangePasswordModel> logger,
             EmailManager emailManager) // Added
+=======
+            ILogger<ChangePasswordModel> logger)
+>>>>>>> Mahmoud-V3
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _logger = logger;
+<<<<<<< HEAD
             _emailManager = emailManager;
+=======
+>>>>>>> Mahmoud-V3
         }
 
         /// <summary>
@@ -123,10 +136,13 @@ namespace RentACar.Web.Areas.Identity.Pages.Account.Manage
 
             await _signInManager.RefreshSignInAsync(user);
             _logger.LogInformation("User changed their password successfully.");
+<<<<<<< HEAD
             
             // 📨 Notify User
             await _emailManager.SendPasswordChangedNotification(user.Email, user.UserName);
             
+=======
+>>>>>>> Mahmoud-V3
             StatusMessage = "Your password has been changed.";
 
             return RedirectToPage();

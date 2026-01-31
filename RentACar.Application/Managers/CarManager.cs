@@ -4,7 +4,10 @@ using Microsoft.AspNetCore.Identity;
 using RentACar.Application.DTOs;
 using RentACar.Core.Entities;
 using RentACar.Core.Repositories;
+<<<<<<< HEAD
 using Microsoft.EntityFrameworkCore;
+=======
+>>>>>>> Mahmoud-V3
 using Microsoft.Extensions.Logging;
 using AspNetUser = RentACar.Core.Entities.AspNetUser;
 
@@ -17,18 +20,26 @@ namespace RentACar.Application.Managers
         private readonly UserManager<IdentityUser> _userManager; // Inject UserManager for role checking
         private readonly ILogger<CarManager> _logger;
         private readonly AuditLogManager _auditLogManager;
+<<<<<<< HEAD
         private readonly EmailManager _emailManager;
         private readonly EmployeeManager _employeeManager;
 
         public CarManager(ICarRepository carRepository, IMapper mapper, UserManager<IdentityUser> userManager, ILogger<CarManager> logger, AuditLogManager auditLogManager, EmailManager emailManager, EmployeeManager employeeManager)
+=======
+
+        public CarManager(ICarRepository carRepository, IMapper mapper, UserManager<IdentityUser> userManager, ILogger<CarManager> logger, AuditLogManager auditLogManager)
+>>>>>>> Mahmoud-V3
         {
             _carRepository = carRepository;
             _mapper = mapper;
             _userManager = userManager;
             _logger = logger;
             _auditLogManager = auditLogManager;
+<<<<<<< HEAD
             _emailManager = emailManager;
             _employeeManager = employeeManager;
+=======
+>>>>>>> Mahmoud-V3
         }
 
         public async Task<CarDto?> AddCarAsync(CarDto carDto, string userId)
@@ -63,11 +74,15 @@ namespace RentACar.Application.Managers
 
             await _auditLogManager.LogAsync("Create", "Car", carEntity.CarId.ToString(), $"Added new car: {carEntity.ModelName} ({carEntity.ModelYear}) - {carEntity.PlateNumber}");
 
+<<<<<<< HEAD
             // 5. Send Car Update Email (Create)
             var emails = await _employeeManager.GetActiveEmployeeEmailsAsync();
             await _emailManager.SendCarUpdateEmail(emails, carEntity, "Create", "New Car", "N/A", "Created", "System/Admin");
 
             // 6. Map the created entity back to a DTO and return it
+=======
+            // 5. Map the created entity back to a DTO and return it
+>>>>>>> Mahmoud-V3
             return _mapper.Map<CarDto>(carEntity);
         }
 
@@ -119,6 +134,7 @@ namespace RentACar.Application.Managers
             _logger.LogInformation("Updating availability for car {Id} to {Avail}", carId, isAvailable);
             await _carRepository.UpdateCarAvailabilityAsync(carId, isAvailable);
             await _auditLogManager.LogAsync("Update", "Car", carId.ToString(), $"Updated availability to: {isAvailable}");
+<<<<<<< HEAD
             
             // 📨 Send Car Update Email
             var car = await _carRepository.GetByIdAsync(carId);
@@ -126,6 +142,8 @@ namespace RentACar.Application.Managers
                 var emails = await _employeeManager.GetActiveEmployeeEmailsAsync();
                 await _emailManager.SendCarUpdateEmail(emails, car, "Update", "IsAvailable", (!isAvailable).ToString(), isAvailable.ToString(), "System/Admin");
             }
+=======
+>>>>>>> Mahmoud-V3
         }
 
         public async Task UpdateCarAsync(CarDto carDto)
@@ -134,6 +152,7 @@ namespace RentACar.Application.Managers
             if (existingCar != null)
             {
                 _logger.LogInformation("Updating car {Id}", carDto.CarId);
+<<<<<<< HEAD
                 
                 var oldPrice = existingCar.PricePerDay;
                 var oldModel = existingCar.ModelName;
@@ -149,6 +168,11 @@ namespace RentACar.Application.Managers
                 }
                 // (Note: The spec asked for 'Car updates', triggering on Price/Availability/Delete. Is it only Price? "Car price changed")
                 // Yes, "Car price changed", "Car availability changed", "Car deleted/archived".
+=======
+                _mapper.Map(carDto, existingCar);
+                await _carRepository.UpdateAsync(existingCar);
+                await _auditLogManager.LogAsync("Update", "Car", carDto.CarId.ToString(), $"Updated car details: {carDto.ModelName} - {carDto.PlateNumber}");
+>>>>>>> Mahmoud-V3
             }
             else
             {
@@ -160,6 +184,7 @@ namespace RentACar.Application.Managers
         public async Task DeleteCarAsync(int id)
         {
             _logger.LogInformation("Deleting car {Id}", id);
+<<<<<<< HEAD
             try 
             {
                 // Try Hard Delete first
@@ -176,12 +201,17 @@ namespace RentACar.Application.Managers
                 await UpdateCarAvailabilityAsync(id, false); // Set IsAvailable = false
                 await _auditLogManager.LogAsync("Deactivate", "Car", id.ToString(), "Deactivated car (Soft Delete) due to existing records");
             }
+=======
+            await _carRepository.DeleteAsync(id);
+            await _auditLogManager.LogAsync("Delete", "Car", id.ToString(), "Deleted car from fleet");
+>>>>>>> Mahmoud-V3
         }
         public async Task<List<CarListDto>> SearchCarsForListAsync(string? modelName = null, int? modelYear = null, int? categoryId = null, bool? isAvailable = null)
         {
             var cars = await _carRepository.SearchByFilterAsync(modelName, modelYear, categoryId, isAvailable);
             return _mapper.Map<List<CarListDto>>(cars);
         }
+<<<<<<< HEAD
 
         public async Task<PagedResultDto<CarListDto>> GetCarsPagedAsync(
             string? name, 
@@ -289,6 +319,8 @@ namespace RentACar.Application.Managers
                 CategoryName = c.Category != null ? c.Category.Name : null
             }).ToListAsync();
         }
+=======
+>>>>>>> Mahmoud-V3
     }
 
     public class CarProfile : Profile

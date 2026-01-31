@@ -8,7 +8,10 @@ using RentACar.Application.DTOs;
 using RentACar.Core.Entities;
 using RentACar.Core.Repositories;
 using Microsoft.Extensions.Logging;
+<<<<<<< HEAD
 using Microsoft.EntityFrameworkCore;
+=======
+>>>>>>> Mahmoud-V3
 using AspNetUserDto = RentACar.Application.DTOs.AspNetUser; // Assuming you have this DTO
 using EmployeeDto = RentACar.Application.DTOs.EmployeeDto;        // Assuming you have this DTO
 using CustomerDto = RentACar.Application.DTOs.CustomerDTO;        // Assuming you have this DTO
@@ -27,10 +30,15 @@ namespace RentACar.Application.Managers
         private readonly IEmployeeRepository _employeeRepository;
         private readonly ILogger<BlacklistManager> _logger;
         private readonly AuditLogManager _auditLogManager;
+<<<<<<< HEAD
         private readonly EmailManager _emailManager;
         private readonly EmployeeManager _employeeManager;
 
         public BlacklistManager(IBlacklistRepository blacklistRepository, UserManager<IdentityUser> userManager, IMapper mapper, ICustomerRepository customerRepository, IEmployeeRepository employeeRepository, ILogger<BlacklistManager> logger, AuditLogManager auditLogManager, EmailManager emailManager, EmployeeManager employeeManager)
+=======
+
+        public BlacklistManager(IBlacklistRepository blacklistRepository, UserManager<IdentityUser> userManager, IMapper mapper, ICustomerRepository customerRepository, IEmployeeRepository employeeRepository, ILogger<BlacklistManager> logger, AuditLogManager auditLogManager)
+>>>>>>> Mahmoud-V3
         {
             _blacklistRepository = blacklistRepository;
             _userManager = userManager;
@@ -39,8 +47,11 @@ namespace RentACar.Application.Managers
             _employeeRepository = employeeRepository;
             _logger = logger;
             _auditLogManager = auditLogManager;
+<<<<<<< HEAD
             _emailManager = emailManager;
             _employeeManager = employeeManager;
+=======
+>>>>>>> Mahmoud-V3
         }
 
         public async Task<OperationResult<BlacklistDto>> AddToBlacklistAsync(AddToBlacklistRequestDto requestDto, EmployeeDto loggedInEmployeeDto)
@@ -136,6 +147,7 @@ namespace RentACar.Application.Managers
                     await _employeeRepository.UpdateAsync(employeeEntity);
                 }
             }
+<<<<<<< HEAD
             
             // 📨 Send Account Status Email (Blocked)
             if (userToBlacklist.Email != null) {
@@ -150,6 +162,8 @@ namespace RentACar.Application.Managers
                       await _emailManager.SendAdminAccountStatusNotification(adminEmails, customer, "Blocked", reason, loggedInEmployee.Name);
                  }
             }
+=======
+>>>>>>> Mahmoud-V3
 
             return OperationResult<BlacklistDto>.SuccessResult(_mapper.Map<BlacklistDto>(addedEntity), "Done");
         }
@@ -227,6 +241,7 @@ namespace RentACar.Application.Managers
                     return OperationResult<bool>.Failure("Cannot verify employee");
                 }
             }
+<<<<<<< HEAD
             
             // 📨 Send Account Status Email (Restored)
             if (userToRemove.Email != null) {
@@ -245,6 +260,8 @@ namespace RentACar.Application.Managers
                       await _emailManager.SendAdminAccountStatusNotification(adminEmails, customer, "Restored", "Removed from blacklist", "Admin");
                  }
             }
+=======
+>>>>>>> Mahmoud-V3
 
             return OperationResult<bool>.SuccessResult(true, "Done");
         }
@@ -354,6 +371,7 @@ namespace RentACar.Application.Managers
             var req = new RemoveFromBlacklistRequestDto { Identifier = entry.UserId, UseUsername = false };
             return await RemoveFromBlacklistAsync(req, loggedInEmployeeDto);
         }
+<<<<<<< HEAD
         public async Task<PagedResultDto<BlacklistDisplayDto>> GetBlacklistPagedAsync(
             string? search, 
             string? type, 
@@ -430,6 +448,8 @@ namespace RentACar.Application.Managers
                 _ => query.OrderByDescending(b => b.DateBlocked)
             };
         }
+=======
+>>>>>>> Mahmoud-V3
     }
 
     public class BlacklistProfile : Profile

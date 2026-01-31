@@ -4,13 +4,19 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> Mahmoud-V3
 namespace RentACar.Core.Entities;
 
 public partial class Customer
 {
+<<<<<<< HEAD
     private ICollection<CustomerRating> customerRatings = new List<CustomerRating>();
 
+=======
+>>>>>>> Mahmoud-V3
     [Key]
     [Column("userID")]
     public int UserId { get; set; } = 0!;
@@ -47,13 +53,21 @@ public partial class Customer
     [InverseProperty("Customer")]
     public virtual ICollection<Booking> Bookings { get; set; } = new List<Booking>();
 
+<<<<<<< HEAD
 
+=======
+    [InverseProperty("User")]
+    public virtual ICollection<CustomerCreditCard> CustomerCreditCards { get; set; } = new List<CustomerCreditCard>();
+>>>>>>> Mahmoud-V3
 
     [ForeignKey("aspNetUserId")]
     [InverseProperty("Customer")]
     public virtual AspNetUser User { get; set; } = null!;
+<<<<<<< HEAD
 
     [InverseProperty("Customer")]
     public virtual ICollection<CustomerRating> CustomerRatings { get => customerRatings; set => customerRatings = value; }
 
+=======
+>>>>>>> Mahmoud-V3
 }

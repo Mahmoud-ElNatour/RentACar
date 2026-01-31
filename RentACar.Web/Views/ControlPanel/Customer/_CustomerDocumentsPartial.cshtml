@@ -1,4 +1,5 @@
 @model RentACar.Application.DTOs.CustomerDTO
+<<<<<<< HEAD
 
 <div class="modal fade" id="customerDocsModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -70,15 +71,53 @@
                                 </div>
                             </div>
                             <input type="file" name="NationalIdback" class="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#d4af37]/10 file:text-[#d4af37] hover:file:bg-[#d4af37]/20 transition-all cursor-pointer" />
+=======
+<div class="modal fade" id="customerDocsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content dark-modal">
+            <div class="modal-header">
+                <h5 class="modal-title">Customer Documents</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="docsForm">
+                    <input type="hidden" name="customerId" value="@Model.UserId" />
+                    <div class="row g-3">
+                        <div class="col-md-6 text-center">
+                            <label class="form-label">Driving License Front</label>
+                            <img src="/api/Customer/Document/@Model.UserId/license-front" class="img-fluid mb-2" onerror="this.style.display='none'" />
+                            <input type="file" name="DrivingLicenseFront" class="form-control" />
+                        </div>
+                        <div class="col-md-6 text-center">
+                            <label class="form-label">Driving License Back</label>
+                            <img src="/api/Customer/Document/@Model.UserId/license-back" class="img-fluid mb-2" onerror="this.style.display='none'" />
+                            <input type="file" name="DrivingLicenseBack" class="form-control" />
+                        </div>
+                        <div class="col-md-6 text-center">
+                            <label class="form-label">National ID Front</label>
+                            <img src="/api/Customer/Document/@Model.UserId/id-front" class="img-fluid mb-2" onerror="this.style.display='none'" />
+                            <input type="file" name="NationalIdfront" class="form-control" />
+                        </div>
+                        <div class="col-md-6 text-center">
+                            <label class="form-label">National ID Back</label>
+                            <img src="/api/Customer/Document/@Model.UserId/id-back" class="img-fluid mb-2" onerror="this.style.display='none'" />
+                            <input type="file" name="NationalIdback" class="form-control" />
+>>>>>>> Mahmoud-V3
                         </div>
                     </div>
                 </form>
             </div>
+<<<<<<< HEAD
             
              <!-- Footer -->
             <div class="modal-footer border-t border-white/5 p-5 flex gap-3">
                 <button type="button" class="flex-1 bg-white/5 hover:bg-white/10 text-white font-medium py-2.5 rounded-xl transition-colors border border-white/10" data-bs-dismiss="modal">Close</button>
                 <button type="button" id="saveDocs" class="flex-1 bg-[#d4af37] hover:bg-[#b5952f] text-black font-semibold py-2.5 rounded-xl transition-all shadow-[0_0_15px_rgba(212,175,55,0.3)]">Save Documents</button>
+=======
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" id="saveDocs" class="btn btn-primary">Save</button>
+>>>>>>> Mahmoud-V3
             </div>
         </div>
     </div>
@@ -101,6 +140,7 @@
     }
 
     document.getElementById('saveDocs').addEventListener('click', async function () {
+<<<<<<< HEAD
         const btn = this;
         const originalText = btn.textContent;
         btn.disabled = true;
@@ -118,6 +158,18 @@
             };
             const id = form.querySelector('[name="customerId"]').value;
             
+=======
+        const form = document.getElementById('docsForm');
+        const files = form.elements;
+        const data = {
+            drivingLicenseFront: files['DrivingLicenseFront'].files[0] ? await fileToBase64(files['DrivingLicenseFront'].files[0]) : null,
+            drivingLicenseBack: files['DrivingLicenseBack'].files[0] ? await fileToBase64(files['DrivingLicenseBack'].files[0]) : null,
+            nationalIdfront: files['NationalIdfront'].files[0] ? await fileToBase64(files['NationalIdfront'].files[0]) : null,
+            nationalIdback: files['NationalIdback'].files[0] ? await fileToBase64(files['NationalIdback'].files[0]) : null
+        };
+        const id = form.querySelector('[name="customerId"]').value;
+        try {
+>>>>>>> Mahmoud-V3
             const response = await fetch('/api/Customer/' + id + '/documents', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
@@ -127,6 +179,7 @@
             if (!response.ok) {
                 let message = 'Failed to update customer documents.';
                 try {
+<<<<<<< HEAD
                     const payload = await response.json();
                     if (payload && payload.message) message = payload.message;
                 } catch { 
@@ -134,11 +187,31 @@
                 }
 
                 if (window.showPopup) window.showPopup(message, 'error');
+=======
+                    const contentType = response.headers.get('Content-Type') || '';
+                    if (contentType.includes('application/json')) {
+                        const payload = await response.json();
+                        if (payload && typeof payload === 'object' && payload.message) {
+                            message = payload.message;
+                        }
+                    } else {
+                        const text = await response.text();
+                        if (text) message = text;
+                    }
+                } catch {
+                    // ignore parsing errors
+                }
+
+                if (window.showPopup) {
+                    window.showPopup(message, 'error');
+                }
+>>>>>>> Mahmoud-V3
                 return;
             }
 
             const modalEl = document.getElementById('customerDocsModal');
             bootstrap.Modal.getInstance(modalEl).hide();
+<<<<<<< HEAD
             if (window.showPopup) window.showPopup('Customer documents updated successfully.', 'success');
         } catch (err) {
             console.error(err);
@@ -146,6 +219,16 @@
         } finally {
             btn.disabled = false;
             btn.textContent = originalText;
+=======
+            if (window.showPopup) {
+                window.showPopup('Customer documents updated successfully.', 'success');
+            }
+        } catch (err) {
+            if (window.showPopup) {
+                window.showPopup('Unexpected error occurred while updating documents.', 'error');
+            }
+            console.error(err);
+>>>>>>> Mahmoud-V3
         }
     });
 </script>

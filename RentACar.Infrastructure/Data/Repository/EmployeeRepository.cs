@@ -41,10 +41,13 @@ namespace RentACar.Infrastructure.Repositories
 
         public async Task UpdateAsync(Employee employee)
         {
+<<<<<<< HEAD
             if (_dbContext.Entry(employee).State == EntityState.Detached)
             {
                 _dbContext.Employees.Attach(employee);
             }
+=======
+>>>>>>> Mahmoud-V3
             _dbContext.Entry(employee).State = EntityState.Modified;
             await _dbContext.SaveChangesAsync();
         }
@@ -66,10 +69,13 @@ namespace RentACar.Infrastructure.Repositories
                                    .Include(e => e.BlackLists)
                                    .FirstOrDefaultAsync(c => c.aspNetUserId == aspNetUserId);
         }
+<<<<<<< HEAD
 
         public IQueryable<Employee> Query()
         {
             return _dbContext.Set<Employee>().AsQueryable();
         }
+=======
+>>>>>>> Mahmoud-V3
     }
 }

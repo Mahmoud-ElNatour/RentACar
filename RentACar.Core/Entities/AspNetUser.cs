@@ -66,4 +66,10 @@ public partial class AspNetUser
 
     [InverseProperty("User")] // Points back to the 'User' navigation property in the Employee class
     public virtual ICollection<Employee> Employees { get; set; } = new List<Employee>();
+<<<<<<< HEAD
+=======
+
+    [InverseProperty("User")]
+    public virtual ICollection<Driver> Drivers { get; set; } = new List<Driver>();
+>>>>>>> Mahmoud-V3
 }

@@ -1,0 +1,314 @@
+@model RentACar.Web.Models.DriverDashboardViewModel
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+    .glass-card {
+        background: rgba(39, 36, 27, 0.4);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(244, 195, 37, 0.15);
+    }
+    .glass-card-hover:hover {
+        border-color: rgba(244, 195, 37, 0.4);
+        background: rgba(39, 36, 27, 0.6);
+        transition: all 0.3s ease;
+    }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+<main class="max-w-[1400px] mx-auto p-6 lg:px-20 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+    <section class="lg:col-span-7 space-y-6">
+        <div class="flex items-center justify-between mb-2">
+            <div>
+                <h1 class="text-3xl font-black tracking-tight text-white">Driver Dashboard</h1>
+                <p class="text-white/60 mt-1">Daily schedule for @Model.DriverName (@Model.DriverCode).</p>
+            </div>
+            <div class="text-sm font-semibold text-primary">
+                @(Model.IsAvailable ? "AVAILABLE" : "OFFLINE")
+            </div>
+        </div>
+
+        @if (!Model.TodayBookings.Any())
+        {
+            <div class="glass-card rounded-xl p-6 text-white/60">
+                No bookings assigned for today.
+            </div>
+        }
+        else
+        {
+            foreach (var booking in Model.TodayBookings)
+            {
+                <div class="glass-card glass-card-hover rounded-xl p-5 flex flex-col md:flex-row gap-6" data-booking-id="@booking.BookingId">
+                    <div class="flex-1 flex flex-col justify-between">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="text-[10px] font-bold tracking-widest text-primary uppercase">@booking.BookingStatus</span>
+                                <h3 class="text-xl font-bold text-white mt-1">Booking #@booking.BookingId</h3>
+                                <div class="flex items-center gap-2 mt-2">
+                                    <span class="material-symbols-outlined text-gray-400 text-base">person</span>
+                                    <span class="text-gray-300 font-medium">@booking.CustomerName</span>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-xs text-gray-500 uppercase font-bold">Dates</p>
+                                <p class="text-white font-bold">
+                                    @(booking.StartDate.ToString("yyyy-MM-dd"))
+                                    → @(booking.EndDate.ToString("yyyy-MM-dd"))
+
+                                </p>
+                            </div>
+                        </div>
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mt-4">
+                            <div class="flex items-center gap-2 text-gray-400">
+                                <span class="material-symbols-outlined text-primary text-sm">location_on</span>
+                                <span class="text-sm truncate">@booking.PickupLocationLabel</span>
+                            </div>
+                            <div class="flex flex-wrap gap-2 items-center">
+                                <button class="tracking-start bg-primary text-background-dark px-4 py-2 rounded-lg font-bold text-xs shadow-[0_0_15px_rgba(244,195,37,0.3)] hover:scale-105 transition-transform">
+                                    Start Tracking
+                                </button>
+                                <button class="tracking-stop border border-red-500/40 text-red-400 px-4 py-2 rounded-lg font-bold text-xs hover:bg-red-500/10 transition-transform">
+                                    Stop
+                                </button>
+                                <a class="bg-white/10 text-white px-4 py-2 rounded-lg font-bold text-xs hover:bg-white/20 transition-transform"></a>
+                                <a class="bg-white/10 text-white px-4 py-2 rounded-lg font-bold text-xs hover:bg-white/20 transition-transform"
+                                   href="@Url.Action("BookingDetails", "DriverPortal", new { id = booking.BookingId })">
+                                    View Trip
+                                </a>
+                            </div>
+                        </div>
+                        <div class="mt-3 flex flex-wrap items-center gap-3 text-xs text-white/50">
+                            <span class="tracking-status">Tracking idle</span>
+                            <span class="tracking-error text-red-400 hidden"></span>
+                            <button class="tracking-retry text-primary underline hidden" type="button">Retry</button>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </section>
+
+    <aside class="lg:col-span-5 space-y-8">
+        <div class="glass-card rounded-2xl p-6 shadow-2xl">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h2 class="text-xl font-bold text-white">Duty Status</h2>
+                    <p class="text-sm text-gray-400">Status updates are visible to dispatch.</p>
+                </div>
+                <span class="text-sm font-bold text-primary">@(Model.IsAvailable ? "AVAILABLE" : "OFFLINE")</span>
+            </div>
+            <p class="text-white/60 text-sm">Toggle availability from the schedule page to sync your weekly availability.</p>
+            <a class="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl font-bold transition-all"
+               href="@Url.Action("Schedule", "DriverPortal")">
+                <span class="material-symbols-outlined text-lg">calendar_today</span>
+                Manage Schedule
+            </a>
+        </div>
+
+        <div class="glass-card rounded-2xl p-6 shadow-2xl">
+            <h2 class="text-xl font-bold text-white mb-4">Next Pickup Route</h2>
+            <div class="h-64 relative bg-gray-800 rounded-xl overflow-hidden">
+                <div class="w-full h-full bg-cover bg-center opacity-70 grayscale contrast-125"
+                     style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuD5-H-seISq_Odd3hLB78Svg57eJur2vri8P68WghLNu5UYtO1s8STTR-L1B7QeiTDAX3pLPxZiXAOmE7dDVwsMzAlPVg5tRbdhgYj9q1Ufk5RYd964x15OgRw1CTBYov9fFyEUmo3GVhV_rtwPmrXujtmSsAFEkMSqI4iFp6DDe7U2vm4NujPt1rhhQhUBXgvrTxCzQ91kKIkSliDd57FoTAp03f5VwXfWtw4Wy06kQkuJD_4Cuy875PXTqOK-lgMQ7GXaMn7nQRLD');">
+                </div>
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <div class="relative">
+                        <div class="h-4 w-4 bg-primary rounded-full animate-ping absolute"></div>
+                        <div class="h-4 w-4 bg-primary rounded-full relative border-2 border-background-dark"></div>
+                    </div>
+                </div>
+            </div>
+            <p class="text-white/50 text-xs mt-3">Map preview uses a placeholder image. Live maps can be connected later.</p>
+        </div>
+    </aside>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js" integrity="sha512-1Yf1sAP0f1C4XqE1P6rrG0o7b4EJhp3hsl2Ov9gfy6dqr8e3VshqV4xRtZ8y6k+GOpAxv4C9M4D9YolX2a+8tw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script>
+    const driverId = @Model.DriverId;
+    const throttleMs = 25000;
+    const idleMs = 120000;
+    const movementThresholdMeters = 15;
+
+    let watchId = null;
+    let lastSentAt = 0;
+    let lastSentPosition = null;
+    let lastMovementAt = 0;
+    let isIdle = false;
+    let activeBookingId = null;
+    let hubConnection = null;
+
+    function haversineMeters(a, b) {
+        if (!a || !b) return 0;
+        const toRad = (deg) => (deg * Math.PI) / 180;
+        const R = 6371000;
+        const dLat = toRad(b.lat - a.lat);
+        const dLng = toRad(b.lng - a.lng);
+        const lat1 = toRad(a.lat);
+        const lat2 = toRad(b.lat);
+        const sinLat = Math.sin(dLat / 2);
+        const sinLng = Math.sin(dLng / 2);
+        const h = sinLat * sinLat + Math.cos(lat1) * Math.cos(lat2) * sinLng * sinLng;
+        return 2 * R * Math.asin(Math.sqrt(h));
+    }
+
+    async function ensureHubConnection() {
+        if (hubConnection) return hubConnection;
+        hubConnection = new signalR.HubConnectionBuilder()
+            .withUrl('/hubs/driverTracking')
+            .withAutomaticReconnect()
+            .build();
+
+        await hubConnection.start();
+        return hubConnection;
+    }
+
+    function updateStatus(card, message) {
+        const statusEl = card.querySelector('.tracking-status');
+        if (statusEl) {
+            statusEl.textContent = message;
+        }
+    }
+
+    function showError(card, message) {
+        const errorEl = card.querySelector('.tracking-error');
+        const retryBtn = card.querySelector('.tracking-retry');
+        if (errorEl) {
+            errorEl.textContent = message;
+            errorEl.classList.remove('hidden');
+        }
+        if (retryBtn) {
+            retryBtn.classList.remove('hidden');
+        }
+    }
+
+    function clearError(card) {
+        const errorEl = card.querySelector('.tracking-error');
+        const retryBtn = card.querySelector('.tracking-retry');
+        if (errorEl) {
+            errorEl.classList.add('hidden');
+            errorEl.textContent = '';
+        }
+        if (retryBtn) {
+            retryBtn.classList.add('hidden');
+        }
+    }
+
+    async function sendLocation(position) {
+        if (!activeBookingId) return;
+        const connection = await ensureHubConnection();
+        await connection.invoke('UpdateLocation', activeBookingId, driverId, position.coords.latitude, position.coords.longitude,
+            new Date().toISOString(), position.coords.speed ?? null, position.coords.heading ?? null, position.coords.accuracy ?? null);
+
+        lastSentAt = Date.now();
+        lastSentPosition = { lat: position.coords.latitude, lng: position.coords.longitude };
+
+        const card = document.querySelector(`[data-booking-id='${activeBookingId}']`);
+        if (card) {
+            updateStatus(card, `Last sent ${new Date().toLocaleTimeString()}`);
+        }
+    }
+
+    function shouldSend(position) {
+        if (!lastSentPosition) {
+            lastMovementAt = Date.now();
+            return true;
+        }
+
+        const current = { lat: position.coords.latitude, lng: position.coords.longitude };
+        const distance = haversineMeters(lastSentPosition, current);
+        const moved = distance >= movementThresholdMeters;
+
+        if (moved) {
+            lastMovementAt = Date.now();
+            if (isIdle) {
+                isIdle = false;
+            }
+        }
+
+        if (isIdle) {
+            return false;
+        }
+
+        if (Date.now() - lastMovementAt >= idleMs) {
+            isIdle = true;
+            const card = document.querySelector(`[data-booking-id='${activeBookingId}']`);
+            if (card) {
+                updateStatus(card, 'Idle (waiting for movement)');
+            }
+            return false;
+        }
+
+        if (!moved) {
+            return false;
+        }
+
+        return Date.now() - lastSentAt >= throttleMs;
+    }
+
+    function onGeoError(error, card) {
+        console.error('Geolocation error:', error);
+        showError(card, 'Location permission denied. Please retry.');
+        updateStatus(card, 'Tracking paused');
+    }
+
+    async function startTracking(card, bookingId) {
+        if (!navigator.geolocation) {
+            showError(card, 'Geolocation is not supported in this browser.');
+            return;
+        }
+
+        if (watchId && activeBookingId === bookingId) {
+            return;
+        }
+
+        activeBookingId = bookingId;
+        lastSentAt = 0;
+        lastSentPosition = null;
+        lastMovementAt = Date.now();
+        isIdle = false;
+
+        clearError(card);
+        updateStatus(card, 'Requesting location...');
+
+        await ensureHubConnection();
+        await hubConnection.invoke('JoinBookingGroup', bookingId);
+
+        watchId = navigator.geolocation.watchPosition(
+            async (position) => {
+                if (!lastSentPosition) {
+                    await sendLocation(position);
+                } else if (shouldSend(position)) {
+                    await sendLocation(position);
+                }
+            },
+            (err) => onGeoError(err, card),
+            {
+                enableHighAccuracy: true,
+                maximumAge: 1000,
+                timeout: 10000
+            }
+        );
+    }
+
+    function stopTracking(card) {
+        if (watchId) {
+            navigator.geolocation.clearWatch(watchId);
+            watchId = null;
+        }
+        updateStatus(card, 'Tracking stopped');
+        activeBookingId = null;
+    }
+
+    document.querySelectorAll('[data-booking-id]').forEach(card => {
+        const bookingId = parseInt(card.getAttribute('data-booking-id'), 10);
+        const startBtn = card.querySelector('.tracking-start');
+        const stopBtn = card.querySelector('.tracking-stop');
+        const retryBtn = card.querySelector('.tracking-retry');
+
+        startBtn?.addEventListener('click', () => startTracking(card, bookingId));
+        stopBtn?.addEventListener('click', () => stopTracking(card));
+        retryBtn?.addEventListener('click', () => startTracking(card, bookingId));
+    });
+</script>

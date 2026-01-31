@@ -1,6 +1,7 @@
 @page
 @model ResendEmailConfirmationModel
 @{
+<<<<<<< HEAD
     ViewData["Title"] = "Resend email confirmation";
     Layout = null;
 }
@@ -128,10 +129,46 @@
     <script src="~/js/site.js"></script> <!-- Required for showPopup -->
     <partial name="_ValidationScriptsPartial" />
     
+=======
+    Layout = "/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Resend email confirmation";
+    ViewData["BodyClass"] = "bg-background-dark";
+}
+
+<div class="flex items-center justify-center min-h-[calc(100vh-300px)] py-16 px-4">
+    <div class="w-full max-w-md space-y-8 bg-[#171717] p-10 rounded-2xl shadow-xl border border-white/5">
+        <div class="text-center">
+            <div class="flex justify-center mb-6">
+                <div class="h-20 w-20 rounded-full bg-gold/10 flex items-center justify-center border border-gold/20">
+                    <span class="material-symbols-outlined text-gold text-5xl">send</span>
+                </div>
+            </div>
+            <h1 class="text-3xl font-bold text-white mb-2">@ViewData["Title"]</h1>
+            <p class="text-gray-400">Enter your email address to receive a new confirmation link.</p>
+        </div>
+
+        <form method="post" class="space-y-6">
+            <div class="space-y-2">
+                <label asp-for="Input.Email" class="block text-sm font-medium text-gray-300">Email Address</label>
+                <input asp-for="Input.Email" class="block w-full bg-[#1a1a1a] border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-gold focus:border-gold transition-all" autocomplete="username" aria-required="true" placeholder="name@example.com" />
+                <span asp-validation-for="Input.Email" class="text-red-400 text-xs"></span>
+            </div>
+
+            <button type="submit" class="w-full inline-flex items-center justify-center px-6 py-3.5 border border-transparent text-base font-bold rounded-lg text-black bg-gold hover:bg-gold-hover transition-all duration-300 shadow-lg">
+                Resend Confirmation
+            </button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+>>>>>>> Mahmoud-V3
     @if (TempData["ResendSuccess"] != null)
     {
         <script>
             document.addEventListener('DOMContentLoaded', function () {
+<<<<<<< HEAD
                 // Ensure showPopup exists (from site.js or inline)
                 if (typeof showPopup === 'function') {
                     showPopup('@Html.Raw(TempData["ResendSuccess"])', 'success');
@@ -143,3 +180,10 @@
     }
 </body>
 </html>
+=======
+                showPopup('@Html.Raw(TempData["ResendSuccess"])', 'success');
+            });
+        </script>
+    }
+}
+>>>>>>> Mahmoud-V3

@@ -6,6 +6,7 @@ namespace RentACar.Infrastructure.Data
 {
     public class ApplicationDbContext : IdentityDbContext
     {
+<<<<<<< HEAD
         public DbSet<DistributionList> DistributionLists { get; set; }
         public DbSet<DistributionListMember> DistributionListMembers { get; set; }
         public DbSet<DistributionListRule> DistributionListRules { get; set; }
@@ -20,14 +21,20 @@ namespace RentACar.Infrastructure.Data
         public DbSet<ServiceRunRecord> ServiceRunRecords { get; set; }
         public DbSet<ServiceRunItem> ServiceRunItems { get; set; }
 
+=======
+>>>>>>> Mahmoud-V3
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {
         }
 
+<<<<<<< HEAD
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
         }
+=======
+
+>>>>>>> Mahmoud-V3
     }
 }

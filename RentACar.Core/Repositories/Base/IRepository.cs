@@ -9,7 +9,10 @@ namespace RentACar.Core.Repositories.Base
 {
     public interface IRepository<T> where T : class
     {
+<<<<<<< HEAD
         IQueryable<T> Query();
+=======
+>>>>>>> Mahmoud-V3
         Task<IReadOnlyList<T>> GetAllAsync();
         Task<IReadOnlyList<T>> GetAsync(Expression<Func<T, bool>> predicate);
         Task<IReadOnlyList<T>> GetAsync(Expression<Func<T, bool>> predicate = null,

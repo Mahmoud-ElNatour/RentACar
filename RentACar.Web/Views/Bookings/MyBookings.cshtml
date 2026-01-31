@@ -2,6 +2,7 @@
     ViewData["Title"] = "My Bookings";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
+<<<<<<< HEAD
 
 <!-- Main Container -->
 <div class="bg-[#121212] min-h-screen py-12">
@@ -52,10 +53,57 @@
                         <!-- Rows injected via JS -->
                     </tbody>
                 </table>
+=======
+<link rel="stylesheet" href="~/css/mybookings.css" />
+<div class="d-flex justify-content-center mt-4">
+    <div class="history-container w-100">
+        <h2 class="text-center mb-4">My Bookings</h2>
+        <div class="table-responsive">
+            <table class="table table-dark table-striped align-middle">
+                <thead>
+                    <tr>
+                        <th>Booking ID</th>
+                        <th>Car</th>
+                        <th>Payment Status</th>
+                        <th>Start</th>
+                        <th>End</th>
+                        <th>Price</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="bookingRows"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="payModal" tabindex="-1" aria-labelledby="payModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark text-light">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title" id="payModalLabel">Pay for Booking</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Total Amount</label>
+                    <div id="paymentAmount" class="fw-bold"></div>
+                </div>
+                <div class="mb-3">
+                    <label for="paymentMethodSelect" class="form-label">Payment Method</label>
+                    <select id="paymentMethodSelect" class="form-select"></select>
+                </div>
+                <div id="paymentError" class="text-danger small d-none"></div>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirmPayBtn">Pay Now</button>
+>>>>>>> Mahmoud-V3
             </div>
         </div>
     </div>
 </div>
+<<<<<<< HEAD
 
 <!-- Details Modal Placeholder -->
 <div id="detailsModalContainer"></div>
@@ -299,6 +347,142 @@
         document.addEventListener('DOMContentLoaded', async () => {
             await loadPaymentMethods();
             await loadBookings();
+=======
+@section Scripts{
+    <script>
+        let selectedBookingId = null;
+        let selectedAmount = null;
+        let paymentMethods = [];
+        let payModal;
+
+        async function loadPaymentMethods() {
+            const res = await fetch('/api/PaymentMethod/active');
+            if (!res.ok) return;
+
+            paymentMethods = await res.json();
+            const select = document.getElementById('paymentMethodSelect');
+            select.innerHTML = '';
+
+            paymentMethods.forEach(method => {
+                const option = document.createElement('option');
+                option.value = method.id;
+                option.textContent = method.paymentMethodName;
+                select.appendChild(option);
+            });
+        }
+
+        async function loadBookings() {
+            const res = await fetch('/api/Bookings');
+            const data = await res.json();
+            const tbody = document.getElementById('bookingRows');
+            tbody.innerHTML = '';
+
+            data.forEach(b => {
+                const paymentStatus = (b.paymentStatus ?? 'unpaid')
+                    .toString()
+                    .trim()
+                    .toLowerCase();
+
+                const statusLabel =
+                    paymentStatus === 'paid'
+                        ? 'Paid'
+                        : paymentStatus === 'cancelled'
+                            ? 'Cancelled'
+                            : 'Unpaid';
+
+                const payDisabled = paymentStatus === 'unpaid';
+                const showPayButton = paymentStatus !== 'paid';
+                const canTrack = b.hasDriver && b.driverId && !['cancelled', 'returned', 'rejected'].includes((b.bookingStatus ?? '').toLowerCase());
+
+                const tr = document.createElement('tr');
+                tr.innerHTML =
+                    `<td>${b.bookingId}</td>` +
+                    `<td>${b.carName ?? ''} (${b.plateNumber ?? ''})</td>` +
+                    `<td>${b.paymentId ?? ''}</td>` +
+                    `<td>${statusLabel}</td>` +
+                    `<td>${b.startdate}</td>` +
+                    `<td>${b.enddate}</td>` +
+                    `<td>${Number(b.totalPrice ?? 0).toFixed(2)}</td>` +
+                    `<td>
+                                ${showPayButton ? `
+                                    <button class="btn btn-primary btn-sm me-2 pay-btn"
+                                            data-booking-id="${b.bookingId}"
+                                            data-amount="${Number(b.totalPrice ?? 0)}"
+                                            ${payDisabled ? 'disabled' : ''}>
+                                        Pay
+                                    </button>
+                                ` : ''}
+                                ${canTrack ? `
+                                    <a class="btn btn-warning btn-sm me-2"
+                                       href="/Tracking/CustomerLive/${b.bookingId}">
+                                        Track Driver
+                                    </a>
+                                ` : ''}
+                                <a class="btn btn-secondary btn-sm"
+                                   href="/Bookings/Ticket/${b.bookingId}"
+                                   target="_blank">
+                                    Ticket
+                                </a>
+                            </td>`;
+
+                tbody.appendChild(tr);
+            });
+
+            document.querySelectorAll('.pay-btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    selectedBookingId = Number(button.dataset.bookingId);
+                    selectedAmount = Number(button.dataset.amount);
+
+                    document.getElementById('paymentAmount').textContent =
+                        selectedAmount.toFixed(2);
+
+                    document.getElementById('paymentError').classList.add('d-none');
+                    payModal.show();
+                });
+            });
+        }
+
+        async function submitPayment() {
+            const paymentMethodId =
+                Number(document.getElementById('paymentMethodSelect').value);
+
+            if (!selectedBookingId || !paymentMethodId) return;
+
+            const res = await fetch('/api/Bookings/Pay', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    bookingId: selectedBookingId,
+                    amount: selectedAmount,
+                    paymentMethodId: paymentMethodId
+                })
+            });
+
+            if (!res.ok) {
+                const errorEl = document.getElementById('paymentError');
+                errorEl.textContent = 'Unable to process payment. Please try again.';
+                errorEl.classList.remove('d-none');
+                return;
+            }
+
+            const result = await res.json();
+
+            if (result.requiresRedirect && result.redirectUrl) {
+                window.location.href = result.redirectUrl;
+                return;
+            }
+
+            payModal.hide();
+            await loadBookings();
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            payModal = new bootstrap.Modal(document.getElementById('payModal'));
+            await loadPaymentMethods();
+            await loadBookings();
+            document.getElementById('confirmPayBtn')
+                .addEventListener('click', submitPayment);
+>>>>>>> Mahmoud-V3
         });
     </script>
 }
