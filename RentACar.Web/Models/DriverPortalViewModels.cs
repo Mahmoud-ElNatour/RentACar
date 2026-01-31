@@ -20,6 +20,7 @@ public class DriverScheduleViewModel
     public DateOnly MonthEnd { get; set; }
     public List<DriverScheduleDayViewModel> Days { get; set; } = new();
     public List<DriverAvailabilityItemViewModel> Availability { get; set; } = new();
+    public List<DriverScheduleBookingItemViewModel> Bookings { get; set; } = new();
     public List<DriverPortalBookingViewModel> UpcomingBookings { get; set; } = new();
 }
 
@@ -71,6 +72,7 @@ public class DriverScheduleBookingItemViewModel
     public DateOnly EndDate { get; set; }
     public DateTime? PickupDateTime { get; set; }
     public string PickupLocationLabel { get; set; } = string.Empty;
+    public string BookingStatus { get; set; } = string.Empty;
 }
 
 public class DriverAvailabilityItemViewModel
