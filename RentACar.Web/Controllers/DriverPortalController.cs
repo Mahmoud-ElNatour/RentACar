@@ -100,34 +100,79 @@ public class DriverPortalController : Controller
         var gridStartDate = DateOnly.FromDateTime(gridStart);
         var gridEndDate = DateOnly.FromDateTime(gridEnd);
 
+        var availability = await _driverManager.GetDriverAvailabilityAsync(driver.DriverId);
+        var bookings = await _bookingManager.GetBookingsByDriverIdAsync(driver.DriverId);
+
+        var availabilityItems = availability.Select(a => new DriverAvailabilityItemViewModel
+        {
+            DriverAvailabilityId = a.DriverAvailabilityId,
+            StartDateTime = a.StartDateTime,
+            EndDateTime = a.EndDateTime,
+            IsAvailable = a.IsAvailable,
+            IsRecurringWeekly = a.IsRecurringWeekly
+        }).ToList();
+
+        var bookingItems = new List<DriverScheduleBookingItemViewModel>();
+        foreach (var booking in bookings.OrderBy(b => b.Startdate))
+        {
+            var customer = await _customerManager.GetCustomerById(booking.CustomerId);
+            bookingItems.Add(new DriverScheduleBookingItemViewModel
+            {
+                BookingId = booking.BookingId,
+                CustomerName = customer?.Name ?? "Customer",
+                StartDate = booking.Startdate,
+                EndDate = booking.Enddate,
+                PickupDateTime = booking.PickupDateTime,
+                PickupLocationLabel = booking.PickupLocationLabel ?? booking.PickupLocationName ?? booking.PickupAddress ?? "Pickup location",
+                BookingStatus = booking.BookingStatus ?? "Pending"
+            });
+        }
+
+        var days = new List<DriverScheduleDayViewModel>();
+        for (var date = gridStartDate; date <= gridEndDate; date = date.AddDays(1))
+        {
+            var dayStart = date.ToDateTime(TimeOnly.MinValue);
+            var dayEnd = date.ToDateTime(TimeOnly.MaxValue);
+            var dayAvailability = availabilityItems
+                .Where(a => a.IsAvailable && IsAvailabilityOnDate(a, date, dayStart, dayEnd))
+                .ToList();
+            var dayBookings = bookingItems
+                .Where(b => b.StartDate <= date && b.EndDate >= date)
+                .ToList();
+
+            days.Add(new DriverScheduleDayViewModel
+            {
+                Date = date,
+                IsToday = date == today,
+                IsCurrentMonth = date >= monthStart && date <= monthEnd,
+                HasAvailability = dayAvailability.Any(),
+                HasBookings = dayBookings.Any(),
+                AvailabilityBlocks = dayAvailability,
+                Bookings = dayBookings
+            });
+        }
+
         var model = new DriverScheduleViewModel
         {
             DriverId = driver.DriverId,
             DriverName = driver.FullName,
-            Availability = availability.Select(a => new DriverAvailabilityItemViewModel
-            {
-                DriverAvailabilityId = a.DriverAvailabilityId,
-                StartDateTime = a.StartDateTime,
-                EndDateTime = a.EndDateTime,
-                IsAvailable = a.IsAvailable,
-                IsRecurringWeekly = a.IsRecurringWeekly
-            }).ToList(),
-            UpcomingBookings = (await Task.WhenAll(bookings
-                    .OrderBy(b => b.Startdate)
-                    .Take(10)
-                    .Select(async b =>
-                    {
-                        var customer = await _customerManager.GetCustomerById(b.CustomerId);
-                        return new DriverPortalBookingViewModel
-                        {
-                            BookingId = b.BookingId,
-                            CustomerName = customer?.Name ?? "Customer",
-                            PickupAddress = b.PickupAddress ?? "Pickup location",
-                            StartDate = b.Startdate,
-                            EndDate = b.Enddate,
-                            BookingStatus = b.BookingStatus
-                        };
-                    })))
+            MonthStart = monthStart,
+            MonthEnd = monthEnd,
+            Days = days,
+            Availability = availabilityItems,
+            Bookings = bookingItems,
+            UpcomingBookings = bookingItems
+                .OrderBy(b => b.StartDate)
+                .Take(10)
+                .Select(b => new DriverPortalBookingViewModel
+                {
+                    BookingId = b.BookingId,
+                    CustomerName = b.CustomerName,
+                    PickupLocationLabel = b.PickupLocationLabel,
+                    StartDate = b.StartDate,
+                    EndDate = b.EndDate,
+                    BookingStatus = b.BookingStatus
+                })
                 .ToList()
         };
 
