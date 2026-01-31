@@ -166,13 +166,18 @@
 </head>
 
 <body class="bg-background-black font-display text-white min-h-screen overflow-hidden">
-<div class="flex h-screen w-full relative">
+<div class="flex flex-col md:flex-row h-screen w-full relative">
     <!-- Drafts Sidebar (25%) -->
-    <aside class="w-[25%] bg-background-black border-r border-border-dark flex flex-col h-full overflow-hidden shrink-0">
+    <aside id="main-sidebar" class="w-full md:w-[25%] bg-background-black border-r border-border-dark flex-col h-full md:h-full overflow-hidden shrink-0 hidden md:flex">
         <div class="p-4 border-b border-border-dark">
-            <div class="flex items-center gap-6 mb-5 border-b border-white/5 pb-2">
-                 <button onclick="switchSidebarTab('drafts')" id="tab-drafts" class="text-white font-extrabold text-sm tracking-[0.2em] uppercase border-b-2 border-primary pb-2 transition-colors">Drafts</button>
-                 <button onclick="switchSidebarTab('sent')" id="tab-sent" class="text-zinc-500 hover:text-white font-extrabold text-sm tracking-[0.2em] uppercase border-b-2 border-transparent pb-2 transition-colors">Sent</button>
+            <div class="flex items-center justify-between mb-5 border-b border-white/5 pb-2">
+                 <div class="flex items-center gap-6">
+                     <button onclick="switchSidebarTab('drafts')" id="tab-drafts" class="text-white font-extrabold text-sm tracking-[0.2em] uppercase border-b-2 border-primary pb-2 transition-colors">Drafts</button>
+                     <button onclick="switchSidebarTab('sent')" id="tab-sent" class="text-zinc-500 hover:text-white font-extrabold text-sm tracking-[0.2em] uppercase border-b-2 border-transparent pb-2 transition-colors">Sent</button>
+                 </div>
+                 <button onclick="toggleMobileSidebar()" class="md:hidden text-zinc-500 hover:text-white">
+                    <span class="material-symbols-outlined">close</span>
+                 </button>
             </div>
 
             <div class="flex items-center justify-between mb-3" id="drafts-meta">
@@ -232,9 +237,13 @@
     </aside>
 
     <!-- Main Content Area -->
-    <main class="w-[75%] flex flex-col h-full bg-background-black relative">
+    <main id="main-content" class="w-full md:w-[75%] flex flex-col h-full bg-background-black relative">
         <header class="px-10 py-8 flex items-center justify-between border-b border-border-dark shrink-0">
             <div class="flex items-center gap-6">
+                <!-- Mobile Menu Toggle -->
+                <button onclick="toggleMobileSidebar()" class="md:hidden text-zinc-500 hover:text-white transition-colors">
+                    <span class="material-symbols-outlined">menu</span>
+                </button>
                 <a href="/EmailServices/EmailServicesHub" class="text-zinc-500 hover:text-white transition-colors">
                     <span class="material-symbols-outlined">arrow_back</span>
                 </a>
@@ -252,7 +261,7 @@
             </div>
         </header>
 
-        <div class="flex flex-1 overflow-hidden" id="main-scroll-area">
+        <div class="flex flex-col md:flex-row flex-1 overflow-hidden" id="main-scroll-area">
             <!-- EDITOR COLUMN -->
             <div class="flex-1 overflow-y-auto custom-scrollbar px-10 pb-8 pt-6 flex flex-col">
 
@@ -372,7 +381,7 @@
             </div>
 
             <!-- Placeholders Sidebar (Template Mode Only) -->
-            <aside id="placeholders-sidebar" class="w-[300px] border-l border-border-dark flex flex-col bg-panel-dark hidden shrink-0">
+            <aside id="placeholders-sidebar" class="w-full md:w-[300px] border-l border-border-dark flex flex-col bg-panel-dark hidden shrink-0">
                 <div class="p-6 border-b border-border-dark">
                     <h3 class="text-white font-black text-[11px] tracking-widest uppercase mb-1">Placeholders</h3>
                     <p class="text-zinc-500 text-[10px]">Inject dynamic logic into template</p>
@@ -606,6 +615,24 @@
             sidebar.classList.remove('hidden');
         }
     }
+    
+    function toggleMobileSidebar() {
+        const sidebar = document.getElementById('main-sidebar');
+        const content = document.getElementById('main-content');
+        
+        // Logical: If sidebar is hidden (has 'hidden' class), show it (remove hidden).
+        // Since we are using Tailwind's 'hidden md:flex', we just toggle 'hidden'.
+        // BUT, on mobile, we want exclusive visibility (one or the other).
+        
+        if (sidebar.classList.contains('hidden')) {
+            sidebar.classList.remove('hidden');
+            content.classList.add('hidden'); // Hide content on mobile
+        } else {
+            sidebar.classList.add('hidden');
+            content.classList.remove('hidden'); // Show content on mobile
+        }
+    }
+
 
     // Toolbar Logic
     function execCmd(command, value = null) {

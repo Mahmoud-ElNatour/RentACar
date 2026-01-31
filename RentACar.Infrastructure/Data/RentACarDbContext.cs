@@ -48,6 +48,7 @@ public partial class RentACarDbContext : DbContext
     public virtual DbSet<NotificationLog> NotificationLogs { get; set; }
     public virtual DbSet<SenderIdentity> SenderIdentities { get; set; }
 
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
 
@@ -151,6 +152,8 @@ public partial class RentACarDbContext : DbContext
         {
             entity.HasIndex(e => e.TemplateKey).IsUnique();
         });
+
+
 
         // Foreign Key Configurations for User Content
         modelBuilder.Entity<EmailDraft>()

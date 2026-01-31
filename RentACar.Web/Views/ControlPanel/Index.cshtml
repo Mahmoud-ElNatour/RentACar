@@ -96,6 +96,8 @@
                     </a>
                 </div>
 
+                @if (User.IsInRole("Admin"))
+                {
                 <!-- Employees -->
                 <div class="group bg-[#121214] border border-white/5 p-5 md:p-8 rounded-xl flex flex-col h-full transition-all duration-300 gold-glow-hover relative overflow-hidden">
                     <div class="absolute -right-4 -top-4 text-[#d4af37]/5 group-hover:text-[#d4af37]/10 transition-colors">
@@ -111,6 +113,7 @@
                         <span class="material-symbols-outlined text-[18px] text-[#d4af37] transition-transform duration-300 group-hover/btn:translate-x-1">arrow_right_alt</span>
                     </a>
                 </div>
+                }
 
                 @if (User.IsInRole("Admin"))
                 {

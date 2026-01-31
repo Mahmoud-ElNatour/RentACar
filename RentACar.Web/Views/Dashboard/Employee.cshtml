@@ -42,21 +42,7 @@
             <h2 class="text-lg lg:text-xl font-bold tracking-tight">Overview</h2>
         </div>
         <div class="flex items-center gap-6">
-            <div class="hidden md:flex items-center relative group">
-                <div class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors">
-                    <span class="material-symbols-outlined text-[20px]">search</span>
-                </div>
-                <input class="bg-surface-dark border border-white/10 rounded-full py-2 pl-10 pr-4 text-sm text-white focus:outline-none focus:border-primary/50 w-64 transition-all focus:w-72 placeholder-gray-500" placeholder="Search bookings, cars..." type="text" />
-            </div>
-            <div class="flex gap-2">
-                <button class="relative flex items-center justify-center size-10 rounded-full hover:bg-white/5 text-gray-300 hover:text-primary transition-colors">
-                    <span class="material-symbols-outlined">notifications</span>
-                    @if (Model.WaitingBookings > 0)
-                    {
-                        <span class="absolute top-2 right-2 size-2 bg-red-500 rounded-full border border-surface-darker"></span>
-                    }
-                </button>
-            </div>
+            <!-- Header actions removed per design requirements -->
         </div>
     </header>
 

@@ -28,14 +28,14 @@
             <div class="lg:col-span-7 lg:pl-10 flex flex-col justify-center h-full">
                 <div class="flex flex-col gap-6 p-8 rounded-2xl bg-white/5 relative group overflow-hidden items-start">
                     <div class="absolute inset-0 bg-gradient-to-br from-gold/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                    <div class="w-full relative z-10 flex flex-col md:flex-row gap-6 md:items-end">
-                        <div class="flex-1">
+                    <div class="w-full relative z-10 flex flex-col gap-4">
+                        <div>
                             <h3 class="text-white font-bold text-xl mb-2">Subscribe for Updates</h3>
                             <p class="text-[15px] text-gray-400">Get the latest news and special offers directly in your inbox.</p>
                         </div>
-                        <form class="flex-1 w-full flex flex-col sm:flex-row gap-2">
-                            <input class="w-full rounded-lg bg-black/40 border border-white/10 text-white placeholder-gray-500 focus:ring-1 focus:ring-gold focus:border-gold px-4 py-3 text-sm transition-all outline-none" placeholder="Email address" type="email" />
-                            <button class="px-6 py-3 rounded-lg bg-gold text-footer-bg font-bold text-sm hover:bg-gold-hover hover:scale-105 active:scale-95 transition-all whitespace-nowrap shadow-lg shadow-gold/20" type="button">
+                        <form id="subscribeForm" class="w-full flex flex-col gap-3">
+                            <input id="subscribeEmail" class="w-full rounded-lg bg-black/40 border border-white/10 text-white placeholder-gray-500 focus:ring-1 focus:ring-gold focus:border-gold px-4 py-3 text-sm transition-all outline-none" placeholder="Email address" type="email" required />
+                            <button id="subscribeBtn" class="w-full sm:w-auto px-6 py-3 rounded-lg bg-gold text-footer-bg font-bold text-sm hover:bg-gold-hover hover:scale-105 active:scale-95 transition-all whitespace-nowrap shadow-lg shadow-gold/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100" type="submit">
                                 Subscribe
                             </button>
                         </form>
@@ -43,6 +43,47 @@
                 </div>
             </div>
         </div>
+        <script>
+            document.getElementById('subscribeForm')?.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const emailInput = document.getElementById('subscribeEmail');
+                const email = emailInput.value.trim();
+                const btn = document.getElementById('subscribeBtn');
+                
+                if (!email) return;
+                
+                btn.disabled = true;
+                btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-sm">refresh</span>';
+                
+                try {
+                    const res = await fetch('/api/Subscription/Subscribe', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email })
+                    });
+                    
+                    const data = await res.json();
+                    
+                    if (data.success) {
+                        if (typeof window.showPopup === 'function') {
+                            window.showPopup(data.message, 'success');
+                        }
+                        emailInput.value = '';
+                    } else {
+                        if (typeof window.showPopup === 'function') {
+                            window.showPopup(data.message, 'error');
+                        }
+                    }
+                } catch (error) {
+                    if (typeof window.showPopup === 'function') {
+                        window.showPopup('Something went wrong. Please try again.', 'error');
+                    }
+                } finally {
+                    btn.disabled = false;
+                    btn.textContent = 'Subscribe';
+                }
+            });
+        </script>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
             <div class="flex flex-col gap-5">
                 <h3 class="text-gold font-bold text-lg mb-2 flex items-center gap-2">

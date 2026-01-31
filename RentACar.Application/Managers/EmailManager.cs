@@ -94,7 +94,7 @@ namespace RentACar.Application.Managers
             return await SendEmailSafeAsync(recipient, subject, body, emailType, null, null, templateUsed, fromEmail, fromName);
         }
 
-        private async Task<bool> SendEmailSafeAsync(string recipient, string subject, string message, string emailType, Dictionary<string, byte[]> attachments = null, string userId = null, string templateKey = "", string? fromEmail = null, string? fromName = null)
+        public async Task<bool> SendEmailSafeAsync(string recipient, string subject, string message, string emailType, Dictionary<string, byte[]> attachments = null, string userId = null, string templateKey = "", string? fromEmail = null, string? fromName = null)
         {
             if (string.IsNullOrEmpty(recipient)) return false;
             

@@ -60,10 +60,13 @@
                 </h1>
             <p class="text-text-muted text-lg font-medium">Manage discount codes and active campaigns for your fleet.</p>
         </div>
+        @if (User.IsInRole("Admin"))
+        {
         <button class="add-promocode flex items-center justify-center gap-2 bg-gold hover:bg-[#dcae1a] text-black font-bold py-3 px-6 rounded-lg transition-all duration-200 shadow-[0_0_15px_rgba(237,188,29,0.1)] group">
             <span class="material-symbols-outlined font-bold group-hover:scale-110 transition-transform">add</span>
             <span>Add New Promocode</span>
         </button>
+        }
     </div>
     
     <div class="bg-card-dark border border-border-dark rounded-xl p-4 mb-8 shadow-md">
@@ -114,6 +117,7 @@
 @section Scripts {
     <script>
         let allPromocodes = [];
+        const isAdmin = @User.IsInRole("Admin").ToString().ToLower();
 
         async function loadPromocodes() {
             try {
@@ -192,12 +196,14 @@
                             <h3 class="${titleClass}">${p.name}</h3>
                         </div>
                         <div class="flex gap-1">
+                            ${isAdmin ? `
                             <button class="edit-promocode p-2 text-text-muted hover:text-gold hover:bg-white/5 rounded-lg transition-colors" data-id="${p.promocodeId}" title="Edit">
                                 <span class="material-symbols-outlined text-[20px]">edit</span>
                             </button>
                             <button class="delete-promocode p-2 text-text-muted hover:text-red-400 hover:bg-white/5 rounded-lg transition-colors" data-id="${p.promocodeId}" title="Delete">
                                 <span class="material-symbols-outlined text-[20px]">delete</span>
                             </button>
+                            ` : ''}
                         </div>
                     </div>
                     <div class="space-y-4 relative z-10">
@@ -220,19 +226,21 @@
                 grid.appendChild(card);
             });
 
-            // "Create New" Card
-            const createCard = document.createElement('button');
-            createCard.className = 'add-promocode group bg-[#0a0a0a] border-2 border-dashed border-border-dark hover:border-gold rounded-xl p-6 flex flex-col items-center justify-center gap-4 transition-all min-h-[260px] cursor-pointer';
-            createCard.innerHTML = `
-                <div class="size-16 rounded-full bg-[#151515] group-hover:bg-gold/20 flex items-center justify-center transition-colors">
-                    <span class="material-symbols-outlined text-4xl text-text-muted group-hover:text-gold transition-colors">add</span>
-                </div>
-                <div class="text-center">
-                    <h3 class="text-white text-lg font-bold group-hover:text-gold transition-colors">Create New Code</h3>
-                    <p class="text-text-muted text-sm mt-1">Set up a new discount campaign</p>
-                </div>
-            `;
-            grid.appendChild(createCard);
+            // "Create New" Card (Admin only)
+            if (isAdmin) {
+                const createCard = document.createElement('button');
+                createCard.className = 'add-promocode group bg-[#0a0a0a] border-2 border-dashed border-border-dark hover:border-gold rounded-xl p-6 flex flex-col items-center justify-center gap-4 transition-all min-h-[260px] cursor-pointer';
+                createCard.innerHTML = `
+                    <div class="size-16 rounded-full bg-[#151515] group-hover:bg-gold/20 flex items-center justify-center transition-colors">
+                        <span class="material-symbols-outlined text-4xl text-text-muted group-hover:text-gold transition-colors">add</span>
+                    </div>
+                    <div class="text-center">
+                        <h3 class="text-white text-lg font-bold group-hover:text-gold transition-colors">Create New Code</h3>
+                        <p class="text-text-muted text-sm mt-1">Set up a new discount campaign</p>
+                    </div>
+                `;
+                grid.appendChild(createCard);
+            }
             
             attachEventListeners();
         }

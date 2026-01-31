@@ -32,7 +32,7 @@ namespace RentACar.Infrastructure.Data.Migrations
 
                     b.HasKey("RoleId", "UserId");
 
-                    b.ToTable("AspNetRoleAspNetUser");
+                    b.ToTable("AspNetRoleAspNetUser", (string)null);
                 });
 
             modelBuilder.Entity("AspNetUserRole", b =>
@@ -68,7 +68,7 @@ namespace RentACar.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("AspNetRoles");
+                    b.ToTable("AspNetRoles", (string)null);
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.AspNetRoleClaim", b =>
@@ -94,7 +94,7 @@ namespace RentACar.Infrastructure.Data.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("AspNetRoleClaims");
+                    b.ToTable("AspNetRoleClaims", (string)null);
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.AspNetUser", b =>
@@ -150,7 +150,7 @@ namespace RentACar.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("AspNetUsers");
+                    b.ToTable("AspNetUsers", (string)null);
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.AspNetUserClaim", b =>
@@ -176,7 +176,7 @@ namespace RentACar.Infrastructure.Data.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("AspNetUserClaims");
+                    b.ToTable("AspNetUserClaims", (string)null);
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.AspNetUserLogin", b =>
@@ -201,7 +201,7 @@ namespace RentACar.Infrastructure.Data.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("AspNetUserLogins");
+                    b.ToTable("AspNetUserLogins", (string)null);
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.AspNetUserToken", b =>
@@ -222,7 +222,7 @@ namespace RentACar.Infrastructure.Data.Migrations
 
                     b.HasKey("UserId", "LoginProvider", "Name");
 
-                    b.ToTable("AspNetUserTokens");
+                    b.ToTable("AspNetUserTokens", (string)null);
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.AuditLog", b =>
@@ -318,7 +318,7 @@ namespace RentACar.Infrastructure.Data.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("AuditLogs");
+                    b.ToTable("AuditLogs", (string)null);
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.BlackList", b =>
@@ -354,7 +354,7 @@ namespace RentACar.Infrastructure.Data.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("BlackList");
+                    b.ToTable("BlackList", (string)null);
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.Booking", b =>
@@ -432,7 +432,7 @@ namespace RentACar.Infrastructure.Data.Migrations
 
                     b.HasIndex("PromocodeId");
 
-                    b.ToTable("Bookings");
+                    b.ToTable("Bookings", (string)null);
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.Car", b =>
@@ -485,7 +485,7 @@ namespace RentACar.Infrastructure.Data.Migrations
 
                     b.HasIndex("CategoryId");
 
-                    b.ToTable("Cars");
+                    b.ToTable("Cars", (string)null);
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.Category", b =>
@@ -512,7 +512,7 @@ namespace RentACar.Infrastructure.Data.Migrations
 
                     b.HasKey("CategoryId");
 
-                    b.ToTable("Categories");
+                    b.ToTable("Categories", (string)null);
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.Customer", b =>
@@ -575,7 +575,7 @@ namespace RentACar.Infrastructure.Data.Migrations
                         .IsUnique()
                         .HasDatabaseName("IX_Customers_AspNetUserId");
 
-                    b.ToTable("Customers");
+                    b.ToTable("Customers", (string)null);
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.CustomerRating", b =>
@@ -613,7 +613,7 @@ namespace RentACar.Infrastructure.Data.Migrations
 
                     b.HasIndex("CustomerId");
 
-                    b.ToTable("CustomerRatings");
+                    b.ToTable("CustomerRatings", (string)null);
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.DistributionList", b =>
@@ -657,7 +657,7 @@ namespace RentACar.Infrastructure.Data.Migrations
 
                     b.HasIndex("UpdatedByUserId");
 
-                    b.ToTable("DistributionLists");
+                    b.ToTable("DistributionLists", (string)null);
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.DistributionListMember", b =>
@@ -700,7 +700,7 @@ namespace RentACar.Infrastructure.Data.Migrations
                     b.HasIndex("DistributionListId", "Email")
                         .IsUnique();
 
-                    b.ToTable("DistributionListMembers");
+                    b.ToTable("DistributionListMembers", (string)null);
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.DistributionListRule", b =>
@@ -743,7 +743,7 @@ namespace RentACar.Infrastructure.Data.Migrations
 
                     b.HasIndex("DistributionListId");
 
-                    b.ToTable("DistributionListRules");
+                    b.ToTable("DistributionListRules", (string)null);
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.EmailDraft", b =>
@@ -784,7 +784,7 @@ namespace RentACar.Infrastructure.Data.Migrations
 
                     b.HasIndex("CreatedByUserId");
 
-                    b.ToTable("EmailDrafts");
+                    b.ToTable("EmailDrafts", (string)null);
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.EmailLog", b =>
@@ -839,7 +839,7 @@ namespace RentACar.Infrastructure.Data.Migrations
 
                     b.HasIndex("CreatedByUserId");
 
-                    b.ToTable("EmailLogs");
+                    b.ToTable("EmailLogs", (string)null);
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.EmailTemplate", b =>
@@ -888,7 +888,7 @@ namespace RentACar.Infrastructure.Data.Migrations
 
                     b.HasIndex("UpdatedByUserId");
 
-                    b.ToTable("EmailTemplates");
+                    b.ToTable("EmailTemplates", (string)null);
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.Employee", b =>
@@ -928,7 +928,7 @@ namespace RentACar.Infrastructure.Data.Migrations
 
                     b.HasIndex("aspNetUserId");
 
-                    b.ToTable("Employees");
+                    b.ToTable("Employees", (string)null);
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.NotificationLog", b =>
@@ -972,7 +972,7 @@ namespace RentACar.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("NotificationLogs");
+                    b.ToTable("NotificationLogs", (string)null);
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.NotificationSettings", b =>
@@ -1062,7 +1062,7 @@ namespace RentACar.Infrastructure.Data.Migrations
 
                     b.HasIndex("UpdatedByUserId");
 
-                    b.ToTable("NotificationSettings");
+                    b.ToTable("NotificationSettings", (string)null);
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.Payment", b =>
@@ -1135,7 +1135,7 @@ namespace RentACar.Infrastructure.Data.Migrations
                     b.HasIndex("Status", "PaymentDate")
                         .HasDatabaseName("IX_Payments_Status_PaymentDate");
 
-                    b.ToTable("Payments");
+                    b.ToTable("Payments", (string)null);
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.PaymentMethod", b =>
@@ -1158,7 +1158,7 @@ namespace RentACar.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("PaymentMethods");
+                    b.ToTable("PaymentMethods", (string)null);
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.Promocode", b =>
@@ -1197,7 +1197,7 @@ namespace RentACar.Infrastructure.Data.Migrations
 
                     b.HasKey("PromocodeId");
 
-                    b.ToTable("Promocodes");
+                    b.ToTable("Promocodes", (string)null);
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.SenderIdentity", b =>
@@ -1248,7 +1248,7 @@ namespace RentACar.Infrastructure.Data.Migrations
 
                     b.HasIndex("UpdatedByUserId");
 
-                    b.ToTable("SenderIdentities");
+                    b.ToTable("SenderIdentities", (string)null);
                 });
 
             modelBuilder.Entity("AspNetUserRole", b =>

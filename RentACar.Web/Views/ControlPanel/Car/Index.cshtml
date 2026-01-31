@@ -33,10 +33,13 @@
             </h1>
             <p class="text-gray-400 mt-2">Manage your inventory, track availability, and update vehicle details.</p>
         </div>
+        @if (User.IsInRole("Admin"))
+        {
         <button id="addCarBtn" class="flex items-center gap-2 bg-gold hover:bg-[#b5952f] text-black px-6 py-3 rounded-xl font-bold shadow-lg shadow-gold/10 transition-all hover:scale-105 active:scale-95">
             <span class="material-symbols-outlined text-[20px]">add_circle</span>
             <span>Add Vehicle</span>
         </button>
+        }
     </div>
 
     <!-- Stats Grid (Updated to match Ratings logic/design) -->
@@ -164,7 +167,10 @@
                         <th class="px-6 py-4 text-center cursor-pointer hover:text-white transition-colors" onclick="setSort('Status')">
                              <div class="flex items-center justify-center gap-1">Status <span class="material-symbols-outlined text-[14px]" id="sort-Status">unfold_more</span></div>
                         </th>
-                        <th class="px-6 py-4 text-right">Actions</th>
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <th class="px-6 py-4 text-right">Actions</th>
+                        }
                     </tr>
                 </thead>
                 <tbody id="carRows" class="divide-y divide-[#262626]">
@@ -207,6 +213,7 @@
 
 <script>
     // State
+    const isAdmin = @User.IsInRole("Admin").ToString().ToLower();
     let categories = [];
     let currentPage = 1;
     let pageSize = 10;
@@ -225,10 +232,13 @@
             loadCars();
         });
 
-        document.getElementById('addCarBtn').addEventListener('click', () => {
-             // Reset form state logic if needed
-             loadModal('/Car/Add');
-        });
+        const addBtn = document.getElementById('addCarBtn');
+        if(addBtn) {
+            addBtn.addEventListener('click', () => {
+                 // Reset form state logic if needed
+                 loadModal('/Car/Add');
+            });
+        }
         
         // Debounce search
         let timeout = null;
@@ -384,6 +394,7 @@
                     <td class="px-6 py-4 text-sm text-gray-400">${car.modelYear}</td>
                     <td class="px-6 py-4 text-right font-bold text-gold">$${car.pricePerDay || 0}</td>
                     <td class="px-6 py-4 text-center">${statusBadge}</td>
+                    ${isAdmin ? `
                     <td class="px-6 py-4 text-right">
                         <div class="flex items-center justify-end gap-2">
                              <button class="edit-btn p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors" data-id="${car.carId}" title="Edit">
@@ -394,10 +405,13 @@
                             </button>
                         </div>
                     </td>
+                    ` : ''}
                 `;
                 
-                tr.querySelector('.edit-btn').addEventListener('click', () => loadModal('/Car/Edit/' + car.carId));
-                tr.querySelector('.delete-btn').addEventListener('click', () => loadModal('/Car/Delete/' + car.carId));
+                if(isAdmin) {
+                    tr.querySelector('.edit-btn')?.addEventListener('click', () => loadModal('/Car/Edit/' + car.carId));
+                    tr.querySelector('.delete-btn')?.addEventListener('click', () => loadModal('/Car/Delete/' + car.carId));
+                }
                 
                 tbody.appendChild(tr);
             });
