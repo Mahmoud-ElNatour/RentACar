@@ -24,17 +24,15 @@ jobs:
       WEB_CSPROJ: ".\\RentACar.Web\\RentACar.Web.csproj"
       INFRA_CSPROJ: ".\\RentACar.Infrastructure\\RentACar.Infrastructure.csproj"
 
-      # Used for naming the migration
       MIGRATION_PREFIX: "Auto"
 
     steps:
-      # 1) Pull latest code
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # 2) Setup .NET 8 to writable folder
+      # Install .NET 8 to a writable folder (avoids Program Files permission issues)
       - name: Setup .NET 8 (no admin)
         uses: actions/setup-dotnet@v4
         with:
@@ -42,32 +40,41 @@ jobs:
         env:
           DOTNET_INSTALL_DIR: ${{ runner.temp }}\dotnet
 
+      # Put installed dotnet on PATH for all following steps
       - name: Add dotnet to PATH
         shell: powershell
         run: |
           Add-Content -Path $env:GITHUB_PATH -Value "${{ runner.temp }}\dotnet"
 
+      # Ensure DOTNET_ROOT points to the installed SDK
       - name: Set DOTNET_ROOT
         shell: powershell
         run: |
           "DOTNET_ROOT=${{ runner.temp }}\dotnet" | Out-File -FilePath $env:GITHUB_ENV -Append
 
+      # Diagnostics (now dotnet should be visible)
       - name: Check dotnet visible to runner
         shell: powershell
         run: |
           where.exe dotnet
           dotnet --info
 
-      # 3) Install EF Tool (dotnet-ef)
-      - name: Install dotnet-ef
+      # ✅ Reliable EF tooling: local tool manifest (avoids PATH/user issues on self-hosted runners)
+      - name: Setup dotnet-ef (local tool)
         shell: powershell
         run: |
-          dotnet tool update --global dotnet-ef
-          $toolPath = "$env:USERPROFILE\.dotnet\tools"
-          Add-Content -Path $env:GITHUB_PATH -Value $toolPath
-          dotnet ef --version
+          # Create tool-manifest if missing
+          if (!(Test-Path ".config")) { New-Item -ItemType Directory -Path ".config" | Out-Null }
+          if (!(Test-Path ".config\dotnet-tools.json")) {
+            dotnet new tool-manifest
+          }
 
-      # 4) Restore + Build
+          # Install or update EF tool
+          dotnet tool update dotnet-ef
+
+          # Show tools (debug)
+          dotnet tool list
+
       - name: Restore
         shell: powershell
         run: dotnet restore
@@ -76,9 +83,8 @@ jobs:
         shell: powershell
         run: dotnet build -c Release --no-restore
 
-      # 5) Detect model changes & auto-add migration only if needed
+      # ✅ Auto-create migration (only if there are model changes), then commit/push it back to master
       - name: Auto Add Migration (only if there are changes)
-        id: automig
         shell: powershell
         run: |
           git config user.name "github-actions[bot]"
@@ -87,8 +93,7 @@ jobs:
           $stamp = Get-Date -Format "yyyyMMdd_HHmmss"
           $migName = "${{ env.MIGRATION_PREFIX }}_$stamp"
 
-          # Try to add migration. If no changes, EF returns: "No changes were found..."
-          $output = & dotnet ef migrations add $migName `
+          $output = & dotnet tool run dotnet-ef migrations add $migName `
             --project "${{ env.INFRA_CSPROJ }}" `
             --startup-project "${{ env.WEB_CSPROJ }}" 2>&1
 
@@ -96,39 +101,27 @@ jobs:
 
           if ($output -match "No changes were found") {
             Write-Host "✅ No model changes. Skipping migration commit."
-            "MIGRATION_CREATED=false" | Out-File -FilePath $env:GITHUB_ENV -Append
             exit 0
           }
-
-          # If migration files were created, commit & push them
-          git status --porcelain
 
           if ((git status --porcelain).Length -gt 0) {
             git add .
             git commit -m "chore(db): auto migration $migName [skip ci]"
             git push
             Write-Host "✅ Migration committed and pushed."
-            "MIGRATION_CREATED=true" | Out-File -FilePath $env:GITHUB_ENV -Append
           } else {
             Write-Host "ℹ️ EF ran but no files changed. Skipping push."
-            "MIGRATION_CREATED=false" | Out-File -FilePath $env:GITHUB_ENV -Append
           }
 
-      # 6) Always update DB (will be no-op if nothing pending)
+      # ✅ Update DB (no-op if nothing pending)
       - name: Update Database
         shell: powershell
         run: |
-          # Optional sanity check: fail fast if connection string is missing
-          if ([string]::IsNullOrWhiteSpace($env:ConnectionStrings__DefaultConnection)) {
-            Write-Host "❌ ConnectionStrings__DefaultConnection is not set on this runner."
-            exit 1
-          }
-
-          dotnet ef database update `
+          dotnet tool run dotnet-ef database update `
             --project "${{ env.INFRA_CSPROJ }}" `
             --startup-project "${{ env.WEB_CSPROJ }}"
 
-      # 7) Publish
+      # Ensure publish folder exists
       - name: Ensure publish folder exists
         shell: powershell
         run: |
@@ -138,7 +131,6 @@ jobs:
         shell: powershell
         run: dotnet publish "${{ env.WEB_CSPROJ }}" -c Release -o "${{ env.PUBLISH_PATH }}" --no-build
 
-      # 8) Deploy to IIS
       - name: Deploy to IIS
         shell: powershell
         run: |
@@ -150,12 +142,14 @@ jobs:
           try { Stop-WebAppPool -Name $appPool } catch { }
           Start-Sleep -Seconds 2
 
+          # Put the site offline during file copy (prevents locked DLL issues)
           "offline" | Out-File (Join-Path $sitePath "app_offline.htm") -Encoding ASCII -Force
 
           robocopy $publishPath $sitePath /MIR /R:2 /W:2 /NFL /NDL /NP
           $rc = $LASTEXITCODE
           if ($rc -ge 8) { throw "Robocopy failed with exit code $rc" }
 
+          # Reset robocopy exit code so the step doesn't fail
           $global:LASTEXITCODE = 0
 
           Remove-Item (Join-Path $sitePath "app_offline.htm") -ErrorAction SilentlyContinue
