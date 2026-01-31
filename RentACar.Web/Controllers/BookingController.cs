@@ -119,7 +119,8 @@ namespace RentACar.Web.Controllers
                 var customer = await _customerManager.GetCustomerByAspNetUserId(user.Id);
                 if (customer != null && !customer.IsVerified)
                 {
-                    return RedirectToPage("/Account/Manage/VerifyIdentity", new { area = "Identity" });
+                    TempData["StatusMessage"] = "Error: Please verify your identity to book a car.";
+                    return Redirect("/Identity/Account/Manage#identity-verification");
                 }
             }
 
