@@ -14,6 +14,8 @@
         transition: all 0.3s ease;
     }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
 <main class="max-w-[1400px] mx-auto p-6 lg:px-20 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
     <section class="lg:col-span-7 space-y-6">
@@ -50,7 +52,11 @@
                             </div>
                             <div class="text-right">
                                 <p class="text-xs text-gray-500 uppercase font-bold">Dates</p>
-                                <p class="text-white font-bold">@booking.StartDate:yyyy-MM-dd → @booking.EndDate:yyyy-MM-dd</p>
+                                <p class="text-white font-bold">
+                                    @(booking.StartDate.ToString("yyyy-MM-dd"))
+                                    → @(booking.EndDate.ToString("yyyy-MM-dd"))
+
+                                </p>
                             </div>
                         </div>
                         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mt-4">

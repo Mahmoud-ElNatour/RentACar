@@ -18,39 +18,93 @@
         cursor: pointer;
     }
 
-    .day-cell:hover {
-        background: rgba(255, 255, 255, 0.05);
+    .calendar-nav button:hover,
+    .calendar-nav button:focus-visible {
+        background: rgba(56, 189, 248, 0.2);
+        border-color: rgba(56, 189, 248, 0.45);
+        outline: none;
     }
 
-    .day-muted {
-        color: rgba(255, 255, 255, 0.3);
+    .calendar-weekdays,
+    .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        gap: 6px;
     }
 
-    .day-today {
-        border-color: rgba(244, 195, 37, 0.6);
-        box-shadow: 0 0 0 1px rgba(244, 195, 37, 0.2) inset;
+    .calendar-weekdays div {
+        text-align: center;
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 0.2em;
+        color: rgba(226, 232, 240, 0.5);
+        padding-bottom: 6px;
     }
 
-    .availability-bar {
-        height: 4px;
+    .calendar-day {
+        min-height: 74px;
+        border-radius: 18px;
+        padding: 8px;
+        border: 1px solid transparent;
+        background: rgba(15, 23, 42, 0.55);
+        color: rgba(226, 232, 240, 0.9);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        transition: all 0.2s ease;
+    }
+
+    .calendar-day:hover,
+    .calendar-day:focus-visible {
+        border-color: rgba(56, 189, 248, 0.45);
+        background: rgba(56, 189, 248, 0.08);
+        outline: none;
+    }
+
+    .calendar-day.is-muted {
+        color: rgba(148, 163, 184, 0.35);
+        background: rgba(15, 23, 42, 0.3);
+    }
+
+    .calendar-day.is-today {
+        border-color: rgba(250, 204, 21, 0.8);
+        box-shadow: 0 0 0 1px rgba(250, 204, 21, 0.25) inset;
+    }
+
+    .calendar-day.is-selected {
+        border-color: rgba(56, 189, 248, 0.9);
+        box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.4) inset;
+        background: rgba(30, 64, 175, 0.25);
+    }
+
+    .calendar-day-number {
+        font-weight: 600;
+        font-size: 0.75rem;
+    }
+
+    .calendar-indicators {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .indicator-availability {
+        height: 3px;
         border-radius: 999px;
-        background: rgba(37, 99, 235, 0.8);
-        border: 1px solid rgba(37, 99, 235, 0.9);
-        margin-top: 6px;
+        background: rgba(56, 189, 248, 0.9);
     }
 
-    .booking-dot {
+    .indicator-booking {
         width: 6px;
         height: 6px;
         border-radius: 999px;
-        background: rgba(244, 195, 37, 0.9);
-        display: inline-block;
-        margin-right: 3px;
+        background: rgba(251, 191, 36, 0.95);
     }
 
-    .detail-panel {
-        background: rgba(17, 24, 39, 0.8);
-        border-left: 1px solid rgba(255, 255, 255, 0.08);
+    .indicator-booking-line {
+        height: 3px;
+        border-radius: 999px;
+        background: rgba(251, 113, 133, 0.95);
     }
 </style>
 
@@ -63,55 +117,111 @@
                     <p class="text-white/50 text-base">Monthly overview for @Model.DriverName.</p>
                 </div>
 
-                <div class="calendar-shell rounded-2xl overflow-hidden">
-                    <div class="grid grid-cols-7 border-b border-white/5 bg-white/5">
-                        <div class="p-3 text-center text-xs font-bold text-white/30 uppercase tracking-widest">Sun</div>
-                        <div class="p-3 text-center text-xs font-bold text-white/30 uppercase tracking-widest">Mon</div>
-                        <div class="p-3 text-center text-xs font-bold text-white/30 uppercase tracking-widest">Tue</div>
-                        <div class="p-3 text-center text-xs font-bold text-white/30 uppercase tracking-widest">Wed</div>
-                        <div class="p-3 text-center text-xs font-bold text-white/30 uppercase tracking-widest">Thu</div>
-                        <div class="p-3 text-center text-xs font-bold text-white/30 uppercase tracking-widest">Fri</div>
-                        <div class="p-3 text-center text-xs font-bold text-white/30 uppercase tracking-widest">Sat</div>
-                    </div>
-                    <div class="grid grid-cols-7">
-                        @{
-                            var jsonOptions = new System.Text.Json.JsonSerializerOptions
-                            {
-                                PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
-                            };
-                        }
-                        @foreach (var day in Model.Days)
-                        {
-                            var bookingsJson = System.Text.Json.JsonSerializer.Serialize(day.Bookings, jsonOptions);
-                            var availabilityJson = System.Text.Json.JsonSerializer.Serialize(day.AvailabilityBlocks, jsonOptions);
-                            <div class="day-cell @(day.IsToday ? "day-today" : "") @(day.IsCurrentMonth ? "" : "day-muted")"
-                                 data-date="@day.Date:yyyy-MM-dd"
-                                 data-bookings='@Html.Raw(bookingsJson)'
-                                 data-availability='@Html.Raw(availabilityJson)'>
-                                <div class="flex justify-between items-center">
-                                    <span class="text-xs font-bold">@day.Date:dd</span>
-                                    @if (day.HasBookings)
-                                    {
-                                        <span class="text-[10px] text-primary font-bold">@day.Bookings.Count</span>
-                                    }
-                                </div>
-                                <div class="mt-2 flex flex-wrap gap-1">
-                                    @if (day.HasBookings)
-                                    {
-                                        @for (var i = 0; i < Math.Min(day.Bookings.Count, 3); i++)
-                                        {
-                                            <span class="booking-dot"></span>
-                                        }
-                                    }
-                                </div>
-                                @if (day.HasAvailability)
-                                {
-                                    <div class="availability-bar"></div>
-                                }
-                            </div>
-                        }
-                    </div>
-                </div>
+    .legend span {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .upcoming-card {
+        background: rgba(15, 23, 42, 0.75);
+        border: 1px solid rgba(148, 163, 184, 0.15);
+        border-radius: 20px;
+        padding: 16px;
+        transition: all 0.2s ease;
+    }
+
+    .upcoming-card:hover {
+        border-color: rgba(56, 189, 248, 0.4);
+        transform: translateY(-2px);
+    }
+
+    .status-badge {
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-weight: 700;
+    }
+
+    .status-pending {
+        background: rgba(251, 191, 36, 0.15);
+        color: rgba(251, 191, 36, 0.95);
+    }
+
+    .status-confirmed {
+        background: rgba(56, 189, 248, 0.18);
+        color: rgba(56, 189, 248, 0.95);
+    }
+
+    .status-cancelled {
+        background: rgba(248, 113, 113, 0.15);
+        color: rgba(248, 113, 113, 0.95);
+    }
+
+    .status-default {
+        background: rgba(148, 163, 184, 0.2);
+        color: rgba(226, 232, 240, 0.8);
+    }
+
+    .booking-sheet-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(8px);
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.2s ease;
+        z-index: 50;
+    }
+
+    .booking-sheet {
+        position: fixed;
+        left: 50%;
+        transform: translateX(-50%);
+        bottom: -100%;
+        width: min(540px, calc(100% - 32px));
+        background: rgba(15, 23, 42, 0.98);
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        border-radius: 24px 24px 0 0;
+        padding: 24px;
+        transition: all 0.3s ease;
+        z-index: 60;
+        box-shadow: 0 -20px 50px rgba(0, 0, 0, 0.45);
+    }
+
+    .booking-sheet.is-open {
+        bottom: 0;
+    }
+
+    .booking-sheet-overlay.is-open {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .booking-sheet-close {
+        width: 32px;
+        height: 32px;
+        border-radius: 999px;
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        background: rgba(148, 163, 184, 0.12);
+        color: #e2e8f0;
+    }
+
+    .toggle-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border-radius: 999px;
+        padding: 4px 12px;
+        background: rgba(56, 189, 248, 0.15);
+        color: rgba(226, 232, 240, 0.9);
+        border: 1px solid rgba(56, 189, 248, 0.4);
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
 
                 <div class="mt-6 flex items-center gap-4 text-xs text-white/60">
                     <div class="flex items-center gap-2">
@@ -146,104 +256,336 @@
                         }
                     </div>
                 </div>
+                <div class="calendar-nav">
+                    <button type="button" id="prevMonth" aria-label="Previous month">
+                        <span class="material-symbols-outlined">chevron_left</span>
+                    </button>
+                    <button type="button" id="nextMonth" aria-label="Next month">
+                        <span class="material-symbols-outlined">chevron_right</span>
+                    </button>
+                </div>
             </div>
 
-            <aside class="w-96 detail-panel flex flex-col p-6 gap-6 overflow-y-auto">
-                <div>
-                    <h2 class="text-xl font-bold text-white" id="detailDate">Select a day</h2>
-                    <p class="text-sm text-white/50" id="detailSubtitle">Tap a day to see availability and bookings.</p>
-                </div>
+            <div class="calendar-weekdays">
+                <div>S</div>
+                <div>M</div>
+                <div>T</div>
+                <div>W</div>
+                <div>T</div>
+                <div>F</div>
+                <div>S</div>
+            </div>
+            <div class="calendar-grid mt-2" id="calendarGrid"></div>
 
-                <div>
-                    <h3 class="text-sm font-bold text-white/40 uppercase tracking-widest mb-3">Availability</h3>
-                    <div id="availabilityList" class="space-y-3 text-sm text-white/70"></div>
-                </div>
+            <div class="legend">
+                <span><span class="indicator-availability" style="width:18px;"></span>Available</span>
+                <span><span class="indicator-booking"></span>Booking</span>
+            </div>
+        </div>
 
                 <div>
                     <h3 class="text-sm font-bold text-white/40 uppercase tracking-widest mb-3">Bookings</h3>
                     <div id="bookingList" class="space-y-3 text-sm text-white/70"></div>
                 </div>
 
-                <div class="border-t border-white/10 pt-6">
-                    <div class="flex items-center gap-2 mb-4">
-                        <span class="material-symbols-outlined text-primary">event_available</span>
-                        <h3 class="text-lg font-bold">Add Availability</h3>
+        <div class="mt-10 calendar-card">
+            <div class="flex items-center gap-2 mb-4">
+                <span class="material-symbols-outlined text-primary">event_available</span>
+                <h3 class="text-lg font-bold text-white">Add Availability</h3>
+            </div>
+            <form method="post" asp-action="AddAvailability">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="IsAvailable" value="true" />
+                <div class="grid gap-4 md:grid-cols-2">
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-xs font-bold text-white/40 uppercase">From Date &amp; Time</label>
+                        <input class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:ring-1 focus:ring-primary/50"
+                               type="datetime-local" name="StartDateTime" required />
                     </div>
-                    <form method="post" asp-action="AddAvailability">
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" name="IsAvailable" value="true" />
-                        <div class="space-y-4">
-                            <div class="flex flex-col gap-1.5">
-                                <label class="text-xs font-bold text-white/40 uppercase">From Date &amp; Time</label>
-                                <input class="w-full calendar-shell bg-white/5 border-none rounded-xl px-4 py-2.5 text-sm focus:ring-1 focus:ring-primary/50"
-                                       type="datetime-local" name="StartDateTime" required />
-                            </div>
-                            <div class="flex flex-col gap-1.5">
-                                <label class="text-xs font-bold text-white/40 uppercase">To Date &amp; Time</label>
-                                <input class="w-full calendar-shell bg-white/5 border-none rounded-xl px-4 py-2.5 text-sm focus:ring-1 focus:ring-primary/50"
-                                       type="datetime-local" name="EndDateTime" required />
-                            </div>
-                            <div class="flex items-center justify-between px-1">
-                                <span class="text-sm text-white/70">Recurring weekly</span>
-                                <input type="checkbox" name="IsRecurringWeekly" value="true" />
-                            </div>
-                            <button class="w-full bg-primary hover:bg-primary/90 text-background-dark font-bold py-3 rounded-xl transition-all shadow-lg shadow-primary/20 active:scale-[0.98]">
-                                Save Availability
-                            </button>
-                        </div>
-                    </form>
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-xs font-bold text-white/40 uppercase">To Date &amp; Time</label>
+                        <input class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:ring-1 focus:ring-primary/50"
+                               type="datetime-local" name="EndDateTime" required />
+                    </div>
                 </div>
-            </aside>
-        </main>
+                <div class="flex items-center justify-between px-1 mt-4">
+                    <span class="text-sm text-white/70">Recurring weekly</span>
+                    <input type="checkbox" name="IsRecurringWeekly" value="true" />
+                </div>
+                <button class="mt-6 w-full bg-primary hover:bg-primary/90 text-background-dark font-bold py-3 rounded-xl transition-all shadow-lg shadow-primary/20 active:scale-[0.98]">
+                    Save Availability
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="booking-sheet-overlay" id="bookingOverlay"></div>
+<div class="booking-sheet" id="bookingSheet" role="dialog" aria-modal="true" aria-labelledby="bookingSheetTitle">
+    <div class="flex items-start justify-between">
+        <div>
+            <p class="text-xs uppercase tracking-[0.3em] text-white/40">Booking</p>
+            <h3 class="text-xl font-bold text-white" id="bookingSheetTitle">Booking #</h3>
+        </div>
+        <button class="booking-sheet-close" type="button" id="closeBookingSheet" aria-label="Close booking details">
+            <span class="material-symbols-outlined">close</span>
+        </button>
+    </div>
+    <div class="mt-4 flex items-center gap-2">
+        <span id="bookingSheetStatus" class="status-badge status-default">Pending</span>
+        <span class="text-sm text-white/60" id="bookingSheetCustomer">Customer</span>
+    </div>
+
+    <div class="mt-6 space-y-4 text-sm text-white/70">
+        <div>
+            <p class="text-xs uppercase tracking-[0.25em] text-white/40">Trip</p>
+            <p class="text-white mt-2"><span class="text-white/50">From:</span> <span id="bookingSheetFrom">Pickup location</span></p>
+            <p class="text-white mt-1"><span class="text-white/50">To:</span> <span id="bookingSheetTo">Dropoff not specified</span></p>
+        </div>
+        <div>
+            <p class="text-xs uppercase tracking-[0.25em] text-white/40">Dates</p>
+            <p class="text-white mt-2" id="bookingSheetDates">Start → End</p>
+        </div>
+        <div>
+            <p class="text-xs uppercase tracking-[0.25em] text-white/40">Vehicle</p>
+            <p class="text-white mt-2" id="bookingSheetCar">Vehicle info not available</p>
+        </div>
     </div>
 </div>
 
 <script>
-    const availabilityList = document.getElementById('availabilityList');
-    const bookingList = document.getElementById('bookingList');
-    const detailDate = document.getElementById('detailDate');
-    const detailSubtitle = document.getElementById('detailSubtitle');
+    const availabilityData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Availability, new System.Text.Json.JsonSerializerOptions
+    {
+        PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
+    }));
+    const bookingData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Bookings, new System.Text.Json.JsonSerializerOptions
+    {
+        PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
+    }));
+    const upcomingData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.UpcomingBookings, new System.Text.Json.JsonSerializerOptions
+    {
+        PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
+    }));
+    const initialMonth = "@Model.MonthStart:yyyy-MM-dd";
 
-    function renderAvailability(items) {
-        availabilityList.innerHTML = '';
-        if (!items || items.length === 0) {
-            availabilityList.innerHTML = '<div class="text-white/40">No availability set.</div>';
-            return;
-        }
-        items.forEach(item => {
-            const element = document.createElement('div');
-            element.className = 'calendar-shell p-3 rounded-xl';
-            const start = new Date(item.startDateTime).toLocaleString();
-            const end = new Date(item.endDateTime).toLocaleString();
-            element.innerHTML = `<div>${start} → ${end}</div><div class="text-xs text-primary">${item.isRecurringWeekly ? 'Recurring weekly' : 'One-time'}</div>`;
-            availabilityList.appendChild(element);
+    const calendarGrid = document.getElementById('calendarGrid');
+    const calendarMonth = document.getElementById('calendarMonth');
+    const bookingSubtitle = document.getElementById('bookingSubtitle');
+    const toggleUpcoming = document.getElementById('toggleUpcoming');
+    const upcomingList = document.getElementById('upcomingList');
+
+    const bookingOverlay = document.getElementById('bookingOverlay');
+    const bookingSheet = document.getElementById('bookingSheet');
+    const closeBookingSheet = document.getElementById('closeBookingSheet');
+
+    const bookingSheetTitle = document.getElementById('bookingSheetTitle');
+    const bookingSheetStatus = document.getElementById('bookingSheetStatus');
+    const bookingSheetCustomer = document.getElementById('bookingSheetCustomer');
+    const bookingSheetFrom = document.getElementById('bookingSheetFrom');
+    const bookingSheetTo = document.getElementById('bookingSheetTo');
+    const bookingSheetDates = document.getElementById('bookingSheetDates');
+    const bookingSheetCar = document.getElementById('bookingSheetCar');
+
+    const monthFormatter = new Intl.DateTimeFormat(undefined, { month: 'long', year: 'numeric' });
+    const dayFormatter = new Intl.DateTimeFormat(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
+
+    let currentMonth = initialMonth ? parseDateOnly(initialMonth) : new Date();
+    let selectedDate = new Date();
+    let showAllUpcoming = false;
+
+    function parseDateOnly(value) {
+        if (!value) return null;
+        const [year, month, day] = value.split('-').map(Number);
+        return new Date(year, month - 1, day);
+    }
+
+    function isSameDate(a, b) {
+        return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+    }
+
+    function toDateOnlyString(date) {
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${date.getFullYear()}-${month}-${day}`;
+    }
+
+    function getStatusClass(status) {
+        if (!status) return 'status-default';
+        const normalized = status.toLowerCase();
+        if (normalized.includes('confirm')) return 'status-confirmed';
+        if (normalized.includes('cancel')) return 'status-cancelled';
+        if (normalized.includes('pending') || normalized.includes('schedule')) return 'status-pending';
+        return 'status-default';
+    }
+
+    function getBookingsForDate(date) {
+        return bookingData.filter(booking => {
+            const start = parseDateOnly(booking.startDate);
+            const end = parseDateOnly(booking.endDate);
+            return start && end && start <= date && end >= date;
         });
     }
 
-    function renderBookings(items) {
-        bookingList.innerHTML = '';
-        if (!items || items.length === 0) {
-            bookingList.innerHTML = '<div class="text-white/40">No bookings.</div>';
-            return;
-        }
-        items.forEach(item => {
-            const element = document.createElement('div');
-            element.className = 'calendar-shell p-3 rounded-xl';
-            const time = item.pickupDateTime ? new Date(item.pickupDateTime).toLocaleString() : `${item.startDate} → ${item.endDate}`;
-            element.innerHTML = `<div class="text-white font-semibold">Booking #${item.bookingId}</div><div class="text-xs text-white/60">${item.customerName}</div><div class="text-xs text-white/40">${item.pickupLocationLabel}</div><div class="text-xs text-primary">${time}</div>`;
-            bookingList.appendChild(element);
+    function getAvailabilityForDate(date) {
+        const dayStart = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0);
+        const dayEnd = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999);
+        return availabilityData.filter(item => {
+            if (!item.isAvailable) {
+                return false;
+            }
+            const start = new Date(item.startDateTime);
+            const end = new Date(item.endDateTime);
+            if (item.isRecurringWeekly) {
+                return start.getDay() === dayStart.getDay();
+            }
+            return start <= dayEnd && end >= dayStart;
         });
     }
 
-    document.querySelectorAll('.day-cell').forEach(cell => {
-        cell.addEventListener('click', () => {
-            const date = cell.getAttribute('data-date');
-            const bookings = JSON.parse(cell.getAttribute('data-bookings') || '[]');
-            const availability = JSON.parse(cell.getAttribute('data-availability') || '[]');
-            detailDate.textContent = new Date(date).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
-            detailSubtitle.textContent = `${bookings.length} booking(s) • ${availability.length} availability block(s)`;
-            renderAvailability(availability);
-            renderBookings(bookings);
+    function renderCalendar() {
+        calendarGrid.innerHTML = '';
+        const monthStart = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+        const monthEnd = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
+        const gridStart = new Date(monthStart);
+        gridStart.setDate(gridStart.getDate() - gridStart.getDay());
+
+        const totalDays = 42;
+        const today = new Date();
+        const desiredDay = selectedDate.getDate();
+        selectedDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), Math.min(desiredDay, monthEnd.getDate()));
+
+        for (let i = 0; i < totalDays; i++) {
+            const currentDate = new Date(gridStart.getFullYear(), gridStart.getMonth(), gridStart.getDate() + i);
+            const bookings = getBookingsForDate(currentDate);
+            const availability = getAvailabilityForDate(currentDate);
+            const isCurrentMonth = currentDate.getMonth() === currentMonth.getMonth();
+
+            const dayButton = document.createElement('button');
+            dayButton.type = 'button';
+            dayButton.className = 'calendar-day';
+            dayButton.setAttribute('data-date', toDateOnlyString(currentDate));
+            dayButton.setAttribute('aria-label', `${dayFormatter.format(currentDate)}. ${availability.length ? 'Available.' : 'No availability.'} ${bookings.length} booking(s).`);
+
+            if (!isCurrentMonth) {
+                dayButton.classList.add('is-muted');
+            }
+            if (isSameDate(currentDate, today)) {
+                dayButton.classList.add('is-today');
+            }
+            if (isSameDate(currentDate, selectedDate)) {
+                dayButton.classList.add('is-selected');
+            }
+
+            dayButton.innerHTML = `
+                <span class="calendar-day-number">${currentDate.getDate()}</span>
+                <div class="calendar-indicators">
+                    ${availability.length ? '<span class="indicator-availability"></span>' : ''}
+                    ${bookings.length ? '<span class="indicator-booking"></span>' : ''}
+                </div>
+            `;
+
+            dayButton.addEventListener('click', () => {
+                selectedDate = currentDate;
+                renderCalendar();
+                renderUpcoming();
+            });
+
+            calendarGrid.appendChild(dayButton);
+        }
+
+        calendarMonth.textContent = monthFormatter.format(currentMonth);
+    }
+
+    function renderUpcoming() {
+        upcomingList.innerHTML = '';
+        let filtered = upcomingData;
+
+        if (!showAllUpcoming) {
+            filtered = upcomingData.filter(booking => {
+                const start = parseDateOnly(booking.startDate);
+                const end = parseDateOnly(booking.endDate);
+                return start && end && start <= selectedDate && end >= selectedDate;
+            });
+            bookingSubtitle.textContent = `Bookings on ${dayFormatter.format(selectedDate)}.`;
+        } else {
+            bookingSubtitle.textContent = 'Showing the next 10 bookings.';
+        }
+
+        if (!filtered.length) {
+            upcomingList.innerHTML = '<div class="upcoming-card text-white/50">No bookings for the selected day.</div>';
+            return;
+        }
+
+        filtered.forEach(booking => {
+            const card = document.createElement('button');
+            card.type = 'button';
+            card.className = 'upcoming-card w-full text-left';
+            card.setAttribute('data-booking', JSON.stringify(booking));
+
+            card.innerHTML = `
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                    <div>
+                        <p class="text-sm font-bold text-white">Booking #${booking.bookingId}</p>
+                        <p class="text-xs text-white/50">${booking.customerName || 'Customer'} • ${booking.pickupLocationLabel || 'Pickup location'}</p>
+                        <p class="text-xs text-white/40">${booking.startDate} → ${booking.endDate}</p>
+                    </div>
+                    <span class="status-badge ${getStatusClass(booking.bookingStatus)}">${booking.bookingStatus || 'Pending'}</span>
+                </div>
+            `;
+
+            card.addEventListener('click', () => openBookingSheet(booking));
+            upcomingList.appendChild(card);
         });
+    }
+
+    function openBookingSheet(booking) {
+        bookingSheetTitle.textContent = `Booking #${booking.bookingId}`;
+        bookingSheetStatus.textContent = booking.bookingStatus || 'Pending';
+        bookingSheetStatus.className = `status-badge ${getStatusClass(booking.bookingStatus)}`;
+        bookingSheetCustomer.textContent = booking.customerName || 'Customer';
+        bookingSheetFrom.textContent = booking.pickupLocationLabel || 'Pickup location';
+        bookingSheetTo.textContent = 'Dropoff not specified';
+        bookingSheetDates.textContent = booking.pickupDateTime
+            ? new Date(booking.pickupDateTime).toLocaleString()
+            : `${booking.startDate} → ${booking.endDate}`;
+        bookingSheetCar.textContent = 'Vehicle info not available';
+
+        bookingOverlay.classList.add('is-open');
+        bookingSheet.classList.add('is-open');
+    }
+
+    function closeSheet() {
+        bookingOverlay.classList.remove('is-open');
+        bookingSheet.classList.remove('is-open');
+    }
+
+    document.getElementById('prevMonth').addEventListener('click', () => {
+        currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1);
+        renderCalendar();
+        renderUpcoming();
     });
+
+    document.getElementById('nextMonth').addEventListener('click', () => {
+        currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1);
+        renderCalendar();
+        renderUpcoming();
+    });
+
+    toggleUpcoming.addEventListener('click', () => {
+        showAllUpcoming = !showAllUpcoming;
+        toggleUpcoming.textContent = showAllUpcoming ? 'Show selected day' : 'Show all upcoming';
+        renderUpcoming();
+    });
+
+    bookingOverlay.addEventListener('click', closeSheet);
+    closeBookingSheet.addEventListener('click', closeSheet);
+
+    document.addEventListener('keydown', event => {
+        if (event.key === 'Escape') {
+            closeSheet();
+        }
+    });
+
+    renderCalendar();
+    renderUpcoming();
 </script>
