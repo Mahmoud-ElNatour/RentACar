@@ -20,21 +20,55 @@ jobs:
       PUBLISH_PATH: "C:\\deploy\\MyApp\\publish"
       APP_POOL: "MyAppPool"
 
-      # Adjust to your solution structure
       WEB_CSPROJ: ".\\RentACar.Web\\RentACar.Web.csproj"
       INFRA_CSPROJ: ".\\RentACar.Infrastructure\\RentACar.Infrastructure.csproj"
-
-      # Used for naming the migration
       MIGRATION_PREFIX: "Auto"
 
     steps:
-      # 1) Pull latest code
+      # ---------------------------
+      # Checkout Repo
+      # ---------------------------
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # 2) Setup .NET 8 to writable folder
+      # ---------------------------
+      # Ensure Git is available
+      # ---------------------------
+      - name: Ensure Git on PATH
+        shell: powershell
+        run: |
+          if (Get-Command git -ErrorAction SilentlyContinue) {
+            Write-Host "Git already available"
+            git --version
+            exit 0
+          }
+
+          Write-Host "Git not found in PATH. Searching common install locations..."
+
+          $possible = @(
+            "C:\Program Files\Git\bin",
+            "C:\Program Files\Git\cmd",
+            "C:\Program Files (x86)\Git\bin",
+            "C:\Program Files (x86)\Git\cmd"
+          )
+
+          foreach ($p in $possible) {
+            if (Test-Path "$p\git.exe") {
+              Write-Host "Found git in $p"
+              Add-Content -Path $env:GITHUB_PATH -Value $p
+              git --version
+              exit 0
+            }
+          }
+
+          Write-Host "ERROR: Git not installed on this runner"
+          exit 1
+
+      # ---------------------------
+      # Setup .NET
+      # ---------------------------
       - name: Setup .NET 8 (no admin)
         uses: actions/setup-dotnet@v4
         with:
@@ -52,22 +86,28 @@ jobs:
         run: |
           "DOTNET_ROOT=${{ runner.temp }}\dotnet" | Out-File -FilePath $env:GITHUB_ENV -Append
 
-      - name: Check dotnet visible to runner
+      - name: Check dotnet visible
         shell: powershell
         run: |
           where.exe dotnet
           dotnet --info
 
-      # 3) Install EF Tool (dotnet-ef)
-      - name: Install dotnet-ef
+      # ---------------------------
+      # Setup EF Tool (Local)
+      # ---------------------------
+      - name: Setup dotnet-ef (local tool)
         shell: powershell
         run: |
-          dotnet tool update --global dotnet-ef
-          $toolPath = "$env:USERPROFILE\.dotnet\tools"
-          Add-Content -Path $env:GITHUB_PATH -Value $toolPath
-          dotnet ef --version
+          if (!(Test-Path ".config")) { New-Item -ItemType Directory -Path ".config" | Out-Null }
+          if (!(Test-Path ".config\dotnet-tools.json")) {
+            dotnet new tool-manifest
+          }
+          dotnet tool update dotnet-ef
+          dotnet tool list
 
-      # 4) Restore + Build
+      # ---------------------------
+      # Restore & Build
+      # ---------------------------
       - name: Restore
         shell: powershell
         run: dotnet restore
@@ -76,59 +116,57 @@ jobs:
         shell: powershell
         run: dotnet build -c Release --no-restore
 
-      # 5) Detect model changes & auto-add migration only if needed
+      # ---------------------------
+      # Auto Migration + Push
+      # ---------------------------
       - name: Auto Add Migration (only if there are changes)
-        id: automig
         shell: powershell
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config core.autocrlf false
 
           $stamp = Get-Date -Format "yyyyMMdd_HHmmss"
           $migName = "${{ env.MIGRATION_PREFIX }}_$stamp"
 
-          # Try to add migration. If no changes, EF returns: "No changes were found..."
-          $output = & dotnet ef migrations add $migName `
+          $output = & dotnet tool run dotnet-ef migrations add $migName `
+            --context RentACarDbContext `
             --project "${{ env.INFRA_CSPROJ }}" `
-            --startup-project "${{ env.WEB_CSPROJ }}" 2>&1
+            --startup-project "${{ env.WEB_CSPROJ }}" *>&1
 
           $output | Out-String | Write-Host
 
           if ($output -match "No changes were found") {
-            Write-Host "✅ No model changes. Skipping migration commit."
-            "MIGRATION_CREATED=false" | Out-File -FilePath $env:GITHUB_ENV -Append
+            Write-Host "No model changes. Skipping migration commit."
             exit 0
           }
 
-          # If migration files were created, commit & push them
+          Write-Host "Git status after migration:"
           git status --porcelain
 
           if ((git status --porcelain).Length -gt 0) {
             git add .
             git commit -m "chore(db): auto migration $migName [skip ci]"
             git push
-            Write-Host "✅ Migration committed and pushed."
-            "MIGRATION_CREATED=true" | Out-File -FilePath $env:GITHUB_ENV -Append
+            Write-Host "Migration committed and pushed."
           } else {
-            Write-Host "ℹ️ EF ran but no files changed. Skipping push."
-            "MIGRATION_CREATED=false" | Out-File -FilePath $env:GITHUB_ENV -Append
+            Write-Host "EF ran but no files changed. Skipping push."
           }
 
-      # 6) Always update DB (will be no-op if nothing pending)
+      # ---------------------------
+      # Update Database
+      # ---------------------------
       - name: Update Database
         shell: powershell
         run: |
-          # Optional sanity check: fail fast if connection string is missing
-          if ([string]::IsNullOrWhiteSpace($env:ConnectionStrings__DefaultConnection)) {
-            Write-Host "❌ ConnectionStrings__DefaultConnection is not set on this runner."
-            exit 1
-          }
-
-          dotnet ef database update `
+          dotnet tool run dotnet-ef database update `
+            --context RentACarDbContext `
             --project "${{ env.INFRA_CSPROJ }}" `
             --startup-project "${{ env.WEB_CSPROJ }}"
 
-      # 7) Publish
+      # ---------------------------
+      # Publish
+      # ---------------------------
       - name: Ensure publish folder exists
         shell: powershell
         run: |
@@ -138,7 +176,9 @@ jobs:
         shell: powershell
         run: dotnet publish "${{ env.WEB_CSPROJ }}" -c Release -o "${{ env.PUBLISH_PATH }}" --no-build
 
-      # 8) Deploy to IIS
+      # ---------------------------
+      # Deploy to IIS
+      # ---------------------------
       - name: Deploy to IIS
         shell: powershell
         run: |
