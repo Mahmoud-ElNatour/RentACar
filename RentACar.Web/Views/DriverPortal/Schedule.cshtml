@@ -358,7 +358,7 @@
     {
         PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
     }));
-    const bookingData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Bookings, new System.Text.Json.JsonSerializerOptions
+    const bookingData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.UpcomingBookings, new System.Text.Json.JsonSerializerOptions
     {
         PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
     }));
