@@ -41,6 +41,7 @@ public partial class RentACarDbContext : DbContext
     public virtual DbSet<Payment> Payments { get; set; }
     public virtual DbSet<PaymentMethod> PaymentMethods { get; set; }
     public virtual DbSet<Promocode> Promocodes { get; set; }
+    public virtual DbSet<Trip> Trips { get; set; }
     public virtual DbSet<AuditLog> AuditLogs { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -180,6 +181,26 @@ public partial class RentACarDbContext : DbContext
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("FK_Payments_Bookings");
+        });
+
+        modelBuilder.Entity<Trip>(entity =>
+        {
+            entity.HasIndex(e => e.BookingId).IsUnique();
+
+            entity.Property(e => e.TripStatus)
+                .HasConversion<string>()
+                .HasMaxLength(30);
+
+            entity.HasOne(d => d.Booking)
+                .WithOne(p => p.Trip)
+                .HasForeignKey<Trip>(d => d.BookingId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_Trips_Bookings");
+
+            entity.HasOne(d => d.Driver)
+                .WithMany(p => p.Trips)
+                .HasForeignKey(d => d.DriverId)
+                .HasConstraintName("FK_Trips_Drivers");
         });
 
         OnModelCreatingPartial(modelBuilder);

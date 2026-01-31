@@ -90,5 +90,8 @@ public partial class Booking
     [InverseProperty("Booking")]
     public virtual ICollection<DriverLocationPing> DriverLocationPings { get; set; } = new List<DriverLocationPing>();
 
+    [InverseProperty("Booking")]
+    public virtual Trip? Trip { get; set; }
+
     public virtual Payment? Payment { get; set; }
 }

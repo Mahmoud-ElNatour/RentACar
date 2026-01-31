@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
+using RentACar.Application.Managers;
 using RentACar.Core.Entities;
 using RentACar.Core.Repositories;
 using RentACar.Infrastructure.Data;
@@ -14,17 +15,20 @@ public class DriverTrackingHub : Hub
 {
     private readonly IDriverRepository _driverRepository;
     private readonly IBookingRepository _bookingRepository;
+    private readonly TripManager _tripManager;
     private readonly RentACarDbContext _dbContext;
     private readonly UserManager<IdentityUser> _userManager;
 
     public DriverTrackingHub(
         IDriverRepository driverRepository,
         IBookingRepository bookingRepository,
+        TripManager tripManager,
         RentACarDbContext dbContext,
         UserManager<IdentityUser> userManager)
     {
         _driverRepository = driverRepository;
         _bookingRepository = bookingRepository;
+        _tripManager = tripManager;
         _dbContext = dbContext;
         _userManager = userManager;
     }
@@ -67,6 +71,17 @@ public class DriverTrackingHub : Hub
              || booking.BookingStatus.Equals("cancelled", StringComparison.OrdinalIgnoreCase)))
         {
             throw new HubException("Booking not active");
+        }
+
+        var tripResult = await _tripManager.UpdateDriverLocationAsync(
+            booking.BookingId,
+            driver.DriverId,
+            (decimal)latitude,
+            (decimal)longitude,
+            timestamp);
+        if (!tripResult.Success)
+        {
+            throw new HubException(tripResult.Message);
         }
 
         var ping = new DriverLocationPing
