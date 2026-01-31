@@ -1,30 +1,65 @@
 @page
 @model ConfirmEmailModel
 @{
-    Layout = "/Views/Shared/_Layout.cshtml";
-    ViewData["Title"] = "Confirm Email";
-    ViewData["BodyClass"] = "bg-background-dark";
+    ViewData["Title"] = "Email Confirmed";
+    Layout = null;
 }
 
-<div class="flex items-center justify-center min-h-[calc(100vh-300px)] py-16 px-4">
-    <div class="w-full max-w-md space-y-8 bg-[#171717] p-10 rounded-2xl shadow-xl border border-white/5 text-center">
-        <div class="flex justify-center">
-            <div class="h-20 w-20 rounded-full bg-gold/10 flex items-center justify-center border border-gold/20">
-                <span class="material-symbols-outlined text-gold text-5xl">mark_email_read</span>
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>@ViewData["Title"] - LuxeDrive</title>
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&amp;family=Inter:wght@300;400;500;600&amp;family=Manrope:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+                primary: "#D4AF37", 
+                "background-dark": "#0B0E14",
+                "card-dark": "#161B22",
+                "gold": "#d4af35",
+                "gold-hover": "#d9a60c",
+            },
+            fontFamily: {
+              display: ["Playfair Display", "serif"],
+              body: ["Inter", "sans-serif"],
+            },
+          },
+        },
+      };
+    </script>
+</head>
+<body class="bg-background-dark min-h-screen flex items-center justify-center p-6 bg-[url('/img/pattern.png')] bg-repeat opacity-95">
+    <div class="w-full max-w-md bg-card-dark p-10 rounded-3xl shadow-2xl border border-white/5 text-center relative overflow-hidden">
+        <!-- Decorative Glow -->
+        <div class="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 bg-gold/20 blur-[50px] rounded-full pointer-events-none"></div>
+
+        <div class="flex justify-center mb-8 relative z-10">
+            <div class="h-24 w-24 rounded-full bg-green-500/10 flex items-center justify-center border border-green-500/20 shadow-[0_0_20px_rgba(34,197,94,0.2)]">
+                <span class="material-symbols-outlined text-green-500 text-5xl">check_circle</span>
             </div>
         </div>
         
-        <div class="space-y-4">
-             <h1 class="text-3xl font-bold text-white">@ViewData["Title"]</h1>
-             <div class="text-gray-400">
-                <partial name="_StatusMessage" model="Model.StatusMessage" />
-             </div>
+        <h1 class="text-3xl font-bold text-white font-display mb-4 relative z-10">Verified!</h1>
+        
+        <div class="text-gray-400 text-lg mb-8 relative z-10">
+             <partial name="_StatusMessage" model="Model.StatusMessage" />
+             <p class="mt-2 text-sm">Your email has been successfully confirmed. You can now access your account.</p>
         </div>
 
-        <div class="mt-8">
-             <a asp-page="./Login" class="inline-flex w-full items-center justify-center px-6 py-3.5 border border-transparent text-base font-bold rounded-lg text-black bg-gold hover:bg-gold-hover transition-all duration-300 shadow-lg">
-                Go to Login
+        <div class="relative z-10">
+             <a asp-page="./Login" class="block w-full py-4 bg-gold text-black font-bold rounded-xl hover:bg-gold-hover transition-all duration-300 shadow-[0_0_20px_rgba(212,175,55,0.3)] transform hover:scale-[1.02]">
+                Sign In Now
             </a>
         </div>
     </div>
-</div>
+</body>
+</html>

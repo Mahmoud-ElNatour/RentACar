@@ -35,7 +35,7 @@ html {
 /* Hero Section */
 .hero-section {
     min-height: 100vh;
-    background: var(--gradient-overlay), url('https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80') center/cover;
+    background: var(--gradient-overlay), url('../img/categories/car.jpg') center/cover;
 /*    position: relative;*/
     display: flex;
     align-items: center;

@@ -1,36 +1,75 @@
 ﻿@page
 @model RegisterConfirmationModel
 @{
-    Layout = "/Views/Shared/_Layout.cshtml";
     ViewData["Title"] = "Confirm your email";
-    ViewData["BodyClass"] = "bg-background-dark";
+    Layout = null;
 }
 
-<div class="flex items-center justify-center min-h-[calc(100vh-300px)] py-16 px-4">
-    <div class="w-full max-w-md space-y-8 bg-[#171717] p-10 rounded-2xl shadow-xl border border-white/5 text-center">
-        <div class="flex justify-center">
-            <div class="h-20 w-20 rounded-full bg-gold/10 flex items-center justify-center border border-gold/20">
-                <span class="material-symbols-outlined text-gold text-5xl">mail</span>
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>@ViewData["Title"] - LuxeDrive</title>
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&amp;family=Inter:wght@300;400;500;600&amp;family=Manrope:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+                primary: "#D4AF37", 
+                "background-dark": "#0B0E14",
+                "card-dark": "#161B22",
+                "gold": "#d4af35",
+                "gold-hover": "#d9a60c",
+            },
+            fontFamily: {
+              display: ["Playfair Display", "serif"],
+              body: ["Inter", "sans-serif"],
+            },
+          },
+        },
+      };
+    </script>
+</head>
+<body class="bg-background-dark min-h-screen flex items-center justify-center p-6">
+    <div class="w-full max-w-md bg-card-dark p-10 rounded-3xl shadow-2xl border border-white/5 text-center">
+        
+        <div class="flex justify-center mb-8">
+            <div class="h-24 w-24 rounded-full bg-gold/10 flex items-center justify-center border border-gold/20 shadow-[0_0_20px_rgba(212,175,55,0.2)]">
+                <span class="material-symbols-outlined text-gold text-5xl">mark_email_unread</span>
             </div>
         </div>
         
-        <div class="space-y-4">
-             <h1 class="text-3xl font-bold text-white">Check Your Inbox</h1>
-             <p class="text-gray-400 text-lg">
-                We've sent a confirmation link to <br/>
-                <span class="text-white font-medium">@Model.Email</span>
-            </p>
-             <p class="text-sm text-gray-400 mt-4">
-                 Did not receive the email? <a asp-page="./ResendEmailConfirmation" asp-route-email="@Model.Email" class="text-gold hover:text-gold-hover hover:underline font-semibold">Resend it</a>
-             </p>
-        </div>
+        <h1 class="text-3xl font-bold text-white font-display mb-4">Check Your Inbox</h1>
+        
+        <p class="text-gray-400 text-lg mb-8 leading-relaxed">
+            We've sent a verification link to <br/>
+            <span class="text-white font-medium">@Model.Email</span>
+        </p>
 
-        <div class="mt-8 border-t border-white/5 pt-6">
-             <div class="text-center">
-                <a asp-page="./Login" class="inline-flex w-full items-center justify-center px-6 py-3.5 border border-transparent text-base font-bold rounded-lg text-black bg-gold hover:bg-gold-hover transition-all duration-300 shadow-lg">
-                    Back to Login
-                </a>
+        <p class="text-sm text-gray-500 mb-8">
+            Click the link in the email to activate your account. <br/>
+            If you verify later, you won't be able to book immediately.
+        </p>
+
+         <div class="space-y-4">
+            <a asp-page="./Login" class="block w-full py-4 bg-gold text-black font-bold rounded-xl hover:bg-gold-hover transition-all duration-300 shadow-[0_0_20px_rgba(212,175,55,0.3)]">
+                Return to Login
+            </a>
+            
+            <div class="pt-4 border-t border-white/5">
+                <p class="text-sm text-gray-400">
+                    Did not receive the email? 
+                    <a asp-page="./ResendEmailConfirmation" asp-route-email="@Model.Email" class="text-gold hover:text-white transition-colors font-medium">Resend it</a>
+                </p>
             </div>
         </div>
     </div>
-</div>
+</body>
+</html>

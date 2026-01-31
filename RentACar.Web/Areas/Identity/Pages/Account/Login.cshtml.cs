@@ -157,7 +157,8 @@ namespace RentACar.Web.Areas.Identity.Pages.Account
                     if (!await _userManager.IsEmailConfirmedAsync(user))
                     {
                         await _auditLogManager.LogAsync("Login", "User", user.Id, $"User {Input.Email} attempted login without confirmed email.", "Failed", Input.Email, "User");
-                        return RedirectToPage("RegisterConfirmation", new { email = Input.Email, returnUrl = returnUrl });
+                        // Redirect to ResendEmailConfirmation as requested
+                        return RedirectToPage("ResendEmailConfirmation", new { email = Input.Email });
                     }
                 }
 

@@ -1,9 +1,23 @@
 @using Microsoft.AspNetCore.Identity
 @inject SignInManager<IdentityUser> SignInManager
 @inject UserManager<IdentityUser> UserManager
+@inject RentACar.Application.Managers.CustomerManager CustomerManager
 
 @{
     var displayName = User.FindFirst("display_name")?.Value ?? User.Identity?.Name ?? "User";
+    bool isVerified = true;
+    if (SignInManager.IsSignedIn(User))
+    {
+        var user = await UserManager.GetUserAsync(User);
+        if (user != null)
+        {
+            var customer = await CustomerManager.GetCustomerByAspNetUserId(user.Id);
+            if (customer != null)
+            {
+                isVerified = customer.IsVerified;
+            }
+        }
+    }
 }
 
 <header class="relative z-50 w-full border-b border-[1px] border-border-dark bg-surface-dark/95 backdrop-blur-sm">
@@ -91,14 +105,54 @@
                 <!-- Notifications (Only if signed in) -->
                 @if (SignInManager.IsSignedIn(User))
                 {
-                    <button class="relative text-gray-400 hover:text-gold transition-colors group">
-                        <span class="material-symbols-outlined">notifications</span>
-                        <!-- Notification Badge -->
-                        <span class="absolute top-0.5 right-0.5 flex h-2 w-2">
-                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-gold opacity-75"></span>
-                            <span class="relative inline-flex rounded-full h-2 w-2 bg-gold"></span>
-                        </span>
-                    </button>
+                    <div class="relative">
+                        <button onclick="document.getElementById('notification-dropdown').classList.toggle('hidden')" 
+                                class="relative text-gray-400 hover:text-gold transition-colors group focus:outline-none">
+                            <span class="material-symbols-outlined">notifications</span>
+                            <!-- Notification Badge -->
+                            @if (!isVerified)
+                            {
+                                <span class="absolute top-0.5 right-0.5 flex h-2.5 w-2.5">
+                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                    <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+                                </span>
+                            }
+                        </button>
+                        
+                        <!-- Notification Dropdown -->
+                         <div id="notification-dropdown" class="hidden absolute right-0 top-full mt-4 w-80 origin-top-right rounded-2xl bg-surface-dark shadow-2xl ring-1 ring-border-dark focus:outline-none z-50 overflow-hidden transform transition-all">
+                            <div class="p-4 border-b border-border-dark flex justify-between items-center">
+                                <h3 class="text-white font-semibold">Notifications</h3>
+                                @if(!isVerified) { <span class="text-xs text-red-400 bg-red-400/10 px-2 py-1 rounded-full">Action Required</span> }
+                            </div>
+                            <div class="max-h-96 overflow-y-auto">
+                                @if (!isVerified)
+                                {
+                                    <div class="p-4 hover:bg-white/5 transition-colors border-b border-white/5">
+                                        <div class="flex gap-3">
+                                            <div class="flex-shrink-0 mt-1">
+                                                <span class="material-symbols-outlined text-red-500">gpp_maybe</span>
+                                            </div>
+                                            <div>
+                                                <p class="text-sm font-medium text-white">Identity Verification Required</p>
+                                                <p class="text-xs text-gray-400 mt-1">Please upload your documents to unlock booking privileges.</p>
+                                                <a href="/Identity/Account/Manage#identity-verification" class="mt-3 inline-block px-3 py-1.5 text-xs font-semibold text-black bg-gold rounded hover:bg-yellow-500 transition-colors">
+                                                    Verify Now
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="p-8 text-center text-gray-500">
+                                        <span class="material-symbols-outlined text-4xl mb-2 opacity-50">notifications_off</span>
+                                        <p class="text-sm">No new notifications</p>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
                 }
 
                 <!-- Divider -->
@@ -139,7 +193,7 @@
                                 
                                 <div class="h-px bg-border-dark my-1 mx-2"></div>
                                 
-                                <form method="post" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home")">
+                                <form method="post" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
                                     <button type="submit" class="w-full text-left block px-4 py-2.5 text-sm text-gray-300 hover:bg-red-500/10 hover:text-red-500 rounded-lg transition-colors flex items-center gap-3 group">
                                         <span class="material-symbols-outlined text-[20px] text-gray-400 group-hover:text-red-500 transition-colors">logout</span> 
                                         <span class="font-medium">Logout</span>

@@ -35,6 +35,13 @@ namespace RentACar.Web.Areas.Identity.Pages.Account
         [BindProperty]
         public InputModel Input { get; set; } = new();
 
+        public string ReturnUrl { get; set; }
+
+        public void OnGet(string returnUrl = null)
+        {
+            ReturnUrl = returnUrl;
+        }
+
         public class InputModel
         {
             [Required]
@@ -50,27 +57,12 @@ namespace RentACar.Web.Areas.Identity.Pages.Account
             public string PhoneNumber { get; set; } = default!;
 
             [Required]
-            public string Address { get; set; } = default!;
-
-            [Required]
             [DataType(DataType.Password)]
             public string Password { get; set; } = default!;
 
             [DataType(DataType.Password)]
             [Compare("Password", ErrorMessage = "The password and confirmation do not match.")]
             public string ConfirmPassword { get; set; } = default!;
-
-            [Required]
-            public IFormFile DrivingLicenseFront { get; set; } = default!;
-
-            [Required]
-            public IFormFile DrivingLicenseBack { get; set; } = default!;
-
-            [Required]
-            public IFormFile NationalIdFront { get; set; } = default!;
-
-            [Required]
-            public IFormFile NationalIdBack { get; set; } = default!;
         }
 
         public async Task<IActionResult> OnPostAsync()
@@ -78,19 +70,22 @@ namespace RentACar.Web.Areas.Identity.Pages.Account
             if (!ModelState.IsValid)
                 return Page();
 
-            byte[] licenseFront = await ConvertToByteArray(Input.DrivingLicenseFront);
-            byte[] licenseBack = await ConvertToByteArray(Input.DrivingLicenseBack);
-            byte[] idFront = await ConvertToByteArray(Input.NationalIdFront);
-            byte[] idBack = await ConvertToByteArray(Input.NationalIdBack);
+            // Check if email already exists
+            var existingUser = await _userManager.FindByEmailAsync(Input.Email);
+            if (existingUser != null)
+            {
+                ModelState.AddModelError(string.Empty, "This email address is already registered.");
+                return Page();
+            }
 
             var createDto = new CustomerCreateDTO
             {
                 Name = Input.FullName,
-                Address = Input.Address,
-                DrivingLicenseFront = licenseFront,
-                DrivingLicenseBack = licenseBack,
-                NationalIdfront = idFront,
-                NationalIdback = idBack,
+                Address = null,
+                DrivingLicenseFront = null,
+                DrivingLicenseBack = null,
+                NationalIdfront = null,
+                NationalIdback = null,
                 Email = Input.Email,
                 Username = Input.Email,
                 PhoneNumber = Input.PhoneNumber,
@@ -118,18 +113,13 @@ namespace RentACar.Web.Areas.Identity.Pages.Account
 
                 await _emailManager.SendConfirmationEmailAsync(Input.Email, HtmlEncoder.Default.Encode(callbackUrl), Input.FullName);
 
-                return RedirectToPage("RegisterConfirmation", new { email = Input.Email, returnUrl = Url.Content("~/") });
+                // Auto-login and redirect to Identity Verification
+                await _signInManager.SignInAsync(user, isPersistent: false);
+                return RedirectToPage("/Account/Manage/VerifyIdentity", new { area = "Identity" });
             }
 
             ModelState.AddModelError(string.Empty, "User created but could not sign in.");
             return Page();
-        }
-
-        private async Task<byte[]> ConvertToByteArray(IFormFile file)
-        {
-            using var ms = new MemoryStream();
-            await file.CopyToAsync(ms);
-            return ms.ToArray();
         }
     }
 }

@@ -113,6 +113,16 @@ namespace RentACar.Web.Controllers
         [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> AddForCustomer(int? carId = null)
         {
+            var user = await _userManager.GetUserAsync(User);
+            if (user != null)
+            {
+                var customer = await _customerManager.GetCustomerByAspNetUserId(user.Id);
+                if (customer != null && !customer.IsVerified)
+                {
+                    return RedirectToPage("/Account/Manage/VerifyIdentity", new { area = "Identity" });
+                }
+            }
+
             if (!carId.HasValue) return RedirectToAction("Index", "Browse");
 
             var car = await _carManager.GetCarByIdAsync(carId.Value);
@@ -200,6 +210,12 @@ namespace RentACar.Web.Controllers
 
              var userId = _userManager.GetUserId(User);
              if(string.IsNullOrEmpty(userId)) return Unauthorized();
+
+             var customer = await _customerManager.GetCustomerByAspNetUserId(userId);
+             if (customer != null && !customer.IsVerified)
+             {
+                 return StatusCode(403, "Account not verified. Please verify your identity to book a car.");
+             }
 
              try 
              {

@@ -1,0 +1,244 @@
+@page
+@model RentACar.Web.Areas.Identity.Pages.Account.Manage.VerifyIdentityModel
+@{
+    ViewData["Title"] = "Verify Identity";
+    Layout = null; 
+}
+
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>@ViewData["Title"] - LuxeDrive</title>
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&amp;family=Inter:wght@300;400;500;600&amp;family=Manrope:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+                primary: "#D4AF37", 
+                "background-light": "#F8FAFC",
+                "background-dark": "#0B0E14",
+                "card-dark": "#161B22",
+                "input-dark": "#0D1117",
+                "gold": "#d4af35",
+                "gold-hover": "#d9a60c",
+            },
+            fontFamily: {
+              display: ["Playfair Display", "serif"],
+              body: ["Inter", "sans-serif"],
+            },
+            boxShadow: {
+                "glow": "0 0 20px rgba(212, 175, 55, 0.15)"
+            },
+          },
+        },
+      };
+    </script>
+     <style>
+        body { font-family: 'Inter', sans-serif; }
+         /* Notification Toast Styling (Inlined) */
+        .notification-container {
+            position: fixed;
+            top: 1.5rem;
+            right: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            z-index: 10000;
+            pointer-events: none;
+        }
+
+        .notification-toast {
+            min-width: 300px;
+            max-width: 400px;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            background: rgba(30, 30, 30, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            padding: 1rem;
+            color: #ffffff;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            pointer-events: auto;
+            position: relative;
+            backdrop-filter: blur(10px);
+        }
+
+        .notification-toast.show { opacity: 1; transform: translateY(0); }
+        .notification-toast.hiding { opacity: 0; transform: translateY(-20px); }
+
+        .notification-icon { font-size: 1.25rem; margin-top: 2px; }
+        .notification-content { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+        .notification-title { font-weight: 600; font-size: 0.95rem; line-height: 1.3; }
+        .notification-message { font-size: 0.85rem; color: #d1d5db; line-height: 1.4; }
+        .notification-close { background: none; border: none; color: #9ca3af; cursor: pointer; padding: 4px; margin: -4px -4px 0 0; transition: color 0.2s; }
+        .notification-close:hover { color: #ffffff; }
+
+        .notification-success { border-left: 4px solid #10b981; }
+        .notification-success .notification-icon { color: #10b981; }
+        .notification-error { border-left: 4px solid #ef4444; }
+        .notification-error .notification-icon { color: #ef4444; }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark min-h-screen">
+    <partial name="_LoginPopupNotifications" />
+    
+    <div class="flex min-h-screen w-full">
+         <!-- Left Section (Image) -->
+        <div class="hidden lg:flex lg:w-1/2 relative flex-col justify-between p-12 overflow-hidden border-r border-primary/30">
+            <div class="absolute inset-0 z-0">
+                <img alt="Verification" class="w-full h-full object-cover" src="~/img/categories/car.jpg" /> <!-- Consider a specific image if available -->
+                <div class="absolute inset-0 bg-black/60"></div>
+                <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/30"></div>
+            </div>
+            
+             <div class="relative z-10 flex items-center gap-4">
+                 <!-- No Back button here as this is a forced step or post-registration -->
+                 <h1 class="text-primary font-display text-3xl font-bold tracking-tight">LB Drive</h1>
+            </div>
+
+            <div class="relative z-10 max-w-lg">
+                <div class="w-16 h-1 bg-primary mb-8"></div>
+                <p class="font-display text-white text-5xl leading-tight mb-4">
+                    "Trust & Safety First."
+                </p>
+                <p class="text-gray-400 text-lg font-light tracking-wide italic">
+                    — Secure your experience
+                </p>
+            </div>
+        </div>
+
+        <!-- Right Section (Form) -->
+        <div class="w-full lg:w-1/2 flex items-center justify-center p-6 bg-background-light dark:bg-background-dark relative overflow-y-auto">
+            <div class="w-full max-w-md py-10">
+                <div class="bg-white dark:bg-card-dark p-8 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800">
+                    <header class="text-center mb-8">
+                        <div class="flex justify-center mb-4">
+                            <div class="h-16 w-16 rounded-full bg-gold/10 flex items-center justify-center border border-gold/20 shadow-glow">
+                                <span class="material-symbols-outlined text-gold text-3xl">verified_user</span>
+                            </div>
+                        </div>
+                        <h2 class="text-primary font-display text-3xl font-bold">Verify Identity</h2>
+                        <p class="text-gray-400 text-sm mt-2">Upload your documents to unlock full access.</p>
+                    </header>
+
+                    <form method="post" enctype="multipart/form-data" class="space-y-6">
+                        <div asp-validation-summary="ModelOnly" class="text-red-500 text-sm list-disc pl-5 hidden"></div>
+                        
+                         <!-- Address -->
+                        <div>
+                            <label asp-for="Input.Address" class="block text-sm font-medium text-gray-300 mb-1">Residential Address</label>
+                            <div class="relative group">
+                                <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-gold transition-colors">home</span>
+                                <input asp-for="Input.Address" class="w-full pl-12 pr-4 py-3 bg-input-dark border border-white/10 rounded-xl text-white placeholder-gray-500 focus:ring-2 focus:ring-gold focus:border-transparent outline-none transition-all" placeholder="123 Main St, City" />
+                            </div>
+                            <span asp-validation-for="Input.Address" class="text-red-400 text-xs mt-1 block"></span>
+                        </div>
+
+                         <!-- File Upload Grid -->
+                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Driving License Front -->
+                             <div class="space-y-2">
+                                <label asp-for="Input.DrivingLicenseFront" class="block text-xs font-medium text-gray-300">License Front</label>
+                                <div class="relative border-2 border-dashed border-white/10 rounded-xl hover:border-gold/50 transition-colors bg-input-dark p-4 text-center group cursor-pointer">
+                                    <input asp-for="Input.DrivingLicenseFront" type="file" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" accept="image/*" />
+                                    <div class="space-y-1">
+                                        <span class="material-symbols-outlined text-gray-400 group-hover:text-gold transition-colors text-2xl">upload_file</span>
+                                        <p class="text-xs text-gray-500 truncate" id="fileName_DLF">Choose File</p>
+                                    </div>
+                                </div>
+                                <span asp-validation-for="Input.DrivingLicenseFront" class="text-red-400 text-xs"></span>
+                             </div>
+
+                             <!-- Driving License Back -->
+                             <div class="space-y-2">
+                                <label asp-for="Input.DrivingLicenseBack" class="block text-xs font-medium text-gray-300">License Back</label>
+                                <div class="relative border-2 border-dashed border-white/10 rounded-xl hover:border-gold/50 transition-colors bg-input-dark p-4 text-center group cursor-pointer">
+                                    <input asp-for="Input.DrivingLicenseBack" type="file" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" accept="image/*" />
+                                    <div class="space-y-1">
+                                         <span class="material-symbols-outlined text-gray-400 group-hover:text-gold transition-colors text-2xl">upload_file</span>
+                                        <p class="text-xs text-gray-500 truncate" id="fileName_DLB">Choose File</p>
+                                    </div>
+                                </div>
+                                <span asp-validation-for="Input.DrivingLicenseBack" class="text-red-400 text-xs"></span>
+                             </div>
+
+                             <!-- National ID Front -->
+                             <div class="space-y-2">
+                                <label asp-for="Input.NationalIdFront" class="block text-xs font-medium text-gray-300">National ID Front</label>
+                                <div class="relative border-2 border-dashed border-white/10 rounded-xl hover:border-gold/50 transition-colors bg-input-dark p-4 text-center group cursor-pointer">
+                                    <input asp-for="Input.NationalIdFront" type="file" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" accept="image/*" />
+                                    <div class="space-y-1">
+                                         <span class="material-symbols-outlined text-gray-400 group-hover:text-gold transition-colors text-2xl">badge</span>
+                                        <p class="text-xs text-gray-500 truncate" id="fileName_NIF">Choose File</p>
+                                    </div>
+                                </div>
+                                <span asp-validation-for="Input.NationalIdFront" class="text-red-400 text-xs"></span>
+                             </div>
+
+                             <!-- National ID Back -->
+                             <div class="space-y-2">
+                                <label asp-for="Input.NationalIdBack" class="block text-xs font-medium text-gray-300">National ID Back</label>
+                                <div class="relative border-2 border-dashed border-white/10 rounded-xl hover:border-gold/50 transition-colors bg-input-dark p-4 text-center group cursor-pointer">
+                                    <input asp-for="Input.NationalIdBack" type="file" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" accept="image/*" />
+                                    <div class="space-y-1">
+                                         <span class="material-symbols-outlined text-gray-400 group-hover:text-gold transition-colors text-2xl">badge</span>
+                                        <p class="text-xs text-gray-500 truncate" id="fileName_NIB">Choose File</p>
+                                    </div>
+                                </div>
+                                <span asp-validation-for="Input.NationalIdBack" class="text-red-400 text-xs"></span>
+                             </div>
+                        </div>
+
+                        <div class="flex gap-4 pt-4">
+                            <button type="submit" asp-page-handler="Skip" formnovalidate class="flex-1 py-3.5 border border-white/10 text-gray-300 font-semibold rounded-xl hover:bg-white/5 transition-all text-sm">
+                                Skip for Now
+                            </button>
+                            <button type="submit" class="flex-1 py-3.5 bg-gold text-black font-bold rounded-xl hover:bg-gold-hover transition-all shadow-glow text-sm">
+                                Submit Documents
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+     <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/js/site.js"></script>
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // Simple File Name Display
+        function bindFileInput(inputId, displayId) {
+            document.getElementById(inputId).addEventListener('change', function(e) {
+                const fileName = e.target.files[0]?.name || "Choose File";
+                document.getElementById(displayId).textContent = fileName;
+            });
+        }
+        bindFileInput('Input_DrivingLicenseFront', 'fileName_DLF');
+        bindFileInput('Input_DrivingLicenseBack', 'fileName_DLB');
+        bindFileInput('Input_NationalIdfront', 'fileName_NIF');
+        bindFileInput('Input_NationalIdback', 'fileName_NIB');
+
+        @if (!ViewData.ModelState.IsValid)
+        {
+             foreach (var modelError in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+             {
+                <text>showPopup("@Html.Raw(modelError.ErrorMessage)", 'error');</text>
+             }
+        }
+    </script>
+</body>
+</html>
