@@ -1,3 +1,4 @@
+@model RentACar.Web.ViewModels.EmailHubViewModel
 @{
     ViewData["Title"] = "Email Services Hub";
     Layout = "_Layout";
@@ -44,28 +45,29 @@
                     <div class="stat-card p-4 md:p-6 rounded-xl border border-white/5 flex flex-col gap-2">
                         <p class="text-zinc-500 text-xs font-bold uppercase tracking-wider">Sent Today</p>
                         <div class="flex items-baseline gap-2">
-                            <span class="text-3xl font-extrabold text-white">1,240</span>
-                            <span class="text-emerald-500 text-xs font-medium">↑ 12%</span>
+                            <span class="text-3xl font-extrabold text-white">@Model.SentToday.ToString("N0")</span>
+                            <!-- Placeholder trend, or calculate vs yesterday if needed -->
+                            <span class="text-emerald-500 text-xs font-medium">Live</span>
                         </div>
                     </div>
                     <div class="stat-card p-4 md:p-6 rounded-xl border border-white/5 flex flex-col gap-2">
                         <p class="text-zinc-500 text-xs font-bold uppercase tracking-wider">Delivery Rate</p>
                         <div class="flex items-baseline gap-2">
-                            <span class="text-3xl font-extrabold text-white">98.5%</span>
-                            <span class="text-[#f2b90d] text-xs font-medium">Optimal</span>
+                            <span class="text-3xl font-extrabold text-white">@Model.DeliveryRate%</span>
+                            <span class="text-[#f2b90d] text-xs font-medium">Global</span>
                         </div>
                     </div>
                     <div class="stat-card p-4 md:p-6 rounded-xl border border-white/5 flex flex-col gap-2">
                         <p class="text-zinc-500 text-xs font-bold uppercase tracking-wider">Active Reminders</p>
                         <div class="flex items-center gap-2 mt-1">
                             <span class="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                            <span class="text-xl font-bold text-white leading-none">Running</span>
+                            <span class="text-xl font-bold text-white leading-none">@Model.ActiveReminders Running</span>
                         </div>
                     </div>
                     <div class="stat-card p-4 md:p-6 rounded-xl border border-white/5 flex flex-col gap-2">
                         <p class="text-zinc-500 text-xs font-bold uppercase tracking-wider">Pending Errors</p>
                         <div class="flex items-baseline gap-2">
-                            <span class="text-3xl font-extrabold text-white">12</span>
+                            <span class="text-3xl font-extrabold text-white">@Model.PendingErrors</span>
                             <span class="text-zinc-500 text-xs font-medium">Last 24h</span>
                         </div>
                     </div>

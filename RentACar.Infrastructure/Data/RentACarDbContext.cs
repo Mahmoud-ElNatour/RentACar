@@ -47,6 +47,7 @@ public partial class RentACarDbContext : DbContext
     public virtual DbSet<EmailLog> EmailLogs { get; set; }
     public virtual DbSet<NotificationLog> NotificationLogs { get; set; }
     public virtual DbSet<SenderIdentity> SenderIdentities { get; set; }
+    public virtual DbSet<EmailFeatureConfig> EmailFeatureConfigs { get; set; }
 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
