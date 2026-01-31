@@ -277,6 +277,7 @@
         valueField: 'id',
         labelField: 'text',
         searchField: 'text',
+        maxItems: 1, // Limit to 1 selection
         placeholder: 'Search for a customer...',
         load: function(query, callback) {
             const url = '/api/Customer/Search?query=' + encodeURIComponent(query);
@@ -285,10 +286,13 @@
         onChange: function(value) { document.getElementById('CustomerId').value = value; },
         render: {
             option: function(item, escape) {
-                return `<div class="p-2 border-b border-gray-800 hover:bg-gray-800">
-                            <div class="font-bold text-white">${escape(item.name)}</div>
-                            <div class="text-xs text-gray-400">ID: ${escape(item.id)} • ${escape(item.email || 'No Email')}</div>
+                return `<div class="p-3 border-b border-gray-800 hover:bg-[#1f1f1f] bg-[#16181a] transition-colors">
+                            <div class="font-bold text-white text-sm">${escape(item.name)}</div>
+                            <div class="text-xs text-gray-500 mt-0.5">ID: ${escape(item.id)} • ${escape(item.email || 'No Email')}</div>
                         </div>`;
+            },
+            item: function(item, escape) {
+                return `<div class="font-bold text-white">${escape(item.name)}</div>`;
             }
         }
     });
@@ -379,9 +383,10 @@
             const eTime = selEnd ? selEnd.getTime() : 0;
             const cTime = date.getTime();
 
-            if(sTime && cTime === sTime) btn.className = 'w-8 h-8 rounded-lg flex items-center justify-center mx-auto bg-gold text-black font-bold shadow-lg shadow-gold/20';
-            else if(eTime && cTime === eTime) btn.className = 'w-8 h-8 rounded-lg flex items-center justify-center mx-auto bg-gold text-black font-bold shadow-lg shadow-gold/20';
-            else if(sTime && eTime && cTime > sTime && cTime < eTime) btn.className = 'w-8 h-8 rounded-lg flex items-center justify-center mx-auto bg-gold/20 text-gold font-bold';
+            if(sTime && cTime === sTime && !eTime) btn.className = 'w-8 h-8 rounded-lg flex items-center justify-center mx-auto bg-gold text-black font-bold shadow-lg shadow-gold/20'; // Start only
+            else if(sTime && cTime === sTime) btn.className = 'w-8 h-8 rounded-l-lg flex items-center justify-center mx-auto bg-gold text-black font-bold shadow-lg shadow-gold/20';
+            else if(eTime && cTime === eTime) btn.className = 'w-8 h-8 rounded-r-lg flex items-center justify-center mx-auto bg-gold text-black font-bold shadow-lg shadow-gold/20';
+            else if(sTime && eTime && cTime > sTime && cTime < eTime) btn.className = 'w-8 h-8 flex items-center justify-center mx-auto bg-gold/20 text-gold font-bold';
             
             grid.appendChild(btn);
         }
@@ -401,10 +406,14 @@
             selEnd = null;
         } else if (!selStart) {
             selStart = date;
+            // Auto-select end as start if user wants 1 day, requires second click.
+            // But if user clicks same day again, treating it as 1 day selection:
         } else if (date < selStart) {
+             // User clicked earlier date, reset start
             selStart = date;
         } else if (date.getTime() === selStart.getTime()) {
-            // Keep start
+            // User clicked same date -> Single day rental
+            selEnd = date;
         } else {
             // Check range for blocking
             let valid = true;
@@ -418,8 +427,10 @@
             }
             
             if(valid) selEnd = date;
+            if(valid) selEnd = date;
             else {
-                alert("Selected range includes unavailable dates.");
+                if(window.showPopup) window.showPopup("Selected range includes unavailable dates.", "error");
+                else alert("Selected range includes unavailable dates.");
                 selEnd = null; // Enforce re-select
                 return;
             }
@@ -460,8 +471,15 @@
                 if (data.discountAmount > 0) {
                     document.getElementById('summPromoRow').classList.remove('hidden');
                     document.getElementById('summDiscount').innerText = "-$" + data.discountAmount.toFixed(2);
+                    document.getElementById('summPromoName').innerText = promo;
                 } else {
                     document.getElementById('summPromoRow').classList.add('hidden');
+                    // Check if promo was entered but no discount returned
+                    if (promo && promo.length > 0) {
+                         if(window.showPopup) window.showPopup("Promocode not found or not applicable.", "error");
+                         else alert("Promocode not found or not applicable.");
+                         document.getElementById('promocode').value = ''; // Clear invalid
+                    }
                 }
             }
         } catch(e) { console.error(e); }
@@ -477,8 +495,16 @@
         const s = document.getElementById('Startdate').value;
         const end = document.getElementById('Enddate').value;
         
-        if(!cid) { alert("Select a customer"); return; }
-        if(!s || !end) { alert("Select dates"); return; }
+        if(!cid) { 
+            if(window.showPopup) window.showPopup("Select a customer", "error"); 
+            else alert("Select a customer");
+            return; 
+        }
+        if(!s || !end) { 
+            if(window.showPopup) window.showPopup("Select dates", "error"); 
+            else alert("Select dates");
+            return; 
+        }
         
         const btn = e.submitter;
         const orig = btn.innerHTML;
@@ -505,7 +531,9 @@
                 if(data.redirectUrl) window.location.href = data.redirectUrl;
                 else window.location.href = '/Booking';
             } else {
-                alert("Error: " + await res.text());
+                const errText = await res.text();
+                if(window.showPopup) window.showPopup("Error: " + errText, "error");
+                else alert("Error: " + errText);
                 btn.disabled = false;
                 btn.innerHTML = orig;
             }

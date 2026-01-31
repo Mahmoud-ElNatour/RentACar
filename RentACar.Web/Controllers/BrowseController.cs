@@ -26,11 +26,12 @@ namespace RentACar.Web.Controllers
             decimal? maxPrice = null, 
             DateOnly? startDate = null, 
             DateOnly? endDate = null,
+            string? sortOrder = null,
             int page = 1)
         {
             var categories = await _categoryManager.GetAllCategoriesAsync();
 
-            var cars = await GetFilteredCarsInternal(name, categoryIds, minPrice, maxPrice, startDate, endDate);
+            var cars = await GetFilteredCarsInternal(name, categoryIds, minPrice, maxPrice, startDate, endDate, sortOrder);
             
             int pageSize = 12;
             int totalCount = cars.Count;
@@ -48,6 +49,7 @@ namespace RentACar.Web.Controllers
                 FilterMaxPrice = maxPrice,
                 FilterStartDate = startDate,
                 FilterEndDate = endDate,
+                SortOrder = sortOrder,
                 CurrentPage = page,
                 TotalPages = totalPages
             };
@@ -63,9 +65,10 @@ namespace RentACar.Web.Controllers
             decimal? maxPrice = null,
             DateOnly? startDate = null,
             DateOnly? endDate = null,
+            string? sortOrder = null,
             int page = 1)
         {
-            var cars = await GetFilteredCarsInternal(name, categoryIds, minPrice, maxPrice, startDate, endDate);
+            var cars = await GetFilteredCarsInternal(name, categoryIds, minPrice, maxPrice, startDate, endDate, sortOrder);
 
             int pageSize = 12;
             var pagedCars = cars.Skip((page - 1) * pageSize).Take(pageSize).ToList();
@@ -81,7 +84,8 @@ namespace RentACar.Web.Controllers
             decimal? minPrice, 
             decimal? maxPrice, 
             DateOnly? startDate, 
-            DateOnly? endDate)
+            DateOnly? endDate,
+            string? sortOrder)
         {
             // Initial Fetch (Lightweight DTOs)
             var cars = await _carManager.SearchCarsForListAsync(modelName: name);
@@ -116,6 +120,29 @@ namespace RentACar.Web.Controllers
                 var availIds = available.Select(c => c.CarId).ToHashSet();
                 
                 cars = cars.Where(c => availIds.Contains(c.CarId)).ToList();
+            }
+
+            // Apply sorting
+            if (!string.IsNullOrEmpty(sortOrder))
+            {
+                switch (sortOrder)
+                {
+                    case "price_asc":
+                        cars = cars.OrderBy(c => c.PricePerDay).ToList();
+                        break;
+                    case "price_desc":
+                        cars = cars.OrderByDescending(c => c.PricePerDay).ToList();
+                        break;
+                    default:
+                        // "Recommended" or null -> default sorting (maybe by popularity or ID)
+                         cars = cars.OrderByDescending(c => c.CarId).ToList();
+                        break;
+                }
+            }
+            else
+            {
+                 // Default sort
+                 cars = cars.OrderByDescending(c => c.CarId).ToList();
             }
 
             return cars;

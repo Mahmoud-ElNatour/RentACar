@@ -31,9 +31,7 @@ public partial class RentACarDbContext : DbContext
     public virtual DbSet<Booking> Bookings { get; set; }
     public virtual DbSet<Car> Cars { get; set; }
     public virtual DbSet<Category> Categories { get; set; }
-    public virtual DbSet<CreditCard> CreditCards { get; set; }
     public virtual DbSet<Customer> Customers { get; set; }
-    public virtual DbSet<CustomerCreditCard> CustomerCreditCards { get; set; }
     public virtual DbSet<Employee> Employees { get; set; }
     public virtual DbSet<Payment> Payments { get; set; }
     public virtual DbSet<PaymentMethod> PaymentMethods { get; set; }
@@ -137,30 +135,7 @@ public partial class RentACarDbContext : DbContext
                 .HasConstraintName("FK_Cars_Categories1");
         });
 
-        modelBuilder.Entity<CreditCard>(entity =>
-        {
-            entity.HasKey(e => e.CreditCardId).HasName("PK_CreditCard_1");
-
-            entity.Property(e => e.CardHolderName).IsFixedLength();
-            entity.Property(e => e.Cvv).IsFixedLength();
-        });
-
-        modelBuilder.Entity<CustomerCreditCard>(entity =>
-        {
-            entity.HasKey(e => new { e.UserId, e.CreditCardId });
-
-            entity.HasOne(e => e.User)
-                .WithMany(c => c.CustomerCreditCards)
-                .HasForeignKey(e => e.UserId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_CustomerCreditCard_Customers");
-
-            entity.HasOne(e => e.CreditCard)
-                .WithMany(cc => cc.CustomerCreditCards)
-                .HasForeignKey(e => e.CreditCardId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_CustomerCreditCard_CreditCard");
-        });
+        // CreditCard and CustomerCreditCard configurations removed - Stripe handles payments
 
         modelBuilder.Entity<DistributionList>(entity =>
         {

@@ -451,13 +451,13 @@ namespace RentACar.Web.Controllers
         [HttpPost("CalculatePrice")]
         public async Task<ActionResult<object>> CalculatePrice([FromBody] CalculatePriceRequestDto dto)
         {
-            if (dto.StartDate >= dto.EndDate)
+            if (dto.StartDate > dto.EndDate)
                 return BadRequest("End date must be after start date.");
 
             var car = await _carManager.GetCarByIdAsync(dto.CarId);
             if (car == null) return NotFound("Car not found.");
 
-            var days = (dto.EndDate.ToDateTime(TimeOnly.MinValue) - dto.StartDate.ToDateTime(TimeOnly.MinValue)).Days;
+            var days = (dto.EndDate.ToDateTime(TimeOnly.MinValue) - dto.StartDate.ToDateTime(TimeOnly.MinValue)).Days + 1;
             var pricePerDay = car.PricePerDay ?? 0;
             var subtotal = pricePerDay * days;
             

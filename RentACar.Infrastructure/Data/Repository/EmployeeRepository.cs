@@ -41,6 +41,10 @@ namespace RentACar.Infrastructure.Repositories
 
         public async Task UpdateAsync(Employee employee)
         {
+            if (_dbContext.Entry(employee).State == EntityState.Detached)
+            {
+                _dbContext.Employees.Attach(employee);
+            }
             _dbContext.Entry(employee).State = EntityState.Modified;
             await _dbContext.SaveChangesAsync();
         }

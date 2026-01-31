@@ -29,6 +29,7 @@
                         <div>
                             <label class="block text-xs font-medium text-gray-500 uppercase mb-1.5">Email Address</label>
                             <input asp-for="Email" class="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-[#d4af37]/50 focus:ring-1 focus:ring-[#d4af37]/50 placeholder-gray-600" placeholder="alice@example.com" required readonly="@(Model.EmployeeId != 0 ? "readonly" : null)" />
+                            <span id="empEmailError" class="text-red-500 text-xs mt-1 hidden">Please enter a valid email address.</span>
                         </div>
                     </div>
 
@@ -48,6 +49,7 @@
                         <div>
                             <label class="block text-xs font-medium text-gray-500 uppercase mb-1.5">Initial Password</label>
                             <input type="password" name="Password" class="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-[#d4af37]/50 focus:ring-1 focus:ring-[#d4af37]/50 placeholder-gray-600" required />
+                            <span id="empPasswordError" class="text-red-500 text-xs mt-1 hidden">Password must be 8+ chars (Upper, Lower, Number, Symbol).</span>
                              <p class="text-xs text-gray-500 mt-1">Must contain uppercase, lowercase, number, and symbol.</p>
                         </div>
                     }
@@ -88,15 +90,53 @@
         const form = e.target;
         const btn = form.querySelector('button[type="submit"]');
         const originalText = btn.textContent;
+        
+        // --- Validation Start ---
+        const f = form.elements;
+        const email = f['Email'].value;
+        const passwordInput = f['Password']; 
+        const employeeId = parseInt(form.querySelector('[name="EmployeeId"]').value || '0');
+        const emailError = document.getElementById('empEmailError');
+        const passwordError = document.getElementById('empPasswordError');
+
+        // Reset
+        if(emailError) emailError.classList.add('hidden');
+        if(passwordError) passwordError.classList.add('hidden');
+
+        let isValid = true;
+
+        // Email Validation
+        const emailRegex = /^[^\s@@]+@@[^\s@@]+\.[^\s@@]+$/;
+        if (!emailRegex.test(email)) {
+             if(emailError) emailError.classList.remove('hidden');
+             isValid = false;
+        }
+
+        // Password Validation (New Employee Only)
+        if (employeeId === 0 && passwordInput) {
+            const password = passwordInput.value;
+            const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+            if (!passwordRegex.test(password)) {
+                if(passwordError) passwordError.classList.remove('hidden');
+                isValid = false;
+            }
+        }
+        
+        if(!isValid) {
+            btn.disabled = false;
+            btn.textContent = originalText;
+            return;
+        }
+        // --- Validation End ---
+
         btn.disabled = true;
         btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-sm">sync</span> Processing...';
 
-        const f = form.elements;
         const data = {
-            employeeId: parseInt(form.querySelector('[name="EmployeeId"]').value || '0'),
+            employeeId: employeeId,
             name: f['Name'].value,
-            email: f['Email'].value,
-            username: f['Email'].value,
+            email: email,
+            username: email,
             phoneNumber: f['PhoneNumber'].value,
             salary: f['Salary'].value ? parseFloat(f['Salary'].value) : null,
             address: f['Address'].value,
@@ -112,7 +152,7 @@
                 url += '/' + data.employeeId;
                 method = 'PUT';
             } else {
-                 data.password = f['Password'].value;
+                 data.password = passwordInput.value;
             }
 
             const response = await fetch(url, {

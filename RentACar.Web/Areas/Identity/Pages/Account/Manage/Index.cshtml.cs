@@ -58,7 +58,7 @@ namespace RentACar.Web.Areas.Identity.Pages.Account.Manage
 
         public bool IsVerified { get; set; }
 
-        public List<CreditCardDto> CreditCards { get; set; } = new();
+
 
         public string DrivingLicenseFrontSrc { get; set; }
         public string DrivingLicenseBackSrc { get; set; }
@@ -100,32 +100,11 @@ namespace RentACar.Web.Areas.Identity.Pages.Account.Manage
             [Required, EmailAddress]
             public string Email { get; set; }
 
-            [Phone]
+            [Required, Phone]
             public string PhoneNumber { get; set; }
         }
 
-        [BindProperty]
-        public CreditCardInputModel NewCreditCard { get; set; }
 
-        public class CreditCardInputModel
-        {
-            [Required]
-            [Display(Name = "Card Number")]
-            // ✅ Allow spaces/dashes in UI validation; we strip them in OnPost
-            [RegularExpression(@"^[\d\s-]{16,22}$", ErrorMessage = "Card number must be 16 digits.")]
-            public string CardNumber { get; set; }
-
-            [Required]
-            public string CardHolderName { get; set; }
-
-            [Required]
-            [RegularExpression(@"^(0[1-9]|1[0-2])\/\d{2}$", ErrorMessage = "Invalid Expiry Format (MM/YY)")]
-            public string ExpiryDate { get; set; }
-
-            [Required]
-            [RegularExpression(@"^\d{3,4}$", ErrorMessage = "Invalid CVV")]
-            public string Cvv { get; set; }
-        }
 
         [BindProperty] public IFormFile UploadNationalIdFront { get; set; }
         [BindProperty] public IFormFile UploadNationalIdBack { get; set; }
@@ -158,21 +137,6 @@ namespace RentACar.Web.Areas.Identity.Pages.Account.Manage
                     if (customer.DrivingLicenseBack != null) CompletedDocsCount++;
                     if (customer.NationalIdfront != null) CompletedDocsCount++;
                     if (customer.NationalIdback != null) CompletedDocsCount++;
-
-                    var cards = await _dbContext.CustomerCreditCards
-                        .Where(c => c.UserId == customer.UserId)
-                        .Include(c => c.CreditCard)
-                        .Select(c => c.CreditCard)
-                        .ToListAsync();
-
-                    CreditCards = cards.Select(c => new CreditCardDto
-                    {
-                        CreditCardId = c.CreditCardId,
-                        CardHolderName = c.CardHolderName,
-                        CardNumber = c.CardNumber,
-                        ExpiryDate = c.ExpiryDate,
-                        Cvv = c.Cvv
-                    }).ToList();
                 }
             }
             else if (await _userManager.IsInRoleAsync(user, "Employee") || await _userManager.IsInRoleAsync(user, "Admin"))
@@ -236,13 +200,32 @@ namespace RentACar.Web.Areas.Identity.Pages.Account.Manage
             }
 
             CustomerDTO customer = null;
+            EmployeeDto employee = null;
+
             if (await _userManager.IsInRoleAsync(user, "Customer"))
-                customer = await _customerManager.GetCustomerByUsername(user.UserName);
+            {
+                customer = await _customerManager.GetCustomerByAspNetUserId(user.Id);
+            }
+            else if (await _userManager.IsInRoleAsync(user, "Employee") || await _userManager.IsInRoleAsync(user, "Admin"))
+            {
+                employee = await _employeeManager.GetEmployeeByAspNetUserId(user.Id);
+            }
 
             if (customer != null)
             {
-                if (Input.Name != customer.Name) await _customerManager.UpdateCustomerName(customer.UserId, Input.Name);
-                if (Input.Address != customer.Address) await _customerManager.UpdateCustomerAddress(customer.UserId, Input.Address);
+                // Update properties on DTO
+                customer.Name = Input.Name;
+                customer.Address = Input.Address;
+                // customer.IsVerified & Isactive remain unchanged here or pulled from source if DTO doesn't have them in input
+                
+                // Call full update method (Fixes: "not update on the db")
+                await _customerManager.UpdateCustomer(customer);
+            }
+            else if (employee != null)
+            {
+                employee.Name = Input.Name;
+                employee.Address = Input.Address;
+                await _employeeManager.UpdateEmployee(employee);
             }
 
             var phoneNumber = await _userManager.GetPhoneNumberAsync(user);
@@ -345,65 +328,7 @@ namespace RentACar.Web.Areas.Identity.Pages.Account.Manage
             return RedirectToPage();
         }
 
-        public async Task<IActionResult> OnPostAddCreditCardAsync()
-        {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null) return NotFound();
-
-            if (NewCreditCard == null)
-            {
-                StatusMessage = "Error: Invalid card data.";
-                return RedirectToPage();
-            }
-
-            // ✅ Clear ModelState because other bound inputs (like Profile Input) are missing and causing validation errors
-            ModelState.Clear();
-
-            // ✅ Normalize card number: remove spaces/dashes
-            NewCreditCard.CardNumber = (NewCreditCard.CardNumber ?? "").Replace(" ", "").Replace("-", "");
-
-            // Trigger DataAnnotations validation after normalization
-            if (!TryValidateModel(NewCreditCard, nameof(NewCreditCard)))
-            {
-                StatusMessage = "Error: Please fix the card form errors.";
-                return RedirectToPage();
-            }
-
-            if (!DateTime.TryParseExact(NewCreditCard.ExpiryDate, "MM/yy", null,
-                    System.Globalization.DateTimeStyles.None, out var expiryParsed))
-            {
-                StatusMessage = "Error: Invalid Expiry Date format.";
-                return RedirectToPage();
-            }
-
-            // Store as DateOnly: first day of month
-            var expiry = new DateOnly(expiryParsed.Year, expiryParsed.Month, 1);
-
-            var customerDto = await _customerManager.GetCustomerByUsername(user.UserName);
-            if (customerDto == null) return RedirectToPage();
-
-            var newCard = new CreditCard
-            {
-                CardNumber = NewCreditCard.CardNumber,
-                CardHolderName = NewCreditCard.CardHolderName,
-                ExpiryDate = expiry,
-                Cvv = NewCreditCard.Cvv
-            };
-
-            _dbContext.CreditCards.Add(newCard);
-            await _dbContext.SaveChangesAsync();
-
-            _dbContext.CustomerCreditCards.Add(new CustomerCreditCard
-            {
-                UserId = customerDto.UserId,
-                CreditCardId = newCard.CreditCardId
-            });
-
-            await _dbContext.SaveChangesAsync();
-
-            StatusMessage = "Credit Card added successfully";
-            return RedirectToPage();
-        }
+        // Credit card handlers removed - payments handled via Stripe
 
         public async Task<IActionResult> OnPostUploadDocumentsAsync()
         {
@@ -430,36 +355,6 @@ namespace RentACar.Web.Areas.Identity.Pages.Account.Manage
             await _dbContext.SaveChangesAsync();
 
             StatusMessage = "Documents uploaded successfully";
-            return RedirectToPage();
-        }
-
-        public async Task<IActionResult> OnPostDeleteCreditCardAsync(int id)
-        {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null) return NotFound();
-
-            var customer = await _dbContext.Customers
-                .Include(c => c.CustomerCreditCards)
-                .ThenInclude(cc => cc.CreditCard)
-                .FirstOrDefaultAsync(c => c.aspNetUserId == user.Id);
-
-            if (customer == null) return NotFound();
-
-            var creditCardLink = customer.CustomerCreditCards.FirstOrDefault(cc => cc.CreditCardId == id);
-            if (creditCardLink == null)
-            {
-                StatusMessage = "Error: Card not found.";
-                return RedirectToPage();
-            }
-
-            _dbContext.Set<CustomerCreditCard>().Remove(creditCardLink);
-
-            if (creditCardLink.CreditCard != null)
-                _dbContext.CreditCards.Remove(creditCardLink.CreditCard);
-
-            await _dbContext.SaveChangesAsync();
-
-            StatusMessage = "Credit card deleted successfully";
             return RedirectToPage();
         }
 

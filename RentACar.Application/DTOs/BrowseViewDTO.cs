@@ -24,6 +24,8 @@ namespace RentACar.Application.DTOs
 
         public DateOnly? FilterStartDate { get; set; }
         public DateOnly? FilterEndDate { get; set; }
+        
+        public string? SortOrder { get; set; }
     }
 }
 

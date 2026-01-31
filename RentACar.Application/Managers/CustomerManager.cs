@@ -346,56 +346,71 @@ namespace RentACar.Application.Managers
         public async Task UpdateCustomer(CustomerDTO dto)
         {
             _logger.LogInformation("Updating customer {Id}", dto.UserId);
-            var customer = await _customerRepository.GetByIdAsync(dto.UserId);
-            if (customer != null)
+            
+            if (dto.UserId <= 0)
             {
-                var user = await _userManager.FindByIdAsync(customer.aspNetUserId);
-                if (user != null)
+                _logger.LogWarning("UpdateCustomer called with invalid UserId: {UserId}. Attempting to resolve via aspNetUserId.", dto.UserId);
+                if (!string.IsNullOrEmpty(dto.aspNetUserId))
                 {
-                    dto.username ??= dto.Email;
-                    var existingByEmail = await _userManager.FindByEmailAsync(dto.Email);
-                    if (existingByEmail != null && existingByEmail.Id != user.Id)
-                    {
-                        throw new InvalidOperationException("Email address is already registered to another user.");
-                    }
-
-                    var existingByUsername = await _userManager.FindByNameAsync(dto.username);
-                    if (existingByUsername != null && existingByUsername.Id != user.Id)
-                    {
-                        throw new InvalidOperationException("Username is already in use by another user.");
-                    }
-
-                    user.Email = dto.Email;
-                    user.UserName = dto.username;
-                    user.PhoneNumber = dto.PhoneNumber;
-                    await _userManager.UpdateAsync(user);
+                    var resolved = await _customerRepository.GetByIdAsync(dto.aspNetUserId);
+                    if (resolved != null) dto.UserId = resolved.UserId;
+                }
+            }
+            
+            var customer = await _customerRepository.GetByIdAsync(dto.UserId);
+            if (customer == null)
+            {
+                _logger.LogError("Customer with UserId {UserId} not found. Update aborted.", dto.UserId);
+                return; // Or throw exception
+            }
+            
+            var user = await _userManager.FindByIdAsync(customer.aspNetUserId);
+            if (user != null)
+            {
+                dto.username ??= dto.Email;
+                var existingByEmail = await _userManager.FindByEmailAsync(dto.Email);
+                if (existingByEmail != null && existingByEmail.Id != user.Id)
+                {
+                    throw new InvalidOperationException("Email address is already registered to another user.");
                 }
 
-                var oldActive = customer.Isactive;
-                var oldVerified = customer.IsVerified;
-
-                customer.Name = dto.Name;
-                customer.Address = dto.Address;
-                customer.IsVerified = dto.IsVerified;
-                customer.Isactive = dto.Isactive;
-
-                await _customerRepository.UpdateAsync(customer);
-                await _auditLogManager.LogEventAsync("Customer.ProfileUpdated", "Customer", dto.UserId.ToString(), $"Updated profile details for: {customer.Name}", null, "Success");
-
-                // Check for Status Changes & Notify
-                if (oldActive != customer.Isactive)
+                var existingByUsername = await _userManager.FindByNameAsync(dto.username);
+                if (existingByUsername != null && existingByUsername.Id != user.Id)
                 {
-                    string status = customer.Isactive ? "Activated" : "Deactivated";
-                    string reason = customer.Isactive ? "Account has been reactivated by administrator." : "Account has been deactivated by administrator.";
-                    await _emailManager.SendAccountStatusEmail(user.Email, customer.Name, status, reason);
+                    throw new InvalidOperationException("Username is already in use by another user.");
                 }
 
-                if (oldVerified != customer.IsVerified)
-                {
-                    string status = customer.IsVerified ? "Verified" : "Unverified";
-                    string reason = customer.IsVerified ? "Your documents have been verified." : "Your verification status has been revoked.";
-                     await _emailManager.SendDocumentVerificationEmail(user.Email, customer.Name, "Account Documents", status, reason, "");
-                }
+                user.Email = dto.Email;
+                user.UserName = dto.username;
+                user.PhoneNumber = dto.PhoneNumber;
+                await _userManager.UpdateAsync(user);
+            }
+
+            var oldActive = customer.Isactive;
+            var oldVerified = customer.IsVerified;
+
+            customer.Name = dto.Name;
+            customer.Address = dto.Address;
+            customer.IsVerified = dto.IsVerified;
+            customer.Isactive = dto.Isactive;
+
+            await _customerRepository.UpdateAsync(customer);
+            _logger.LogInformation("Customer {Id} updated successfully in repository.", dto.UserId);
+            await _auditLogManager.LogEventAsync("Customer.ProfileUpdated", "Customer", dto.UserId.ToString(), $"Updated profile details for: {customer.Name}", null, "Success");
+
+            // Check for Status Changes & Notify
+            if (oldActive != customer.Isactive)
+            {
+                string status = customer.Isactive ? "Activated" : "Deactivated";
+                string reason = customer.Isactive ? "Account has been reactivated by administrator." : "Account has been deactivated by administrator.";
+                await _emailManager.SendAccountStatusEmail(user.Email, customer.Name, status, reason);
+            }
+
+            if (oldVerified != customer.IsVerified)
+            {
+                string status = customer.IsVerified ? "Verified" : "Unverified";
+                string reason = customer.IsVerified ? "Your documents have been verified." : "Your verification status has been revoked.";
+                 await _emailManager.SendDocumentVerificationEmail(user.Email, customer.Name, "Account Documents", status, reason, "");
             }
         }
 
@@ -590,6 +605,7 @@ namespace RentACar.Application.Managers
                 .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.User.Email))
                 .ForMember(dest => dest.username, opt => opt.MapFrom(src => src.User.UserName))
                 .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.User.PhoneNumber))
+                .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId)) // Explicit map
                 .ReverseMap()
                 .ForMember(dest => dest.User, opt => opt.Ignore()); // skip reverse mapping User
                 

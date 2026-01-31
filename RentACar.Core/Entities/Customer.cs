@@ -47,8 +47,7 @@ public partial class Customer
     [InverseProperty("Customer")]
     public virtual ICollection<Booking> Bookings { get; set; } = new List<Booking>();
 
-    [InverseProperty("User")]
-    public virtual ICollection<CustomerCreditCard> CustomerCreditCards { get; set; } = new List<CustomerCreditCard>();
+
 
     [ForeignKey("aspNetUserId")]
     [InverseProperty("Customer")]

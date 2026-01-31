@@ -131,6 +131,7 @@
                         <!-- Hidden Inputs sent to server -->
                         <input type="hidden" name="startDate" id="hStartDate" value="@(Model.FilterStartDate?.ToString("yyyy-MM-dd"))" />
                         <input type="hidden" name="endDate" id="hEndDate" value="@(Model.FilterEndDate?.ToString("yyyy-MM-dd"))" />
+                        <input type="hidden" name="sortOrder" id="hSortOrder" value="@Model.SortOrder" />
                     </div>
 
                     <!-- Category (Pills) -->
@@ -200,10 +201,10 @@
                 </div>
                 <!-- Sort -->
                 <div class="flex items-center gap-2">
-                     <select class="bg-[#16181a] border border-[#262626] rounded-lg py-2 pl-3 pr-8 text-sm text-white focus:border-gold focus:ring-0 cursor-pointer">
-                         <option>Recommended</option>
-                         <option>Price: Low to High</option>
-                         <option>Price: High to Low</option>
+                     <select onchange="updateSort(this.value)" class="bg-[#16181a] border border-[#262626] rounded-lg py-2 pl-3 pr-8 text-sm text-white focus:border-gold focus:ring-0 cursor-pointer">
+                         <!option value="" @(string.IsNullOrEmpty(Model.SortOrder) ? "selected" : "")>Recommended</!option>
+                         <!option value="price_asc" @(Model.SortOrder == "price_asc" ? "selected" : "")>Price: Low to High</!option>
+                         <!option value="price_desc" @(Model.SortOrder == "price_desc" ? "selected" : "")>Price: High to Low</!option>
                      </select>
                 </div>
             </div>
@@ -246,6 +247,11 @@
     function toggleFilters() {
         const sidebar = document.getElementById('filtersSidebar');
         sidebar.classList.toggle('-translate-x-full');
+    }
+
+    function updateSort(val) {
+        document.getElementById('hSortOrder').value = val;
+        document.getElementById('filterForm').submit();
     }
 
     // --- Pagination Logic ---

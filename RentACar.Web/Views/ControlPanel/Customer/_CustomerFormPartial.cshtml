@@ -30,6 +30,7 @@
                         <div>
                             <label class="block text-xs font-medium text-gray-500 uppercase mb-1.5">Email Address</label>
                             <input asp-for="Email" class="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-[#d4af37]/50 focus:ring-1 focus:ring-[#d4af37]/50 placeholder-gray-600" placeholder="john@example.com" />
+                            <span id="emailError" class="text-red-500 text-xs mt-1 hidden">Please enter a valid email address.</span>
                         </div>
                     </div>
 
@@ -43,6 +44,7 @@
                         <div>
                             <label class="block text-xs font-medium text-gray-500 uppercase mb-1.5">Password</label>
                             <input type="password" name="Password" class="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-[#d4af37]/50 focus:ring-1 focus:ring-[#d4af37]/50 placeholder-gray-600" />
+                            <span id="passwordError" class="text-red-500 text-xs mt-1 hidden">Password must be 8+ chars (Upper, Lower, Number, Symbol).</span>
                         </div>
                         
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
@@ -126,19 +128,56 @@
     document.getElementById('customerForm').addEventListener('submit', async function (e) {
         e.preventDefault();
         const form = e.target;
-        
-        // Show Loading State on Button
         const btn = form.querySelector('button[type="submit"]');
         const originalText = btn.textContent;
+        
+        // --- Validation Start ---
+        const f = form.elements;
+        const email = f['Email'].value;
+        const passwordInput = f['Password']; 
+        const userId = parseInt(form.querySelector('[name="UserId"]').value || '0');
+        const emailError = document.getElementById('emailError');
+        const passwordError = document.getElementById('passwordError');
+
+        // Reset Errors
+        if(emailError) emailError.classList.add('hidden');
+        if(passwordError) passwordError.classList.add('hidden');
+
+        let isValid = true;
+
+        // Email Validation
+        const emailRegex = /^[^\s@@]+@@[^\s@@]+\.[^\s@@]+$/;
+        if (!emailRegex.test(email)) {
+             if(emailError) emailError.classList.remove('hidden');
+             isValid = false;
+        }
+
+        // Password Validation
+        if (userId === 0 && passwordInput) {
+            const password = passwordInput.value;
+            const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+            if (!passwordRegex.test(password)) {
+                if(passwordError) passwordError.classList.remove('hidden');
+                isValid = false;
+            }
+        }
+        
+        if(!isValid) {
+            // Re-enable button immediately if validation fails
+            btn.disabled = false;
+            btn.textContent = originalText;
+            return;
+        }
+        // --- Validation End ---
+
         btn.disabled = true;
         btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-sm">sync</span> Processing...';
 
-        const f = form.elements;
         const data = {
-            userId: parseInt(form.querySelector('[name="UserId"]').value || '0'),
+            userId: userId,
             name: f['Name'].value,
-            email: f['Email'].value,
-            username: f['Email'].value, // Using email as username
+            email: email,
+            username: email, // Using email as username
             phoneNumber: f['PhoneNumber'].value,
             address: f['Address'].value,
             isVerified: form.querySelector('[name="IsVerified"]')?.checked ?? false,
@@ -154,7 +193,7 @@
                 url += '/' + data.userId;
                 method = 'PUT';
             } else {
-                data.password = f['Password'].value;
+                data.password = passwordInput.value;
                 const licenseFrontFile = f['DrivingLicenseFront'].files[0];
                 const licenseBackFile = f['DrivingLicenseBack'].files[0];
                 const nationalFrontFile = f['NationalIdfront'].files[0];

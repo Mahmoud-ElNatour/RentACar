@@ -64,11 +64,11 @@
                 <div class="flex items-center gap-1 bg-background-dark/50 rounded-full p-1">
                      @if (User.IsInRole("Customer"))
                      {
-                        <a asp-controller="Browse" asp-action="Index" 
+                        <a asp-area="" asp-controller="Browse" asp-action="Index" 
                            class="px-4 py-1.5 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 rounded-full transition-all duration-200 @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Browse" ? "text-gold bg-gold/10 border border-[1px] border-gold/20" : "")">
                             Browse Cars
                         </a>
-                        <a asp-controller="Bookings" asp-action="MyBookings"
+                        <a asp-area="" asp-controller="Bookings" asp-action="MyBookings"
                            class="px-4 py-1.5 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 rounded-full transition-all duration-200 @(ViewContext.RouteData.Values["Action"]?.ToString() == "MyBookings" ? "text-gold bg-gold/10 border border-[1px] border-gold/20" : "")">
                             My Bookings
                         </a>
@@ -76,7 +76,7 @@
                      
                      @if (SignInManager.IsSignedIn(User))
                      {
-                        <a asp-controller="Dashboard" asp-action="Index"
+                        <a asp-area="" asp-controller="Dashboard" asp-action="Index"
                            class="px-4 py-1.5 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 rounded-full transition-all duration-200 @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Dashboard" ? "text-gold bg-gold/10 border border-[1px] border-gold/20" : "")">
                             Dashboard
                         </a>
@@ -84,15 +84,15 @@
                      
                      @if (User.IsInRole("Admin") || User.IsInRole("Employee"))
                      {
-                        <a asp-controller="ControlPanel" asp-action="Index"
+                        <a asp-area="" asp-controller="ControlPanel" asp-action="Index"
                            class="px-4 py-1.5 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 rounded-full transition-all duration-200 @(ViewContext.RouteData.Values["Controller"]?.ToString() == "ControlPanel" ? "text-gold bg-gold/10 border border-[1px] border-gold/20" : "")">
                             Control Panel
                         </a>
-                        <a asp-controller="EmailServices" asp-action="EmailServicesHub"
+                        <a asp-area="" asp-controller="EmailServices" asp-action="EmailServicesHub"
                            class="px-4 py-1.5 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 rounded-full transition-all duration-200 @(ViewContext.RouteData.Values["Controller"]?.ToString() == "EmailServices" ? "text-gold bg-gold/10 border border-[1px] border-gold/20" : "")">
                             Email Hub
                         </a>
-                        <a asp-controller="Reports" asp-action="Index"
+                        <a asp-area="" asp-controller="Reports" asp-action="Index"
                            class="px-4 py-1.5 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 rounded-full transition-all duration-200 @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Reports" ? "text-gold bg-gold/10 border border-[1px] border-gold/20" : "")">
                             Reports
                         </a>

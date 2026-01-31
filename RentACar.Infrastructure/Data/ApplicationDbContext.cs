@@ -28,12 +28,6 @@ namespace RentACar.Infrastructure.Data
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
-
-            // Configure CustomerCreditCard composite key to match RentACarDbContext
-            // This is required because attributes were removed from the entity class
-            builder.Entity<CustomerCreditCard>()
-                .HasKey(c => new { c.UserId, c.CreditCardId });
-
         }
     }
 }

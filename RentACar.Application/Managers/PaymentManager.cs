@@ -20,7 +20,6 @@ namespace RentACar.Application.Managers
     {
         private readonly IPaymentRepository _paymentRepository;
         private readonly IBookingRepository _bookingRepository;
-        private readonly ICreditCardRepository _creditCardRepository;
         private readonly IPaymentMethodRepository _paymentMethodRepository;
         private readonly IPromocodeRepository _promocodeRepository; // Added
         private readonly UserManager<IdentityUser> _userManager;
@@ -34,7 +33,6 @@ namespace RentACar.Application.Managers
         public PaymentManager(
             IPaymentRepository paymentRepository,
             IBookingRepository bookingRepository,
-            ICreditCardRepository creditCardRepository,
             IPaymentMethodRepository paymentMethodRepository,
             IPromocodeRepository promocodeRepository, // Added
             UserManager<IdentityUser> userManager,
@@ -47,7 +45,6 @@ namespace RentACar.Application.Managers
         {
             _paymentRepository = paymentRepository;
             _bookingRepository = bookingRepository;
-            _creditCardRepository = creditCardRepository;
             _paymentMethodRepository = paymentMethodRepository;
             _promocodeRepository = promocodeRepository; // Added
             _userManager = userManager;
@@ -198,19 +195,12 @@ namespace RentACar.Application.Managers
 
             if (paymentMethod.PaymentMethodName.Equals("creditcard", StringComparison.OrdinalIgnoreCase))
             {
-                if (!paymentDto.CreditcardId.HasValue)
-                    return null;
-
-                var creditCard = await _creditCardRepository.GetByIdAsync(paymentDto.CreditcardId.Value);
-                if (creditCard == null)
-                    return null;
-
+                // Credit card payments are now handled via Stripe externally
                 var payment = new Payment
                 {
                     BookingId = paymentDto.BookingId,
                     Amount = paymentDto.Amount,
                     PaymentDate = DateOnly.FromDateTime(DateTime.UtcNow),
-                    CreditcardId = paymentDto.CreditcardId,
                     PaymentMethod = paymentMethod.PaymentMethodName,
                     Status = PaymentStatus.Paid
                 };
@@ -556,21 +546,7 @@ namespace RentACar.Application.Managers
                 return null;
             }
 
-            if (paymentMethod.PaymentMethodName.Equals("creditcard", StringComparison.OrdinalIgnoreCase) && !dto.CreditcardId.HasValue)
-            {
-                _logger.LogWarning("Credit card payment requires a card id");
-                return null;
-            }
-
-            if (dto.CreditcardId.HasValue)
-            {
-                var card = await _creditCardRepository.GetByIdAsync(dto.CreditcardId.Value);
-                if (card == null)
-                {
-                    _logger.LogWarning("Invalid credit card {CardId} provided", dto.CreditcardId);
-                    return null;
-                }
-            }
+            // Credit card validation removed - payments handled via Stripe
 
             var payment = new Payment
             {
@@ -633,21 +609,7 @@ namespace RentACar.Application.Managers
                 return null;
             }
 
-            if (paymentMethod.PaymentMethodName.Equals("creditcard", StringComparison.OrdinalIgnoreCase) && !dto.CreditcardId.HasValue)
-            {
-                _logger.LogWarning("Credit card payment update requires card id");
-                return null;
-            }
-
-            if (dto.CreditcardId.HasValue)
-            {
-                var card = await _creditCardRepository.GetByIdAsync(dto.CreditcardId.Value);
-                if (card == null)
-                {
-                    _logger.LogWarning("Invalid credit card {CardId} provided for update", dto.CreditcardId);
-                    return null;
-                }
-            }
+            // Credit card validation removed - payments handled via Stripe
 
             existing.Amount = dto.Amount;
             existing.PaymentDate = dto.PaymentDate;

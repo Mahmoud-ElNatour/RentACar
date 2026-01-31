@@ -125,57 +125,72 @@ namespace RentACar.Application.Managers
             return _mapper.Map<List<EmployeeDto>>(employees);
         }
 
+        public async Task<EmployeeDto?> GetEmployeeByAspNetUserId(string aspNetUserId)
+        {
+            var employee = await _employeeRepository.GetByIdAsync(aspNetUserId);
+            return _mapper.Map<EmployeeDto>(employee);
+        }
+
         public async Task UpdateEmployee(EmployeeDto employeeDto)
         {
+            _logger.LogInformation("Updating employee {Id}", employeeDto.EmployeeId);
+            
+            if (employeeDto.EmployeeId <= 0)
+            {
+                _logger.LogWarning("UpdateEmployee called with invalid EmployeeId: {Id}. Attempting to resolve via aspNetUserId.", employeeDto.EmployeeId);
+                if (!string.IsNullOrEmpty(employeeDto.aspNetUserId))
+                {
+                    var resolved = await _employeeRepository.GetByIdAsync(employeeDto.aspNetUserId);
+                    if (resolved != null) employeeDto.EmployeeId = resolved.EmployeeId;
+                }
+            }
+            
             var employeeEntity = await _employeeRepository.GetByIdAsync(employeeDto.EmployeeId);
-            if (employeeEntity != null)
+            if (employeeEntity == null)
             {
-                var user = await _userManager.FindByIdAsync(employeeEntity.aspNetUserId);
-                if (user != null)
-                {
-                    employeeDto.username ??= employeeDto.Email;
-                    var existingByEmail = await _userManager.FindByEmailAsync(employeeDto.Email);
-                    if (existingByEmail != null && existingByEmail.Id != user.Id)
-                    {
-                        throw new InvalidOperationException("Email address is already registered to another user.");
-                    }
-
-                    var existingByUsername = await _userManager.FindByNameAsync(employeeDto.username);
-                    if (existingByUsername != null && existingByUsername.Id != user.Id)
-                    {
-                        throw new InvalidOperationException("Username is already in use by another user.");
-                    }
-
-                    user.Email = employeeDto.Email;
-                    user.UserName = employeeDto.username;
-                    user.PhoneNumber = employeeDto.PhoneNumber;
-                    await _userManager.UpdateAsync(user);
-                }
-
-                var oldActive = employeeEntity.IsActive;
-                
-                employeeEntity.Name = employeeDto.Name;
-                employeeEntity.Salary = employeeDto.Salary;
-                employeeEntity.Address = employeeDto.Address;
-                employeeEntity.IsActive = employeeDto.IsActive;
-
-                await _employeeRepository.UpdateAsync(employeeEntity);
-                await _auditLogManager.LogAsync("Update", "Employee", employeeDto.EmployeeId.ToString(), $"Updated employee profile: {employeeDto.Name}");
-                
-                if (oldActive != employeeDto.IsActive)
-                {
-                    string status = employeeEntity.IsActive ? "Activated" : "Deactivated";
-                    string reason = employeeEntity.IsActive ? "Account activated." : "Account deactivated.";
-                    await _emailManager.SendAccountStatusEmail(user.Email, employeeEntity.Name, status, reason);
-                }
-            }
-            else
-            {
+                _logger.LogError("Employee with EmployeeId {Id} not found. Update aborted.", employeeDto.EmployeeId);
                 throw new KeyNotFoundException($"Employee with ID {employeeDto.EmployeeId} not found.");
+            }
+            
+            var user = await _userManager.FindByIdAsync(employeeEntity.aspNetUserId);
+            if (user != null)
+            {
+                employeeDto.username ??= employeeDto.Email;
+                var existingByEmail = await _userManager.FindByEmailAsync(employeeDto.Email);
+                if (existingByEmail != null && existingByEmail.Id != user.Id)
+                {
+                    throw new InvalidOperationException("Email address is already registered to another user.");
+                }
 
+                var existingByUsername = await _userManager.FindByNameAsync(employeeDto.username);
+                if (existingByUsername != null && existingByUsername.Id != user.Id)
+                {
+                    throw new InvalidOperationException("Username is already in use by another user.");
+                }
+
+                user.Email = employeeDto.Email;
+                user.UserName = employeeDto.username;
+                user.PhoneNumber = employeeDto.PhoneNumber;
+                await _userManager.UpdateAsync(user);
             }
 
+            var oldActive = employeeEntity.IsActive;
+            
+            employeeEntity.Name = employeeDto.Name;
+            employeeEntity.Salary = employeeDto.Salary;
+            employeeEntity.Address = employeeDto.Address;
+            employeeEntity.IsActive = employeeDto.IsActive;
 
+            await _employeeRepository.UpdateAsync(employeeEntity);
+            _logger.LogInformation("Employee {Id} updated successfully in repository.", employeeDto.EmployeeId);
+            await _auditLogManager.LogAsync("Update", "Employee", employeeDto.EmployeeId.ToString(), $"Updated employee profile: {employeeDto.Name}");
+            
+            if (oldActive != employeeDto.IsActive)
+            {
+                string status = employeeEntity.IsActive ? "Activated" : "Deactivated";
+                string reason = employeeEntity.IsActive ? "Account activated." : "Account deactivated.";
+                await _emailManager.SendAccountStatusEmail(user.Email, employeeEntity.Name, status, reason);
+            }
         }
 
 
@@ -539,6 +554,7 @@ namespace RentACar.Application.Managers
                 .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.User.Email))
                 .ForMember(dest => dest.username, opt => opt.MapFrom(src => src.User.UserName))
                 .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.User.PhoneNumber))
+                .ForMember(dest => dest.EmployeeId, opt => opt.MapFrom(src => src.EmployeeId)) // Explicit map
                 .ReverseMap()
                 .ForMember(dest => dest.User, opt => opt.Ignore()); // Prevent circular reference
 
