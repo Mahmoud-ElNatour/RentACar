@@ -23,6 +23,14 @@
         justify-content: space-between;
         gap: 12px;
         margin-bottom: 16px;
+        flex-wrap: wrap;
+    }
+
+    .calendar-controls {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
     }
 
     .calendar-nav {
@@ -31,22 +39,52 @@
         gap: 8px;
     }
 
-    .calendar-nav button {
-        width: 36px;
+        .calendar-nav button,
+        .today-btn {
+            height: 36px;
+            border-radius: 999px;
+            background: rgba(148, 163, 184, 0.12);
+            color: #e2e8f0;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            transition: all 0.2s ease;
+            padding: 0 12px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .calendar-nav button {
+            width: 36px;
+            padding: 0;
+            display: grid;
+            place-items: center;
+        }
+
+            .calendar-nav button:hover,
+            .calendar-nav button:focus-visible,
+            .today-btn:hover,
+            .today-btn:focus-visible {
+                background: rgba(56, 189, 248, 0.2);
+                border-color: rgba(56, 189, 248, 0.45);
+                outline: none;
+            }
+
+    .month-year-select {
         height: 36px;
         border-radius: 999px;
-        background: rgba(148, 163, 184, 0.12);
-        color: #e2e8f0;
+        background: rgba(15, 23, 42, 0.55);
         border: 1px solid rgba(148, 163, 184, 0.2);
-        transition: all 0.2s ease;
-    }
-
-    .calendar-nav button:hover,
-    .calendar-nav button:focus-visible {
-        background: rgba(56, 189, 248, 0.2);
-        border-color: rgba(56, 189, 248, 0.45);
+        color: rgba(226, 232, 240, 0.95);
+        padding: 0 12px;
+        font-size: 0.8rem;
+        font-weight: 700;
         outline: none;
     }
+
+        .month-year-select:focus {
+            border-color: rgba(56, 189, 248, 0.6);
+            box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.15);
+        }
 
     .calendar-weekdays,
     .calendar-grid {
@@ -55,14 +93,14 @@
         gap: 6px;
     }
 
-    .calendar-weekdays div {
-        text-align: center;
-        font-size: 0.65rem;
-        text-transform: uppercase;
-        letter-spacing: 0.2em;
-        color: rgba(226, 232, 240, 0.5);
-        padding-bottom: 6px;
-    }
+        .calendar-weekdays div {
+            text-align: center;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            color: rgba(226, 232, 240, 0.5);
+            padding-bottom: 6px;
+        }
 
     .calendar-day {
         min-height: 74px;
@@ -75,71 +113,83 @@
         flex-direction: column;
         justify-content: space-between;
         transition: all 0.2s ease;
+        cursor: pointer;
     }
 
-    .calendar-day:hover,
-    .calendar-day:focus-visible {
-        border-color: rgba(56, 189, 248, 0.45);
-        background: rgba(56, 189, 248, 0.08);
-        outline: none;
-    }
+        .calendar-day:hover,
+        .calendar-day:focus-visible {
+            border-color: rgba(56, 189, 248, 0.45);
+            background: rgba(56, 189, 248, 0.08);
+            outline: none;
+        }
 
-    .calendar-day.is-muted {
-        color: rgba(148, 163, 184, 0.35);
-        background: rgba(15, 23, 42, 0.3);
-    }
+        .calendar-day.is-muted {
+            color: rgba(148, 163, 184, 0.35);
+            background: rgba(15, 23, 42, 0.3);
+        }
 
-    .calendar-day.is-today {
-        border-color: rgba(250, 204, 21, 0.8);
-        box-shadow: 0 0 0 1px rgba(250, 204, 21, 0.25) inset;
-    }
+        .calendar-day.is-today {
+            border-color: rgba(250, 204, 21, 0.8);
+            box-shadow: 0 0 0 1px rgba(250, 204, 21, 0.25) inset;
+        }
 
-    .calendar-day.is-selected {
-        border-color: rgba(56, 189, 248, 0.9);
-        box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.4) inset;
-        background: rgba(30, 64, 175, 0.25);
-    }
+        .calendar-day.is-selected {
+            border-color: rgba(56, 189, 248, 0.9);
+            box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.4) inset;
+            background: rgba(30, 64, 175, 0.25);
+        }
 
     .calendar-day-number {
-        font-weight: 600;
-        font-size: 0.75rem;
+        font-weight: 800;
+        font-size: 0.8rem;
     }
 
-    .calendar-indicators {
+    /* iPhone-like thin bars */
+    .calendar-bars {
         display: flex;
-        flex-direction: column;
         gap: 4px;
-    }
-
-    .indicator-availability {
-        height: 3px;
-        border-radius: 999px;
-        background: rgba(56, 189, 248, 0.9);
-    }
-
-    .indicator-booking {
-        width: 6px;
-        height: 6px;
-        border-radius: 999px;
-        background: rgba(251, 191, 36, 0.95);
-    }
-
-    .indicator-booking-line {
-        height: 3px;
-        border-radius: 999px;
-        background: rgba(251, 113, 133, 0.95);
-    }
-
-    .status-default {
-        background: rgba(148, 163, 184, 0.2);
-        color: rgba(226, 232, 240, 0.8);
-    }
-
-    .legend span {
-        display: inline-flex;
         align-items: center;
-        gap: 6px;
     }
+
+    .calendar-bar {
+        height: 4px;
+        border-radius: 999px;
+        flex: 1;
+        min-width: 10px;
+        opacity: 0.95;
+    }
+
+        .calendar-bar.available {
+            background: rgba(56, 189, 248, 0.95);
+            box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.25) inset;
+        }
+
+        .calendar-bar.booking {
+            background: rgba(251, 191, 36, 0.95);
+            box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.25) inset;
+        }
+
+    .calendar-more {
+        font-size: 0.65rem;
+        color: rgba(226, 232, 240, 0.55);
+        margin-left: 2px;
+        white-space: nowrap;
+    }
+
+    .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        font-size: 0.75rem;
+        color: rgba(226, 232, 240, 0.6);
+        margin-top: 16px;
+    }
+
+        .legend span {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
 
     .upcoming-card {
         background: rgba(15, 23, 42, 0.75);
@@ -149,10 +199,10 @@
         transition: all 0.2s ease;
     }
 
-    .upcoming-card:hover {
-        border-color: rgba(56, 189, 248, 0.4);
-        transform: translateY(-2px);
-    }
+        .upcoming-card:hover {
+            border-color: rgba(56, 189, 248, 0.4);
+            transform: translateY(-2px);
+        }
 
     .status-badge {
         padding: 4px 10px;
@@ -160,7 +210,7 @@
         font-size: 0.65rem;
         text-transform: uppercase;
         letter-spacing: 0.08em;
-        font-weight: 700;
+        font-weight: 800;
     }
 
     .status-pending {
@@ -209,9 +259,9 @@
         box-shadow: 0 -20px 50px rgba(0, 0, 0, 0.45);
     }
 
-    .booking-sheet.is-open {
-        bottom: 0;
-    }
+        .booking-sheet.is-open {
+            bottom: 0;
+        }
 
     .booking-sheet-overlay.is-open {
         opacity: 1;
@@ -225,6 +275,7 @@
         border: 1px solid rgba(148, 163, 184, 0.2);
         background: rgba(148, 163, 184, 0.12);
         color: #e2e8f0;
+        cursor: pointer;
     }
 
     .toggle-pill {
@@ -239,6 +290,7 @@
         font-size: 0.7rem;
         text-transform: uppercase;
         letter-spacing: 0.08em;
+        cursor: pointer;
     }
 
     @@media (max-width: 768px) {
@@ -246,60 +298,67 @@
             padding: 16px;
         }
 
-                <div class="mt-8">
-                    <h3 class="text-lg font-bold text-white mb-3">Upcoming Bookings</h3>
-                    <div class="space-y-3">
-                        @if (!Model.UpcomingBookings.Any())
-                        {
-                            <div class="calendar-shell p-4 rounded-xl text-white/50">No upcoming bookings assigned.</div>
-                        }
-                        else
-                        {
-                            foreach (var booking in Model.UpcomingBookings)
-                            {
-                                <div class="calendar-shell p-4 rounded-xl flex items-center justify-between">
-                                    <div>
-                                        <p class="text-sm font-bold text-white">Booking #@booking.BookingId</p>
-                                        <p class="text-xs text-white/50">@booking.CustomerName • @booking.PickupLocationLabel</p>
-                                    </div>
-                                    <span class="text-xs text-primary font-bold">@booking.StartDate:yyyy-MM-dd</span>
-                                </div>
-                            }
-                        }
+        .calendar-day {
+            min-height: 62px;
+            border-radius: 14px;
+        }
+
+        .booking-sheet {
+            width: 100%;
+            border-radius: 22px 22px 0 0;
+        }
+    }
+</style>
+
+<div class="min-h-screen py-8 px-4 md:px-8">
+    <div class="schedule-container">
+        <div class="flex flex-col gap-1 mb-6">
+            <h1 class="text-4xl font-black tracking-tight text-white">Driver Schedule</h1>
+            <p class="text-white/50 text-base">Monthly overview for @Model.DriverName.</p>
+        </div>
+
+        <div class="calendar-card">
+            <div class="calendar-header">
+                <div>
+                    <p class="text-xs uppercase tracking-[0.3em] text-white/40">Month</p>
+                    <h2 class="text-2xl font-bold text-white" id="calendarMonth">January 2026</h2>
+                </div>
+
+                <!-- ✅ Added fully functional controls -->
+                <div class="calendar-controls">
+                    <select id="monthSelect" class="month-year-select" aria-label="Select month"></select>
+                    <select id="yearSelect" class="month-year-select" aria-label="Select year"></select>
+
+                    <button type="button" class="today-btn" id="goToday">
+                        Today
+                    </button>
+
+                    <div class="calendar-nav">
+                        <button type="button" id="prevMonth" aria-label="Previous month">
+                            <span class="material-symbols-outlined">chevron_left</span>
+                        </button>
+                        <button type="button" id="nextMonth" aria-label="Next month">
+                            <span class="material-symbols-outlined">chevron_right</span>
+                        </button>
                     </div>
-                </div>
-                <div class="calendar-nav">
-                    <button type="button" id="prevMonth" aria-label="Previous month">
-                        <span class="material-symbols-outlined">chevron_left</span>
-                    </button>
-                    <button type="button" id="nextMonth" aria-label="Next month">
-                        <span class="material-symbols-outlined">chevron_right</span>
-                    </button>
-                </div>
-                <div class="calendar-nav">
-                    <button type="button" id="prevMonth" aria-label="Previous month">
-                        <span class="material-symbols-outlined">chevron_left</span>
-                    </button>
-                    <button type="button" id="nextMonth" aria-label="Next month">
-                        <span class="material-symbols-outlined">chevron_right</span>
-                    </button>
                 </div>
             </div>
 
             <div class="calendar-weekdays">
-                <div>S</div>
-                <div>M</div>
-                <div>T</div>
-                <div>W</div>
-                <div>T</div>
-                <div>F</div>
-                <div>S</div>
+                <div>S</div><div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>S</div>
             </div>
+
             <div class="calendar-grid mt-2" id="calendarGrid"></div>
 
             <div class="legend">
-                <span><span class="indicator-availability" style="width:18px;"></span>Available</span>
-                <span><span class="indicator-booking"></span>Booking</span>
+                <span>
+                    <span class="calendar-bar available" style="width:18px; flex:unset;"></span>
+                    Available
+                </span>
+                <span>
+                    <span class="calendar-bar booking" style="width:18px; flex:unset;"></span>
+                    Booking
+                </span>
             </div>
         </div>
 
@@ -319,9 +378,11 @@
                 <span class="material-symbols-outlined text-primary">event_available</span>
                 <h3 class="text-lg font-bold text-white">Add Availability</h3>
             </div>
+
             <form method="post" asp-action="AddAvailability">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="IsAvailable" value="true" />
+
                 <div class="grid gap-4 md:grid-cols-2">
                     <div class="flex flex-col gap-1.5">
                         <label class="text-xs font-bold text-white/40 uppercase">From Date &amp; Time</label>
@@ -334,10 +395,12 @@
                                type="datetime-local" name="EndDateTime" required />
                     </div>
                 </div>
+
                 <div class="flex items-center justify-between px-1 mt-4">
                     <span class="text-sm text-white/70">Recurring weekly</span>
                     <input type="checkbox" name="IsRecurringWeekly" value="true" />
                 </div>
+
                 <button class="mt-6 w-full bg-primary hover:bg-primary/90 text-background-dark font-bold py-3 rounded-xl transition-all shadow-lg shadow-primary/20 active:scale-[0.98]">
                     Save Availability
                 </button>
@@ -357,39 +420,7 @@
             <span class="material-symbols-outlined">close</span>
         </button>
     </div>
-    <div class="mt-4 flex items-center gap-2">
-        <span id="bookingSheetStatus" class="status-badge status-default">Pending</span>
-        <span class="text-sm text-white/60" id="bookingSheetCustomer">Customer</span>
-    </div>
 
-    <div class="mt-6 space-y-4 text-sm text-white/70">
-        <div>
-            <p class="text-xs uppercase tracking-[0.25em] text-white/40">Trip</p>
-            <p class="text-white mt-2"><span class="text-white/50">From:</span> <span id="bookingSheetFrom">Pickup location</span></p>
-            <p class="text-white mt-1"><span class="text-white/50">To:</span> <span id="bookingSheetTo">Dropoff not specified</span></p>
-        </div>
-        <div>
-            <p class="text-xs uppercase tracking-[0.25em] text-white/40">Dates</p>
-            <p class="text-white mt-2" id="bookingSheetDates">Start → End</p>
-        </div>
-        <div>
-            <p class="text-xs uppercase tracking-[0.25em] text-white/40">Vehicle</p>
-            <p class="text-white mt-2" id="bookingSheetCar">Vehicle info not available</p>
-        </div>
-    </div>
-</div>
-
-<div class="booking-sheet-overlay" id="bookingOverlay"></div>
-<div class="booking-sheet" id="bookingSheet" role="dialog" aria-modal="true" aria-labelledby="bookingSheetTitle">
-    <div class="flex items-start justify-between">
-        <div>
-            <p class="text-xs uppercase tracking-[0.3em] text-white/40">Booking</p>
-            <h3 class="text-xl font-bold text-white" id="bookingSheetTitle">Booking #</h3>
-        </div>
-        <button class="booking-sheet-close" type="button" id="closeBookingSheet" aria-label="Close booking details">
-            <span class="material-symbols-outlined">close</span>
-        </button>
-    </div>
     <div class="mt-4 flex items-center gap-2">
         <span id="bookingSheetStatus" class="status-badge status-default">Pending</span>
         <span class="text-sm text-white/60" id="bookingSheetCustomer">Customer</span>
@@ -415,15 +446,15 @@
 <script>
     const availabilityData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Availability, new System.Text.Json.JsonSerializerOptions
     {
-        PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
+            PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
     }));
-    const bookingData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.UpcomingBookings, new System.Text.Json.JsonSerializerOptions
+    const bookingData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Bookings, new System.Text.Json.JsonSerializerOptions
     {
-        PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
+            PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
     }));
     const upcomingData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.UpcomingBookings, new System.Text.Json.JsonSerializerOptions
     {
-        PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
+            PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
     }));
     const initialMonth = "@Model.MonthStart:yyyy-MM-dd";
 
@@ -445,17 +476,27 @@
     const bookingSheetDates = document.getElementById('bookingSheetDates');
     const bookingSheetCar = document.getElementById('bookingSheetCar');
 
+    const monthSelect = document.getElementById('monthSelect');
+    const yearSelect = document.getElementById('yearSelect');
+    const goTodayBtn = document.getElementById('goToday');
+
     const monthFormatter = new Intl.DateTimeFormat(undefined, { month: 'long', year: 'numeric' });
     const dayFormatter = new Intl.DateTimeFormat(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
+    const monthNameFormatter = new Intl.DateTimeFormat(undefined, { month: 'long' });
 
-    let currentMonth = initialMonth ? parseDateOnly(initialMonth) : new Date();
+    let currentMonth = initialMonth ? parseDateSmart(initialMonth) : new Date();
     let selectedDate = new Date();
     let showAllUpcoming = false;
 
-    function parseDateOnly(value) {
+    function parseDateSmart(value) {
         if (!value) return null;
-        const [year, month, day] = value.split('-').map(Number);
-        return new Date(year, month - 1, day);
+
+        const d = new Date(value);
+        if (!isNaN(d.getTime())) return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+
+        const parts = String(value).split('T')[0].split('-').map(Number);
+        if (parts.length !== 3) return null;
+        return new Date(parts[0], parts[1] - 1, parts[2]);
     }
 
     function isSameDate(a, b) {
@@ -471,32 +512,16 @@
     function getStatusClass(status) {
         if (!status) return 'status-default';
         const normalized = status.toLowerCase();
-        if (normalized.includes('completed')) return 'status-confirmed';
+        if (normalized.includes('confirm')) return 'status-confirmed';
         if (normalized.includes('cancel')) return 'status-cancelled';
-        if (normalized.includes('on the way') || normalized.includes('ontheway') || normalized.includes('arrived') || normalized.includes('intrip') || normalized.includes('in trip')) {
-            return 'status-confirmed';
-        }
-        if (normalized.includes('pending') || normalized.includes('schedule') || normalized.includes('assigned')) return 'status-pending';
+        if (normalized.includes('pending') || normalized.includes('schedule')) return 'status-pending';
         return 'status-default';
-    }
-
-    function formatStatusLabel(status) {
-        if (!status) return status;
-        const normalized = status.toLowerCase();
-        if (normalized === 'ontheway') return 'On the way';
-        if (normalized === 'intrip') return 'In Trip';
-        return status;
-    }
-
-    function getDisplayStatus(booking) {
-        const status = booking.tripStatus || booking.bookingStatus || 'Pending';
-        return formatStatusLabel(status);
     }
 
     function getBookingsForDate(date) {
         return bookingData.filter(booking => {
-            const start = parseDateOnly(booking.startDate);
-            const end = parseDateOnly(booking.endDate);
+            const start = parseDateSmart(booking.startDate);
+            const end = parseDateSmart(booking.endDate);
             return start && end && start <= date && end >= date;
         });
     }
@@ -504,33 +529,93 @@
     function getAvailabilityForDate(date) {
         const dayStart = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0);
         const dayEnd = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999);
+
         return availabilityData.filter(item => {
-            if (!item.isAvailable) {
-                return false;
-            }
+            if (!item.isAvailable) return false;
+
             const start = new Date(item.startDateTime);
             const end = new Date(item.endDateTime);
-            if (item.isRecurringWeekly) {
-                return start.getDay() === dayStart.getDay();
-            }
+
+            if (item.isRecurringWeekly) return start.getDay() === dayStart.getDay();
             return start <= dayEnd && end >= dayStart;
         });
     }
 
+    function initMonthYearSelectors() {
+        // Months
+        monthSelect.innerHTML = '';
+        for (let m = 0; m < 12; m++) {
+            const d = new Date(2020, m, 1);
+            const opt = document.createElement('option');
+            opt.value = String(m);
+            opt.textContent = monthNameFormatter.format(d);
+            monthSelect.appendChild(opt);
+        }
+
+        // Years (adjust range as you like)
+        const now = new Date();
+        const minYear = now.getFullYear() - 5;
+        const maxYear = now.getFullYear() + 5;
+
+        yearSelect.innerHTML = '';
+        for (let y = minYear; y <= maxYear; y++) {
+            const opt = document.createElement('option');
+            opt.value = String(y);
+            opt.textContent = String(y);
+            yearSelect.appendChild(opt);
+        }
+
+        syncSelectorsToCurrentMonth();
+
+        monthSelect.addEventListener('change', () => {
+            const m = Number(monthSelect.value);
+            const y = Number(yearSelect.value);
+            currentMonth = new Date(y, m, 1);
+            renderCalendar();
+            renderUpcoming();
+        });
+
+        yearSelect.addEventListener('change', () => {
+            const m = Number(monthSelect.value);
+            const y = Number(yearSelect.value);
+            currentMonth = new Date(y, m, 1);
+            renderCalendar();
+            renderUpcoming();
+        });
+
+        goTodayBtn.addEventListener('click', () => {
+            const today = new Date();
+            currentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+            selectedDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+            syncSelectorsToCurrentMonth();
+            renderCalendar();
+            renderUpcoming();
+        });
+    }
+
+    function syncSelectorsToCurrentMonth() {
+        monthSelect.value = String(currentMonth.getMonth());
+        yearSelect.value = String(currentMonth.getFullYear());
+    }
+
     function renderCalendar() {
         calendarGrid.innerHTML = '';
+
         const monthStart = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
         const monthEnd = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
+
         const gridStart = new Date(monthStart);
         gridStart.setDate(gridStart.getDate() - gridStart.getDay());
 
         const totalDays = 42;
         const today = new Date();
+
         const desiredDay = selectedDate.getDate();
         selectedDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), Math.min(desiredDay, monthEnd.getDate()));
 
         for (let i = 0; i < totalDays; i++) {
             const currentDate = new Date(gridStart.getFullYear(), gridStart.getMonth(), gridStart.getDate() + i);
+
             const bookings = getBookingsForDate(currentDate);
             const availability = getAvailabilityForDate(currentDate);
             const isCurrentMonth = currentDate.getMonth() === currentMonth.getMonth();
@@ -541,25 +626,28 @@
             dayButton.setAttribute('data-date', toDateOnlyString(currentDate));
             dayButton.setAttribute('aria-label', `${dayFormatter.format(currentDate)}. ${availability.length ? 'Available.' : 'No availability.'} ${bookings.length} booking(s).`);
 
-            if (!isCurrentMonth) {
-                dayButton.classList.add('is-muted');
-            }
-            if (isSameDate(currentDate, today)) {
-                dayButton.classList.add('is-today');
-            }
-            if (isSameDate(currentDate, selectedDate)) {
-                dayButton.classList.add('is-selected');
-            }
+            if (!isCurrentMonth) dayButton.classList.add('is-muted');
+            if (isSameDate(currentDate, today)) dayButton.classList.add('is-today');
+            if (isSameDate(currentDate, selectedDate)) dayButton.classList.add('is-selected');
+
+            const bookingCount = bookings.length;
+            const hasAvailability = availability.length > 0;
+
+            const maxBookingBars = 2;
+            const bookingBarsToShow = Math.min(bookingCount, maxBookingBars);
+            const remaining = Math.max(0, bookingCount - bookingBarsToShow);
 
             dayButton.innerHTML = `
                 <span class="calendar-day-number">${currentDate.getDate()}</span>
-                <div class="calendar-indicators">
-                    ${availability.length ? '<span class="indicator-availability"></span>' : ''}
-                    ${bookings.length ? '<span class="indicator-booking"></span>' : ''}
+                <div class="calendar-bars">
+                    ${hasAvailability ? `<span class="calendar-bar available" title="Available"></span>` : ``}
+                    ${Array.from({ length: bookingBarsToShow }).map(() => `<span class="calendar-bar booking" title="Booking"></span>`).join('')}
+                    ${remaining ? `<span class="calendar-more">+${remaining}</span>` : ``}
                 </div>
             `;
 
             dayButton.addEventListener('click', () => {
+                if (isSameDate(currentDate, selectedDate)) return;
                 selectedDate = currentDate;
                 renderCalendar();
                 renderUpcoming();
@@ -569,20 +657,22 @@
         }
 
         calendarMonth.textContent = monthFormatter.format(currentMonth);
+        syncSelectorsToCurrentMonth();
     }
 
     function renderUpcoming() {
         upcomingList.innerHTML = '';
-        let filtered = upcomingData;
+        let filtered = [...upcomingData];
 
         if (!showAllUpcoming) {
-            filtered = upcomingData.filter(booking => {
-                const start = parseDateOnly(booking.startDate);
-                const end = parseDateOnly(booking.endDate);
+            filtered = filtered.filter(booking => {
+                const start = parseDateSmart(booking.startDate);
+                const end = parseDateSmart(booking.endDate);
                 return start && end && start <= selectedDate && end >= selectedDate;
             });
             bookingSubtitle.textContent = `Bookings on ${dayFormatter.format(selectedDate)}.`;
         } else {
+            filtered = filtered.slice(0, 10);
             bookingSubtitle.textContent = 'Showing the next 10 bookings.';
         }
 
@@ -595,7 +685,6 @@
             const card = document.createElement('button');
             card.type = 'button';
             card.className = 'upcoming-card w-full text-left';
-            card.setAttribute('data-booking', JSON.stringify(booking));
 
             card.innerHTML = `
                 <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
@@ -604,7 +693,7 @@
                         <p class="text-xs text-white/50">${booking.customerName || 'Customer'} • ${booking.pickupLocationLabel || 'Pickup location'}</p>
                         <p class="text-xs text-white/40">${booking.startDate} → ${booking.endDate}</p>
                     </div>
-                    <span class="status-badge ${getStatusClass(getDisplayStatus(booking))}">${getDisplayStatus(booking)}</span>
+                    <span class="status-badge ${getStatusClass(booking.bookingStatus)}">${booking.bookingStatus || 'Pending'}</span>
                 </div>
             `;
 
@@ -615,14 +704,27 @@
 
     function openBookingSheet(booking) {
         bookingSheetTitle.textContent = `Booking #${booking.bookingId}`;
-        bookingSheetStatus.textContent = getDisplayStatus(booking);
-        bookingSheetStatus.className = `status-badge ${getStatusClass(getDisplayStatus(booking))}`;
+
+        bookingSheetStatus.textContent = booking.bookingStatus || 'Pending';
+        bookingSheetStatus.className = `status-badge ${getStatusClass(booking.bookingStatus)}`;
+
         bookingSheetCustomer.textContent = booking.customerName || 'Customer';
         bookingSheetFrom.textContent = booking.pickupLocationLabel || 'Pickup location';
         bookingSheetTo.textContent = 'Dropoff not specified';
-        bookingSheetDates.textContent = booking.pickupDateTime
-            ? new Date(booking.pickupDateTime).toLocaleString()
-            : `${booking.startDate} → ${booking.endDate}`;
+
+        const start = booking.startDate ? parseDateSmart(booking.startDate) : null;
+        const end = booking.endDate ? parseDateSmart(booking.endDate) : null;
+
+        const rangeText = (start && end)
+            ? `${start.toLocaleDateString()} → ${end.toLocaleDateString()}`
+            : `${booking.startDate || ''} → ${booking.endDate || ''}`;
+
+        const pickupText = booking.pickupDateTime
+            ? `Pickup: ${new Date(booking.pickupDateTime).toLocaleString()}`
+            : '';
+
+        bookingSheetDates.textContent = pickupText ? `${pickupText} • ${rangeText}` : rangeText;
+
         bookingSheetCar.textContent = 'Vehicle info not available';
 
         bookingOverlay.classList.add('is-open');
@@ -656,11 +758,10 @@
     closeBookingSheet.addEventListener('click', closeSheet);
 
     document.addEventListener('keydown', event => {
-        if (event.key === 'Escape') {
-            closeSheet();
-        }
+        if (event.key === 'Escape') closeSheet();
     });
 
+    initMonthYearSelectors();
     renderCalendar();
     renderUpcoming();
 </script>
