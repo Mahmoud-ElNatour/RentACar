@@ -30,6 +30,42 @@ jobs:
         with:
           fetch-depth: 0
 
+      # ---------------------------
+      # Ensure Git is available
+      # ---------------------------
+      - name: Ensure Git on PATH
+        shell: powershell
+        run: |
+          if (Get-Command git -ErrorAction SilentlyContinue) {
+            Write-Host "Git already available"
+            git --version
+            exit 0
+          }
+
+          Write-Host "Git not found in PATH. Searching common install locations..."
+
+          $possible = @(
+            "C:\Program Files\Git\bin",
+            "C:\Program Files\Git\cmd",
+            "C:\Program Files (x86)\Git\bin",
+            "C:\Program Files (x86)\Git\cmd"
+          )
+
+          foreach ($p in $possible) {
+            if (Test-Path "$p\git.exe") {
+              Write-Host "Found git in $p"
+              Add-Content -Path $env:GITHUB_PATH -Value $p
+              git --version
+              exit 0
+            }
+          }
+
+          Write-Host "ERROR: Git not installed on this runner"
+          exit 1
+
+      # ---------------------------
+      # Setup .NET
+      # ---------------------------
       - name: Setup .NET 8 (no admin)
         uses: actions/setup-dotnet@v4
         with:
@@ -53,7 +89,9 @@ jobs:
           where.exe dotnet
           dotnet --info
 
-      # Reliable EF tooling (local tool manifest) - avoids PATH/user issues on self-hosted runners
+      # ---------------------------
+      # Setup EF tool (LOCAL)
+      # ---------------------------
       - name: Setup dotnet-ef (local tool)
         shell: powershell
         run: |
@@ -72,6 +110,9 @@ jobs:
         shell: powershell
         run: dotnet build -c Release --no-restore
 
+      # ---------------------------
+      # Auto Migration + Push
+      # ---------------------------
       - name: Auto Add Migration (only if there are changes)
         shell: powershell
         run: |
@@ -105,6 +146,9 @@ jobs:
             Write-Host "EF ran but no files changed. Skipping push."
           }
 
+      # ---------------------------
+      # Update Database
+      # ---------------------------
       - name: Update Database
         shell: powershell
         run: |
@@ -112,6 +156,9 @@ jobs:
             --project "${{ env.INFRA_CSPROJ }}" `
             --startup-project "${{ env.WEB_CSPROJ }}"
 
+      # ---------------------------
+      # Publish
+      # ---------------------------
       - name: Ensure publish folder exists
         shell: powershell
         run: |
@@ -121,6 +168,9 @@ jobs:
         shell: powershell
         run: dotnet publish "${{ env.WEB_CSPROJ }}" -c Release -o "${{ env.PUBLISH_PATH }}" --no-build
 
+      # ---------------------------
+      # Deploy to IIS
+      # ---------------------------
       - name: Deploy to IIS
         shell: powershell
         run: |
