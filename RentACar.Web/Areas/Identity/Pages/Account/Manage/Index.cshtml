@@ -476,29 +476,49 @@
                                 </div>
 
                                 <!-- ✅ FIXED HANDLER NAME HERE -->
-                                <form method="post" asp-page-handler="ResetPasswordWithOtp" class="space-y-4">
-                                    <div>
-                                        <label class="block text-xs font-bold text-white/40 uppercase mb-2">New Password</label>
-                                        <div class="relative">
-                                            <input asp-for="NewPassword" type="password" class="w-full bg-[#18181b] border-none rounded-xl px-4 py-3.5 text-white focus:ring-2 focus:ring-[#d4af35]/50 transition-all font-medium" placeholder="••••••••" />
-                                            <span class="material-symbols-outlined absolute right-4 top-3.5 text-white/20">lock</span>
+                                    <form method="post" asp-page-handler="ResetPasswordWithOtp" class="space-y-4" onsubmit="return validateDashboardPassword()">
+                                        <div>
+                                            <label class="block text-xs font-bold text-white/40 uppercase mb-2">New Password</label>
+                                            <div class="relative">
+                                                <input asp-for="NewPassword" id="Dashboard_NewPassword" type="password" class="w-full bg-[#18181b] border-none rounded-xl px-4 py-3.5 text-white focus:ring-2 focus:ring-[#d4af35]/50 transition-all font-medium" placeholder="••••••••" />
+                                                <span class="material-symbols-outlined absolute right-4 top-3.5 text-white/20">lock</span>
+                                            </div>
+                                            <span asp-validation-for="NewPassword" class="text-red-500 text-xs mt-1 block"></span>
                                         </div>
-                                        <span asp-validation-for="NewPassword" class="text-red-500 text-xs mt-1 block"></span>
-                                    </div>
 
-                                    <div>
-                                        <label class="block text-xs font-bold text-white/40 uppercase mb-2">Confirm Password</label>
-                                        <div class="relative">
-                                            <input asp-for="ConfirmNewPassword" type="password" class="w-full bg-[#18181b] border-none rounded-xl px-4 py-3.5 text-white focus:ring-2 focus:ring-[#d4af35]/50 transition-all font-medium" placeholder="••••••••" />
-                                            <span class="material-symbols-outlined absolute right-4 top-3.5 text-white/20">lock</span>
+                                        <div>
+                                            <label class="block text-xs font-bold text-white/40 uppercase mb-2">Confirm Password</label>
+                                            <div class="relative">
+                                                <input asp-for="ConfirmNewPassword" id="Dashboard_ConfirmPassword" type="password" class="w-full bg-[#18181b] border-none rounded-xl px-4 py-3.5 text-white focus:ring-2 focus:ring-[#d4af35]/50 transition-all font-medium" placeholder="••••••••" />
+                                                <span class="material-symbols-outlined absolute right-4 top-3.5 text-white/20">lock</span>
+                                            </div>
+                                            <span asp-validation-for="ConfirmNewPassword" class="text-red-500 text-xs mt-1 block"></span>
                                         </div>
-                                        <span asp-validation-for="ConfirmNewPassword" class="text-red-500 text-xs mt-1 block"></span>
-                                    </div>
 
-                                    <button type="submit" class="w-full bg-[#d4af35] hover:bg-[#b5952f] text-black font-bold py-3.5 rounded-xl transition-all shadow-lg mt-2">
-                                        Update Password
-                                    </button>
-                                </form>
+                                        <button type="submit" class="w-full bg-[#d4af35] hover:bg-[#b5952f] text-black font-bold py-3.5 rounded-xl transition-all shadow-lg mt-2">
+                                            Update Password
+                                        </button>
+                                    </form>
+                                    <script>
+                                        function validateDashboardPassword() {
+                                            const password = document.getElementById('Dashboard_NewPassword').value;
+                                            const confirmPassword = document.getElementById('Dashboard_ConfirmPassword').value;
+                                            const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+                                
+                                            if (!passwordRegex.test(password)) {
+                                                 if (window.showPopup) showPopup("Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character.", 'error');
+                                                 else alert("Weak password: 8+ chars, Upper, Lower, Number, Special required.");
+                                                 return false;
+                                            }
+                                
+                                            if (password !== confirmPassword) {
+                                                if (window.showPopup) showPopup("Passwords do not match.", 'error');
+                                                else alert("Passwords do not match.");
+                                                return false;
+                                            }
+                                            return true;
+                                        }
+                                    </script>
                             </div>
                         }
                     </div>

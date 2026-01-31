@@ -220,11 +220,34 @@
     <script src="~/js/site.js"></script>
     <partial name="_ValidationScriptsPartial" />
     <script>
-        // Simple File Name Display
+        // Simple File Name Display & Validation
         function bindFileInput(inputId, displayId) {
             document.getElementById(inputId).addEventListener('change', function(e) {
-                const fileName = e.target.files[0]?.name || "Choose File";
-                document.getElementById(displayId).textContent = fileName;
+                const file = e.target.files[0];
+                if (!file) {
+                    document.getElementById(displayId).textContent = "Choose File";
+                    return;
+                }
+
+                // Validation
+                const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+                const maxSize = 5 * 1024 * 1024; // 5MB
+
+                if (!allowedTypes.includes(file.type)) {
+                    showPopup("Invalid file type. Only images (JPG, PNG, WEBP) are allowed.", 'error');
+                    e.target.value = ""; // Clear input
+                    document.getElementById(displayId).textContent = "Choose File";
+                    return;
+                }
+
+                if (file.size > maxSize) {
+                    showPopup("File is too large. Max size is 5MB.", 'error');
+                     e.target.value = ""; // Clear input
+                    document.getElementById(displayId).textContent = "Choose File";
+                    return;
+                }
+
+                document.getElementById(displayId).textContent = file.name;
             });
         }
         bindFileInput('Input_DrivingLicenseFront', 'fileName_DLF');

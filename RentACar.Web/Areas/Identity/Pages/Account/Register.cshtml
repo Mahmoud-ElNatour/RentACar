@@ -288,11 +288,28 @@
 
         function validateForm() {
             const email = document.getElementById('Input_Email').value;
+            const password = document.getElementById('Input_Password').value;
+            const confirmPassword = document.getElementById('Input_ConfirmPassword').value;
+
             if (!validateEmail(email)) {
                 showPopup("Please enter a valid email address containing '@@' and '.'", 'error');
                 emailError.classList.remove('hidden');
                 return false;
             }
+
+            // Strong Password Validation
+            // Min 8 chars, 1 Uppercase, 1 Lowercase, 1 Number, 1 Special Char
+            const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+            if (!passwordRegex.test(password)) {
+                 showPopup("Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character.", 'error');
+                 return false;
+            }
+
+            if (password !== confirmPassword) {
+                showPopup("Passwords do not match.", 'error');
+                return false;
+            }
+
             return true;
         }
 
