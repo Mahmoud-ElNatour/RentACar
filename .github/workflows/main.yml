@@ -25,6 +25,9 @@ jobs:
       MIGRATION_PREFIX: "Auto"
 
     steps:
+      # ---------------------------
+      # Checkout Repo
+      # ---------------------------
       - name: Checkout
         uses: actions/checkout@v4
         with:
@@ -83,14 +86,14 @@ jobs:
         run: |
           "DOTNET_ROOT=${{ runner.temp }}\dotnet" | Out-File -FilePath $env:GITHUB_ENV -Append
 
-      - name: Check dotnet visible to runner
+      - name: Check dotnet visible
         shell: powershell
         run: |
           where.exe dotnet
           dotnet --info
 
       # ---------------------------
-      # Setup EF tool (LOCAL)
+      # Setup EF Tool (Local)
       # ---------------------------
       - name: Setup dotnet-ef (local tool)
         shell: powershell
@@ -102,6 +105,9 @@ jobs:
           dotnet tool update dotnet-ef
           dotnet tool list
 
+      # ---------------------------
+      # Restore & Build
+      # ---------------------------
       - name: Restore
         shell: powershell
         run: dotnet restore
@@ -124,10 +130,9 @@ jobs:
           $migName = "${{ env.MIGRATION_PREFIX }}_$stamp"
 
           $output = & dotnet tool run dotnet-ef migrations add $migName `
-          --context RentACarDbContext `
-          --project "${{ env.INFRA_CSPROJ }}" `
-          --startup-project "${{ env.WEB_CSPROJ }}"
-           2>&1
+            --context RentACarDbContext `
+            --project "${{ env.INFRA_CSPROJ }}" `
+            --startup-project "${{ env.WEB_CSPROJ }}" *>&1
 
           $output | Out-String | Write-Host
 
@@ -154,11 +159,10 @@ jobs:
       - name: Update Database
         shell: powershell
         run: |
-         dotnet tool run dotnet-ef database update `
-          --context RentACarDbContext `
-          --project "${{ env.INFRA_CSPROJ }}" `
-          --startup-project "${{ env.WEB_CSPROJ }}"
-
+          dotnet tool run dotnet-ef database update `
+            --context RentACarDbContext `
+            --project "${{ env.INFRA_CSPROJ }}" `
+            --startup-project "${{ env.WEB_CSPROJ }}"
 
       # ---------------------------
       # Publish
