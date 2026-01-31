@@ -79,6 +79,8 @@ namespace RentACar.Application.DTOs
 
     public class BookingCreationResultDto
     {
+        public bool Success { get; set; } = true;
+        public string? ErrorMessage { get; set; }
         public BookingDto Booking { get; set; } = new();
         public string? RedirectUrl { get; set; }
         public int? PaymentId { get; set; }

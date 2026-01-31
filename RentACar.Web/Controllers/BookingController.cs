@@ -166,7 +166,10 @@ namespace RentACar.Web.Controllers
             try
             {
                 var created = await _bookingManager.MakeBookingAsync(dto, userId);
-                if (created == null) return BadRequest("Booking failed.");
+                if (created == null || !created.Success)
+                {
+                    return BadRequest(created?.ErrorMessage ?? "Booking failed.");
+                }
 
                 return CreatedAtAction("Get", new { id = created.Booking.BookingId }, created);
             }
@@ -222,7 +225,10 @@ namespace RentACar.Web.Controllers
              {
                  var created = await _bookingManager.MakeBookingAsync(dto, userId);
                  
-                 if (created == null) return BadRequest("Booking failed. Please check availability.");
+                 if (created == null || !created.Success)
+                 {
+                     return BadRequest(created?.ErrorMessage ?? "Booking failed. Please check availability.");
+                 }
                  
                 if (!string.IsNullOrEmpty(created.RedirectUrl))
                  {
@@ -576,7 +582,7 @@ namespace RentACar.Web.Controllers
                                 }
                             });
 
-                            var days = (booking.Enddate.ToDateTime(TimeOnly.MinValue) - booking.Startdate.ToDateTime(TimeOnly.MinValue)).Days;
+                            var days = (booking.Enddate.ToDateTime(TimeOnly.MinValue) - booking.Startdate.ToDateTime(TimeOnly.MinValue)).Days + 1;
                             
                             table.Cell().Element(CellStyle).Text(booking.Startdate.ToString("dd MMM yyyy"));
                             table.Cell().Element(CellStyle).Text(booking.Enddate.ToString("dd MMM yyyy"));

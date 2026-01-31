@@ -71,7 +71,7 @@ namespace RentACar.Application.Managers
             if (user == null)
             {
                 _logger.LogWarning("Booking failed: user not found.");
-                return null;
+                return new BookingCreationResultDto { Success = false, ErrorMessage = "User session expired. Please log in again." };
             }
 
             var isCustomer = await _userManager.IsInRoleAsync(user, "Customer");
@@ -88,7 +88,7 @@ namespace RentACar.Application.Managers
                 if (customerEntity == null)
                 {
                     _logger.LogWarning("Booking failed: No customer found for user {UserId}", loggedInUserId);
-                    return null;
+                    return new BookingCreationResultDto { Success = false, ErrorMessage = "Customer profile not found. Please complete your registration." };
                 }
 
                 requestDto.CustomerId = customerEntity.UserId;
@@ -97,19 +97,33 @@ namespace RentACar.Application.Managers
 
             // 🔹 Validate customer
             var customer = await _customerRepository.GetByIdAsync(requestDto.CustomerId);
-            if (customer == null || !customer.IsVerified || !customer.Isactive)
+            if (customer == null)
             {
-                _logger.LogWarning("Booking failed: Invalid customer [null: {Null}, verified: {Verified}, active: {Active}]",
-                    customer == null, customer?.IsVerified, customer?.Isactive);
-                return null;
+                _logger.LogWarning("Booking failed: Customer not found.");
+                return new BookingCreationResultDto { Success = false, ErrorMessage = "Customer not found." };
+            }
+            if (!customer.IsVerified)
+            {
+                _logger.LogWarning("Booking failed: Customer identity not verified.");
+                return new BookingCreationResultDto { Success = false, ErrorMessage = "Customer identity is not verified. Please verify your identity before booking." };
+            }
+            if (!customer.Isactive)
+            {
+                _logger.LogWarning("Booking failed: Customer account is inactive.");
+                return new BookingCreationResultDto { Success = false, ErrorMessage = "Customer account is inactive. Please contact support." };
             }
 
             // 🔹 Validate car
             var car = await _carRepository.GetByIdAsync(requestDto.CarId);
-            if (car == null || !car.IsAvailable)
+            if (car == null)
             {
-                _logger.LogWarning("Booking failed: Car not found or unavailable.");
-                return null;
+                _logger.LogWarning("Booking failed: Car not found.");
+                return new BookingCreationResultDto { Success = false, ErrorMessage = "Car not found." };
+            }
+            if (!car.IsAvailable)
+            {
+                _logger.LogWarning("Booking failed: Car is not available.");
+                return new BookingCreationResultDto { Success = false, ErrorMessage = "This car is currently not available for booking." };
             }
 
             var existingBookings = await _bookingRepository.GetBookingsByCarIdAsync(requestDto.CarId);
@@ -127,7 +141,11 @@ namespace RentACar.Application.Managers
                     conflictingBookings.Count,
                     firstConflict.Startdate,
                     firstConflict.Enddate);
-                return null;
+                return new BookingCreationResultDto 
+                { 
+                    Success = false, 
+                    ErrorMessage = $"Date conflict: This car is already booked from {firstConflict.Startdate:MMM dd, yyyy} to {firstConflict.Enddate:MMM dd, yyyy}. Please select different dates." 
+                };
             }
 
             // 🔹 Validate promocode
@@ -177,7 +195,7 @@ namespace RentACar.Application.Managers
             {
                 var allNames = string.Join(", ", (await _paymentMethodRepository.GetAllAsync()).Select(m => m.PaymentMethodName));
                 _logger.LogWarning("Booking failed: MATCH_FAIL ID:{Id} Name:'{Name}'. Available: [{Available}]", requestDto.PaymentMethodId, requestDto.PaymentMethod, allNames);
-                return null;
+                return new BookingCreationResultDto { Success = false, ErrorMessage = "Invalid payment method selected." };
             }
 
             // 🔹 Set employee booker if employee or admin
@@ -205,7 +223,7 @@ namespace RentACar.Application.Managers
                 if (!isEmployee && !isAdmin)
                 {
                     _logger.LogWarning("Booking failed: Cash payment only allowed for employees.");
-                    return null;
+                    return new BookingCreationResultDto { Success = false, ErrorMessage = "Cash payments are only available for walk-in bookings. Please select a card payment method." };
                 }
                 
                 // If today is start date -> InProgress
@@ -336,8 +354,9 @@ namespace RentACar.Application.Managers
 
         private decimal CalculateTotalPrice(decimal pricePerDay, DateOnly startDate, DateOnly endDate)
         {
+            // +1 to include both start and end dates (e.g., Jan 1 to Jan 3 = 3 days, not 2)
             TimeSpan duration = endDate.ToDateTime(TimeOnly.MinValue) - startDate.ToDateTime(TimeOnly.MinValue);
-            return pricePerDay * (decimal)duration.Days;
+            return pricePerDay * (decimal)(duration.Days + 1);
         }
 
         private decimal ApplyPromocode(decimal price, Promocode promocode)
