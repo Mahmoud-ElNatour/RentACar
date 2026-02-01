@@ -16,8 +16,6 @@ using QuestPDF.Infrastructure;
 var builder = WebApplication.CreateBuilder(args);
 var fromConfig = builder.Configuration.GetConnectionString("DefaultConnection");
 var fromEnv = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection");
-Console.WriteLine($"[DEBUG] From config: '{fromConfig}'");
-Console.WriteLine($"[DEBUG] From env   : '{fromEnv}'");
 
 
 
@@ -42,7 +40,8 @@ builder.Services.AddDbContext<RentACarDbContext>(options =>
     options.UseSqlServer(connectionString));
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString));
+    options.UseSqlServer(connectionString, 
+        x => x.MigrationsHistoryTable("__ApplicationHistory", "dbo")));
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
@@ -148,6 +147,43 @@ builder.Services.AddScoped<EmailLogManager>();
 builder.Services.AddHostedService<RentACar.Web.Services.NotificationBackgroundService>();
 
 var app = builder.Build();
+
+// ✅ Automatically apply migrations on startup
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        // 1. Identity/App Context (using __ApplicationHistory)
+        try {
+            var identityContext = services.GetRequiredService<ApplicationDbContext>();
+            if (identityContext.Database.GetPendingMigrations().Any())
+            {
+                identityContext.Database.Migrate();
+            }
+        } catch (Exception ex) {
+            var logger = services.GetRequiredService<ILogger<Program>>();
+            logger.LogWarning(ex, "Identity Migration Skip: Database might already be up to date.");
+        }
+
+        // 2. Business Context (using __EFMigrationsHistory)
+        try {
+            var businessContext = services.GetRequiredService<RentACarDbContext>();
+            if (businessContext.Database.GetPendingMigrations().Any())
+            {
+                businessContext.Database.Migrate();
+            }
+        } catch (Exception ex) {
+            var logger = services.GetRequiredService<ILogger<Program>>();
+            logger.LogWarning(ex, "Business Migration Skip: Database might already be up to date.");
+        }
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Critical error during migration sequence.");
+    }
+}
 
 // ✅ Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
