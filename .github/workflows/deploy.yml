@@ -1,0 +1,32 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+        
+    - name: Restore dependencies
+      run: dotnet restore
+      
+    - name: Build
+      run: dotnet build --no-restore --configuration Release
+      
+    - name: Publish
+      run: dotnet publish RentACar.Web/RentACar.Web.csproj -c Release -o ./publish
+      
+    # NOTE: To complete the deployment, you will need to add a step here to upload
+    # the ./publish folder to your server via SSH/FTP or a cloud-specific action
+    # (e.g., Azure WebApp, AWS S3, etc.)
