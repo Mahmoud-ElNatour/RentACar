@@ -178,37 +178,6 @@
                     </a>
                 </div>
             }
-
-            <!-- Driver Section -->
-            @if (User.IsInRole("Driver"))
-            {
-                <div class="mt-8">
-                     <p class="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Driver Portal</p>
-                     
-                     <div class="relative group/menu" onmouseenter="openMenu('driverMenu', 'driverArrow')" onmouseleave="closeMenu('driverMenu', 'driverArrow')">
-                         <a href="/DriverPortal/Dashboard" 
-                            class="w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors group">
-                            <div class="flex items-center gap-3">
-                                 <span class="material-symbols-outlined text-[22px] group-hover:scale-110 transition-transform">badge</span>
-                                 Driver Portal
-                            </div>
-                            <span id="driverArrow" class="material-symbols-outlined text-[18px] transition-transform duration-200">expand_more</span>
-                         </a>
-                     
-                     <div id="driverMenu" class="hidden pl-4 space-y-1 mt-1 border-l border-border-dark ml-5">
-                          <a href="/DriverPortal/Dashboard" class="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md text-gray-500 hover:text-gold hover:bg-gold/5 transition-colors">
-                              <span class="material-symbols-outlined text-[18px]">dashboard</span> Dashboard
-                          </a>
-                          <a href="/DriverPortal/Schedule" class="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md text-gray-500 hover:text-gold hover:bg-gold/5 transition-colors">
-                              <span class="material-symbols-outlined text-[18px]">calendar_today</span> Schedule
-                          </a>
-                          <a href="#" class="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md text-gray-500 hover:text-gold hover:bg-gold/5 transition-colors">
-                              <span class="material-symbols-outlined text-[18px]">history</span> History
-                          </a>
-                     </div> 
-                     </div>
-                </div>
-            }
             
             <div class="mt-8">
                 <p class="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Account</p>

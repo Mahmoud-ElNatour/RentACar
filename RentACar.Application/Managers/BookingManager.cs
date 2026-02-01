@@ -6,35 +6,20 @@ using AutoMapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using RentACar.Application.DTOs;
-<<<<<<< HEAD
 using RentACar.Core.Entities;
 using RentACar.Core.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 using RentACar.Core.Constants;
-=======
-using RentACar.Application.Services;
-using RentACar.Core.Entities;
-using RentACar.Core.Repositories;
->>>>>>> Mahmoud-V3
 
 namespace RentACar.Application.Managers
 {
     public class BookingManager
     {
-<<<<<<< HEAD
 
         private readonly IBookingRepository _bookingRepository;
         private readonly ICustomerRepository _customerRepository;
         private readonly IEmployeeRepository _employeeRepository;
-=======
-        private readonly IGoogleGeocodingService _geocodingService;
-        private readonly IBookingRepository _bookingRepository;
-        private readonly ICustomerRepository _customerRepository;
-        private readonly IEmployeeRepository _employeeRepository;
-        private readonly IDriverRepository _driverRepository;
-        private readonly IDriverAvailabilityRepository _driverAvailabilityRepository;
->>>>>>> Mahmoud-V3
         private readonly ICarRepository _carRepository;
         private readonly IPromocodeRepository _promocodeRepository;
         private readonly IPaymentMethodRepository _paymentMethodRepository;
@@ -44,18 +29,10 @@ namespace RentACar.Application.Managers
         private readonly ILogger<BookingManager> _logger;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly AuditLogManager _auditLogManager;
-<<<<<<< HEAD
         private readonly EmailManager _emailManager;
 
         public BookingManager(
             IEmployeeRepository employeeRepository,
-=======
-
-        public BookingManager(
-            IEmployeeRepository employeeRepository,
-            IDriverRepository driverRepository,
-            IDriverAvailabilityRepository driverAvailabilityRepository,
->>>>>>> Mahmoud-V3
             IBookingRepository bookingRepository,
             ICustomerRepository customerRepository,
             ICarRepository carRepository,
@@ -63,7 +40,6 @@ namespace RentACar.Application.Managers
             IPaymentMethodRepository paymentMethodRepository,
             IPaymentRepository paymentRepository,
             PaymentManager paymentManager,
-<<<<<<< HEAD
             IMapper mapper,
             UserManager<IdentityUser> userManager,
             ILogger<BookingManager> logger,
@@ -74,22 +50,6 @@ namespace RentACar.Application.Managers
             _bookingRepository = bookingRepository;
             _customerRepository = customerRepository;
             _carRepository = carRepository;
-=======
-            IGoogleGeocodingService geocodingService,
-            IMapper mapper,
-            UserManager<IdentityUser> userManager,
-            ILogger<BookingManager> logger,
-            AuditLogManager auditLogManager
-            )
-        {
-            _employeeRepository = employeeRepository;
-            _driverRepository = driverRepository;
-            _driverAvailabilityRepository = driverAvailabilityRepository;
-            _bookingRepository = bookingRepository;
-            _customerRepository = customerRepository;
-            _carRepository = carRepository;
-            _geocodingService = geocodingService;
->>>>>>> Mahmoud-V3
             _userManager = userManager;
             _promocodeRepository = promocodeRepository;
             _paymentMethodRepository = paymentMethodRepository;
@@ -98,10 +58,7 @@ namespace RentACar.Application.Managers
             _mapper = mapper;
             _logger = logger;
             _auditLogManager = auditLogManager;
-<<<<<<< HEAD
             _emailManager = emailManager;
-=======
->>>>>>> Mahmoud-V3
         }
 
         public async Task<BookingCreationResultDto?> MakeBookingAsync(MakeBookingRequestDto requestDto, string loggedInUserId)
@@ -114,11 +71,7 @@ namespace RentACar.Application.Managers
             if (user == null)
             {
                 _logger.LogWarning("Booking failed: user not found.");
-<<<<<<< HEAD
                 return new BookingCreationResultDto { Success = false, ErrorMessage = "User session expired. Please log in again." };
-=======
-                return null;
->>>>>>> Mahmoud-V3
             }
 
             var isCustomer = await _userManager.IsInRoleAsync(user, "Customer");
@@ -130,22 +83,12 @@ namespace RentACar.Application.Managers
             {
                 var customerEntity = (await _customerRepository.GetAllAsync())
                     .FirstOrDefault(c => c.aspNetUserId == loggedInUserId);
-<<<<<<< HEAD
                 _logger.LogInformation("Customer found with ID: {CustomerId}", customerEntity.UserId);
                 _logger.LogInformation("Customer Details: {@Customer}", customerEntity);
                 if (customerEntity == null)
                 {
                     _logger.LogWarning("Booking failed: No customer found for user {UserId}", loggedInUserId);
                     return new BookingCreationResultDto { Success = false, ErrorMessage = "Customer profile not found. Please complete your registration." };
-=======
-                _logger.LogInformation("Customer is booking with customer id if this print them custome ris null");
-                _logger.LogInformation("Customer is booking with customer id", customerEntity.UserId);
-                _logger.LogInformation("Customer", customerEntity);
-                if (customerEntity == null)
-                {
-                    _logger.LogWarning("Booking failed: No customer found for user {UserId}", loggedInUserId);
-                    return null;
->>>>>>> Mahmoud-V3
                 }
 
                 requestDto.CustomerId = customerEntity.UserId;
@@ -154,7 +97,6 @@ namespace RentACar.Application.Managers
 
             // 🔹 Validate customer
             var customer = await _customerRepository.GetByIdAsync(requestDto.CustomerId);
-<<<<<<< HEAD
             if (customer == null)
             {
                 _logger.LogWarning("Booking failed: Customer not found.");
@@ -169,18 +111,10 @@ namespace RentACar.Application.Managers
             {
                 _logger.LogWarning("Booking failed: Customer account is inactive.");
                 return new BookingCreationResultDto { Success = false, ErrorMessage = "Customer account is inactive. Please contact support." };
-=======
-            if (customer == null || !customer.IsVerified || !customer.Isactive)
-            {
-                _logger.LogWarning("Booking failed: Invalid customer [null: {Null}, verified: {Verified}, active: {Active}]",
-                    customer == null, customer?.IsVerified, customer?.Isactive);
-                return null;
->>>>>>> Mahmoud-V3
             }
 
             // 🔹 Validate car
             var car = await _carRepository.GetByIdAsync(requestDto.CarId);
-<<<<<<< HEAD
             if (car == null)
             {
                 _logger.LogWarning("Booking failed: Car not found.");
@@ -190,12 +124,6 @@ namespace RentACar.Application.Managers
             {
                 _logger.LogWarning("Booking failed: Car is not available.");
                 return new BookingCreationResultDto { Success = false, ErrorMessage = "This car is currently not available for booking." };
-=======
-            if (car == null || !car.IsAvailable)
-            {
-                _logger.LogWarning("Booking failed: Car not found or unavailable.");
-                return null;
->>>>>>> Mahmoud-V3
             }
 
             var existingBookings = await _bookingRepository.GetBookingsByCarIdAsync(requestDto.CarId);
@@ -213,28 +141,11 @@ namespace RentACar.Application.Managers
                     conflictingBookings.Count,
                     firstConflict.Startdate,
                     firstConflict.Enddate);
-<<<<<<< HEAD
                 return new BookingCreationResultDto 
                 { 
                     Success = false, 
                     ErrorMessage = $"Date conflict: This car is already booked from {firstConflict.Startdate:MMM dd, yyyy} to {firstConflict.Enddate:MMM dd, yyyy}. Please select different dates." 
                 };
-=======
-                return null;
-            }
-
-            int? assignedDriverId = null;
-            decimal? driverDailyFee = null;
-            if (requestDto.HasDriver)
-            {
-                driverDailyFee = requestDto.DriverDailyFee ?? 85m;
-                assignedDriverId = await FindAvailableDriverAsync(requestDto.Startdate, requestDto.Enddate);
-                if (!assignedDriverId.HasValue)
-                {
-                    _logger.LogWarning("Booking failed: No available driver found.");
-                    return null;
-                }
->>>>>>> Mahmoud-V3
             }
 
             // 🔹 Validate promocode
@@ -250,7 +161,6 @@ namespace RentACar.Application.Managers
             }
 
             // 🔹 Calculate price
-<<<<<<< HEAD
             decimal subtotal = CalculateTotalPrice(car.PricePerDay ?? 0, requestDto.Startdate, requestDto.Enddate);
             decimal totalPrice = promocode != null ? ApplyPromocode(subtotal, promocode) : subtotal;
 
@@ -286,21 +196,6 @@ namespace RentACar.Application.Managers
                 var allNames = string.Join(", ", (await _paymentMethodRepository.GetAllAsync()).Select(m => m.PaymentMethodName));
                 _logger.LogWarning("Booking failed: MATCH_FAIL ID:{Id} Name:'{Name}'. Available: [{Available}]", requestDto.PaymentMethodId, requestDto.PaymentMethod, allNames);
                 return new BookingCreationResultDto { Success = false, ErrorMessage = "Invalid payment method selected." };
-=======
-            decimal baseSubtotal = CalculateTotalPrice(car.PricePerDay ?? 0, requestDto.Startdate, requestDto.Enddate);
-            decimal driverFeeTotal = requestDto.HasDriver && driverDailyFee.HasValue
-                ? CalculateTotalPrice(driverDailyFee.Value, requestDto.Startdate, requestDto.Enddate)
-                : 0m;
-            decimal subtotal = baseSubtotal + driverFeeTotal;
-            decimal totalPrice = promocode != null ? ApplyPromocode(subtotal, promocode) : subtotal;
-
-            // 🔹 Validate payment method
-            var paymentMethod = await _paymentMethodRepository.GetByIdAsync(requestDto.PaymentMethodId);
-            if (paymentMethod == null)
-            {
-                _logger.LogWarning("Booking failed: Payment method not found.");
-                return null;
->>>>>>> Mahmoud-V3
             }
 
             // 🔹 Set employee booker if employee or admin
@@ -318,7 +213,6 @@ namespace RentACar.Application.Managers
             }
 
             // 🔹 Create booking entity (without payment yet)
-<<<<<<< HEAD
             var initialStatus = BookingStatus.Pending;
 
             // Cash Logic check
@@ -345,8 +239,6 @@ namespace RentACar.Application.Managers
                 }
             }
 
-=======
->>>>>>> Mahmoud-V3
             var booking = new Booking
             {
                 CustomerId = requestDto.CustomerId,
@@ -355,65 +247,29 @@ namespace RentACar.Application.Managers
                 Enddate = requestDto.Enddate,
                 PromocodeId = promocode?.PromocodeId,
                 TotalPrice = totalPrice,
-<<<<<<< HEAD
                 BookingStatus = initialStatus,
                 Subtotal = subtotal,
                 IsBookedByEmployee = isBookedByEmployee,
                 EmployeebookerId = isBookedByEmployee ? employeeBookerIntId : null
             };
 
-=======
-                BookingStatus = "Pending",
-                Subtotal = subtotal,
-                IsBookedByEmployee = isBookedByEmployee,
-                EmployeebookerId = isBookedByEmployee ? employeeBookerIntId : null,
-                HasDriver = requestDto.HasDriver,
-                DriverId = requestDto.HasDriver ? assignedDriverId : null,
-                DriverDailyFee = requestDto.HasDriver ? driverDailyFee : null,
-                PickupAddress = requestDto.PickupAddress,
-                PickupLocationLabel = requestDto.PickupLocationName,
-                PickupDateTime = requestDto.PickupDateTime
-            };
-
-            var requestLat = requestDto.PickupLatitude;
-            var requestLng = requestDto.PickupLongitude;
-
-            if (!requestLat.HasValue || !requestLng.HasValue)
-            {
-                _logger.LogWarning("Pickup pin missing for booking request.");
-                throw new InvalidOperationException("MISSING_PICKUP_PIN");
-            }
-
-            booking.PickupLatitude = requestLat;
-            booking.PickupLongitude = requestLng;
-
-
->>>>>>> Mahmoud-V3
             // Save booking first to generate BookingId
             var addedBooking = await _bookingRepository.AddAsync(booking);
 
             var payableAmount = CalculatePayableAmount(totalPrice, paymentMethod.PaymentMethodName);
 
             // 🔹 Create payment linked to the newly created booking
-<<<<<<< HEAD
             // 🔹 Create payment linked to the newly created booking
             // isCash already defined above
 
-=======
->>>>>>> Mahmoud-V3
             var payment = new Payment
             {
                 BookingId = addedBooking.BookingId,
                 Amount = payableAmount,
                 PaymentDate = DateOnly.FromDateTime(DateTime.UtcNow),
                 PaymentMethod = paymentMethod.PaymentMethodName,
-<<<<<<< HEAD
                 Status = isCash ? PaymentStatus.Paid : PaymentStatus.Pending, 
                 PaymentProvider = isCash ? "Cash" : "Stripe",
-=======
-                Status = "Unpaid",
-                PaymentProvider = "Stripe",
->>>>>>> Mahmoud-V3
                 CreditcardId = paymentMethod.PaymentMethodName.Equals("creditcard", StringComparison.OrdinalIgnoreCase)
                     ? requestDto.CreditcardId
                     : null
@@ -421,7 +277,6 @@ namespace RentACar.Application.Managers
 
             var addedPayment = await _paymentRepository.AddAsync(payment);
 
-<<<<<<< HEAD
             _logger.LogInformation("✅ Booking created with ID: {BookingId} Status: {Status}", addedBooking.BookingId, addedBooking.BookingStatus);
             
             await _auditLogManager.LogEventAsync("Booking.Created", "Booking", addedBooking.BookingId.ToString(), $"Created new booking for Car {addedBooking.CarId}. Status: {addedBooking.BookingStatus}", null, "Success");
@@ -451,31 +306,12 @@ namespace RentACar.Application.Managers
                     _logger.LogWarning("Stripe checkout session missing URL for booking {BookingId}", addedBooking.BookingId);
                 }
                 checkoutUrl = session.CheckoutUrl;
-=======
-            _logger.LogInformation("✅ Booking created with ID: {BookingId}", addedBooking.BookingId);
-            
-            await _auditLogManager.LogEventAsync("Booking.Created", "Booking", addedBooking.BookingId.ToString(), $"Created new booking for Car {addedBooking.CarId}", null, "Success");
-
-            if (addedBooking.HasDriver && addedBooking.DriverId.HasValue)
-            {
-                await _auditLogManager.LogEventAsync("Booking.DriverAssigned", "Booking", addedBooking.BookingId.ToString(), $"Driver {addedBooking.DriverId} assigned to booking.", null, "Success");
-            }
-            
-            var session = await _paymentManager.CreateCheckoutSessionForPaymentAsync(addedPayment);
-            if (string.IsNullOrWhiteSpace(session.CheckoutUrl))
-            {
-                _logger.LogWarning("Stripe checkout session missing URL for booking {BookingId}", addedBooking.BookingId);
->>>>>>> Mahmoud-V3
             }
 
             return new BookingCreationResultDto
             {
                 Booking = _mapper.Map<BookingDto>(addedBooking),
-<<<<<<< HEAD
                 RedirectUrl = checkoutUrl,
-=======
-                RedirectUrl = session.CheckoutUrl,
->>>>>>> Mahmoud-V3
                 PaymentId = addedPayment.PaymentId
             };
         }
@@ -493,60 +329,10 @@ namespace RentACar.Application.Managers
                 return true;
             }
 
-<<<<<<< HEAD
             return !status.Equals(BookingStatus.Completed, StringComparison.OrdinalIgnoreCase)
                 && !status.Equals("Returned", StringComparison.OrdinalIgnoreCase) // Legacy status support
                 && !status.Equals(BookingStatus.Rejected, StringComparison.OrdinalIgnoreCase)
                 && !status.Equals(BookingStatus.Cancelled, StringComparison.OrdinalIgnoreCase);
-=======
-            return !status.Equals("returned", StringComparison.OrdinalIgnoreCase)
-                && !status.Equals("rejected", StringComparison.OrdinalIgnoreCase);
-        }
-
-        private async Task<int?> FindAvailableDriverAsync(DateOnly startDate, DateOnly endDate)
-        {
-            var drivers = await _driverRepository.GetActiveAsync();
-            if (!drivers.Any())
-            {
-                return null;
-            }
-
-            foreach (var driver in drivers)
-            {
-                var identityUser = await _userManager.FindByIdAsync(driver.AspNetUserId);
-                if (identityUser == null || !await _userManager.IsInRoleAsync(identityUser, "Driver"))
-                {
-                    continue;
-                }
-
-                var driverBookings = await _bookingRepository.GetBookingsByDriverIdAsync(driver.DriverId);
-                var hasConflict = driverBookings.Any(b =>
-                    IsBlockingStatus(b.BookingStatus) &&
-                    DatesOverlap(b.Startdate, b.Enddate, startDate, endDate));
-
-                if (hasConflict)
-                {
-                    continue;
-                }
-
-                var availability = await _driverAvailabilityRepository.GetByDriverIdAsync(driver.DriverId);
-                var startDateTime = startDate.ToDateTime(TimeOnly.MinValue);
-                var endDateTime = endDate.ToDateTime(TimeOnly.MaxValue);
-                var isUnavailable = availability.Any(a =>
-                    !a.IsAvailable &&
-                    a.StartDateTime <= endDateTime &&
-                    a.EndDateTime >= startDateTime);
-
-                if (isUnavailable)
-                {
-                    continue;
-                }
-
-                return driver.DriverId;
-            }
-
-            return null;
->>>>>>> Mahmoud-V3
         }
 
         private static decimal CalculatePayableAmount(decimal totalPrice, string? paymentMethodName)
@@ -558,12 +344,8 @@ namespace RentACar.Application.Managers
 
             if (paymentMethodName.Equals("cash", StringComparison.OrdinalIgnoreCase))
             {
-<<<<<<< HEAD
                 // No extra charge for cash anymore
                 return totalPrice;
-=======
-                return Math.Round(totalPrice * 0.30m, 2, MidpointRounding.AwayFromZero);
->>>>>>> Mahmoud-V3
             }
 
             return totalPrice;
@@ -572,14 +354,9 @@ namespace RentACar.Application.Managers
 
         private decimal CalculateTotalPrice(decimal pricePerDay, DateOnly startDate, DateOnly endDate)
         {
-<<<<<<< HEAD
             // +1 to include both start and end dates (e.g., Jan 1 to Jan 3 = 3 days, not 2)
             TimeSpan duration = endDate.ToDateTime(TimeOnly.MinValue) - startDate.ToDateTime(TimeOnly.MinValue);
             return pricePerDay * (decimal)(duration.Days + 1);
-=======
-            TimeSpan duration = endDate.ToDateTime(TimeOnly.MinValue) - startDate.ToDateTime(TimeOnly.MinValue);
-            return pricePerDay * (decimal)duration.Days;
->>>>>>> Mahmoud-V3
         }
 
         private decimal ApplyPromocode(decimal price, Promocode promocode)
@@ -602,15 +379,11 @@ namespace RentACar.Application.Managers
                 return null;
             }
 
-<<<<<<< HEAD
             var oldStatus = booking.BookingStatus;
-=======
->>>>>>> Mahmoud-V3
             _mapper.Map(bookingDto, booking);
             await _bookingRepository.UpdateAsync(booking);
             await _auditLogManager.LogEventAsync("Booking.StatusChanged", "Booking", bookingDto.BookingId.ToString(), $"Updated booking details. Status: {booking.BookingStatus}", null, "Success");
 
-<<<<<<< HEAD
             // 📨 Send Email if Status Changed
             if (oldStatus != booking.BookingStatus) 
             {
@@ -627,8 +400,6 @@ namespace RentACar.Application.Managers
                 }
             }
 
-=======
->>>>>>> Mahmoud-V3
             return _mapper.Map<BookingEditDto>(booking);
         }
 
@@ -639,52 +410,17 @@ namespace RentACar.Application.Managers
             return _mapper.Map<List<BookingDto>>(bookings);
         }
 
-<<<<<<< HEAD
-=======
-        public async Task<bool> UpdateBookingStatusAsync(int bookingId, string status)
-        {
-            var booking = await _bookingRepository.GetBookingByIdAsync(bookingId);
-            if (booking == null)
-            {
-                return false;
-            }
-
-            booking.BookingStatus = status;
-            await _bookingRepository.UpdateAsync(booking);
-
-            await _auditLogManager.LogEventAsync(
-                "Booking.StatusChanged",
-                "Booking",
-                bookingId.ToString(),
-                $"Driver updated status to {status} at {DateTime.UtcNow:O}",
-                null,
-                "Success");
-
-            return true;
-        }
-
->>>>>>> Mahmoud-V3
         public async Task<List<BookingDto>> GetBookingsByEmployeeIdAsync(int employeeId)
         {
             var bookings = await _bookingRepository.GetBookingsByEmployeeIdAsync(employeeId);
             return _mapper.Map<List<BookingDto>>(bookings);
         }
 
-<<<<<<< HEAD
-=======
-        public async Task<List<BookingDto>> GetBookingsByDriverIdAsync(int driverId)
-        {
-            var bookings = await _bookingRepository.GetBookingsByDriverIdAsync(driverId);
-            return _mapper.Map<List<BookingDto>>(bookings);
-        }
-
->>>>>>> Mahmoud-V3
         public async Task<BookingDto?> GetBookingByIdAsync(int bookingId)
         {
             var booking = await _bookingRepository.GetBookingByIdAsync(bookingId);
             return _mapper.Map<BookingDto>(booking);
         }
-<<<<<<< HEAD
         public async Task<IEnumerable<BookingListDto>> GetAllBookingsForListAsync()
         {
             // 1. Fetch Bookings (Projected)
@@ -931,8 +667,6 @@ namespace RentACar.Application.Managers
             };
         }
 
-=======
->>>>>>> Mahmoud-V3
         public async Task<List<BookingDto>> GetAllBookingsAsync()
         {
             var bookings = await _bookingRepository.GetAllAsync();
@@ -943,11 +677,7 @@ namespace RentACar.Application.Managers
             _logger.LogInformation("Deleting booking {Id}", requestDto.BookingId);
 
             var booking = await _bookingRepository.GetBookingByIdAsync(requestDto.BookingId);
-<<<<<<< HEAD
             if (booking == null)
-=======
-            if (booking == null || booking.Startdate <= DateOnly.FromDateTime(DateTime.UtcNow))
->>>>>>> Mahmoud-V3
                 return false;
 
             // 🔍 Fetch payments for this booking
@@ -967,7 +697,6 @@ namespace RentACar.Application.Managers
         }
 
 
-<<<<<<< HEAD
         public async Task<List<string>> GetBookedDatesForCarAsync(int carId, int? year = null, int? month = null)
         {
             var bookings = await _bookingRepository.GetBookingsByCarIdAsync(carId);
@@ -1003,8 +732,6 @@ namespace RentACar.Application.Managers
             return dates.ToList();
         }
 
-=======
->>>>>>> Mahmoud-V3
         public async Task<(DateOnly startDate, DateOnly endDate)> SuggestBookingDatesAsync(int carId)
         {
             var bookings = await _bookingRepository.GetBookingsByCarIdAsync(carId);
@@ -1043,7 +770,6 @@ namespace RentACar.Application.Managers
         {
             return Task.FromResult(true);
         }
-<<<<<<< HEAD
 
         public async Task ProcessOverdueBookingsAsync()
         {
@@ -1080,8 +806,6 @@ namespace RentACar.Application.Managers
                 }
            }
         }
-=======
->>>>>>> Mahmoud-V3
     }
 
     public class BookingProfile : Profile

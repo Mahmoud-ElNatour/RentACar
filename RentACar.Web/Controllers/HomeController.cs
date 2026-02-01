@@ -33,11 +33,7 @@ namespace RentACar.Web.Controllers
         {
             string userRole = string.Empty;
 
-<<<<<<< HEAD
             if (User.Identity?.IsAuthenticated == true)
-=======
-            if (User.Identity.IsAuthenticated)
->>>>>>> Mahmoud-V3
             {
                 var user = await _userManager.GetUserAsync(User);
                 if (user != null)
@@ -73,14 +69,11 @@ namespace RentACar.Web.Controllers
             return View();
         }
 
-<<<<<<< HEAD
         public IActionResult NotFound()
         {
             return View();
         }
 
-=======
->>>>>>> Mahmoud-V3
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {

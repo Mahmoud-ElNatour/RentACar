@@ -22,26 +22,18 @@ namespace RentACar.Application.Managers
 
 
         private readonly AuditLogManager _auditLogManager;
-<<<<<<< HEAD
         private readonly EmailManager _emailManager;
         private readonly EmployeeManager _employeeManager;
 
         public CategoryManager(ICategoryRepository categoryRepository, IMapper mapper, UserManager<IdentityUser> userManager, ILogger<CategoryManager> logger, AuditLogManager auditLogManager, EmailManager emailManager, EmployeeManager employeeManager)
-=======
-
-        public CategoryManager(ICategoryRepository categoryRepository, IMapper mapper, UserManager<IdentityUser> userManager, ILogger<CategoryManager> logger, AuditLogManager auditLogManager)
->>>>>>> Mahmoud-V3
         {
             _categoryRepository = categoryRepository;
             _mapper = mapper;
             _userManager = userManager;
             _logger = logger;
             _auditLogManager = auditLogManager;
-<<<<<<< HEAD
             _emailManager = emailManager;
             _employeeManager = employeeManager;
-=======
->>>>>>> Mahmoud-V3
         }
 
         public async Task<CategoryDto?> AddCategoryAsync(CategoryDto categoryDto, string userId)
@@ -77,12 +69,9 @@ namespace RentACar.Application.Managers
 
             _logger.LogInformation("Category added with id {Id}", categoryEntity.CategoryId);
             await _auditLogManager.LogAsync("Create", "Category", categoryEntity.CategoryId.ToString(), $"Added category: {categoryDto.Name}");
-<<<<<<< HEAD
             var emails = await _employeeManager.GetActiveEmployeeEmailsAsync();
             await _emailManager.SendCategoryUpdateEmail(emails, categoryEntity, "Create", "New Category", "Created", "System/Admin");
 
-=======
->>>>>>> Mahmoud-V3
             return _mapper.Map<CategoryDto>(categoryEntity);
         }
 
@@ -177,7 +166,6 @@ namespace RentACar.Application.Managers
 
             _logger.LogInformation("Category {Id} updated", categoryDto.CategoryId);
             await _auditLogManager.LogAsync("Update", "Category", categoryDto.CategoryId.ToString(), $"Updated category: {categoryDto.Name}");
-<<<<<<< HEAD
             await _categoryRepository.UpdateAsync(existingCategory);
 
             _logger.LogInformation("Category {Id} updated", categoryDto.CategoryId);
@@ -203,8 +191,6 @@ namespace RentACar.Application.Managers
              var emails = await _employeeManager.GetActiveEmployeeEmailsAsync();
              await _emailManager.SendCategoryUpdateEmail(emails, existingCategory, "Update", "IsActive/Details", existingCategory.IsActive.ToString(), "System/Admin");
             
-=======
->>>>>>> Mahmoud-V3
             return _mapper.Map<CategoryDto>(existingCategory);
         }
 
@@ -246,13 +232,10 @@ namespace RentACar.Application.Managers
                 await _auditLogManager.LogAsync("Delete", "Category", id.ToString(), "Hard deleted category");
             }
             
-<<<<<<< HEAD
             // 📨 Send Category Update Email (Delete/Archive)
             var emailsDel = await _employeeManager.GetActiveEmployeeEmailsAsync();
             await _emailManager.SendCategoryUpdateEmail(emailsDel, existingCategory, hasCars ? "Archived" : "Deleted", "Active", hasCars ? "Archived" : "Deleted", "System/Admin");
             
-=======
->>>>>>> Mahmoud-V3
             return true;
         }
         public async Task<bool> DeleteCategoryByNameAsync(string name, string userId)

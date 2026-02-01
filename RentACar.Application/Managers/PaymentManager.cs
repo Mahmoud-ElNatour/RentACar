@@ -12,10 +12,7 @@ using RentACar.Core.Entities;
 using RentACar.Core.Repositories;
 using AspNetUserEntity = RentACar.Core.Entities.AspNetUser;
 using Microsoft.AspNetCore.Http;
-<<<<<<< HEAD
 using RentACar.Core.Constants;
-=======
->>>>>>> Mahmoud-V3
 
 namespace RentACar.Application.Managers
 {
@@ -23,40 +20,26 @@ namespace RentACar.Application.Managers
     {
         private readonly IPaymentRepository _paymentRepository;
         private readonly IBookingRepository _bookingRepository;
-<<<<<<< HEAD
         private readonly IPaymentMethodRepository _paymentMethodRepository;
         private readonly IPromocodeRepository _promocodeRepository; // Added
-=======
-        private readonly ICreditCardRepository _creditCardRepository;
-        private readonly IPaymentMethodRepository _paymentMethodRepository;
->>>>>>> Mahmoud-V3
         private readonly UserManager<IdentityUser> _userManager;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly Services.IStripePaymentService _stripePaymentService;
         private readonly IMapper _mapper;
         private readonly ILogger<PaymentManager> _logger;
         private readonly AuditLogManager _auditLogManager;
-<<<<<<< HEAD
         private readonly EmailManager _emailManager;
-=======
->>>>>>> Mahmoud-V3
 
         public PaymentManager(
             IPaymentRepository paymentRepository,
             IBookingRepository bookingRepository,
-<<<<<<< HEAD
             IPaymentMethodRepository paymentMethodRepository,
             IPromocodeRepository promocodeRepository, // Added
-=======
-            ICreditCardRepository creditCardRepository,
-            IPaymentMethodRepository paymentMethodRepository,
->>>>>>> Mahmoud-V3
             UserManager<IdentityUser> userManager,
             IHttpContextAccessor httpContextAccessor,
             Services.IStripePaymentService stripePaymentService,
             IMapper mapper,
             ILogger<PaymentManager> logger,
-<<<<<<< HEAD
             AuditLogManager auditLogManager,
             EmailManager emailManager)
         {
@@ -64,24 +47,13 @@ namespace RentACar.Application.Managers
             _bookingRepository = bookingRepository;
             _paymentMethodRepository = paymentMethodRepository;
             _promocodeRepository = promocodeRepository; // Added
-=======
-            AuditLogManager auditLogManager)
-        {
-            _paymentRepository = paymentRepository;
-            _bookingRepository = bookingRepository;
-            _creditCardRepository = creditCardRepository;
-            _paymentMethodRepository = paymentMethodRepository;
->>>>>>> Mahmoud-V3
             _userManager = userManager;
             _httpContextAccessor = httpContextAccessor;
             _stripePaymentService = stripePaymentService;
             _mapper = mapper;
             _logger = logger;
             _auditLogManager = auditLogManager;
-<<<<<<< HEAD
             _emailManager = emailManager;
-=======
->>>>>>> Mahmoud-V3
         }
 
         public async Task<MakePaymentResultDto?> MakePaymentByCustomerAsync(MakePaymentRequestDto paymentDto, int customerUserId)
@@ -101,11 +73,7 @@ namespace RentACar.Application.Managers
                     .First();
 
                 // ✅ If already paid, don't redirect
-<<<<<<< HEAD
                 if (string.Equals(latestPayment.Status, PaymentStatus.Paid, StringComparison.OrdinalIgnoreCase))
-=======
-                if (string.Equals(latestPayment.Status, "paid", StringComparison.OrdinalIgnoreCase))
->>>>>>> Mahmoud-V3
                 {
                     var paidDto = _mapper.Map<PaymentDto>(latestPayment);
 
@@ -137,11 +105,7 @@ namespace RentACar.Application.Managers
                     Amount = paymentDto.Amount,
                     PaymentDate = DateOnly.FromDateTime(DateTime.UtcNow),
                     PaymentMethod = paymentMethod.PaymentMethodName,
-<<<<<<< HEAD
                     Status = PaymentStatus.Pending,
-=======
-                    Status = "Unpaid",
->>>>>>> Mahmoud-V3
                     PaymentProvider = "Stripe"
                 };
 
@@ -175,7 +139,6 @@ namespace RentACar.Application.Managers
                     Amount = paymentDto.Amount,
                     PaymentDate = DateOnly.FromDateTime(DateTime.UtcNow),
                     PaymentMethod = paymentMethod.PaymentMethodName,
-<<<<<<< HEAD
                     Status = PaymentStatus.Paid
                 };
                 await _paymentRepository.AddAsync(payment);
@@ -209,12 +172,6 @@ namespace RentACar.Application.Managers
                      await _emailManager.SendPaymentSuccessEmail(custUser.Email, (await _bookingRepository.GetByIdAsync(paymentDto.BookingId)).Customer.Name, payment, await _bookingRepository.GetByIdAsync(paymentDto.BookingId));
                 }
 
-=======
-                    Status = "Paid"
-                };
-                await _paymentRepository.AddAsync(payment);
-                await _auditLogManager.LogEventAsync("Payment.Created", "Payment", payment.PaymentId.ToString(), $"Customer payment of {payment.Amount:C} via {payment.PaymentMethod}", null, "Success");
->>>>>>> Mahmoud-V3
                 var dto = _mapper.Map<PaymentDto>(payment);
                 dto.PaymentMethodId = paymentMethod.Id;
                 return new MakePaymentResultDto
@@ -238,37 +195,20 @@ namespace RentACar.Application.Managers
 
             if (paymentMethod.PaymentMethodName.Equals("creditcard", StringComparison.OrdinalIgnoreCase))
             {
-<<<<<<< HEAD
                 // Credit card payments are now handled via Stripe externally
-=======
-                if (!paymentDto.CreditcardId.HasValue)
-                    return null;
-
-                var creditCard = await _creditCardRepository.GetByIdAsync(paymentDto.CreditcardId.Value);
-                if (creditCard == null)
-                    return null;
-
->>>>>>> Mahmoud-V3
                 var payment = new Payment
                 {
                     BookingId = paymentDto.BookingId,
                     Amount = paymentDto.Amount,
                     PaymentDate = DateOnly.FromDateTime(DateTime.UtcNow),
-<<<<<<< HEAD
                     PaymentMethod = paymentMethod.PaymentMethodName,
                     Status = PaymentStatus.Paid
-=======
-                    CreditcardId = paymentDto.CreditcardId,
-                    PaymentMethod = paymentMethod.PaymentMethodName,
-                    Status = "Paid"
->>>>>>> Mahmoud-V3
                 };
 
                 await _paymentRepository.AddAsync(payment);
 
                 await _auditLogManager.LogEventAsync("Payment.Created", "Payment", payment.PaymentId.ToString(), $"Employee recorded payment of {payment.Amount:C}", null, "Success");
 
-<<<<<<< HEAD
                 // 📨 Send Payment Success Email (Employee Recorded)
                 var booking = await _bookingRepository.GetByIdAsync(paymentDto.BookingId);
                 if (booking != null) {
@@ -280,8 +220,6 @@ namespace RentACar.Application.Managers
                     }
                 }
 
-=======
->>>>>>> Mahmoud-V3
                 var dto = _mapper.Map<PaymentDto>(payment);
                 dto.PaymentMethodId = paymentMethod.Id;
                 return new MakePaymentResultDto
@@ -308,11 +246,7 @@ namespace RentACar.Application.Managers
                     Amount = paymentDto.Amount,
                     PaymentDate = DateOnly.FromDateTime(DateTime.UtcNow),
                     PaymentMethod = paymentMethod.PaymentMethodName,
-<<<<<<< HEAD
                     Status = PaymentStatus.Paid
-=======
-                    Status = "Paid"
->>>>>>> Mahmoud-V3
                 };
 
                 await _paymentRepository.AddAsync(payment);
@@ -336,21 +270,13 @@ namespace RentACar.Application.Managers
                 return false;
             }
 
-<<<<<<< HEAD
             if (string.Equals(payment.Status, PaymentStatus.Paid, StringComparison.OrdinalIgnoreCase))
-=======
-            if (string.Equals(payment.Status, "paid", StringComparison.OrdinalIgnoreCase))
->>>>>>> Mahmoud-V3
             {
                 _logger.LogInformation("Stripe webhook received for already completed payment {PaymentId}", paymentId);
                 return true;
             }
 
-<<<<<<< HEAD
             payment.Status = PaymentStatus.Paid;
-=======
-            payment.Status = "Paid";
->>>>>>> Mahmoud-V3
             payment.PaymentProvider = "Stripe";
             if (!string.IsNullOrWhiteSpace(paymentIntentId))
             {
@@ -367,7 +293,6 @@ namespace RentACar.Application.Managers
             if (booking != null)
             {
                 await UpdateBookingStatusForPaymentAsync(booking, payment.Status);
-<<<<<<< HEAD
                 
                 // 📨 Send Payment Success Email (Stripe Webhook)
                 var cust = booking.Customer;
@@ -376,8 +301,6 @@ namespace RentACar.Application.Managers
                      if (custUser != null)
                           await _emailManager.SendPaymentSuccessEmail(custUser.Email, cust.Name, payment, booking);
                 }
-=======
->>>>>>> Mahmoud-V3
             }
             return true;
         }
@@ -400,7 +323,6 @@ namespace RentACar.Application.Managers
             return _mapper.Map<List<PaymentDto>>(payments);
         }
 
-<<<<<<< HEAD
         public async Task<PaymentResultDto> GetPaymentsAsync(PaymentFilterDto filter)
         {
             // Base query for Counting (No Includes)
@@ -560,8 +482,6 @@ namespace RentACar.Application.Managers
             return query;
         }
 
-=======
->>>>>>> Mahmoud-V3
         public async Task<List<PaymentDetailsDto>> GetAllPaymentsWithDetailsAsync()
         {
             var payments = await _paymentRepository.GetAllWithDetailsAsync();
@@ -626,25 +546,7 @@ namespace RentACar.Application.Managers
                 return null;
             }
 
-<<<<<<< HEAD
             // Credit card validation removed - payments handled via Stripe
-=======
-            if (paymentMethod.PaymentMethodName.Equals("creditcard", StringComparison.OrdinalIgnoreCase) && !dto.CreditcardId.HasValue)
-            {
-                _logger.LogWarning("Credit card payment requires a card id");
-                return null;
-            }
-
-            if (dto.CreditcardId.HasValue)
-            {
-                var card = await _creditCardRepository.GetByIdAsync(dto.CreditcardId.Value);
-                if (card == null)
-                {
-                    _logger.LogWarning("Invalid credit card {CardId} provided", dto.CreditcardId);
-                    return null;
-                }
-            }
->>>>>>> Mahmoud-V3
 
             var payment = new Payment
             {
@@ -707,25 +609,7 @@ namespace RentACar.Application.Managers
                 return null;
             }
 
-<<<<<<< HEAD
             // Credit card validation removed - payments handled via Stripe
-=======
-            if (paymentMethod.PaymentMethodName.Equals("creditcard", StringComparison.OrdinalIgnoreCase) && !dto.CreditcardId.HasValue)
-            {
-                _logger.LogWarning("Credit card payment update requires card id");
-                return null;
-            }
-
-            if (dto.CreditcardId.HasValue)
-            {
-                var card = await _creditCardRepository.GetByIdAsync(dto.CreditcardId.Value);
-                if (card == null)
-                {
-                    _logger.LogWarning("Invalid credit card {CardId} provided for update", dto.CreditcardId);
-                    return null;
-                }
-            }
->>>>>>> Mahmoud-V3
 
             existing.Amount = dto.Amount;
             existing.PaymentDate = dto.PaymentDate;
@@ -758,73 +642,30 @@ namespace RentACar.Application.Managers
 
         private PaymentDetailsDto MapToDetailsDto(Payment payment, IReadOnlyDictionary<string, int>? methodLookup = null)
         {
-<<<<<<< HEAD
-=======
-            int? methodId = null;
-            if (!string.IsNullOrWhiteSpace(payment.PaymentMethod) && methodLookup != null &&
-                methodLookup.TryGetValue(payment.PaymentMethod, out var resolvedId))
-            {
-                methodId = resolvedId;
-            }
-
->>>>>>> Mahmoud-V3
             var subtotal = payment.Booking?.Subtotal;
             var promocode = payment.Booking?.Promocode;
             var discountPercentage = promocode?.DiscountPercentage;
 
-<<<<<<< HEAD
-=======
-            decimal? discountAmount = null;
-            if (discountPercentage.HasValue && subtotal.HasValue)
-            {
-                discountAmount = Math.Round(subtotal.Value * discountPercentage.Value / 100m, 2, MidpointRounding.AwayFromZero);
-            }
-
-            var total = payment.Booking?.TotalPrice;
-            if (!total.HasValue && subtotal.HasValue)
-            {
-                total = discountAmount.HasValue ? subtotal.Value - discountAmount.Value : subtotal.Value;
-            }
-
->>>>>>> Mahmoud-V3
             return new PaymentDetailsDto
             {
                 PaymentId = payment.PaymentId,
                 BookingId = payment.BookingId,
                 Amount = payment.Amount,
                 PaymentDate = payment.PaymentDate,
-<<<<<<< HEAD
-=======
-                CreditcardId = payment.CreditcardId,
->>>>>>> Mahmoud-V3
                 PaymentMethodName = payment.PaymentMethod,
                 Status = payment.Status,
                 PaymentProvider = payment.PaymentProvider,
                 PaymentProviderSessionId = payment.PaymentProviderSessionId,
-<<<<<<< HEAD
                 CustomerName = payment.Booking?.Customer?.Name,
                 CustomerUsername = payment.Booking?.Customer?.User?.UserName,
                 BookingStatus = payment.Booking?.BookingStatus,
                 BookingSubtotal = subtotal,
-=======
-                PaymentProviderPaymentIntentId = payment.PaymentProviderPaymentIntentId,
-                CustomerName = payment.Booking?.Customer?.Name,
-                CustomerUsername = payment.Booking?.Customer?.User?.UserName,
-                BookingStatus = payment.Booking?.BookingStatus,
-                BookingTotal = total,
-                BookingSubtotal = subtotal,
-                BookingDiscountAmount = discountAmount,
->>>>>>> Mahmoud-V3
                 PromocodeName = promocode?.Name,
                 PromocodeDiscountPercentage = discountPercentage,
                 CarModel = payment.Booking?.Car?.ModelName,
                 CarPlateNumber = payment.Booking?.Car?.PlateNumber,
-<<<<<<< HEAD
                 BookingStartDate = payment.Booking?.Startdate,
                 BookingEndDate = payment.Booking?.Enddate
-=======
-                PaymentMethodId = methodId
->>>>>>> Mahmoud-V3
             };
         }
 
@@ -851,18 +692,12 @@ namespace RentACar.Application.Managers
                 return;
             }
 
-<<<<<<< HEAD
             if (paymentStatus.Equals(PaymentStatus.Cancelled, StringComparison.OrdinalIgnoreCase) ||
                 paymentStatus.Equals(PaymentStatus.Pending, StringComparison.OrdinalIgnoreCase))
-=======
-            if (paymentStatus.Equals("cancelled", StringComparison.OrdinalIgnoreCase) ||
-                paymentStatus.Equals("unpaid", StringComparison.OrdinalIgnoreCase))
->>>>>>> Mahmoud-V3
             {
                 return;
             }
 
-<<<<<<< HEAD
             if (paymentStatus.Equals(PaymentStatus.Paid, StringComparison.OrdinalIgnoreCase))
             {
                 // Logic: If Today is start date -> InProgress, Else -> Confirmed
@@ -874,14 +709,6 @@ namespace RentACar.Application.Managers
                 if (string.Equals(booking.BookingStatus, BookingStatus.Pending, StringComparison.OrdinalIgnoreCase))
                 {
                     booking.BookingStatus = newStatus;
-=======
-            if (paymentStatus.Equals("paid", StringComparison.OrdinalIgnoreCase))
-            {
-                const string targetStatus = "Booked";
-                if (!string.Equals(booking.BookingStatus, targetStatus, StringComparison.OrdinalIgnoreCase))
-                {
-                    booking.BookingStatus = targetStatus;
->>>>>>> Mahmoud-V3
                     await _bookingRepository.UpdateAsync(booking);
                 }
             }
@@ -896,16 +723,11 @@ namespace RentACar.Application.Managers
                 return false;
             }
 
-<<<<<<< HEAD
             if (string.Equals(payment.Status, PaymentStatus.Cancelled, StringComparison.OrdinalIgnoreCase))
-=======
-            if (string.Equals(payment.Status, "cancelled", StringComparison.OrdinalIgnoreCase))
->>>>>>> Mahmoud-V3
             {
                 return true;
             }
 
-<<<<<<< HEAD
             payment.Status = PaymentStatus.Cancelled;
             await _paymentRepository.UpdateAsync(payment);
             
@@ -979,16 +801,11 @@ namespace RentACar.Application.Managers
 
             await _auditLogManager.LogEventAsync("Payment.PromocodeApplied", "Payment", paymentId.ToString(), $"Applied promo {promo.Name} ({promo.DiscountPercentage}%) to booking {booking.BookingId}", null, "Success");
 
-=======
-            payment.Status = "Cancelled";
-            await _paymentRepository.UpdateAsync(payment);
->>>>>>> Mahmoud-V3
             return true;
         }
 
         public async Task<StripeCheckoutSessionDto> CreateCheckoutSessionForPaymentAsync(Payment payment)
         {
-<<<<<<< HEAD
             try
             {
                 var session = await CreateStripeCheckoutSessionAsync(payment);
@@ -1020,27 +837,6 @@ namespace RentACar.Application.Managers
                     RawResponse = $"Error: {ex.Message}"
                 };
             }
-=======
-            var session = await CreateStripeCheckoutSessionAsync(payment);
-
-            if (!string.IsNullOrWhiteSpace(session.SessionId))
-            {
-                payment.PaymentProviderSessionId = session.SessionId;
-            }
-
-            if (!string.IsNullOrWhiteSpace(session.PaymentIntentId))
-            {
-                payment.PaymentProviderPaymentIntentId = session.PaymentIntentId;
-            }
-
-            if (!string.IsNullOrWhiteSpace(session.SessionId) || !string.IsNullOrWhiteSpace(session.PaymentIntentId))
-            {
-                payment.PaymentProvider = "Stripe";
-                await _paymentRepository.UpdateAsync(payment);
-            }
-
-            return session;
->>>>>>> Mahmoud-V3
         }
 
         private static string? NormalizePaymentStatus(string? status)

@@ -19,7 +19,6 @@ namespace RentACar.Web.Controllers
         }
 
         [HttpGet("~/Browse")]
-<<<<<<< HEAD
         public async Task<IActionResult> Index(
             string? name = null, 
             [FromQuery] int[]? categoryIds = null, 
@@ -102,30 +101,16 @@ namespace RentACar.Web.Controllers
             {
                 cars = cars.Where(c => c.PricePerDay >= minPrice.Value).ToList();
             }
-=======
-        public async Task<IActionResult> Index(string? name = null, int? categoryId = null, decimal? maxPrice = null, DateOnly? startDate = null, DateOnly? endDate = null)
-        {
-            var categories = await _categoryManager.GetAllCategoriesAsync();
-
-            // Get all filtered cars (without price yet)
-            var cars = await _carManager.SearchCarsByFilterAsync(modelName: name, categoryId: categoryId);
-
-            // Apply price filter here (client-side filter, unless you want to add price param to CarManager too)
->>>>>>> Mahmoud-V3
             if (maxPrice.HasValue)
             {
                 cars = cars.Where(c => c.PricePerDay <= maxPrice.Value).ToList();
             }
 
-<<<<<<< HEAD
             // Apply Date Availability Logic
-=======
->>>>>>> Mahmoud-V3
             if (startDate.HasValue || endDate.HasValue)
             {
                 var start = startDate ?? endDate ?? DateOnly.FromDateTime(DateTime.Today);
                 var end = endDate ?? start;
-<<<<<<< HEAD
                 if (end < start) (start, end) = (end, start);
                 
                 // Fetch unavailable cars in timeline (or available ones)
@@ -161,31 +146,6 @@ namespace RentACar.Web.Controllers
             }
 
             return cars;
-=======
-                if (end < start)
-                {
-                    var temp = start;
-                    start = end;
-                    end = temp;
-                }
-                var available = await _carManager.GetAvailableCarsInTimelineAsync(start.ToDateTime(TimeOnly.MinValue), end.ToDateTime(TimeOnly.MinValue));
-                var availIds = available.Select(c => c.CarId).ToHashSet();
-                cars = cars.Where(c => availIds.Contains(c.CarId)).ToList();
-            }
-
-            var model = new BrowseViewDTO
-            {
-                Cars = cars,
-                Categories = categories,
-                FilterName = name,
-                FilterCategoryId = categoryId,
-                FilterMaxPrice = maxPrice,
-                FilterStartDate = startDate,
-                FilterEndDate = endDate
-            };
-
-            return View(model);
->>>>>>> Mahmoud-V3
         }
 
     }

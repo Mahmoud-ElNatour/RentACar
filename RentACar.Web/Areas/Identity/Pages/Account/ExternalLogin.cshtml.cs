@@ -17,13 +17,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
-<<<<<<< HEAD
 using RentACar.Application.Managers;
 using RentACar.Application.DTOs;
 using System.IO;
 using Microsoft.AspNetCore.Http;
-=======
->>>>>>> Mahmoud-V3
 
 namespace RentACar.Web.Areas.Identity.Pages.Account
 {
@@ -36,22 +33,15 @@ namespace RentACar.Web.Areas.Identity.Pages.Account
         private readonly IUserEmailStore<IdentityUser> _emailStore;
         private readonly IEmailSender _emailSender;
         private readonly ILogger<ExternalLoginModel> _logger;
-<<<<<<< HEAD
         private readonly CustomerManager _customerManager;
-=======
->>>>>>> Mahmoud-V3
 
         public ExternalLoginModel(
             SignInManager<IdentityUser> signInManager,
             UserManager<IdentityUser> userManager,
             IUserStore<IdentityUser> userStore,
             ILogger<ExternalLoginModel> logger,
-<<<<<<< HEAD
             IEmailSender emailSender,
             CustomerManager customerManager)
-=======
-            IEmailSender emailSender)
->>>>>>> Mahmoud-V3
         {
             _signInManager = signInManager;
             _userManager = userManager;
@@ -59,10 +49,7 @@ namespace RentACar.Web.Areas.Identity.Pages.Account
             _emailStore = GetEmailStore();
             _logger = logger;
             _emailSender = emailSender;
-<<<<<<< HEAD
             _customerManager = customerManager;
-=======
->>>>>>> Mahmoud-V3
         }
 
         /// <summary>
@@ -104,7 +91,6 @@ namespace RentACar.Web.Areas.Identity.Pages.Account
             [Required]
             [EmailAddress]
             public string Email { get; set; }
-<<<<<<< HEAD
 
             [Required]
             [Display(Name = "Full Name")]
@@ -133,8 +119,6 @@ namespace RentACar.Web.Areas.Identity.Pages.Account
             [Required]
             [Display(Name = "National ID (Back)")]
             public IFormFile NationalIdBack { get; set; } = default!;
-=======
->>>>>>> Mahmoud-V3
         }
         
         public IActionResult OnGet() => RedirectToPage("./Login");
@@ -182,12 +166,8 @@ namespace RentACar.Web.Areas.Identity.Pages.Account
                 {
                     Input = new InputModel
                     {
-<<<<<<< HEAD
                         Email = info.Principal.FindFirstValue(ClaimTypes.Email),
                         FullName = info.Principal.FindFirstValue(ClaimTypes.Name)
-=======
-                        Email = info.Principal.FindFirstValue(ClaimTypes.Email)
->>>>>>> Mahmoud-V3
                     };
                 }
                 return Page();
@@ -211,10 +191,7 @@ namespace RentACar.Web.Areas.Identity.Pages.Account
 
                 await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
                 await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
-<<<<<<< HEAD
                 user.PhoneNumber = Input.PhoneNumber; // Set phone number on user
-=======
->>>>>>> Mahmoud-V3
 
                 var result = await _userManager.CreateAsync(user);
                 if (result.Succeeded)
@@ -222,7 +199,6 @@ namespace RentACar.Web.Areas.Identity.Pages.Account
                     result = await _userManager.AddLoginAsync(user, info);
                     if (result.Succeeded)
                     {
-<<<<<<< HEAD
                         // ✅ Create Customer Record
                         var customerDto = new CustomerCreateDTO
                         {
@@ -240,8 +216,6 @@ namespace RentACar.Web.Areas.Identity.Pages.Account
                         await _customerManager.CreateCustomerForExternalUser(user, customerDto);
 
 
-=======
->>>>>>> Mahmoud-V3
                         _logger.LogInformation("User created an account using {Name} provider.", info.LoginProvider);
 
                         var userId = await _userManager.GetUserIdAsync(user);
@@ -277,7 +251,6 @@ namespace RentACar.Web.Areas.Identity.Pages.Account
             return Page();
         }
 
-<<<<<<< HEAD
         private async Task<byte[]> ConvertToByteArray(IFormFile file)
         {
             if (file == null) return null;
@@ -286,8 +259,6 @@ namespace RentACar.Web.Areas.Identity.Pages.Account
             return ms.ToArray();
         }
 
-=======
->>>>>>> Mahmoud-V3
         private IdentityUser CreateUser()
         {
             try

@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 @model RentACar.Application.DTOs.BookingDetailsDto
 
 <div class="modal fade" id="bookingDetailsModal" tabindex="-1" aria-hidden="true">
@@ -148,105 +147,10 @@
                                 </div>
                             </div>
                         </div>
-=======
-@model RentACar.Web.Models.BookingDetailsViewModel
-
-<div class="modal fade" id="bookingDetailsModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content dark-modal">
-            <div class="modal-header">
-                <h5 class="modal-title">Booking Details</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <h6 class="text-uppercase text-secondary">Booking</h6>
-                        <dl class="row mb-0">
-                            <dt class="col-sm-5">Booking ID</dt>
-                            <dd class="col-sm-7">@Model.BookingId</dd>
-
-                            <dt class="col-sm-5">Status</dt>
-                            <dd class="col-sm-7">@(!string.IsNullOrWhiteSpace(Model.BookingStatus) ? Model.BookingStatus : "-")</dd>
-
-                            <dt class="col-sm-5">Start Date</dt>
-                            <dd class="col-sm-7">@Model.StartDate.ToString("yyyy-MM-dd")</dd>
-
-                            <dt class="col-sm-5">End Date</dt>
-                            <dd class="col-sm-7">@Model.EndDate.ToString("yyyy-MM-dd")</dd>
-
-                            <dt class="col-sm-5">Subtotal</dt>
-                            <dd class="col-sm-7">@((Model.Subtotal ?? 0).ToString("C"))</dd>
-
-                            <dt class="col-sm-5">Total Price</dt>
-                            <dd class="col-sm-7">@((Model.TotalPrice).ToString("C"))</dd>
-                        </dl>
-                    </div>
-
-                    <div class="col-md-6">
-                        <h6 class="text-uppercase text-secondary">Customer</h6>
-                        <dl class="row mb-0">
-                            <dt class="col-sm-5">Name</dt>
-                            <dd class="col-sm-7">@(!string.IsNullOrWhiteSpace(Model.CustomerName) ? Model.CustomerName : "-")</dd>
-
-                            <dt class="col-sm-5">Username</dt>
-                            <dd class="col-sm-7">@(!string.IsNullOrWhiteSpace(Model.CustomerUsername) ? Model.CustomerUsername : "-")</dd>
-
-                            <dt class="col-sm-5">Email</dt>
-                            <dd class="col-sm-7">@(!string.IsNullOrWhiteSpace(Model.CustomerEmail) ? Model.CustomerEmail : "-")</dd>
-
-                            <dt class="col-sm-5">Phone</dt>
-                            <dd class="col-sm-7">@(!string.IsNullOrWhiteSpace(Model.CustomerPhone) ? Model.CustomerPhone : "-")</dd>
-                        </dl>
-                    </div>
-
-                    <div class="col-md-6">
-                        <h6 class="text-uppercase text-secondary mt-3">Car</h6>
-                        <dl class="row mb-0">
-                            <dt class="col-sm-5">Model</dt>
-                            <dd class="col-sm-7">@(!string.IsNullOrWhiteSpace(Model.CarModel) ? Model.CarModel : "-")</dd>
-
-                            <dt class="col-sm-5">Plate</dt>
-                            <dd class="col-sm-7">@(!string.IsNullOrWhiteSpace(Model.CarPlateNumber) ? Model.CarPlateNumber : "-")</dd>
-
-                            <dt class="col-sm-5">Category</dt>
-                            <dd class="col-sm-7">@(!string.IsNullOrWhiteSpace(Model.CarCategory) ? Model.CarCategory : "-")</dd>
-
-                            <dt class="col-sm-5">Color</dt>
-                            <dd class="col-sm-7">@(!string.IsNullOrWhiteSpace(Model.CarColor) ? Model.CarColor : "-")</dd>
-
-                            <dt class="col-sm-5">Model Year</dt>
-                            <dd class="col-sm-7">@((Model.CarModelYear?.ToString() ?? "-"))</dd>
-
-                            <dt class="col-sm-5">Price / day</dt>
-                            <dd class="col-sm-7">@((Model.CarPricePerDay?.ToString("C") ?? "-"))</dd>
-                        </dl>
-                    </div>
-
-                    <div class="col-md-6">
-                        <h6 class="text-uppercase text-secondary mt-3">Additional</h6>
-                        <dl class="row mb-0">
-                            <dt class="col-sm-5">Booked By</dt>
-                            <dd class="col-sm-7">@(!string.IsNullOrWhiteSpace(Model.EmployeeName) ? Model.EmployeeName : "-")</dd>
-
-                            <dt class="col-sm-5">Payment</dt>
-                            <dd class="col-sm-7">@((Model.PaymentId.HasValue ? $"#{Model.PaymentId}" : "-"))</dd>
-
-                            <dt class="col-sm-5">Paid Amount</dt>
-                            <dd class="col-sm-7">@((Model.PaymentAmount?.ToString("C") ?? "-"))</dd>
-
-                            <dt class="col-sm-5">Promocode</dt>
-                            <dd class="col-sm-7">@(!string.IsNullOrWhiteSpace(Model.PromocodeName) ? Model.PromocodeName : "-")</dd>
-
-                            <dt class="col-sm-5">Discount</dt>
-                            <dd class="col-sm-7">@((Model.PromocodeDiscount.HasValue ? $"{Model.PromocodeDiscount.Value}%" : "-"))</dd>
-                        </dl>
->>>>>>> Mahmoud-V3
                     </div>
                 </div>
             </div>
 
-<<<<<<< HEAD
             <!-- Footer -->
             <div class="modal-footer border-t border-white/5 p-4 bg-[#1a1a1a] flex justify-end gap-3">
                 <button onclick="loadModal('/Booking/Edit/@Model.BookingId')" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-bold text-sm transition-colors shadow-lg shadow-blue-500/20 flex items-center gap-2">
@@ -261,22 +165,7 @@
                     <span class="material-symbols-outlined text-[18px]">print</span> Print Contract
                 </a>
                 <button type="button" class="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg font-bold text-sm transition-colors border border-white/10" data-bs-dismiss="modal">Close</button>
-=======
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
->>>>>>> Mahmoud-V3
             </div>
         </div>
     </div>
 </div>
-<<<<<<< HEAD
-=======
-
-<script>
-    (function () {
-        const modalElement = document.getElementById('bookingDetailsModal');
-        modalElement.addEventListener('hidden.bs.modal', () => modalElement.remove(), { once: true });
-        new bootstrap.Modal(modalElement).show();
-    })();
-</script>
->>>>>>> Mahmoud-V3

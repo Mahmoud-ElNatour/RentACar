@@ -83,7 +83,6 @@ namespace RentACar.Web.Controllers
         }
 
         [HttpGet]
-<<<<<<< HEAD
         [Authorize(Roles = "Admin,Employee")]
         public async Task<ActionResult<PagedResultDto<CarListDto>>> GetFilteredCars(
             [FromQuery] string? name, 
@@ -105,14 +104,6 @@ namespace RentACar.Web.Controllers
                 _logger.LogError(ex, "Failed to load cars paged");
                 return StatusCode(500, new { message = ex.Message, stack = ex.StackTrace, inner = ex.InnerException?.Message });
             }
-=======
-        public async Task<ActionResult<IEnumerable<CarListDto>>> Get([FromQuery] string? name, [FromQuery] int? categoryId, [FromQuery] bool? available)
-        {
-            _logger.LogInformation("📥 [Get] Querying cars - Name: {Name}, CategoryId: {CategoryId}, Available: {Available}", name, categoryId, available);
-            var carDtos = await _carManager.SearchCarsForListAsync(name, null, categoryId, available);
-            _logger.LogInformation("📦 [Get] Retrieved {Count} cars", carDtos.Count);
-            return Ok(carDtos);
->>>>>>> Mahmoud-V3
         }
 
         [HttpGet("Image/{id}")]
@@ -187,30 +178,9 @@ namespace RentACar.Web.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             _logger.LogInformation("🗑️ [Delete] Request to delete car ID {Id}", id);
-<<<<<<< HEAD
             await _carManager.DeleteCarAsync(id);
             _logger.LogInformation("✅ [Delete] Car processed (Deleted or Deactivated)", id);
             return NoContent();
-=======
-            try
-            {
-                await _carManager.DeleteCarAsync(id);
-                _logger.LogInformation("✅ [Delete] Car ID {Id} deleted successfully", id);
-                return NoContent();
-            }
-            catch (DbUpdateException ex)
-            {
-                _logger.LogError(ex, "Database constraint prevented deleting car {Id}", id);
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    "Unable to delete car because related records exist. Remove the related data before deleting the car.");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Unexpected error while deleting car {Id}", id);
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    "An unexpected error occurred while deleting the car. Please try again later.");
-            }
->>>>>>> Mahmoud-V3
         }
 
         private async Task PopulateCategories()

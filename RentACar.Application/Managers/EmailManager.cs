@@ -6,10 +6,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using RentACar.Core.Repositories;
 using RentACar.Infrastructure.Data;
-<<<<<<< HEAD
 using RentACar.Core.Entities;
-=======
->>>>>>> Mahmoud-V3
 
 namespace RentACar.Application.Managers
 {
@@ -17,19 +14,14 @@ namespace RentACar.Application.Managers
     {
         private readonly IEmailService _emailService;
         private readonly RentACarDbContext _dbContext;
-<<<<<<< HEAD
         private readonly ApplicationDbContext _appDbContext; // Added for FeatureConfig
         private readonly UserManager<IdentityUser> _userManager;
         private readonly AuditLogManager _auditLogManager;
         private readonly EmailTemplateManager _templateManager;
-=======
-        private readonly UserManager<IdentityUser> _userManager;
->>>>>>> Mahmoud-V3
 
         public EmailManager(
             IEmailService emailService,
             RentACarDbContext dbContext,
-<<<<<<< HEAD
             ApplicationDbContext appDbContext,
             UserManager<IdentityUser> userManager,
             AuditLogManager auditLogManager,
@@ -394,26 +386,6 @@ namespace RentACar.Application.Managers
             foreach (var customer in unverified)
             {
                 if(await SendReminderToCustomerAsync(customer.UserId)) count++;
-=======
-            UserManager<IdentityUser> userManager)
-        {
-            _emailService = emailService;
-            _dbContext = dbContext;
-            _userManager = userManager;
-        }
-
-        public async Task<int> SendReminderToAllUnverifiedAsync()
-        {
-            var unverified = await _dbContext.Customers
-                .Where(c => !c.IsVerified)
-                .ToListAsync();
-
-            int count = 0;
-            foreach (var customer in unverified)
-            {
-                var sent = await SendReminderToCustomerAsync(customer.UserId);
-                if (sent) count++;
->>>>>>> Mahmoud-V3
             }
             return count;
         }
@@ -426,7 +398,6 @@ namespace RentACar.Application.Managers
             var user = await _userManager.FindByIdAsync(customer.aspNetUserId);
             if (user != null && !string.IsNullOrEmpty(user.Email))
             {
-<<<<<<< HEAD
                  var placeholders = new Dictionary<string, string>
                  {
                      { "CustomerName", customer.Name },
@@ -438,23 +409,10 @@ namespace RentACar.Application.Managers
 
                  // Feature Key: UnverifiedDocsReminder
                  return await SendTemplatedEmailAsync(user.Email, "UnverifiedDocsReminder", "REM-UNVERIFIED-DOCS", placeholders, "Action Required: Verify Account", fallback, "Unverified Reminder");
-=======
-                try
-                {
-                    await SendEmailInternalAsync(user.Email, customer.Name);
-                    return true;
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error sending email to {user.Email}: {ex.Message}");
-                    return false;
-                }
->>>>>>> Mahmoud-V3
             }
             return false;
         }
 
-<<<<<<< HEAD
         public async Task SendPaymentFailedEmail(string email, string customerName, int bookingId, decimal amount)
         {
             var placeholders = new Dictionary<string, string>
@@ -597,132 +555,6 @@ namespace RentACar.Application.Managers
         public async Task<EmailLog> GetEmailLogAsync(int id)
         {
             return await _dbContext.EmailLogs.FindAsync(id);
-=======
-        private async Task SendEmailInternalAsync(string email, string name)
-        {
-            var subject = "Action Required: Verify Your RentACar Account";
-            var bodyContent = $@"
-                <h2>Verify Account</h2>
-                <p>Hello {name},</p>
-                <p>We noticed you haven't verified your account properly (e.g., missing ID or documentation).</p>
-                <p>Please log in to your dashboard and complete your profile to start booking cars.</p>
-                <p>Please log in to your dashboard and complete your profile to start booking cars.</p>
-                <a href='http://rentacarmohammadmahmoud.shop/Dashboard/Customer' class='btn' style='display: inline-block; padding: 12px 24px; background-color: #d4af37; color: #000000; text-decoration: none; border-radius: 4px; font-weight: bold; margin-top: 20px;'>Go to Dashboard</a>
-                <br><br>
-                <p>Best Regards,<br>RentACar Team</p>";
-
-            var message = EmailTemplates.GetStandardTemplate(bodyContent, "Action Required");
-
-            await _emailService.SendEmailAsync(email, subject, message);
-        }
-
-    public async Task<bool> SendOtpEmailAsync(string email, string otp, string name)
-        {
-            var bodyContent = $@"
-                <h2>Security Verification</h2>
-                <p>Hello {name},</p>
-                <p>You requested to change your password or security settings.</p>
-                <p>Please use the following One-Time Password (OTP) to complete the verification:</p>
-                <div style='text-align:center; padding: 20px;'>
-                    <span style='font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #d4af37;'>{otp}</span>
-                </div>
-                <p>This code is valid for 5 minutes. Do not share this code with anyone.</p>
-                <br>
-                <p>If you did not request this code, please ignore this email.</p>";
-
-            var message = EmailTemplates.GetStandardTemplate(bodyContent, "Verification Code");
-            
-            try
-            {
-                await _emailService.SendEmailAsync(email, "Your Verification Code", message);
-                return true;
-            }
-            catch (Exception ex)
-            {
-                // Log exception
-                Console.WriteLine($"Error sending OTP: {ex.Message}");
-                return false;
-            }
-        }
-
-        public async Task<bool> SendForgotPasswordEmailAsync(string email, string callbackUrl, string name = "User")
-        {
-            var bodyContent = $@"
-                <h2>Reset Your Password</h2>
-                <p>Hello {name},</p>
-                <p>We received a request to reset your password.</p>
-                <p>Please click the button below to reset your password:</p>
-                <a href='{callbackUrl}' class='btn' style='display: inline-block; padding: 12px 24px; background-color: #d4af37; color: #000000; text-decoration: none; border-radius: 4px; font-weight: bold; margin-top: 20px;'>Reset Password</a>
-                <br><br>
-                <p>If you did not request a password reset, you can safely ignore this email.</p>";
-
-            var message = EmailTemplates.GetStandardTemplate(bodyContent, "Reset Password");
-
-            try
-            {
-                await _emailService.SendEmailAsync(email, "Reset Password", message);
-                return true;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error sending Forgot Password email: {ex.Message}");
-                return false;
-            }
-        }
-
-        public async Task<bool> SendConfirmationEmailAsync(string email, string callbackUrl, string name = "User")
-        {
-            var bodyContent = $@"
-                <h2>Confirm Your Email</h2>
-                <p>Hello {name},</p>
-                <p>Thank you for registering with RentACar.</p>
-                <p>Please confirm your account by clicking the button below:</p>
-                <a href='{callbackUrl}' class='btn' style='display: inline-block; padding: 12px 24px; background-color: #d4af37; color: #000000; text-decoration: none; border-radius: 4px; font-weight: bold; margin-top: 20px;'>Confirm Account</a>
-                <br><br>
-                <p>If you did not create an account, no further action is required.</p>";
-
-            var message = EmailTemplates.GetStandardTemplate(bodyContent, "Confirm Your Email");
-
-            try
-            {
-                await _emailService.SendEmailAsync(email, "Confirm Your Email", message);
-                return true;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error sending Confirmation email: {ex.Message}");
-                return false;
-            }
-        }
-        public async Task<bool> SendRecoveryCodesEmailAsync(string email, IEnumerable<string> codes, string name = "User")
-        {
-            var codesList = string.Join("</div><div style='padding:10px; border:1px solid #444; margin:5px; display:inline-block; font-family:monospace; color:#d4af37; background:#222; border-radius:4px;'>", codes);
-            codesList = $"<div style='text-align:center; padding: 20px;'><div style='padding:10px; border:1px solid #444; margin:5px; display:inline-block; font-family:monospace; color:#d4af37; background:#222; border-radius:4px;'>{codesList}</div></div>";
-
-            var bodyContent = $@"
-                <h2>New Recovery Codes</h2>
-                <p>Hello {name},</p>
-                <p>You have generated a new set of recovery codes for your RentACar account.</p>
-                <p><strong>These codes are the only way to access your account if you lose your 2FA device.</strong></p>
-                <p>Keep them safe and secure.</p>
-                {codesList}
-                <p><strong>Note:</strong> Generating these codes has invalidated any previous codes you may have saved.</p>
-                <br>
-                <p>If you did not perform this action, please secure your account immediately.</p>";
-
-            var message = EmailTemplates.GetStandardTemplate(bodyContent, "Recovery Codes");
-
-            try
-            {
-                await _emailService.SendEmailAsync(email, "New Recovery Codes", message);
-                return true;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error sending Recovery Codes email: {ex.Message}");
-                return false;
-            }
->>>>>>> Mahmoud-V3
         }
     }
 }

@@ -4,12 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 using RentACar.Application.DTOs;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-<<<<<<< HEAD
 using RentACar.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Linq; // Ensure LINQ is available
-=======
->>>>>>> Mahmoud-V3
 
 namespace RentACar.Web.Controllers
 {
@@ -22,19 +19,13 @@ namespace RentACar.Web.Controllers
         private readonly UserManager<IdentityUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly ILogger<ControlPanelController> _logger;
-<<<<<<< HEAD
         private readonly RentACarDbContext _context;
 
         public ControlPanelController(UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager, ILogger<ControlPanelController> logger, RentACarDbContext context)
-=======
-
-        public ControlPanelController(UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager, ILogger<ControlPanelController> logger)
->>>>>>> Mahmoud-V3
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _logger = logger;
-<<<<<<< HEAD
             _context = context;
         }
 
@@ -209,11 +200,6 @@ namespace RentACar.Web.Controllers
 
         [HttpGet("~/ControlPanel")]
         [Authorize(Roles = "Admin,Employee")]
-=======
-        }
-
-        [HttpGet("~/ControlPanel")]
->>>>>>> Mahmoud-V3
         [ApiExplorerSettings(IgnoreApi = true)]
         public IActionResult Index()
         {
@@ -229,10 +215,7 @@ namespace RentACar.Web.Controllers
         }
 
 
-<<<<<<< HEAD
 
-=======
->>>>>>> Mahmoud-V3
         [HttpPost("ChangeRole")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> ChangeRole([FromBody] ChangeRoleDTO model)

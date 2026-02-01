@@ -56,7 +56,6 @@ namespace RentACar.Web.Controllers
                 using var document = JsonDocument.Parse(payload);
                 var root = document.RootElement;
                 var eventType = root.GetProperty("type").GetString();
-<<<<<<< HEAD
                 if (string.Equals(eventType, "checkout.session.completed", StringComparison.OrdinalIgnoreCase) ||
                     string.Equals(eventType, "payment_intent.succeeded", StringComparison.OrdinalIgnoreCase))
                 {
@@ -78,9 +77,6 @@ namespace RentACar.Web.Controllers
                     return Ok();
                 }
                 else
-=======
-                if (!string.Equals(eventType, "checkout.session.completed", StringComparison.OrdinalIgnoreCase))
->>>>>>> Mahmoud-V3
                 {
                     return Ok();
                 }
@@ -117,7 +113,6 @@ namespace RentACar.Web.Controllers
 
         [HttpGet("Success")]
         [AllowAnonymous]
-<<<<<<< HEAD
         public async Task<IActionResult> Success(string session_id)
         {
             if (string.IsNullOrWhiteSpace(session_id))
@@ -171,10 +166,6 @@ namespace RentACar.Web.Controllers
                 _logger.LogError(ex, "Error processing Stripe success for session {SessionId}", session_id);
             }
 
-=======
-        public IActionResult Success()
-        {
->>>>>>> Mahmoud-V3
             return View("~/Views/Stripe/Success.cshtml");
         }
 
