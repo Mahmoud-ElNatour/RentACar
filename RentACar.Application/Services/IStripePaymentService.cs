@@ -14,10 +14,6 @@ namespace RentACar.Application.Services
             string payload,
             string signatureHeader,
             int toleranceSeconds = 300);
-<<<<<<< HEAD
-
         Task<StripeCheckoutSessionDto> GetSessionAsync(string sessionId, CancellationToken cancellationToken = default);
-=======
->>>>>>> Mahmoud-V3
     }
 }

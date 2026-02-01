@@ -20,8 +20,7 @@ public partial class Payment
     [Column("paymentDate")]
     public DateOnly PaymentDate { get; set; }
 
-    [Column("creditcardID")]
-    public int? CreditcardId { get; set; }
+
 
     [Column("paymentMethod")]
     [StringLength(20)]

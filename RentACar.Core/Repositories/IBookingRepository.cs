@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,10 +12,7 @@ namespace RentACar.Core.Repositories
     {
         Task<Booking> GetBookingByIdAsync(int id);
         Task<List<Booking>> GetBookingsByEmployeeIdAsync(int employeeId);
-<<<<<<< HEAD
-=======
         Task<List<Booking>> GetBookingsByDriverIdAsync(int driverId);
->>>>>>> Mahmoud-V3
         Task<List<Booking>> GetBookingsByCustomerIdAsync(int customerId);
         Task<List<Booking>> GetBookingsByCarIdAsync(int carId);
         Task<List<Booking>> GetBookingsBetweenDatesAsync(DateOnly startDate, DateOnly endDate);

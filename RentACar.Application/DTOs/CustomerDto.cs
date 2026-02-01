@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace RentACar.Application.DTOs
 {
@@ -25,8 +25,6 @@ namespace RentACar.Application.DTOs
         [Required]
         [MaxLength(50)]
         public string Name { get; set; }
-
-<<<<<<< HEAD
         public string? Address { get; set; }
 
         public byte[]? DrivingLicenseFront { get; set; }
@@ -41,28 +39,6 @@ namespace RentACar.Application.DTOs
         public string Email { get; set; }
         
         public string? Username { get; set; }
-=======
-        public string Address { get; set; }
-
-        [Required]
-        public byte[] DrivingLicenseFront { get; set; }
-
-        [Required]
-        public byte[] DrivingLicenseBack { get; set; }
-
-        [Required]
-        public byte[] NationalIdfront { get; set; }
-
-        [Required]
-        public byte[] NationalIdback { get; set; }
-
-        [Required]
-        public string Email { get; set; }
-
-        
-        public string Username { get; set; }
->>>>>>> Mahmoud-V3
-
         [Required]
         public string PhoneNumber { get; set; }
 

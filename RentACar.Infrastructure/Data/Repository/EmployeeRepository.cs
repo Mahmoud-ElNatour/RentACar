@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -41,41 +41,35 @@ namespace RentACar.Infrastructure.Repositories
 
         public async Task UpdateAsync(Employee employee)
         {
-<<<<<<< HEAD
             if (_dbContext.Entry(employee).State == EntityState.Detached)
             {
                 _dbContext.Employees.Attach(employee);
             }
-=======
->>>>>>> Mahmoud-V3
             _dbContext.Entry(employee).State = EntityState.Modified;
             await _dbContext.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(int id)
         {
-            var employee = await _dbContext.Set<Employee>().FindAsync(id);
+            var employee = await _dbContext.Employees.FindAsync(id);
             if (employee != null)
             {
-                _dbContext.Set<Employee>().Remove(employee);
+                _dbContext.Employees.Remove(employee);
                 await _dbContext.SaveChangesAsync();
             }
         }
 
-        public async Task<Employee?> GetByIdAsync(string aspNetUserId)
-        {
-            return await _dbContext.Set<Employee>()
-                                   .Include(e => e.User)
-                                   .Include(e => e.BlackLists)
-                                   .FirstOrDefaultAsync(c => c.aspNetUserId == aspNetUserId);
-        }
-<<<<<<< HEAD
-
         public IQueryable<Employee> Query()
         {
-            return _dbContext.Set<Employee>().AsQueryable();
+            return _dbContext.Employees;
         }
-=======
->>>>>>> Mahmoud-V3
+
+        public async Task<Employee?> GetByIdAsync(string id)
+        {
+            return await _dbContext.Employees
+                .Include(e => e.User)
+                .Include(e => e.BlackLists)
+                .FirstOrDefaultAsync(e => e.aspNetUserId == id);
+        }
     }
 }

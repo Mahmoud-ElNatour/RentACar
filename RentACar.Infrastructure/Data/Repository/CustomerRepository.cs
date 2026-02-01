@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -10,14 +10,13 @@ namespace RentACar.Infrastructure.Repositories
 {
     public class CustomerRepository : ICustomerRepository
     {
-        private readonly RentACarDbContext _dbContext; // Replace with your actual DbContext
+        private readonly RentACarDbContext _dbContext;
 
         public CustomerRepository(RentACarDbContext dbContext)
         {
             _dbContext = dbContext;
         }
-<<<<<<< HEAD
-=======
+
         public async Task<List<Customer>> GetByIdsAsync(List<int> ids)
         {
             if (ids == null || ids.Count == 0) return new List<Customer>();
@@ -28,13 +27,19 @@ namespace RentACar.Infrastructure.Repositories
                 .Where(c => ids.Contains(c.UserId))
                 .ToListAsync();
         }
->>>>>>> Mahmoud-V3
 
         public async Task<Customer?> GetByIdAsync(int id)
         {
             return await _dbContext.Set<Customer>()
                                    .Include(c => c.User)
                                    .FirstOrDefaultAsync(c => c.UserId == id);
+        }
+
+        public async Task<Employee?> GetEmployeeByIdAsync(int id)
+        {
+             // Not part of ICustomerRepository but maybe referenced? 
+             // Ignoring unless needed.
+             return null;
         }
 
         public async Task<List<Customer>> GetAllAsync()
@@ -52,29 +57,19 @@ namespace RentACar.Infrastructure.Repositories
                                    .ToListAsync();
         }
 
-<<<<<<< HEAD
         public IQueryable<Customer> Query()
         {
             return _dbContext.Set<Customer>();
         }
 
-=======
->>>>>>> Mahmoud-V3
         public async Task AddAsync(Customer customer)
         {
-            await _dbContext.Set<Customer>().AddAsync(customer);
-            await _dbContext.SaveChangesAsync();
+             await _dbContext.Set<Customer>().AddAsync(customer);
+             await _dbContext.SaveChangesAsync();
         }
 
         public async Task UpdateAsync(Customer customer)
         {
-<<<<<<< HEAD
-            if (_dbContext.Entry(customer).State == EntityState.Detached)
-            {
-                _dbContext.Customers.Attach(customer);
-            }
-=======
->>>>>>> Mahmoud-V3
             _dbContext.Entry(customer).State = EntityState.Modified;
             await _dbContext.SaveChangesAsync();
         }
@@ -95,19 +90,6 @@ namespace RentACar.Infrastructure.Repositories
                                            .Include(c => c.User)
                                            .FirstOrDefaultAsync(c => c.aspNetUserId == aspNetUserId);
             return customer;
-        }
-
-
-        public async Task DeleteAsync(String aspNetUserId)
-        {
-            var customer = await _dbContext.Set<Customer>()
-                                           .FirstOrDefaultAsync(c => c.aspNetUserId == aspNetUserId);
-            if (customer != null)
-            {
-                _dbContext.Set<Customer>().Remove(customer);
-                await _dbContext.SaveChangesAsync();
-            }
-
         }
     }
 }

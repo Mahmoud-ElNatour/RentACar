@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -553,7 +553,6 @@ namespace RentACar.Application.Managers
                 BookingId = dto.BookingId,
                 Amount = dto.Amount,
                 PaymentDate = dto.PaymentDate,
-                CreditcardId = dto.CreditcardId,
                 PaymentMethod = paymentMethod.PaymentMethodName,
                 Status = NormalizePaymentStatus(dto.Status),
                 PaymentProvider = dto.PaymentProvider,
@@ -613,7 +612,6 @@ namespace RentACar.Application.Managers
 
             existing.Amount = dto.Amount;
             existing.PaymentDate = dto.PaymentDate;
-            existing.CreditcardId = dto.CreditcardId;
             existing.PaymentMethod = paymentMethod.PaymentMethodName;
             existing.Status = NormalizePaymentStatus(dto.Status);
             existing.PaymentProvider = dto.PaymentProvider;

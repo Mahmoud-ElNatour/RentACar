@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -47,14 +47,10 @@ namespace RentACar.Infrastructure.Data.Repository
             return await _dbContext.Bookings.Where(b => b.EmployeebookerId == employeeId).ToListAsync();
         }
 
-<<<<<<< HEAD
-=======
         public async Task<List<Booking>> GetBookingsByDriverIdAsync(int driverId)
         {
             return await _dbContext.Bookings.Where(b => b.DriverId == driverId).ToListAsync();
         }
-
->>>>>>> Mahmoud-V3
         public async Task UpdateCarAvailabilityAsync(int carId, bool isAvailable)
         {
             var car = await _dbContext.Cars.FindAsync(carId);

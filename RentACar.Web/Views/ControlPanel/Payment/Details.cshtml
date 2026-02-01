@@ -2,11 +2,11 @@
 @{
     ViewData["Title"] = "Payment Details";
     Layout = null;
-    decimal? discountAmount = Model.BookingDiscountAmount;
-    if (!discountAmount.HasValue && Model.BookingSubtotal.HasValue && Model.BookingTotal.HasValue)
-    {
-        discountAmount = Model.BookingSubtotal.Value - Model.BookingTotal.Value;
-    }
+    // decimal? discountAmount = Model.BookingDiscountAmount;
+    // if (!discountAmount.HasValue && Model.BookingSubtotal.HasValue && Model.BookingTotal.HasValue)
+    // {
+    //     discountAmount = Model.BookingSubtotal.Value - Model.BookingTotal.Value;
+    // }
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -55,8 +55,8 @@
                 <p class="mb-1"><strong>Subtotal:</strong> @(Model.BookingSubtotal?.ToString("F2") ?? "-")</p>
                 <p class="mb-1"><strong>Promo Code:</strong> @(string.IsNullOrWhiteSpace(Model.PromocodeName) ? "-" : Model.PromocodeName)</p>
                 <p class="mb-1"><strong>Discount (%):</strong> @(Model.PromocodeDiscountPercentage.HasValue ? Model.PromocodeDiscountPercentage.Value.ToString("F2") + "%" : "-")</p>
-                <p class="mb-1"><strong>Discount Amount:</strong> @(discountAmount.HasValue ? discountAmount.Value.ToString("F2") : "-")</p>
-                <p class="mb-1"><strong>Total:</strong> @(Model.BookingTotal?.ToString("F2") ?? "-")</p>
+                <p class="mb-1"><strong>Discount Amount:</strong> -</p>
+                @* <p class="mb-1"><strong>Total:</strong> @(Model.BookingTotal?.ToString("F2") ?? "-")</p> *@
                 <p class="mb-1"><strong>Car:</strong> @Model.CarModel @if (!string.IsNullOrEmpty(Model.CarPlateNumber)){<text>(@Model.CarPlateNumber)</text>}</p>
             </div>
         </div>

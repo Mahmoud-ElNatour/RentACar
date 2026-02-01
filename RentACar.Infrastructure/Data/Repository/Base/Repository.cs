@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -18,14 +18,10 @@ namespace RentACar.Infrastructure.Data.Repository.Base
             _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
         }
 
-<<<<<<< HEAD
         public IQueryable<T> Query()
         {
             return _dbContext.Set<T>();
         }
-
-=======
->>>>>>> Mahmoud-V3
         public async Task<IReadOnlyList<T>> GetAllAsync()
         {
             return await _dbContext.Set<T>().ToListAsync();

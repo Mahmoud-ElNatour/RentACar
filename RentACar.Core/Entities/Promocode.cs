@@ -1,4 +1,4 @@
-﻿    using System;
+    using System;
     using System.Collections.Generic;
     using System.ComponentModel.DataAnnotations;
     using System.ComponentModel.DataAnnotations.Schema;
@@ -29,10 +29,6 @@
 
         [InverseProperty("Promocode")]
         public virtual ICollection<Booking> Bookings { get; set; } = new List<Booking>();
-<<<<<<< HEAD
-
         [Column("isExpiredNotificationSent")]
         public bool IsExpiredNotificationSent { get; set; }
-=======
->>>>>>> Mahmoud-V3
     }

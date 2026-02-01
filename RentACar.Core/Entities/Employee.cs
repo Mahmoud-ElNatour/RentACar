@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -38,11 +38,7 @@ public partial class Employee
 
     [InverseProperty("Employeebooker")]
     public virtual ICollection<Booking> Bookings { get; set; } = new List<Booking>();
-<<<<<<< HEAD
-}
-=======
 
     [InverseProperty("Employee")]
     public virtual Driver? Driver { get; set; }
 }
->>>>>>> Mahmoud-V3

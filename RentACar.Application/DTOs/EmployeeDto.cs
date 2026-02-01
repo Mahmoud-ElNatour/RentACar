@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 namespace RentACar.Application.DTOs
@@ -27,8 +27,6 @@ namespace RentACar.Application.DTOs
         public string username { get; set; } = null!;
 
         public string? PhoneNumber { get; set; }
-<<<<<<< HEAD
-=======
 
         public List<string> Roles { get; set; } = new();
 
@@ -45,7 +43,6 @@ namespace RentACar.Application.DTOs
         public bool DriverIsActive { get; set; } = true;
         public DateTime? DriverCreatedAt { get; set; }
         public DateTime? DriverUpdatedAt { get; set; }
->>>>>>> Mahmoud-V3
     }
 
 
@@ -68,22 +65,6 @@ namespace RentACar.Application.DTOs
         public string Password { get; set; } = null!;
 
         public string? PhoneNumber { get; set; }
-<<<<<<< HEAD
-=======
-
-        public List<string> Roles { get; set; } = new();
-
-        public string? DriverCode { get; set; }
-        public string? DriverFullName { get; set; }
-        public string? DriverPhone { get; set; }
-        public string? DriverEmail { get; set; }
-        public decimal? DriverRating { get; set; }
-        public string? DriverLicenseNumber { get; set; }
-        public DateOnly? DriverLicenseExpiry { get; set; }
-        public string? DriverLanguages { get; set; }
-        public string? DriverNotes { get; set; }
-        public bool DriverIsActive { get; set; } = true;
->>>>>>> Mahmoud-V3
     }
 
     public class EmployeeDisplayDto
@@ -95,27 +76,7 @@ namespace RentACar.Application.DTOs
         public decimal? Salary { get; set; }
         public string? Address { get; set; }
         public bool IsActive { get; set; }
-<<<<<<< HEAD
         public string Role { get; set; } = "Unknown";
     }
 
 }
-=======
-        public List<string> Roles { get; set; } = new();
-        public bool IsDriver { get; set; }
-        public int? DriverId { get; set; }
-        public string? DriverCode { get; set; }
-        public string? DriverFullName { get; set; }
-        public string? DriverPhone { get; set; }
-        public string? DriverEmail { get; set; }
-        public decimal? DriverRating { get; set; }
-        public string? DriverLicenseNumber { get; set; }
-        public DateOnly? DriverLicenseExpiry { get; set; }
-        public string? DriverLanguages { get; set; }
-        public bool DriverIsActive { get; set; } = true;
-        public DateTime? DriverCreatedAt { get; set; }
-        public DateTime? DriverUpdatedAt { get; set; }
-    }
-
-}
->>>>>>> Mahmoud-V3

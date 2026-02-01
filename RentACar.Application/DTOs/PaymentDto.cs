@@ -17,7 +17,7 @@ namespace RentACar.Application.DTOs
         [Required]
         public DateOnly PaymentDate { get; set; }
 
-        public int? CreditcardId { get; set; }
+
 
         // Use ID instead of raw string for better normalization
         [Required]
@@ -48,6 +48,6 @@ namespace RentACar.Application.DTOs
         [Required]
         public int PaymentMethodId { get; set; } // refers to PaymentMethods table
 
-        public int? CreditcardId { get; set; } // Required if method is credit card
+
     }
 }

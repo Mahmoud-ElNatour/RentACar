@@ -47,10 +47,6 @@
                     <label class="form-label text-white">Payment Method</label>
                     <select name="PaymentMethodId" class="form-select" required></select>
                 </div>
-                <div class="input mb-3">
-                    <label class="form-label text-white">Credit Card ID (optional)</label>
-                    <input name="CreditcardId" type="number" min="0" class="form-control" value="@(Model.CreditcardId?.ToString() ?? string.Empty)" />
-                </div>
                 <div class="input mb-4">
                     <label class="form-label text-white">Status</label>
                     <select name="Status" class="form-select">
@@ -127,7 +123,6 @@
                 amount: Number(form.Amount.value),
                 paymentDate: form.PaymentDate.value,
                 paymentMethodId: Number(form.PaymentMethodId.value),
-                creditcardId: form.CreditcardId.value ? Number(form.CreditcardId.value) : null,
                 status: form.Status.value || null
             };
             try {

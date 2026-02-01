@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using RentACar.Core.Entities;
@@ -31,9 +31,7 @@ public partial class RentACarDbContext : DbContext
     public virtual DbSet<Booking> Bookings { get; set; }
     public virtual DbSet<Car> Cars { get; set; }
     public virtual DbSet<Category> Categories { get; set; }
-    public virtual DbSet<CreditCard> CreditCards { get; set; }
     public virtual DbSet<Customer> Customers { get; set; }
-    public virtual DbSet<CustomerCreditCard> CustomerCreditCards { get; set; }
     public virtual DbSet<Driver> Drivers { get; set; }
     public virtual DbSet<DriverAvailability> DriverAvailabilities { get; set; }
     public virtual DbSet<DriverLocationPing> DriverLocationPings { get; set; }
@@ -41,6 +39,7 @@ public partial class RentACarDbContext : DbContext
     public virtual DbSet<Payment> Payments { get; set; }
     public virtual DbSet<PaymentMethod> PaymentMethods { get; set; }
     public virtual DbSet<Promocode> Promocodes { get; set; }
+
     public virtual DbSet<Trip> Trips { get; set; }
     public virtual DbSet<AuditLog> AuditLogs { get; set; }
     public virtual DbSet<CustomerRating> CustomerRatings { get; set; }
@@ -55,8 +54,72 @@ public partial class RentACarDbContext : DbContext
     public virtual DbSet<SenderIdentity> SenderIdentities { get; set; }
     public virtual DbSet<EmailFeatureConfig> EmailFeatureConfigs { get; set; }
 
+
+
+
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+
+        // Email / Distribution Lists
+        modelBuilder.Entity<DistributionList>(entity =>
+        {
+            entity.HasIndex(e => e.Name).IsUnique();
+        });
+
+        modelBuilder.Entity<DistributionListMember>(entity =>
+        {
+            entity.HasIndex(e => new { e.DistributionListId, e.Email }).IsUnique();
+        });
+
+        modelBuilder.Entity<EmailTemplate>(entity =>
+        {
+            entity.HasIndex(e => e.TemplateKey).IsUnique();
+        });
+
+        // Foreign Key Configurations for User Content
+        modelBuilder.Entity<EmailDraft>()
+            .HasOne(d => d.CreatedByUser)
+            .WithMany()
+            .HasForeignKey(d => d.CreatedByUserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<DistributionList>()
+            .HasOne(d => d.CreatedByUser)
+            .WithMany()
+            .HasForeignKey(d => d.CreatedByUserId)
+            .OnDelete(DeleteBehavior.ClientSetNull);
+
+        modelBuilder.Entity<DistributionList>()
+            .HasOne(d => d.UpdatedByUser)
+            .WithMany()
+            .HasForeignKey(d => d.UpdatedByUserId)
+            .OnDelete(DeleteBehavior.ClientSetNull);
+
+        modelBuilder.Entity<DistributionListMember>()
+            .HasOne(d => d.AddedByUser)
+            .WithMany()
+            .HasForeignKey(d => d.AddedByUserId)
+            .OnDelete(DeleteBehavior.ClientSetNull);
+
+        modelBuilder.Entity<EmailTemplate>()
+            .HasOne(d => d.UpdatedByUser)
+            .WithMany()
+            .HasForeignKey(d => d.UpdatedByUserId)
+            .OnDelete(DeleteBehavior.ClientSetNull);
+
+        // Logs - Preserve History
+        modelBuilder.Entity<EmailLog>()
+            .HasOne(d => d.CreatedByUser)
+            .WithMany()
+            .HasForeignKey(d => d.CreatedByUserId)
+            .OnDelete(DeleteBehavior.ClientSetNull);
+
+        modelBuilder.Entity<AuditLog>()
+            .HasOne(d => d.User)
+            .WithMany()
+            .HasForeignKey(d => d.UserId)
+            .OnDelete(DeleteBehavior.ClientSetNull);
 
         modelBuilder.Entity<AspNetUser>(entity =>
         {
@@ -147,30 +210,7 @@ public partial class RentACarDbContext : DbContext
         });
         
         // Driver Entitites Configuration
-        modelBuilder.Entity<CreditCard>(entity =>
-        {
-            entity.HasKey(e => e.CreditCardId).HasName("PK_CreditCard_1");
 
-            entity.Property(e => e.CardHolderName).IsFixedLength();
-            entity.Property(e => e.Cvv).IsFixedLength();
-        });
-
-        modelBuilder.Entity<CustomerCreditCard>(entity =>
-        {
-            entity.HasKey(e => new { e.UserId, e.CreditCardId });
-
-            entity.HasOne(e => e.User)
-                .WithMany(c => c.CustomerCreditCards)
-                .HasForeignKey(e => e.UserId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_CustomerCreditCard_Customers");
-
-            entity.HasOne(e => e.CreditCard)
-                .WithMany(cc => cc.CustomerCreditCards)
-                .HasForeignKey(e => e.CreditCardId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_CustomerCreditCard_CreditCard");
-        });
 
         modelBuilder.Entity<Driver>(entity =>
         {
@@ -227,253 +267,10 @@ public partial class RentACarDbContext : DbContext
                 .HasConstraintName("FK_Trips_Drivers");
         });
 
-        // Email / Distribution Lists
-        modelBuilder.Entity<DistributionList>(entity =>
-        {
-            entity.HasIndex(e => e.Name).IsUnique();
-        });
-
-        modelBuilder.Entity<DistributionListMember>(entity =>
-        {
-            entity.HasIndex(e => new { e.DistributionListId, e.Email }).IsUnique();
-        });
-
-        modelBuilder.Entity<EmailTemplate>(entity =>
-        {
-            entity.HasIndex(e => e.TemplateKey).IsUnique();
-        });
-
-
-
-        // Foreign Key Configurations for User Content
-        modelBuilder.Entity<EmailDraft>()
-            .HasOne(d => d.CreatedByUser)
-            .WithMany()
-            .HasForeignKey(d => d.CreatedByUserId)
-            .OnDelete(DeleteBehavior.Cascade); // Drafts are personal, delete if user deleted
-
-        modelBuilder.Entity<DistributionList>()
-            .HasOne(d => d.CreatedByUser)
-            .WithMany()
-            .HasForeignKey(d => d.CreatedByUserId)
-            .OnDelete(DeleteBehavior.ClientSetNull); // Shared resource, keep list if user deleted
-
-        modelBuilder.Entity<DistributionList>()
-            .HasOne(d => d.UpdatedByUser)
-            .WithMany()
-            .HasForeignKey(d => d.UpdatedByUserId)
-            .OnDelete(DeleteBehavior.ClientSetNull);
-
-        modelBuilder.Entity<DistributionListMember>()
-            .HasOne(d => d.AddedByUser)
-            .WithMany()
-            .HasForeignKey(d => d.AddedByUserId)
-            .OnDelete(DeleteBehavior.ClientSetNull);
-
-        modelBuilder.Entity<EmailTemplate>()
-            .HasOne(d => d.UpdatedByUser)
-            .WithMany()
-            .HasForeignKey(d => d.UpdatedByUserId)
-            .OnDelete(DeleteBehavior.ClientSetNull);
-
-        // Logs - Preserve History
-        modelBuilder.Entity<EmailLog>()
-            .HasOne(d => d.CreatedByUser)
-            .WithMany()
-            .HasForeignKey(d => d.CreatedByUserId)
-            .OnDelete(DeleteBehavior.ClientSetNull);
-
-        modelBuilder.Entity<AuditLog>()
-            .HasOne(d => d.User)
-            .WithMany()
-            .HasForeignKey(d => d.UserId)
-            .OnDelete(DeleteBehavior.ClientSetNull);
-
         OnModelCreatingPartial(modelBuilder);
     }
 
-    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
-    {
-        var auditEntries = OnBeforeSaveChanges();
-        var result = await base.SaveChangesAsync(cancellationToken);
-        await OnAfterSaveChanges(auditEntries);
-        return result;
-    }
-
-    private List<AuditLog> OnBeforeSaveChanges()
-    {
-        ChangeTracker.DetectChanges();
-        var auditEntries = new List<AuditLog>();
-<<<<<<< HEAD
-        
-        var user = _httpContextAccessor?.HttpContext?.User;
-        var userName = user?.Identity?.Name ?? "System"; 
-        
-        if (user?.Identity?.IsAuthenticated == true && string.IsNullOrEmpty(userName))
-        {
-             userName = user.FindFirst(ClaimTypes.Email)?.Value ?? user.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "Unknown User";
-=======
-
-        var user = _httpContextAccessor?.HttpContext?.User;
-        var userName = user?.Identity?.Name ?? "System";
-
-        if (user?.Identity?.IsAuthenticated == true && string.IsNullOrEmpty(userName))
-        {
-            userName = user.FindFirst(ClaimTypes.Email)?.Value ?? user.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "Unknown User";
->>>>>>> Mahmoud-V3
-        }
-
-        var userRole = "Unknown";
-        if (user != null)
-        {
-            var roles = user.FindAll(ClaimTypes.Role);
-            if (roles.Any())
-            {
-                userRole = string.Join(", ", roles.Select(r => r.Value));
-            }
-        }
-<<<<<<< HEAD
-        
-=======
-
->>>>>>> Mahmoud-V3
-        var ipAddress = _httpContextAccessor?.HttpContext?.Connection?.RemoteIpAddress?.ToString() ?? "Unknown";
-        var userAgent = _httpContextAccessor?.HttpContext?.Request?.Headers["User-Agent"].ToString();
-
-        foreach (var entry in ChangeTracker.Entries())
-        {
-            if (entry.Entity is AuditLog || entry.State == EntityState.Detached || entry.State == EntityState.Unchanged)
-                continue;
-
-<<<<<<< HEAD
-            var userId = user?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-            var auditEntry = new AuditLog
-            {
-                Timestamp = DateTime.UtcNow,
-                UserId = userId,
-=======
-            var auditEntry = new AuditLog
-            {
-                Timestamp = DateTime.UtcNow,
->>>>>>> Mahmoud-V3
-                ActorName = userName,
-                ActorRole = userRole,
-                IpAddress = ipAddress,
-                UserAgent = userAgent,
-                Action = entry.State.ToString(),
-                Entity = entry.Entity.GetType().Name,
-                Status = "Success",
-                TargetType = entry.Entity.GetType().Name,
-                Outcome = "Success"
-            };
-
-            var primaryKey = entry.Properties.FirstOrDefault(p => p.Metadata.IsPrimaryKey());
-            if (primaryKey != null && primaryKey.CurrentValue != null)
-            {
-                auditEntry.EntityId = primaryKey.CurrentValue.ToString();
-                auditEntry.TargetId = primaryKey.CurrentValue.ToString();
-            }
-
-            var oldValues = new Dictionary<string, object>();
-            var newValues = new Dictionary<string, object>();
-            var changes = new List<string>();
-
-            foreach (var property in entry.Properties)
-            {
-                string propertyName = property.Metadata.Name;
-                if (property.IsTemporary) continue;
-
-                var originalVal = property.OriginalValue;
-                var currentVal = property.CurrentValue;
-
-                switch (entry.State)
-                {
-                    case EntityState.Added:
-                        newValues[propertyName] = MaskSensitiveData(propertyName, currentVal);
-                        changes.Add($"{propertyName}: {FormatValue(currentVal)}");
-                        break;
-
-                    case EntityState.Deleted:
-                        oldValues[propertyName] = MaskSensitiveData(propertyName, originalVal);
-                        changes.Add($"{propertyName}: {FormatValue(originalVal)}");
-                        break;
-
-                    case EntityState.Modified:
-                        if (property.IsModified)
-                        {
-                            // Only log if effectively different
-                            var strOriginal = originalVal?.ToString();
-                            var strCurrent = currentVal?.ToString();
-<<<<<<< HEAD
-                            
-=======
-
->>>>>>> Mahmoud-V3
-                            if (strOriginal != strCurrent)
-                            {
-                                oldValues[propertyName] = MaskSensitiveData(propertyName, originalVal);
-                                newValues[propertyName] = MaskSensitiveData(propertyName, currentVal);
-                                changes.Add($"{propertyName}: {FormatValue(originalVal)} -> {FormatValue(currentVal)}");
-                            }
-                        }
-                        break;
-                }
-            }
-            if (newValues.Count > 0) 
-                auditEntry.NewValuesJson = System.Text.Json.JsonSerializer.Serialize(newValues);
-
-            // Summary
-            var summary = string.Join("; ", changes);
-            if (summary.Length > 2000) summary = summary.Substring(0, 1997) + "..."; // Increased limit or reliance on nvarchar(max)
-            
-            auditEntry.Summary = string.IsNullOrWhiteSpace(summary) ? $"{entry.State} {auditEntry.Entity}" : summary;
-
-            auditEntries.Add(auditEntry);
-        }
-
-        return auditEntries;
-    }
-
-    private object MaskSensitiveData(string key, object value)
-    {
-        if (value == null) return null;
-        
-        var lowerKey = key.ToLower();
-        if (lowerKey.Contains("password") || 
-            lowerKey.Contains("cvv") || 
-            lowerKey.Contains("token") || 
-            lowerKey.Contains("secret") ||
-            lowerKey.Contains("cardnumber")) // Partial mask for card?
-        {
-            return "***MASKED***";
-        }
-        
-        return value;
-    }
-
-    private string FormatValue(object value)
-    {
-        if (value == null) return "null";
-        // Simple heuristic to avoid logging massive blobs in summary if not needed, 
-        // but for now standard toString is fine.
-        return value.ToString();
-    }
-
-    private async Task OnAfterSaveChanges(List<AuditLog> auditEntries)
-    {
-        if (auditEntries == null || auditEntries.Count == 0)
-            return;
-
-        foreach (var auditEntry in auditEntries)
-        {
-            // Logic to update IDs for added entities could go here if we tracked the temporary entries
-            // For now, we accept that ID might be missing for AutoInc PKs on "Added" events in this simplified version
-        }
-
-        await this.AuditLogs.AddRangeAsync(auditEntries);
-        await base.SaveChangesAsync(); 
-    }
 
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
 }
+
