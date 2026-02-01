@@ -60,10 +60,10 @@
                     <div class="relative group shrink-0">
                         <select name="actionType" class="appearance-none h-10 pl-4 pr-8 rounded-lg bg-surface-dark-lighter text-white/80 text-sm font-medium focus:outline-none focus:border-gold/50 hover:bg-gold/10 transition-colors cursor-pointer w-full md:w-auto border-transparent">
                             <option value="" class="bg-surface-dark-lighter text-white">All Actions</option>
-                            <!option value="Create" class="bg-surface-dark-lighter text-white" @(Model.ActionType == "Create" ? "selected" : "")>Create</!option>
-                            <!option value="Update" class="bg-surface-dark-lighter text-white" @(Model.ActionType == "Update" ? "selected" : "")>Update</!option>
-                            <!option value="Delete" class="bg-surface-dark-lighter text-white" @(Model.ActionType == "Delete" ? "selected" : "")>Delete</!option>
-                            <!option value="Login" class="bg-surface-dark-lighter text-white" @(Model.ActionType == "Login" ? "selected" : "")>Login</!option>
+                            @foreach (var action in Model.AvailableActions)
+                            {
+                                <!option value="@action" class="bg-surface-dark-lighter text-white" @(Model.ActionType == action ? "selected" : "")>@action</!option>
+                            }
                         </select>
                         <span class="material-symbols-outlined text-white/40 text-[18px] absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">expand_more</span>
                     </div>
@@ -72,12 +72,10 @@
                     <div class="relative group shrink-0">
                         <select name="entity" class="appearance-none h-10 pl-4 pr-8 rounded-lg bg-surface-dark-lighter text-white/80 text-sm font-medium focus:outline-none focus:border-gold/50 hover:bg-gold/10 transition-colors cursor-pointer w-full md:w-auto border-transparent">
                             <option value="" class="bg-surface-dark-lighter text-white">All Entities</option>
-                            <!option value="Car" class="bg-surface-dark-lighter text-white" @(Model.EntityName == "Car" ? "selected" : "")>Car</!option>
-                            <!option value="Customer" class="bg-surface-dark-lighter text-white" @(Model.EntityName == "Customer" ? "selected" : "")>Customer</!option>
-                            <!option value="Booking" class="bg-surface-dark-lighter text-white" @(Model.EntityName == "Booking" ? "selected" : "")>Booking</!option>
-                            <!option value="Payment" class="bg-surface-dark-lighter text-white" @(Model.EntityName == "Payment" ? "selected" : "")>Payment</!option>
-                            <!option value="Employee" class="bg-surface-dark-lighter text-white" @(Model.EntityName == "Employee" ? "selected" : "")>Employee</!option>
-                            <!option value="Blacklist" class="bg-surface-dark-lighter text-white" @(Model.EntityName == "Blacklist" ? "selected" : "")>Blacklist</!option>
+                            @foreach (var entity in Model.AvailableEntities)
+                            {
+                                <!option value="@entity" class="bg-surface-dark-lighter text-white" @(Model.EntityName == entity ? "selected" : "")>@entity</!option>
+                            }
                         </select>
                         <span class="material-symbols-outlined text-white/40 text-[18px] absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">expand_more</span>
                     </div>

@@ -15,6 +15,11 @@ namespace RentACar.Application.DTOs
         public string? Status { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
+        
+        // Dynamic Filter Data
+        public List<string> AvailableActions { get; set; } = new();
+        public List<string> AvailableEntities { get; set; } = new();
+
         public int Page { get; set; } = 1;
         public int PageSize { get; set; } = 20;
         public int TotalCount { get; set; }

@@ -377,9 +377,37 @@ namespace RentACar.Application.Managers
             }
 
             var oldStatus = booking.BookingStatus;
+            
+            // Capture Snapshot Before
+            var before = new { 
+                booking.BookingStatus, 
+                booking.Startdate, 
+                booking.Enddate, 
+                booking.CarId, 
+                booking.TotalPrice 
+            };
+
             _mapper.Map(bookingDto, booking);
             await _bookingRepository.UpdateAsync(booking);
-            await _auditLogManager.LogEventAsync("Booking.StatusChanged", "Booking", bookingDto.BookingId.ToString(), $"Updated booking details. Status: {booking.BookingStatus}", null, "Success");
+
+            // Capture Snapshot After
+            var after = new { 
+                booking.BookingStatus, 
+                booking.Startdate, 
+                booking.Enddate, 
+                booking.CarId, 
+                booking.TotalPrice 
+            };
+
+            await _auditLogManager.LogEventAsync(
+                "Booking.StatusChanged", 
+                "Booking", 
+                bookingDto.BookingId.ToString(), 
+                $"Updated booking details. Status: {booking.BookingStatus}", 
+                null, 
+                "Success",
+                oldValues: before,
+                newValues: after);
 
             // 📨 Send Email if Status Changed
             if (oldStatus != booking.BookingStatus) 

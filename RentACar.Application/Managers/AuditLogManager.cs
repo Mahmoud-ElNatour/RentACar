@@ -25,9 +25,9 @@ namespace RentACar.Application.Managers
             _userManager = userManager;
         }
 
-        public async Task LogAsync(string action, string entity, string entityId, string summary, string status = "Success", string? explicitActorName = null, string? explicitActorRole = null)
+        public async Task LogAsync(string action, string entity, string entityId, string summary, string status = "Success", string? explicitActorName = null, string? explicitActorRole = null, object? oldValues = null, object? newValues = null)
         {
-            await LogEventAsync(action, entity, entityId, summary, null, status, null, explicitActorName, explicitActorRole);
+            await LogEventAsync(action, entity, entityId, summary, null, status, null, explicitActorName, explicitActorRole, null, status, null, null, oldValues, newValues);
         }
 
         public async Task LogEventAsync(
@@ -43,7 +43,9 @@ namespace RentACar.Application.Managers
             string? correlationId = null,
             string? outcome = null,
             string? targetType = null,
-            string? targetId = null)
+            string? targetId = null,
+            object? oldValues = null,
+            object? newValues = null)
         {
             try
             {
@@ -130,6 +132,16 @@ namespace RentACar.Application.Managers
                     log.DetailsJson = System.Text.Json.JsonSerializer.Serialize(details);
                 }
 
+                if (oldValues != null)
+                {
+                    log.OldValuesJson = System.Text.Json.JsonSerializer.Serialize(oldValues);
+                }
+
+                if (newValues != null)
+                {
+                    log.NewValuesJson = System.Text.Json.JsonSerializer.Serialize(newValues);
+                }
+
                 _dbContext.AuditLogs.Add(log);
                 await _dbContext.SaveChangesAsync();
             }
@@ -155,7 +167,37 @@ namespace RentACar.Application.Managers
 
             if (!string.IsNullOrWhiteSpace(actionType))
             {
-                query = query.Where(l => l.Action == actionType);
+                if (actionType.Equals("Email", StringComparison.OrdinalIgnoreCase))
+                {
+                    query = query.Where(l => l.Action == "EmailSent" || l.Action == "EmailFailed");
+                }
+                else if (actionType.Equals("Create", StringComparison.OrdinalIgnoreCase))
+                {
+                    query = query.Where(l => l.Action == "Create" || l.Action.Contains("Created") || l.Action.Contains("Registered"));
+                }
+                else if (actionType.Equals("Update", StringComparison.OrdinalIgnoreCase))
+                {
+                    query = query.Where(l => l.Action == "Update" || l.Action.Contains("Updated") || l.Action.Contains("Modified") || l.Action.Contains("StatusChanged"));
+                }
+                else if (actionType.Equals("Delete", StringComparison.OrdinalIgnoreCase))
+                {
+                    query = query.Where(l => l.Action == "Delete" || l.Action.Contains("Deleted") || l.Action.Contains("Cancelled"));
+                }
+                else if (actionType.Equals("Other", StringComparison.OrdinalIgnoreCase))
+                {
+                    // Exclude the ones covered by the categories above
+                    var primaryActions = new[] { "Create", "Update", "Delete", "EmailSent", "EmailFailed" };
+                    query = query.Where(l => !primaryActions.Contains(l.Action) && 
+                                           !l.Action.Contains("Created") && 
+                                           !l.Action.Contains("Updated") && 
+                                           !l.Action.Contains("Modified") && 
+                                           !l.Action.Contains("Deleted") &&
+                                           !l.Action.Contains("Registered"));
+                }
+                else
+                {
+                    query = query.Where(l => l.Action == actionType);
+                }
             }
 
             if (!string.IsNullOrWhiteSpace(entityName))
@@ -208,6 +250,20 @@ namespace RentACar.Application.Managers
                                   .ToListAsync();
 
             return (logs, totalCount);
+        }
+
+        public async Task<(List<string> Actions, List<string> Entities)> GetDistinctFiltersAsync()
+        {
+            // The user wants specific categorized actions
+            var actions = new List<string> { "Create", "Update", "Delete", "Email", "Other" };
+
+            var entities = await _dbContext.AuditLogs
+                .Select(l => l.Entity)
+                .Distinct()
+                .OrderBy(e => e)
+                .ToListAsync();
+
+            return (actions, entities);
         }
 
         private string ParseDevice(string userAgent)

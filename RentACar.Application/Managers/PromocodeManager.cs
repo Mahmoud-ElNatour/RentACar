@@ -119,12 +119,32 @@ namespace RentACar.Application.Managers
             }
 
             var oldIsActive = existingPromocode.IsActive;
+
+            // Capture Snapshot Before
+            var before = new { 
+                existingPromocode.Name, 
+                existingPromocode.DiscountPercentage, 
+                existingPromocode.IsActive 
+            };
             
             _mapper.Map(promocodeDto, existingPromocode);
             await _promocodeRepository.UpdateAsync(existingPromocode);
+
+            // Capture Snapshot After
+            var after = new { 
+                existingPromocode.Name, 
+                existingPromocode.DiscountPercentage, 
+                existingPromocode.IsActive 
+            };
             
             _logger.LogInformation("Promocode {Id} updated", promocodeDto.PromocodeId);
-            await _auditLogManager.LogAsync("Update", "Promocode", promocodeDto.PromocodeId.ToString(), $"Updated promocode: {promocodeDto.Name}");
+            await _auditLogManager.LogAsync(
+                "Update", 
+                "Promocode", 
+                promocodeDto.PromocodeId.ToString(), 
+                $"Updated promocode: {promocodeDto.Name}",
+                oldValues: before,
+                newValues: after);
             
             // Determine reason
             string reason = "General Update";

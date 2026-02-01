@@ -23,8 +23,10 @@ namespace RentACar.Web.Controllers
         }
 
         [HttpGet]
-        public IActionResult AuditLog(string? search, string? actionType, string? entity, string? status, DateTime? startDate, DateTime? endDate)
+        public async Task<IActionResult> AuditLog(string? search, string? actionType, string? entity, string? status, DateTime? startDate, DateTime? endDate)
         {
+            var (actions, entities) = await _auditLogManager.GetDistinctFiltersAsync();
+
             var model = new AuditLogViewModel
             {
                 SearchTerm = search,
@@ -32,7 +34,9 @@ namespace RentACar.Web.Controllers
                 EntityName = entity,
                 Status = status,
                 StartDate = startDate,
-                EndDate = endDate
+                EndDate = endDate,
+                AvailableActions = actions,
+                AvailableEntities = entities
             };
 
             return View(model);

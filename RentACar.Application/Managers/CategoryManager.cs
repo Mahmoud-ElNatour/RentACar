@@ -145,6 +145,12 @@ namespace RentACar.Application.Managers
                 return null;
             }
 
+            // Capture Snapshot Before
+            var before = new { 
+                existingCategory.Name, 
+                existingCategory.IsActive 
+            };
+
             // Map properties but handle Image differently
             _mapper.Map(categoryDto, existingCategory);
 
@@ -162,14 +168,22 @@ namespace RentACar.Application.Managers
             // so `Image` property on Entity should be untouched by Mapper if DTO doesn't have it.
             // Wait, I need to check if I updated AutoMapper profile correctly.
 
+            // Capture Snapshot After
+            var after = new { 
+                existingCategory.Name, 
+                existingCategory.IsActive 
+            };
+
             await _categoryRepository.UpdateAsync(existingCategory);
 
             _logger.LogInformation("Category {Id} updated", categoryDto.CategoryId);
-            await _auditLogManager.LogAsync("Update", "Category", categoryDto.CategoryId.ToString(), $"Updated category: {categoryDto.Name}");
-            await _categoryRepository.UpdateAsync(existingCategory);
-
-            _logger.LogInformation("Category {Id} updated", categoryDto.CategoryId);
-            await _auditLogManager.LogAsync("Update", "Category", categoryDto.CategoryId.ToString(), $"Updated category: {categoryDto.Name}");
+            await _auditLogManager.LogAsync(
+                "Update", 
+                "Category", 
+                categoryDto.CategoryId.ToString(), 
+                $"Updated category: {categoryDto.Name}",
+                oldValues: before,
+                newValues: after);
             
             // 📨 Send Email if IsActive status changed, or just general update
             // Request: "Category IsActive status changed"

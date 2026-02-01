@@ -390,6 +390,17 @@ namespace RentACar.Application.Managers
             var oldActive = customer.Isactive;
             var oldVerified = customer.IsVerified;
 
+            // Capture Snapshot Before
+            var before = new { 
+                customer.Name, 
+                customer.Address, 
+                customer.IsVerified, 
+                customer.Isactive,
+                Email = user?.Email,
+                Username = user?.UserName,
+                PhoneNumber = user?.PhoneNumber
+            };
+
             customer.Name = dto.Name;
             customer.Address = dto.Address;
             customer.IsVerified = dto.IsVerified;
@@ -397,7 +408,27 @@ namespace RentACar.Application.Managers
 
             await _customerRepository.UpdateAsync(customer);
             _logger.LogInformation("Customer {Id} updated successfully in repository.", dto.UserId);
-            await _auditLogManager.LogEventAsync("Customer.ProfileUpdated", "Customer", dto.UserId.ToString(), $"Updated profile details for: {customer.Name}", null, "Success");
+
+            // Capture Snapshot After
+            var after = new { 
+                customer.Name, 
+                customer.Address, 
+                customer.IsVerified, 
+                customer.Isactive,
+                Email = user?.Email,
+                Username = user?.UserName,
+                PhoneNumber = user?.PhoneNumber
+            };
+
+            await _auditLogManager.LogEventAsync(
+                "Customer.ProfileUpdated", 
+                "Customer", 
+                dto.UserId.ToString(), 
+                $"Updated profile details for: {customer.Name}", 
+                null, 
+                "Success",
+                oldValues: before,
+                newValues: after);
 
             // Check for Status Changes & Notify
             if (oldActive != customer.Isactive)

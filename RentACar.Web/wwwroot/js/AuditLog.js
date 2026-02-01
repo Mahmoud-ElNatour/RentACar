@@ -117,25 +117,33 @@ $(document).ready(function () {
             // Actor Initials
             var initial = log.actorName ? log.actorName.charAt(0).toUpperCase() : '?';
 
-            // Action Badge Logic
+            // Action Categorization for Table Display
+            var readableAction = "Other";
             var actionColor = "text-white/70";
             var actionBg = "bg-white/5 border-white/10";
             var actionUpper = log.action ? log.action.toUpperCase() : "UNKNOWN";
 
-            if (["CREATE", "ADDED"].includes(actionUpper)) {
+            if (actionUpper === "EMAILSENT" || actionUpper === "EMAILFAILED") {
+                readableAction = "Email";
+                actionColor = actionUpper === "EMAILSENT" ? "text-gold" : "text-pink-400";
+                actionBg = actionUpper === "EMAILSENT" ? "bg-gold/10 border-gold/20" : "bg-pink-500/10 border-pink-500/20";
+            } else if (actionUpper === "CREATE" || actionUpper.includes("CREATED") || actionUpper.includes("REGISTERED")) {
+                readableAction = "Create";
                 actionColor = "text-blue-400";
                 actionBg = "bg-blue-500/10";
-            } else if (["UPDATE", "MODIFIED"].includes(actionUpper)) {
+            } else if (actionUpper === "UPDATE" || actionUpper.includes("UPDATED") || actionUpper.includes("MODIFIED") || actionUpper.includes("STATUSCHANGED")) {
+                readableAction = "Update";
                 actionColor = "text-emerald-500";
                 actionBg = "bg-emerald-500/10 border-emerald-500/20";
-            } else if (["DELETE", "DELETED"].includes(actionUpper)) {
+            } else if (actionUpper === "DELETE" || actionUpper.includes("DELETED") || actionUpper.includes("CANCELLED")) {
+                readableAction = "Delete";
                 actionColor = "text-red-400";
                 actionBg = "bg-red-500/10 border-red-500/20";
             }
 
             // Status Logic
             var statusHtml = '';
-            if (log.status === "Success") {
+            if (log.status === "Success" || log.outcome === "Success") {
                 statusHtml = `<span class="inline-flex items-center gap-1.5 rounded text-xs font-medium text-emerald-400">
                                 <span class="h-1.5 w-1.5 rounded-full bg-emerald-400"></span> Success
                               </span>`;
@@ -189,7 +197,7 @@ $(document).ready(function () {
                 </td>
                 <td class="py-4 px-6 whitespace-nowrap">
                     <span class="inline-flex items-center rounded-full ${actionBg} px-2.5 py-0.5 text-xs font-medium ${actionColor} border-none">
-                        ${actionUpper}
+                        ${readableAction}
                     </span>
                 </td>
                 <td class="py-4 px-6 whitespace-nowrap">

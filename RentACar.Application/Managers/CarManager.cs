@@ -138,9 +138,34 @@ namespace RentACar.Application.Managers
                 var oldPrice = existingCar.PricePerDay;
                 var oldModel = existingCar.ModelName;
                 
+                // Capture Snapshot Before
+                var before = new { 
+                    existingCar.ModelName, 
+                    existingCar.PlateNumber, 
+                    existingCar.PricePerDay, 
+                    existingCar.IsAvailable, 
+                    existingCar.CategoryId 
+                };
+
                 _mapper.Map(carDto, existingCar);
                 await _carRepository.UpdateAsync(existingCar);
-                await _auditLogManager.LogAsync("Update", "Car", carDto.CarId.ToString(), $"Updated car details: {carDto.ModelName} - {carDto.PlateNumber}");
+
+                // Capture Snapshot After
+                var after = new { 
+                    existingCar.ModelName, 
+                    existingCar.PlateNumber, 
+                    existingCar.PricePerDay, 
+                    existingCar.IsAvailable, 
+                    existingCar.CategoryId 
+                };
+
+                await _auditLogManager.LogAsync(
+                    "Update", 
+                    "Car", 
+                    carDto.CarId.ToString(), 
+                    $"Updated car details: {carDto.ModelName} - {carDto.PlateNumber}",
+                    oldValues: before,
+                    newValues: after);
 
                 // 📨 Send Car Update Email (Price Change)
                 if (oldPrice != existingCar.PricePerDay) {

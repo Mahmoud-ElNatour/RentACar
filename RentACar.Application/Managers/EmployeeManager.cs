@@ -176,6 +176,17 @@ namespace RentACar.Application.Managers
 
             var oldActive = employeeEntity.IsActive;
             
+            // Capture Snapshot Before
+            var before = new { 
+                employeeEntity.Name, 
+                employeeEntity.Salary, 
+                employeeEntity.Address, 
+                employeeEntity.IsActive,
+                Email = user?.Email,
+                Username = user?.UserName,
+                PhoneNumber = user?.PhoneNumber
+            };
+
             employeeEntity.Name = employeeDto.Name;
             employeeEntity.Salary = employeeDto.Salary;
             employeeEntity.Address = employeeDto.Address;
@@ -183,7 +194,25 @@ namespace RentACar.Application.Managers
 
             await _employeeRepository.UpdateAsync(employeeEntity);
             _logger.LogInformation("Employee {Id} updated successfully in repository.", employeeDto.EmployeeId);
-            await _auditLogManager.LogAsync("Update", "Employee", employeeDto.EmployeeId.ToString(), $"Updated employee profile: {employeeDto.Name}");
+
+            // Capture Snapshot After
+            var after = new { 
+                employeeEntity.Name, 
+                employeeEntity.Salary, 
+                employeeEntity.Address, 
+                employeeEntity.IsActive,
+                Email = user?.Email,
+                Username = user?.UserName,
+                PhoneNumber = user?.PhoneNumber
+            };
+
+            await _auditLogManager.LogAsync(
+                "Update", 
+                "Employee", 
+                employeeDto.EmployeeId.ToString(), 
+                $"Updated employee profile: {employeeDto.Name}",
+                oldValues: before,
+                newValues: after);
             
             if (oldActive != employeeDto.IsActive)
             {
