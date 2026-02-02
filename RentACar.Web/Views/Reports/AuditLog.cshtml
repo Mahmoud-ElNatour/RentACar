@@ -5,9 +5,10 @@
     ViewData["Title"] = "Audit Log Report";
 }
 
-<!-- Removed conflicting CSS link -->
+<!-- Custom Styles -->
+<link rel="stylesheet" href="~/css/AuditLog.css" asp-append-version="true" />
 
-<div class="layout-container flex h-full grow flex-col bg-background-dark min-h-screen">
+<div class="audit-log-page layout-container flex h-full grow flex-col bg-background-dark min-h-screen">
     <div class="flex flex-1 justify-center py-6 px-4 md:px-8">
         <div class="layout-content-container flex flex-col w-full max-w-[1400px] flex-1">
 <!-- Page Header -->
@@ -17,7 +18,6 @@
         <p class="text-white/60 text-base font-normal">Track system changes, user activities, and administrative actions.</p>
     </div>
     <!-- Export Button -->
-     <!-- Added name="exportBtn" to identify it, usually formaction works but JS intercepts it -->
     <button type="submit" form="filterForm" asp-action="ExportAuditLog" class="flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-lg h-10 px-6 bg-gold hover:bg-gold-hover text-background-dark text-sm font-bold leading-normal tracking-wide transition-colors" formnovalidate>
         <span class="material-symbols-outlined text-[20px]">download</span>
         <span class="truncate">Export Report</span>
@@ -25,74 +25,62 @@
 </div>
 
             <!-- Filters Area -->
-            <form method="get" asp-action="AuditLog" class="flex flex-col xl:flex-row gap-4 p-4 mb-6 bg-surface-dark rounded-xl shadow-lg relative z-50 items-start xl:items-center" id="filterForm">
+            <form method="get" asp-action="AuditLog" class="flex flex-wrap items-center gap-x-4 gap-y-3 p-4 mb-6 bg-surface-dark rounded-xl shadow-lg relative z-50" id="filterForm">
                 <input type="hidden" name="page" value="1" />
                 
                 <!-- Search Box -->
-                <div class="relative group w-full xl:w-auto xl:flex-1 max-w-md">
+                <div class="relative group w-full md:w-64">
                     <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-gold transition-colors">search</span>
-                    <input type="text" name="search" value="@Model.SearchTerm" placeholder="Search User, ID, or IP..." 
-                           class="w-full h-10 pl-12 pr-4 rounded-lg bg-surface-dark-lighter text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-gold/50 transition-all border-transparent" />
+                    <input type="text" name="search" value="@Model.SearchTerm" placeholder="Search..." 
+                           class="w-full h-10 pl-11 pr-4 rounded-lg bg-surface-dark-lighter text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-gold/50 transition-all border-transparent" />
                 </div>
 
                 <!-- Date Range Filter -->
-                <div class="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
-                    <div class="relative group shrink-0">
-                        <input type="date" name="startDate" value="@(Model.StartDate?.ToString("yyyy-MM-dd"))" class="h-10 px-4 rounded-lg bg-surface-dark-lighter text-white/80 text-sm font-medium focus:outline-none focus:border-gold/50 hover:bg-gold/10 transition-colors border-transparent placeholder-gray-500 w-full md:w-auto" placeholder="Start Date">
+                <div class="flex items-center gap-2 shrink-0">
+                    <div class="relative group">
+                        <input type="date" name="startDate" value="@(Model.StartDate?.ToString("yyyy-MM-dd"))" class="h-10 px-3 rounded-lg bg-surface-dark-lighter text-white/80 text-sm font-medium focus:outline-none focus:border-gold/50 hover:bg-gold/10 transition-colors border-transparent w-36">
                     </div>
                     <span class="text-gray-500 shrink-0">-</span>
-                    <div class="relative group shrink-0">
-                        <input type="date" name="endDate" value="@(Model.EndDate?.ToString("yyyy-MM-dd"))" class="h-10 px-4 rounded-lg bg-surface-dark-lighter text-white/80 text-sm font-medium focus:outline-none focus:border-gold/50 hover:bg-gold/10 transition-colors border-transparent placeholder-gray-500 w-full md:w-auto" placeholder="End Date">
+                    <div class="relative group">
+                        <input type="date" name="endDate" value="@(Model.EndDate?.ToString("yyyy-MM-dd"))" class="h-10 px-3 rounded-lg bg-surface-dark-lighter text-white/80 text-sm font-medium focus:outline-none focus:border-gold/50 hover:bg-gold/10 transition-colors border-transparent w-36">
                     </div>
                 </div>
 
-                <div class="flex flex-wrap items-center gap-3 w-full xl:w-auto xl:justify-end">
-                    
-                    <style>
-                        /* Attempt to style select options - Support varies */
-                        option:hover, option:focus, option:active, option:checked {
-                            background-color: #f2b90d !important; /* gold */
-                            color: #0a0a0a !important; /* background-dark */
+                <!-- Action Type Filter -->
+                <div class="relative group shrink-0">
+                    <select name="actionType" class="appearance-none h-10 pl-4 pr-8 rounded-lg bg-surface-dark-lighter text-white/80 text-sm font-medium focus:outline-none focus:border-gold/50 hover:bg-gold/10 transition-colors cursor-pointer border-transparent min-w-[130px]">
+                        <option value="" class="bg-surface-dark-lighter text-white">All Actions</option>
+                        @foreach (var action in Model.AvailableActions)
+                        {
+                            <!option value="@action" class="bg-surface-dark-lighter text-white" @(Model.ActionType == action ? "selected" : "")>@action</!option>
                         }
-                    </style>
-                    
-                    <!-- Action Type Filter -->
-                    <div class="relative group shrink-0">
-                        <select name="actionType" class="appearance-none h-10 pl-4 pr-8 rounded-lg bg-surface-dark-lighter text-white/80 text-sm font-medium focus:outline-none focus:border-gold/50 hover:bg-gold/10 transition-colors cursor-pointer w-full md:w-auto border-transparent">
-                            <option value="" class="bg-surface-dark-lighter text-white">All Actions</option>
-                            @foreach (var action in Model.AvailableActions)
-                            {
-                                <!option value="@action" class="bg-surface-dark-lighter text-white" @(Model.ActionType == action ? "selected" : "")>@action</!option>
-                            }
-                        </select>
-                        <span class="material-symbols-outlined text-white/40 text-[18px] absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">expand_more</span>
-                    </div>
+                    </select>
+                </div>
 
-                    <!-- Entity Filter -->
-                    <div class="relative group shrink-0">
-                        <select name="entity" class="appearance-none h-10 pl-4 pr-8 rounded-lg bg-surface-dark-lighter text-white/80 text-sm font-medium focus:outline-none focus:border-gold/50 hover:bg-gold/10 transition-colors cursor-pointer w-full md:w-auto border-transparent">
-                            <option value="" class="bg-surface-dark-lighter text-white">All Entities</option>
-                            @foreach (var entity in Model.AvailableEntities)
-                            {
-                                <!option value="@entity" class="bg-surface-dark-lighter text-white" @(Model.EntityName == entity ? "selected" : "")>@entity</!option>
-                            }
-                        </select>
-                        <span class="material-symbols-outlined text-white/40 text-[18px] absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">expand_more</span>
-                    </div>
+                <!-- Entity Filter -->
+                <div class="relative group shrink-0">
+                    <select name="entity" class="appearance-none h-10 pl-4 pr-8 rounded-lg bg-surface-dark-lighter text-white/80 text-sm font-medium focus:outline-none focus:border-gold/50 hover:bg-gold/10 transition-colors cursor-pointer border-transparent min-w-[130px]">
+                        <option value="" class="bg-surface-dark-lighter text-white">All Entities</option>
+                        @foreach (var entity in Model.AvailableEntities)
+                        {
+                            <!option value="@entity" class="bg-surface-dark-lighter text-white" @(Model.EntityName == entity ? "selected" : "")>@entity</!option>
+                        }
+                    </select>
+                </div>
 
-                     <!-- Status Filter -->
-                    <div class="relative group shrink-0">
-                        <select name="status" class="appearance-none h-10 pl-4 pr-8 rounded-lg bg-surface-dark-lighter text-white/80 text-sm font-medium focus:outline-none focus:border-gold/50 hover:bg-gold/10 transition-colors cursor-pointer w-full md:w-auto border-transparent">
-                            <option value="" class="bg-surface-dark-lighter text-white">All Statuses</option>
-                            <!option value="Success" class="bg-surface-dark-lighter text-white" @(Model.Status == "Success" ? "selected" : "")>Success</!option>
-                            <!option value="Failed" class="bg-surface-dark-lighter text-white" @(Model.Status == "Failed" ? "selected" : "")>Failed</!option>
-                        </select>
-                         <span class="material-symbols-outlined text-white/40 text-[18px] absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">expand_more</span>
-                    </div>
+                 <!-- Status Filter -->
+                <div class="relative group shrink-0">
+                    <select name="status" class="appearance-none h-10 pl-4 pr-8 rounded-lg bg-surface-dark-lighter text-white/80 text-sm font-medium focus:outline-none focus:border-gold/50 hover:bg-gold/10 transition-colors cursor-pointer border-transparent min-w-[120px]">
+                        <option value="" class="bg-surface-dark-lighter text-white">All Statuses</option>
+                        <!option value="Success" class="bg-surface-dark-lighter text-white" @(Model.Status == "Success" ? "selected" : "")>Success</!option>
+                        <!option value="Failed" class="bg-surface-dark-lighter text-white" @(Model.Status == "Failed" ? "selected" : "")>Failed</!option>
+                    </select>
+                </div>
 
-                    <button type="submit" class="h-10 px-4 rounded-lg bg-gold text-background-dark font-bold text-sm hover:bg-gold-hover transition-colors shrink-0">Apply</button>
-                    <a asp-action="AuditLog" class="h-10 px-4 flex items-center justify-center rounded-lg border border-gold/10 text-white/70 hover:text-white hover:bg-white/5 transition-colors text-sm shrink-0">Reset</a>
-
+                <!-- Buttons Group -->
+                <div class="flex items-center gap-3 ml-auto shrink-0">
+                    <button type="submit" class="h-10 px-5 rounded-lg bg-gold text-background-dark font-bold text-sm hover:bg-gold-hover transition-colors">Apply</button>
+                    <a asp-action="AuditLog" class="h-10 px-4 flex items-center justify-center rounded-lg border border-gold/10 text-white/70 hover:text-white hover:bg-white/5 transition-colors text-sm">Reset</a>
                 </div>
             </form>
 

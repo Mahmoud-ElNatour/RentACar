@@ -183,10 +183,14 @@ namespace RentACar.Application.Managers
                 {
                     query = query.Where(l => l.Action == "Delete" || l.Action.Contains("Deleted") || l.Action.Contains("Cancelled"));
                 }
+                else if (actionType.Equals("Login", StringComparison.OrdinalIgnoreCase))
+                {
+                    query = query.Where(l => l.Action == "Login");
+                }
                 else if (actionType.Equals("Other", StringComparison.OrdinalIgnoreCase))
                 {
                     // Exclude the ones covered by the categories above
-                    var primaryActions = new[] { "Create", "Update", "Delete", "EmailSent", "EmailFailed" };
+                    var primaryActions = new[] { "Create", "Update", "Delete", "EmailSent", "EmailFailed", "Login" };
                     query = query.Where(l => !primaryActions.Contains(l.Action) && 
                                            !l.Action.Contains("Created") && 
                                            !l.Action.Contains("Updated") && 
@@ -202,7 +206,16 @@ namespace RentACar.Application.Managers
 
             if (!string.IsNullOrWhiteSpace(entityName))
             {
-                query = query.Where(l => l.Entity == entityName);
+                if (entityName.Equals("Other", StringComparison.OrdinalIgnoreCase))
+                {
+                    // Define "known" entities that should NOT be in "Other"
+                    var knownEntities = new[] { "Car", "Category", "Customer", "Employee", "Booking", "Payment", "Promocode", "User", "ApplicationUser", "BlackList", "CreditCard" };
+                    query = query.Where(l => !knownEntities.Contains(l.Entity));
+                }
+                else
+                {
+                    query = query.Where(l => l.Entity == entityName);
+                }
             }
 
             if (!string.IsNullOrWhiteSpace(status))
@@ -255,13 +268,20 @@ namespace RentACar.Application.Managers
         public async Task<(List<string> Actions, List<string> Entities)> GetDistinctFiltersAsync()
         {
             // The user wants specific categorized actions
-            var actions = new List<string> { "Create", "Update", "Delete", "Email", "Other" };
+            var actions = new List<string> { "Create", "Update", "Delete", "Email", "Login", "Other" };
 
+            // Fetch primary entities for the "main" list
+            var knownEntities = new List<string> { "Car", "Category", "Customer", "Employee", "Booking", "Payment", "Promocode", "User", "BlackList", "CreditCard" };
+            
             var entities = await _dbContext.AuditLogs
                 .Select(l => l.Entity)
                 .Distinct()
+                .Where(e => knownEntities.Contains(e))
                 .OrderBy(e => e)
                 .ToListAsync();
+
+            // Append "Other" to the entities list
+            entities.Add("Other");
 
             return (actions, entities);
         }

@@ -131,6 +131,10 @@ $(document).ready(function () {
                 readableAction = "Create";
                 actionColor = "text-blue-400";
                 actionBg = "bg-blue-500/10";
+            } else if (actionUpper === "LOGIN") {
+                readableAction = "Login";
+                actionColor = "text-cyan-400";
+                actionBg = "bg-cyan-500/10 border-cyan-500/20";
             } else if (actionUpper === "UPDATE" || actionUpper.includes("UPDATED") || actionUpper.includes("MODIFIED") || actionUpper.includes("STATUSCHANGED")) {
                 readableAction = "Update";
                 actionColor = "text-emerald-500";
