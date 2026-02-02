@@ -1,3 +1,4 @@
+
 name: Deploy to IIS (Windows Server)
 
 on:
@@ -5,28 +6,26 @@ on:
     branches:
       - master
 
-<<<<<<< HEAD
-permissions:
-  contents: write
+    
+    permissions:
+        contents: write
 
-=======
->>>>>>> Mahmoud-V3
+
+
 jobs:
   deploy:
     runs-on: self-hosted
 
-<<<<<<< HEAD
+
     # Prevent infinite loop when workflow pushes the auto migration commit
     if: github.actor != 'github-actions[bot]'
 
-=======
->>>>>>> Mahmoud-V3
+
     env:
       SITE_PATH: "C:\\inetpub\\wwwroot\\MyApp"
       PUBLISH_PATH: "C:\\deploy\\MyApp\\publish"
       APP_POOL: "MyAppPool"
 
-<<<<<<< HEAD
       WEB_CSPROJ: ".\\RentACar.Web\\RentACar.Web.csproj"
       INFRA_CSPROJ: ".\\RentACar.Infrastructure\\RentACar.Infrastructure.csproj"
       MIGRATION_PREFIX: "Auto"
@@ -76,7 +75,7 @@ jobs:
       # ---------------------------
       # Setup .NET
       # ---------------------------
-=======
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -89,7 +88,7 @@ jobs:
           dotnet --info
 
       # Install .NET to a writable folder (avoids C:\Program Files\dotnet permission issue)
->>>>>>> Mahmoud-V3
+
       - name: Setup .NET 8 (no admin)
         uses: actions/setup-dotnet@v4
         with:
@@ -97,16 +96,16 @@ jobs:
         env:
           DOTNET_INSTALL_DIR: ${{ runner.temp }}\dotnet
 
-<<<<<<< HEAD
-=======
+
+
       # Ensure the installed dotnet is on PATH for next steps (PowerShell 5.1 compatible)
->>>>>>> Mahmoud-V3
+
       - name: Add dotnet to PATH
         shell: powershell
         run: |
           Add-Content -Path $env:GITHUB_PATH -Value "${{ runner.temp }}\dotnet"
 
-<<<<<<< HEAD
+
       - name: Set DOTNET_ROOT
         shell: powershell
         run: |
@@ -134,8 +133,7 @@ jobs:
       # ---------------------------
       # Restore & Build
       # ---------------------------
-=======
->>>>>>> Mahmoud-V3
+
       - name: Restore
         shell: powershell
         run: dotnet restore
@@ -144,7 +142,6 @@ jobs:
         shell: powershell
         run: dotnet build -c Release --no-restore
 
-<<<<<<< HEAD
       # ---------------------------
       # Auto Migration + Push
       # ---------------------------
@@ -196,9 +193,7 @@ jobs:
       # ---------------------------
       # Publish
       # ---------------------------
-=======
-      # Ensure publish folder exists (prevents publish failures on fresh machines / cleaned folders)
->>>>>>> Mahmoud-V3
+
       - name: Ensure publish folder exists
         shell: powershell
         run: |
@@ -206,16 +201,15 @@ jobs:
 
       - name: Publish (Web)
         shell: powershell
-<<<<<<< HEAD
+
         run: dotnet publish "${{ env.WEB_CSPROJ }}" -c Release -o "${{ env.PUBLISH_PATH }}" --no-build
 
       # ---------------------------
       # Deploy to IIS
       # ---------------------------
-=======
+
         run: dotnet publish .\RentACar.Web\RentACar.Web.csproj -c Release -o "${{ env.PUBLISH_PATH }}" --no-build
 
->>>>>>> Mahmoud-V3
       - name: Deploy to IIS
         shell: powershell
         run: |
@@ -227,19 +221,15 @@ jobs:
           try { Stop-WebAppPool -Name $appPool } catch { }
           Start-Sleep -Seconds 2
 
-<<<<<<< HEAD
-=======
-          # Put the site offline during file copy (prevents locked DLL issues)
->>>>>>> Mahmoud-V3
+
           "offline" | Out-File (Join-Path $sitePath "app_offline.htm") -Encoding ASCII -Force
 
           robocopy $publishPath $sitePath /MIR /R:2 /W:2 /NFL /NDL /NP
           $rc = $LASTEXITCODE
           if ($rc -ge 8) { throw "Robocopy failed with exit code $rc" }
-<<<<<<< HEAD
 
-=======
->>>>>>> Mahmoud-V3
+
+
           $global:LASTEXITCODE = 0
 
           Remove-Item (Join-Path $sitePath "app_offline.htm") -ErrorAction SilentlyContinue
