@@ -268,7 +268,7 @@
                 <div class="col-lg-4 col-md-6">
                     @if(User.Identity?.IsAuthenticated ?? false)
                     {
-                        <a asp-controller="Browse" asp-action="Index" asp-route-categoryId="@cat.CategoryId" class="gallery-item d-block">
+                        <a asp-controller="Browse" asp-action="Index" asp-route-categoryIds="@cat.CategoryId" class="gallery-item d-block">
                             <img src="@imagePath" alt="@cat.Name" class="img-fluid">
                             <div class="gallery-overlay">
                                 <div class="gallery-content">
@@ -280,7 +280,7 @@
                     }
                     else
                     {
-                        <a asp-area="Identity" asp-page="/Account/Login" asp-route-returnUrl="@Url.Action("Index","Browse", new { categoryId = cat.CategoryId })" class="gallery-item d-block">
+                        <a asp-area="Identity" asp-page="/Account/Login" asp-route-returnUrl="@Url.Action("Index","Browse", new { categoryIds = cat.CategoryId })" class="gallery-item d-block">
                             <img src="@imagePath" alt="@cat.Name" class="img-fluid">
                             <div class="gallery-overlay">
                                 <div class="gallery-content">
