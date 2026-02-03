@@ -18,15 +18,15 @@
         position: relative;
     }
 
-        .pulse-dot::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background-color: #f4c325;
-            border-radius: 50%;
-            animation: pulse 2s infinite;
-            opacity: 0.6;
-        }
+    .pulse-dot::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background-color: #f4c325;
+        border-radius: 50%;
+        animation: pulse 2s infinite;
+        opacity: 0.6;
+    }
 
     @@keyframes pulse {
         0% {
@@ -44,7 +44,8 @@
 <main class="w-full px-4 md:px-8 py-8">
     <div class="max-w-6xl mx-auto flex flex-col gap-6">
         <!-- TOP INFO CARD -->
-        <div class="glass-panel rounded-2xl p-4 md:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-2xl">
+        <div
+            class="glass-panel rounded-2xl p-4 md:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-2xl">
             <div class="flex items-center gap-4">
                 <div class="flex flex-col">
                     <p class="text-[10px] font-bold uppercase tracking-widest text-primary/80">
@@ -115,35 +116,38 @@
 <!-- SIGNALR -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
 
-<script>
-    let map, driverMarker, pickupMarker;
 
-    function initMap() {
+<script>
+    window.map = null;
+    window.driverMarker = null;
+    window.pickupMarker = null;
+
+    window.initMap = function () {
         const driverLat = @(Model.LastLatitude?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "33.8938");
         const driverLng = @(Model.LastLongitude?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "35.5018");
         const pickupLat = @(Model.PickupLatitude?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? Model.LastLatitude?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "33.8938");
         const pickupLng = @(Model.PickupLongitude?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? Model.LastLongitude?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "35.5018");
         const hasPickup = @(Model.PickupLatitude.HasValue && Model.PickupLongitude.HasValue ? "true" : "false");
 
-        map = new google.maps.Map(document.getElementById("map"), {
+        window.map = new google.maps.Map(document.getElementById("map"), {
             center: { lat: Number(driverLat), lng: Number(driverLng) },
             zoom: 14,
             disableDefaultUI: true,
             gestureHandling: "greedy"
         });
 
-        driverMarker = new google.maps.Marker({
+        window.driverMarker = new google.maps.Marker({
             position: { lat: Number(driverLat), lng: Number(driverLng) },
-            map,
+            map: window.map,
             title: "Driver"
         });
 
-        pickupMarker = new google.maps.Marker({
+        window.pickupMarker = new google.maps.Marker({
             position: { lat: Number(pickupLat), lng: Number(pickupLng) },
-            map,
+            map: window.map,
             title: hasPickup ? "Pickup" : "Pickup (estimated)"
         });
-    }
+    };
 
     (function () {
         const bookingId = @Model.BookingId;
@@ -162,11 +166,11 @@
 
             const pos = { lat: Number(payload.latitude), lng: Number(payload.longitude) };
 
-            if (map && driverMarker) {
-                driverMarker.setPosition(pos);
-                const bounds = map.getBounds();
+            if (window.map && window.driverMarker) {
+                window.driverMarker.setPosition(pos);
+                const bounds = window.map.getBounds();
                 if (bounds && !bounds.contains(pos)) {
-                    map.panTo(pos);
+                    window.map.panTo(pos);
                 }
             }
 
@@ -182,7 +186,12 @@
     })();
 </script>
 
-<!-- GOOGLE MAPS (ONLY ONCE) -->
-<script async defer
-        src="https://maps.googleapis.com/maps/api/js?key=@ViewBag.GoogleMapsKey&callback=initMap">
-</script>
+
+@if (ViewBag.GoogleMapsKey != null)
+
+{
+    <!-- GOOGLE MAPS (ONLY ONCE) -->
+    <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=@ViewBag.GoogleMapsKey&callback=initMap&loading=async">
+        </script>
+}

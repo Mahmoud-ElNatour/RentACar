@@ -417,6 +417,8 @@
         });
     }
 
+
+<script>
     window.initTripMap = function () {
         if (!pickupLat || !pickupLng || !window.google) return;
         const pickup = { lat: parseFloat(pickupLat), lng: parseFloat(pickupLng) };
@@ -424,7 +426,7 @@
             ? { lat: parseFloat(initialDriverLat), lng: parseFloat(initialDriverLng) }
             : pickup;
 
-        map = new google.maps.Map(document.getElementById('tripMap'), {
+        window.tripMap = new google.maps.Map(document.getElementById('tripMap'), {
             center: pickup,
             zoom: 13,
             disableDefaultUI: true,
@@ -433,13 +435,13 @@
 
         pickupMarker = new google.maps.Marker({
             position: pickup,
-            map,
+            map: window.tripMap,
             label: 'P'
         });
 
         driverMarker = new google.maps.Marker({
             position: driver,
-            map,
+            map: window.tripMap,
             icon: {
                 path: google.maps.SymbolPath.CIRCLE,
                 scale: 6,
@@ -452,7 +454,7 @@
 
         directionsService = new google.maps.DirectionsService();
         directionsRenderer = new google.maps.DirectionsRenderer({
-            map,
+            map: window.tripMap,
             suppressMarkers: true,
             polylineOptions: {
                 strokeColor: '#f4c325',
@@ -469,9 +471,9 @@
         }
     };
 
-    document.getElementById('startTracking').addEventListener('click', startWatching);
-    document.getElementById('stopTracking').addEventListener('click', stopWatching);
-    retryTracking.addEventListener('click', startWatching);
+    document.getElementById('startTracking')?.addEventListener('click', startWatching);
+    document.getElementById('stopTracking')?.addEventListener('click', stopWatching);
+    document.getElementById('retryTracking')?.addEventListener('click', startWatching);
 
     if (statusPill && statusPill.textContent.toLowerCase().includes('on the way')) {
         updateTrackingStatus('Live: Tracking available');
@@ -481,6 +483,6 @@
 @if (!string.IsNullOrWhiteSpace(ViewBag.GoogleMapsKey))
 {
     <script async defer
-            src="https://maps.googleapis.com/maps/api/js?key=@ViewBag.GoogleMapsKey&callback=initTripMap">
+            src="https://maps.googleapis.com/maps/api/js?key=@ViewBag.GoogleMapsKey&callback=initTripMap&loading=async">
     </script>
 }

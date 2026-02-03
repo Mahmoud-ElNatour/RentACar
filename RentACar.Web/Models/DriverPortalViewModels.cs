@@ -81,8 +81,13 @@ public class DriverScheduleBookingItemViewModel
 public class DriverAvailabilityItemViewModel
 {
     public int DriverAvailabilityId { get; set; }
-    public DateTime StartDateTime { get; set; }
-    public DateTime EndDateTime { get; set; }
-    public bool IsRecurringWeekly { get; set; }
+    public DateOnly Date { get; set; }
     public bool IsAvailable { get; set; }
+    public TimeOnly? StartTime { get; set; }
+    public TimeOnly? EndTime { get; set; }
+
+    // Legacy fields
+    public DateTime? StartDateTime { get; set; }
+    public DateTime? EndDateTime { get; set; }
+    public bool? IsRecurringWeekly { get; set; }
 }

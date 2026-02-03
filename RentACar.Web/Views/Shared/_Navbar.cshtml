@@ -74,7 +74,7 @@
                         </a>
                      }
                      
-                     @if (SignInManager.IsSignedIn(User))
+                     @if (SignInManager.IsSignedIn(User)&&!User.IsInRole("Driver"))
                      {
                         <a asp-area="" asp-controller="Dashboard" asp-action="Index"
                            class="px-4 py-1.5 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 rounded-full transition-all duration-200 @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Dashboard" ? "text-gold bg-gold/10 border border-[1px] border-gold/20" : "")">
@@ -95,6 +95,17 @@
                         <a asp-area="" asp-controller="Reports" asp-action="Index"
                            class="px-4 py-1.5 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 rounded-full transition-all duration-200 @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Reports" ? "text-gold bg-gold/10 border border-[1px] border-gold/20" : "")">
                             Reports
+                        </a>
+                     }
+                     @if (User.IsInRole("Driver"))
+                     {
+                        <a asp-area="" asp-controller="DriverPortal" asp-action="Dashboard" 
+                           class="px-4 py-1.5 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 rounded-full transition-all duration-200 @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Browse" ? "text-gold bg-gold/10 border border-[1px] border-gold/20" : "")">
+                            Dashboard
+                        </a>
+                        <a asp-area="" asp-controller="DriverPortal" asp-action="Schedule"
+                           class="px-4 py-1.5 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 rounded-full transition-all duration-200 @(ViewContext.RouteData.Values["Action"]?.ToString() == "MyBookings" ? "text-gold bg-gold/10 border border-[1px] border-gold/20" : "")">
+                            Schedule
                         </a>
                      }
                 </div>

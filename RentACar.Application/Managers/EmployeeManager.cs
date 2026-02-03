@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using RentACar.Application.DTOs;
 using RentACar.Application.Managers;
 using RentACar.Core.Entities;
@@ -22,14 +23,16 @@ namespace RentACar.Application.Managers
         private readonly CustomerManager _customerManager; // To access CustomerManager methods
         private readonly ILogger<EmployeeManager> _logger;
         private readonly IBookingRepository _bookingRepository;
+        private readonly IDriverRepository _driverRepository;
         private readonly AuditLogManager _auditLogManager;
         private readonly EmailManager _emailManager;
 
-        public EmployeeManager(UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager, IEmployeeRepository employeeRepository, IBookingRepository bookingRepository, IMapper mapper, CustomerManager customerManager, ILogger<EmployeeManager> logger, AuditLogManager auditLogManager, EmailManager emailManager)
+        public EmployeeManager(UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager, IEmployeeRepository employeeRepository, IDriverRepository driverRepository, IBookingRepository bookingRepository, IMapper mapper, CustomerManager customerManager, ILogger<EmployeeManager> logger, AuditLogManager auditLogManager, EmailManager emailManager)
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _employeeRepository = employeeRepository;
+            _driverRepository = driverRepository;
             _mapper = mapper;
             _customerManager = customerManager;
             _logger = logger;
@@ -41,19 +44,18 @@ namespace RentACar.Application.Managers
         public async Task<EmployeeDto?> CreateEmployee(EmployeeCreateDTO createDto)
         {
             _logger.LogInformation("Creating employee for {Email}", createDto.Email);
+
+            // 1. Validate role combinations
+            var requestedRoles = createDto.Roles ?? new List<string> { "Employee" };
+            ValidateRoles(requestedRoles);
+
             var username = createDto.Email;
 
             var existingByUsername = await _userManager.FindByNameAsync(username);
-            if (existingByUsername != null)
-            {
-                throw new InvalidOperationException("Username is already in use by another user.");
-            }
+            if (existingByUsername != null) throw new InvalidOperationException("Username is already in use.");
 
             var existingByEmail = await _userManager.FindByEmailAsync(createDto.Email);
-            if (existingByEmail != null)
-            {
-                throw new InvalidOperationException("Email address is already registered.");
-            }
+            if (existingByEmail != null) throw new InvalidOperationException("Email address is already registered.");
 
             var user = new IdentityUser
             {
@@ -67,31 +69,35 @@ namespace RentACar.Application.Managers
 
             if (result.Succeeded)
             {
-                if (!await _roleManager.RoleExistsAsync("Employee"))
+                // 2. Assign Identity Roles
+                foreach (var role in requestedRoles)
                 {
-                    await _roleManager.CreateAsync(new IdentityRole("Employee"));
+                    if (!await _roleManager.RoleExistsAsync(role))
+                    {
+                        await _roleManager.CreateAsync(new IdentityRole(role));
+                    }
+                    await _userManager.AddToRoleAsync(user, role);
                 }
-
-                await _userManager.AddToRoleAsync(user, "Employee");
 
                 var employee = _mapper.Map<Employee>(createDto);
                 employee.IsActive = createDto.IsActive;
                 employee.aspNetUserId = user.Id;
                 await _employeeRepository.AddAsync(employee);
+
+                // 3. Handle Driver Sync
+                if (requestedRoles.Contains("Driver", StringComparer.OrdinalIgnoreCase))
+                {
+                    await SyncDriverRecord(employee, createDto, user.Id);
+                }
+
                 _logger.LogInformation("Employee created with id {Id}", employee.EmployeeId);
+                await _auditLogManager.LogAsync("Create", "Employee", employee.EmployeeId.ToString(), $"Created new employee: {employee.Name} with roles [{string.Join(", ", requestedRoles)}]");
 
-                await _auditLogManager.LogAsync("Create", "Employee", employee.EmployeeId.ToString(), $"Created new employee: {employee.Name} ({createDto.Email})");
-
-                return _mapper.Map<EmployeeDto>(employee);
+                return await GetEmployeeById(employee.EmployeeId);
             }
+
             var errorMessage = string.Join("; ", result.Errors.Select(e => e.Description));
-            if (string.IsNullOrWhiteSpace(errorMessage))
-            {
-                errorMessage = "Unable to create employee account.";
-            }
-
-            _logger.LogWarning("Failed to create employee for {Email}: {Message}", createDto.Email, errorMessage);
-            throw new InvalidOperationException(errorMessage);
+            throw new InvalidOperationException(errorMessage ?? "Unable to create employee account.");
         }
         public async Task<bool> ResetPassword(int EmployeeId)
         {
@@ -99,18 +105,18 @@ namespace RentACar.Application.Managers
             if (employee == null) return false;
             var user = await _userManager.FindByIdAsync(employee.aspNetUserId);
             if (user == null) return false;
-            
+
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
             var newPassword = $"RentCar{new Random().Next(100000, 999999)}!";
-            
+
             var result = await _userManager.ResetPasswordAsync(user, token, newPassword);
-            
-             if (result.Succeeded)
+
+            if (result.Succeeded)
             {
-                 await _emailManager.SendAdminResetPasswordEmail(user.Email, newPassword, employee.Name);
-                 await _auditLogManager.LogEventAsync("Employee.PasswordReset", "Employee", EmployeeId.ToString(), "Admin reset employee password", null, "Success");
+                await _emailManager.SendAdminResetPasswordEmail(user.Email, newPassword, employee.Name);
+                await _auditLogManager.LogEventAsync("Employee.PasswordReset", "Employee", EmployeeId.ToString(), "Admin reset employee password", null, "Success");
             }
-            
+
             return result.Succeeded;
         }
         public async Task<EmployeeDto?> GetEmployeeById(int id)
@@ -134,92 +140,140 @@ namespace RentACar.Application.Managers
         public async Task UpdateEmployee(EmployeeDto employeeDto)
         {
             _logger.LogInformation("Updating employee {Id}", employeeDto.EmployeeId);
-            
-            if (employeeDto.EmployeeId <= 0)
-            {
-                _logger.LogWarning("UpdateEmployee called with invalid EmployeeId: {Id}. Attempting to resolve via aspNetUserId.", employeeDto.EmployeeId);
-                if (!string.IsNullOrEmpty(employeeDto.aspNetUserId))
-                {
-                    var resolved = await _employeeRepository.GetByIdAsync(employeeDto.aspNetUserId);
-                    if (resolved != null) employeeDto.EmployeeId = resolved.EmployeeId;
-                }
-            }
-            
-            var employeeEntity = await _employeeRepository.GetByIdAsync(employeeDto.EmployeeId);
-            if (employeeEntity == null)
-            {
-                _logger.LogError("Employee with EmployeeId {Id} not found. Update aborted.", employeeDto.EmployeeId);
-                throw new KeyNotFoundException($"Employee with ID {employeeDto.EmployeeId} not found.");
-            }
-            
+
+            var employeeEntity = await _employeeRepository.Query()
+                .Include(e => e.User)
+                .Include(e => e.Driver)
+                .FirstOrDefaultAsync(e => e.EmployeeId == employeeDto.EmployeeId);
+
+            if (employeeEntity == null) throw new KeyNotFoundException($"Employee with ID {employeeDto.EmployeeId} not found.");
+
+            // 1. Sync Identity User & Roles
             var user = await _userManager.FindByIdAsync(employeeEntity.aspNetUserId);
             if (user != null)
             {
-                employeeDto.username ??= employeeDto.Email;
-                var existingByEmail = await _userManager.FindByEmailAsync(employeeDto.Email);
-                if (existingByEmail != null && existingByEmail.Id != user.Id)
-                {
-                    throw new InvalidOperationException("Email address is already registered to another user.");
-                }
-
-                var existingByUsername = await _userManager.FindByNameAsync(employeeDto.username);
-                if (existingByUsername != null && existingByUsername.Id != user.Id)
-                {
-                    throw new InvalidOperationException("Username is already in use by another user.");
-                }
-
                 user.Email = employeeDto.Email;
-                user.UserName = employeeDto.username;
+                user.UserName = employeeDto.username ?? employeeDto.Email;
                 user.PhoneNumber = employeeDto.PhoneNumber;
                 await _userManager.UpdateAsync(user);
+
+                if (employeeDto.Roles != null && employeeDto.Roles.Any())
+                {
+                    ValidateRoles(employeeDto.Roles);
+                    var currentRoles = await _userManager.GetRolesAsync(user);
+                    var rolesToAdd = employeeDto.Roles.Except(currentRoles, StringComparer.OrdinalIgnoreCase).ToList();
+                    var rolesToRemove = currentRoles.Except(employeeDto.Roles, StringComparer.OrdinalIgnoreCase).ToList();
+
+                    foreach (var r in rolesToAdd)
+                    {
+                        if (!await _roleManager.RoleExistsAsync(r)) await _roleManager.CreateAsync(new IdentityRole(r));
+                        await _userManager.AddToRoleAsync(user, r);
+                    }
+                    await _userManager.RemoveFromRolesAsync(user, rolesToRemove);
+                }
             }
 
-            var oldActive = employeeEntity.IsActive;
-            
-            // Capture Snapshot Before
-            var before = new { 
-                employeeEntity.Name, 
-                employeeEntity.Salary, 
-                employeeEntity.Address, 
-                employeeEntity.IsActive,
-                Email = user?.Email,
-                Username = user?.UserName,
-                PhoneNumber = user?.PhoneNumber
-            };
+            // 2. Update Employee Basic Info
+            var before = new { employeeEntity.Name, employeeEntity.Salary, employeeEntity.Address, employeeEntity.IsActive };
 
             employeeEntity.Name = employeeDto.Name;
             employeeEntity.Salary = employeeDto.Salary;
             employeeEntity.Address = employeeDto.Address;
+            var oldActive = employeeEntity.IsActive;
             employeeEntity.IsActive = employeeDto.IsActive;
 
             await _employeeRepository.UpdateAsync(employeeEntity);
-            _logger.LogInformation("Employee {Id} updated successfully in repository.", employeeDto.EmployeeId);
 
-            // Capture Snapshot After
-            var after = new { 
-                employeeEntity.Name, 
-                employeeEntity.Salary, 
-                employeeEntity.Address, 
-                employeeEntity.IsActive,
-                Email = user?.Email,
-                Username = user?.UserName,
-                PhoneNumber = user?.PhoneNumber
-            };
+            // 3. Sync Driver Data
+            bool isDriver = employeeDto.Roles?.Contains("Driver", StringComparer.OrdinalIgnoreCase) ?? false;
+            await SyncDriverRecord(employeeEntity, employeeDto, employeeEntity.aspNetUserId, isDriver);
 
-            await _auditLogManager.LogAsync(
-                "Update", 
-                "Employee", 
-                employeeDto.EmployeeId.ToString(), 
-                $"Updated employee profile: {employeeDto.Name}",
-                oldValues: before,
-                newValues: after);
-            
-            if (oldActive != employeeDto.IsActive)
+            await _auditLogManager.LogAsync("Update", "Employee", employeeDto.EmployeeId.ToString(), $"Updated employee profile: {employeeDto.Name}", oldValues: before, newValues: employeeDto);
+
+            if (oldActive != employeeDto.IsActive && user != null)
             {
                 string status = employeeEntity.IsActive ? "Activated" : "Deactivated";
                 string reason = employeeEntity.IsActive ? "Account activated." : "Account deactivated.";
                 await _emailManager.SendAccountStatusEmail(user.Email, employeeEntity.Name, status, reason);
             }
+        }
+
+        private void ValidateRoles(List<string> roles)
+        {
+            bool isCustomer = roles.Contains("Customer", StringComparer.OrdinalIgnoreCase);
+            bool isEmployee = roles.Contains("Employee", StringComparer.OrdinalIgnoreCase);
+            bool isDriver = roles.Contains("Driver", StringComparer.OrdinalIgnoreCase);
+            bool isAdmin = roles.Contains("Admin", StringComparer.OrdinalIgnoreCase);
+
+            if (isCustomer && (isEmployee || isDriver))
+                throw new InvalidOperationException("Customer role cannot be combined with Employee or Driver roles.");
+
+            if (isAdmin && isCustomer)
+                throw new InvalidOperationException("Admin role cannot be combined with Customer role.");
+        }
+
+        private async Task SyncDriverRecord(Employee employee, object dto, string aspNetUserId, bool shouldBeActive = true)
+        {
+            var driver = await _driverRepository.GetByEmployeeIdAsync(employee.EmployeeId);
+
+            // Map common fields from object (DTO or CreateDTO)
+            string? driverCode = GetPropValue(dto, "DriverCode")?.ToString();
+            string? fullName = GetPropValue(dto, "DriverFullName")?.ToString() ?? employee.Name;
+            string? phone = GetPropValue(dto, "DriverPhone")?.ToString();
+            string? email = GetPropValue(dto, "DriverEmail")?.ToString();
+            decimal? rating = GetPropValue(dto, "DriverRating") as decimal?;
+            string? license = GetPropValue(dto, "DriverLicenseNumber")?.ToString();
+            DateOnly? expiry = GetPropValue(dto, "DriverLicenseExpiry") as DateOnly?;
+            string? languages = GetPropValue(dto, "DriverLanguages")?.ToString();
+            string? notes = GetPropValue(dto, "DriverNotes")?.ToString();
+
+            if (driver == null && shouldBeActive)
+            {
+                driver = new Driver
+                {
+                    EmployeeId = employee.EmployeeId,
+                    AspNetUserId = aspNetUserId,
+                    DriverCode = driverCode ?? $"DR-{DateTime.Now.Ticks % 100000:D5}",
+                    FullName = fullName,
+                    Phone = phone,
+                    Email = email ?? employee.User?.Email ?? "N/A",
+                    Rating = rating,
+                    LicenseNumber = license,
+                    LicenseExpiry = expiry,
+                    Languages = languages,
+                    Notes = notes,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                };
+                await _driverRepository.AddAsync(driver);
+            }
+            else if (driver != null)
+            {
+                if (shouldBeActive)
+                {
+                    driver.FullName = fullName;
+                    driver.Phone = phone;
+                    driver.Email = email ?? driver.Email;
+                    driver.Rating = rating ?? driver.Rating;
+                    driver.LicenseNumber = license ?? driver.LicenseNumber;
+                    driver.LicenseExpiry = expiry ?? driver.LicenseExpiry;
+                    driver.Languages = languages ?? driver.Languages;
+                    driver.Notes = notes ?? driver.Notes;
+                    driver.IsActive = true;
+                    driver.UpdatedAt = DateTime.UtcNow;
+                }
+                else
+                {
+                    driver.IsActive = false;
+                    driver.UpdatedAt = DateTime.UtcNow;
+                }
+                await _driverRepository.UpdateAsync(driver);
+            }
+        }
+
+        private object? GetPropValue(object src, string propName)
+        {
+            return src.GetType().GetProperty(propName)?.GetValue(src, null);
         }
 
 
@@ -255,7 +309,7 @@ namespace RentACar.Application.Managers
             }
 
             await _employeeRepository.DeleteAsync(id);
-            
+
             if (user != null)
             {
                 await _userManager.DeleteAsync(user);
@@ -265,7 +319,8 @@ namespace RentACar.Application.Managers
         }
 
         public async Task<IList<string>> GetUserRoles(int userId)
-        {var employee = await _employeeRepository.GetByIdAsync(userId);
+        {
+            var employee = await _employeeRepository.GetByIdAsync(userId);
             var user = await _userManager.FindByIdAsync(employee.aspNetUserId);
             if (user != null)
             {
@@ -425,7 +480,7 @@ namespace RentACar.Application.Managers
             foreach (var emp in employees)
             {
                 if (!emp.IsActive) continue;
-                
+
                 var user = await _userManager.FindByIdAsync(emp.aspNetUserId);
                 if (user != null && await _userManager.IsInRoleAsync(user, "Admin") && !string.IsNullOrEmpty(user.Email))
                 {
@@ -476,7 +531,7 @@ namespace RentACar.Application.Managers
                 // In-memory filter for role (less efficient but simplest without custom joins)
                 var allMatches = await query.ToListAsync();
                 var roleFiltered = new List<Employee>();
-                
+
                 foreach (var emp in allMatches)
                 {
                     var user = await _userManager.FindByIdAsync(emp.aspNetUserId);
@@ -497,7 +552,7 @@ namespace RentACar.Application.Managers
                 {
                     var user = await _userManager.FindByIdAsync(emp.aspNetUserId);
                     var roles = await _userManager.GetRolesAsync(user);
-                     dtosFiltered.Add(new EmployeeDisplayDto
+                    dtosFiltered.Add(new EmployeeDisplayDto
                     {
                         EmployeeId = emp.EmployeeId,
                         Name = emp.Name,
@@ -530,16 +585,16 @@ namespace RentACar.Application.Managers
             var dtos = new List<EmployeeDisplayDto>();
             foreach (var emp in pagedItems)
             {
-                 var user = await _userManager.FindByIdAsync(emp.aspNetUserId);
-                 // If user is null (data integrity issue), skip or handle? distinct from query include? 
-                 // Include(e => e.User) guarantees it's loaded if EF recognizes relationship.
-                 // But _userManager might trigger extra DB calls if we aren't careful.
-                 // Since we have the User object from Include, we can try to use it directly if possible, 
-                 // but GetRolesAsync needs user.Id or User object.
-                 
-                 var roles = user != null ? await _userManager.GetRolesAsync(user) : new List<string>();
+                var user = await _userManager.FindByIdAsync(emp.aspNetUserId);
+                // If user is null (data integrity issue), skip or handle? distinct from query include? 
+                // Include(e => e.User) guarantees it's loaded if EF recognizes relationship.
+                // But _userManager might trigger extra DB calls if we aren't careful.
+                // Since we have the User object from Include, we can try to use it directly if possible, 
+                // but GetRolesAsync needs user.Id or User object.
 
-                 dtos.Add(new EmployeeDisplayDto
+                var roles = user != null ? await _userManager.GetRolesAsync(user) : new List<string>();
+
+                dtos.Add(new EmployeeDisplayDto
                 {
                     EmployeeId = emp.EmployeeId,
                     Name = emp.Name,
@@ -584,8 +639,22 @@ namespace RentACar.Application.Managers
                 .ForMember(dest => dest.username, opt => opt.MapFrom(src => src.User.UserName))
                 .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.User.PhoneNumber))
                 .ForMember(dest => dest.EmployeeId, opt => opt.MapFrom(src => src.EmployeeId)) // Explicit map
+                .ForMember(dest => dest.DriverId, opt => opt.MapFrom(src => src.Driver != null ? (int?)src.Driver.DriverId : null))
+                .ForMember(dest => dest.DriverCode, opt => opt.MapFrom(src => src.Driver != null ? src.Driver.DriverCode : null))
+                .ForMember(dest => dest.DriverFullName, opt => opt.MapFrom(src => src.Driver != null ? src.Driver.FullName : null))
+                .ForMember(dest => dest.DriverPhone, opt => opt.MapFrom(src => src.Driver != null ? src.Driver.Phone : null))
+                .ForMember(dest => dest.DriverEmail, opt => opt.MapFrom(src => src.Driver != null ? src.Driver.Email : null))
+                .ForMember(dest => dest.DriverRating, opt => opt.MapFrom(src => src.Driver != null ? src.Driver.Rating : null))
+                .ForMember(dest => dest.DriverLicenseNumber, opt => opt.MapFrom(src => src.Driver != null ? src.Driver.LicenseNumber : null))
+                .ForMember(dest => dest.DriverLicenseExpiry, opt => opt.MapFrom(src => src.Driver != null ? src.Driver.LicenseExpiry : null))
+                .ForMember(dest => dest.DriverLanguages, opt => opt.MapFrom(src => src.Driver != null ? src.Driver.Languages : null))
+                .ForMember(dest => dest.DriverNotes, opt => opt.MapFrom(src => src.Driver != null ? src.Driver.Notes : null))
+                .ForMember(dest => dest.DriverIsActive, opt => opt.MapFrom(src => src.Driver != null ? src.Driver.IsActive : false))
+                .ForMember(dest => dest.DriverCreatedAt, opt => opt.MapFrom(src => src.Driver != null ? (DateTime?)src.Driver.CreatedAt : null))
+                .ForMember(dest => dest.DriverUpdatedAt, opt => opt.MapFrom(src => src.Driver != null ? (DateTime?)src.Driver.UpdatedAt : null))
                 .ReverseMap()
-                .ForMember(dest => dest.User, opt => opt.Ignore()); // Prevent circular reference
+                .ForMember(dest => dest.User, opt => opt.Ignore())
+                .ForMember(dest => dest.Driver, opt => opt.Ignore());
 
             CreateMap<EmployeeCreateDTO, Employee>();
         }
