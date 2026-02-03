@@ -1,0 +1,371 @@
+@{
+    ViewData["Title"] = "Employee Management";
+    Layout = "_Layout";
+    ViewData["BodyClass"] = "bg-background-dark";
+}
+
+<div class="px-4 md:px-10 py-8 max-w-[1440px] mx-auto w-full text-white font-display">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+        <div>
+            <h1 class="text-3xl md:text-4xl font-black tracking-tight flex items-center gap-3">
+                <span class="material-symbols-outlined text-primary text-4xl">badge</span>
+                Employee Management (Done)
+            </h1>
+            <p class="text-gray-400 mt-2">Manage staff access, roles, and driver assignments.</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-3">
+            <a href="/EmployeeDone/ChangeRole" class="inline-flex items-center gap-2 border border-border-dark px-4 py-2 rounded-lg text-sm text-gray-200 hover:text-white hover:border-primary transition-colors">
+                <span class="material-symbols-outlined text-base">manage_accounts</span>
+                Change Role
+            </a>
+            <button id="addEmployeeBtn" class="inline-flex items-center gap-2 bg-primary hover:bg-gold-hover text-black px-5 py-2 rounded-lg font-bold transition-colors">
+                <span class="material-symbols-outlined text-[20px]">person_add</span>
+                Add Employee
+            </button>
+        </div>
+    </div>
+
+    <div class="bg-surface-dark border border-border-dark rounded-2xl p-4 mb-6 shadow-glow">
+        <form id="filterForm" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <label class="flex flex-col">
+                <span class="text-xs uppercase tracking-wider text-gray-400 mb-2">Search</span>
+                <input id="searchInput" name="search" type="text" class="rounded-lg bg-background-dark border border-border-dark px-3 py-2 text-sm" placeholder="Name, Email, Driver Code" />
+            </label>
+            <label class="flex flex-col">
+                <span class="text-xs uppercase tracking-wider text-gray-400 mb-2">Status</span>
+                <select id="activeFilter" name="active" class="rounded-lg bg-background-dark border border-border-dark px-3 py-2 text-sm">
+                    <option value="">All</option>
+                    <option value="true">Active</option>
+                    <option value="false">Inactive</option>
+                </select>
+            </label>
+            <label class="flex flex-col">
+                <span class="text-xs uppercase tracking-wider text-gray-400 mb-2">Role</span>
+                <select id="roleFilter" name="role" class="rounded-lg bg-background-dark border border-border-dark px-3 py-2 text-sm">
+                    <option value="">All</option>
+                    <option value="Employee">Employee</option>
+                    <option value="Driver">Driver</option>
+                    <option value="Manager">Manager</option>
+                    <option value="Admin">Admin</option>
+                </select>
+            </label>
+            <div class="flex items-end">
+                <button type="submit" class="w-full bg-white/5 hover:bg-white/10 border border-border-dark text-white px-4 py-2 rounded-lg font-semibold text-sm">
+                    Apply Filters
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+        <div class="flex items-center gap-2 text-xs uppercase tracking-wider text-gray-400">
+            <span class="material-symbols-outlined text-base text-primary">table_view</span>
+            Results
+        </div>
+        <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-gray-400 text-base">search</span>
+            <input id="tableSearchInput" type="text" class="rounded-lg bg-background-dark border border-border-dark px-3 py-2 text-sm" placeholder="Filter table..." />
+        </div>
+    </div>
+
+    <div class="bg-surface-dark border border-border-dark rounded-2xl overflow-hidden shadow-glow">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead id="employeeTableHead" class="bg-white/5 text-xs uppercase tracking-wider text-gray-400"></thead>
+                <tbody id="employeeTableBody" class="divide-y divide-border-dark text-sm"></tbody>
+            </table>
+        </div>
+        <div id="emptyState" class="hidden p-10 text-center text-gray-500">
+            <span class="material-symbols-outlined text-4xl mb-2">person_off</span>
+            <p>No employees found.</p>
+        </div>
+    </div>
+</div>
+
+<div id="employeeModalPlaceholder"></div>
+
+@section Scripts {
+    <script>
+        const canResetEmployeePassword = @User.IsInRole("Admin").ToString().ToLower();
+        let employees = [];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadEmployees();
+
+            document.getElementById('filterForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                loadEmployees();
+            });
+
+            document.getElementById('roleFilter').addEventListener('change', () => loadEmployees());
+            document.getElementById('tableSearchInput').addEventListener('input', () => renderEmployees());
+            document.getElementById('employeeTableBody').addEventListener('click', handleTableClick);
+            document.getElementById('addEmployeeBtn').addEventListener('click', () => openEmployeeForm('/EmployeeDone/Add'));
+        });
+
+        async function loadEmployees() {
+            const search = document.getElementById('searchInput').value.trim();
+            const active = document.getElementById('activeFilter').value;
+            const role = document.getElementById('roleFilter').value;
+
+            const params = new URLSearchParams();
+            if (search) params.append('search', search);
+            if (active) params.append('active', active);
+            if (role) params.append('role', role);
+
+            const res = await fetch(`/api/EmployeeDone?${params.toString()}`);
+            if (!res.ok) {
+                console.error('Failed to load employees');
+                return;
+            }
+            employees = await res.json();
+            renderEmployees();
+        }
+
+        function getLayout(role) {
+            if (role === 'Driver') {
+                return {
+                    columns: [
+                        { key: 'driverCode', label: 'Driver Code' },
+                        { key: 'driverFullName', label: 'Driver Name' },
+                        { key: 'driverPhone', label: 'Driver Phone' },
+                        { key: 'driverEmail', label: 'Driver Email' },
+                        { key: 'driverRating', label: 'Rating' },
+                        { key: 'driverLicenseNumber', label: 'License #' },
+                        { key: 'driverLicenseExpiry', label: 'License Expiry' },
+                        { key: 'driverLanguages', label: 'Languages' },
+                        { key: 'driverIsActive', label: 'Driver Active' }
+                    ]
+                };
+            }
+            if (role === 'Employee') {
+                return {
+                    columns: [
+                        { key: 'name', label: 'Name' },
+                        { key: 'email', label: 'Email' },
+                        { key: 'phoneNumber', label: 'Phone' },
+                        { key: 'salary', label: 'Salary' },
+                        { key: 'address', label: 'Address' },
+                        { key: 'isActive', label: 'Active' },
+                        { key: 'roles', label: 'Roles' }
+                    ]
+                };
+            }
+            return {
+                columns: [
+                    { key: 'name', label: 'Name' },
+                    { key: 'email', label: 'Email' },
+                    { key: 'phoneNumber', label: 'Phone' },
+                    { key: 'roles', label: 'Roles' },
+                    { key: 'isActive', label: 'Active' }
+                ]
+            };
+        }
+
+        function renderEmployees() {
+            const role = document.getElementById('roleFilter').value;
+            const layout = getLayout(role);
+            const tableHead = document.getElementById('employeeTableHead');
+            const tableBody = document.getElementById('employeeTableBody');
+            const emptyState = document.getElementById('emptyState');
+            const searchValue = document.getElementById('tableSearchInput').value.trim().toLowerCase();
+
+            const filtered = employees.filter(emp => {
+                if (!searchValue) return true;
+                return (
+                    (emp.name || '').toLowerCase().includes(searchValue) ||
+                    (emp.email || '').toLowerCase().includes(searchValue) ||
+                    (emp.driverCode || '').toLowerCase().includes(searchValue) ||
+                    (emp.driverFullName || '').toLowerCase().includes(searchValue)
+                );
+            });
+
+            tableHead.innerHTML = `
+                <tr>
+                    ${layout.columns.map(col => `<th class="px-4 py-3">${col.label}</th>`).join('')}
+                    <th class="px-4 py-3 text-right">Actions</th>
+                </tr>`;
+
+            tableBody.innerHTML = filtered.map(emp => {
+                const cells = layout.columns.map(col => {
+                    let value = emp[col.key];
+                    if (col.key === 'roles') {
+                        value = (emp.roles || []).join(', ');
+                    }
+                    if (col.key === 'isActive' || col.key === 'driverIsActive') {
+                        value = value ? 'Yes' : 'No';
+                    }
+                    if (col.key === 'salary' && value !== null && value !== undefined) {
+                        value = `$${value}`;
+                    }
+                    return `<td class="px-4 py-3">${value ?? '-'}</td>`;
+                }).join('');
+
+                const resetBtn = canResetEmployeePassword
+                    ? `<button class="reset-pass text-xs text-blue-400 hover:text-blue-300" data-id="${emp.employeeId}">Reset Password</button>`
+                    : '';
+
+                return `
+                    <tr class="hover:bg-white/5">
+                        ${cells}
+                        <td class="px-4 py-3 text-right">
+                            <div class="flex flex-col md:flex-row gap-2 justify-end">
+                                <button class="edit-employee text-xs text-primary hover:text-gold-hover" data-id="${emp.employeeId}">Edit</button>
+                                <button class="delete-employee text-xs text-red-400 hover:text-red-300" data-id="${emp.employeeId}">Delete</button>
+                                ${resetBtn}
+                            </div>
+                        </td>
+                    </tr>`;
+            }).join('');
+
+            emptyState.classList.toggle('hidden', filtered.length !== 0);
+        }
+
+        function handleTableClick(event) {
+            const editBtn = event.target.closest('.edit-employee');
+            const deleteBtn = event.target.closest('.delete-employee');
+            const resetBtn = event.target.closest('.reset-pass');
+
+            if (editBtn) {
+                openEmployeeForm(`/EmployeeDone/Edit/${editBtn.dataset.id}`);
+            }
+            if (deleteBtn) {
+                openDeleteForm(`/EmployeeDone/Delete/${deleteBtn.dataset.id}`);
+            }
+            if (resetBtn) {
+                resetPassword(resetBtn.dataset.id);
+            }
+        }
+
+        async function openEmployeeForm(url) {
+            const res = await fetch(url);
+            if (!res.ok) return;
+            const html = await res.text();
+            const container = document.getElementById('employeeModalPlaceholder');
+            container.innerHTML = html;
+            const modalElement = document.getElementById('employeeModal');
+            if (!modalElement) return;
+            const modal = new bootstrap.Modal(modalElement);
+            bindEmployeeForm(modalElement, modal);
+            modal.show();
+        }
+
+        async function openDeleteForm(url) {
+            const res = await fetch(url);
+            if (!res.ok) return;
+            const html = await res.text();
+            const container = document.getElementById('employeeModalPlaceholder');
+            container.innerHTML = html;
+            const modalElement = document.getElementById('deleteEmployeeModal');
+            if (!modalElement) return;
+            const modal = new bootstrap.Modal(modalElement);
+            bindDeleteForm(modalElement, modal);
+            modal.show();
+        }
+
+        function bindEmployeeForm(modalElement, modal) {
+            const form = modalElement.querySelector('#employeeForm');
+            if (!form) return;
+
+            const driverSection = form.querySelector('#driverFields');
+            const driverCheckbox = form.querySelector('input[name="roles"][value="Driver"]');
+
+            const toggleDriver = () => {
+                if (!driverSection || !driverCheckbox) return;
+                driverSection.classList.toggle('d-none', !driverCheckbox.checked);
+            };
+
+            if (driverCheckbox) {
+                driverCheckbox.addEventListener('change', toggleDriver);
+                toggleDriver();
+            }
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const data = buildEmployeePayload(form);
+                const isEdit = data.employeeId && data.employeeId > 0;
+
+                if (!isEdit && !data.password) {
+                    alert('Password is required for new employees.');
+                    return;
+                }
+
+                const url = isEdit ? `/api/EmployeeDone/${data.employeeId}` : '/api/EmployeeDone';
+                const method = isEdit ? 'PUT' : 'POST';
+
+                const res = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (!res.ok) {
+                    const message = await res.text();
+                    alert(message || 'Failed to save employee.');
+                    return;
+                }
+
+                modal.hide();
+                await loadEmployees();
+            });
+        }
+
+        function bindDeleteForm(modalElement, modal) {
+            const confirmBtn = modalElement.querySelector('#confirmDeleteEmployee');
+            if (!confirmBtn) return;
+            confirmBtn.addEventListener('click', async () => {
+                const id = confirmBtn.dataset.employeeId;
+                const res = await fetch(`/api/EmployeeDone/${id}`, { method: 'DELETE' });
+                if (!res.ok) {
+                    const message = await res.text();
+                    alert(message || 'Failed to delete employee.');
+                    return;
+                }
+                modal.hide();
+                await loadEmployees();
+            });
+        }
+
+        async function resetPassword(employeeId) {
+            if (!confirm('Reset password for this employee?')) return;
+            const res = await fetch(`/api/EmployeeDone/${employeeId}/reset-password`, { method: 'POST' });
+            if (!res.ok) {
+                alert('Failed to reset password.');
+                return;
+            }
+            alert('Password reset to: E@e123456');
+        }
+
+        function buildEmployeePayload(form) {
+            const roles = Array.from(form.querySelectorAll('input[name="roles"]:checked')).map(cb => cb.value);
+            const getValue = (selector) => form.querySelector(selector)?.value?.trim() || null;
+            const getNumber = (selector) => {
+                const value = form.querySelector(selector)?.value;
+                return value === '' || value === undefined ? null : Number(value);
+            };
+
+            return {
+                employeeId: Number(form.querySelector('#EmployeeId')?.value || 0),
+                name: getValue('#Name'),
+                email: getValue('#Email'),
+                phoneNumber: getValue('#PhoneNumber'),
+                salary: getNumber('#Salary'),
+                address: getValue('#Address'),
+                isActive: form.querySelector('#IsActive')?.checked ?? true,
+                roles,
+                password: getValue('#Password'),
+                driverId: getNumber('#DriverId'),
+                driverCode: getValue('#DriverCode'),
+                driverFullName: getValue('#DriverFullName'),
+                driverPhone: getValue('#DriverPhone'),
+                driverEmail: getValue('#DriverEmail'),
+                driverRating: getNumber('#DriverRating'),
+                driverLicenseNumber: getValue('#DriverLicenseNumber'),
+                driverLicenseExpiry: getValue('#DriverLicenseExpiry'),
+                driverLanguages: getValue('#DriverLanguages'),
+                driverNotes: getValue('#DriverNotes'),
+                driverIsActive: form.querySelector('#DriverIsActive')?.checked ?? true
+            };
+        }
+    </script>
+}

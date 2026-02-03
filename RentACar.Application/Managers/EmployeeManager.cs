@@ -101,7 +101,7 @@ namespace RentACar.Application.Managers
             if (user == null) return false;
             
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-            var newPassword = $"RentCar{new Random().Next(100000, 999999)}!";
+            var newPassword = "E@e123456";
             
             var result = await _userManager.ResetPasswordAsync(user, token, newPassword);
             
@@ -584,6 +584,19 @@ namespace RentACar.Application.Managers
                 .ForMember(dest => dest.username, opt => opt.MapFrom(src => src.User.UserName))
                 .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.User.PhoneNumber))
                 .ForMember(dest => dest.EmployeeId, opt => opt.MapFrom(src => src.EmployeeId)) // Explicit map
+                .ForMember(dest => dest.DriverId, opt => opt.MapFrom(src => src.Driver != null ? src.Driver.DriverId : (int?)null))
+                .ForMember(dest => dest.DriverCode, opt => opt.MapFrom(src => src.Driver != null ? src.Driver.DriverCode : null))
+                .ForMember(dest => dest.DriverFullName, opt => opt.MapFrom(src => src.Driver != null ? src.Driver.FullName : null))
+                .ForMember(dest => dest.DriverPhone, opt => opt.MapFrom(src => src.Driver != null ? src.Driver.Phone : null))
+                .ForMember(dest => dest.DriverEmail, opt => opt.MapFrom(src => src.Driver != null ? src.Driver.Email : null))
+                .ForMember(dest => dest.DriverRating, opt => opt.MapFrom(src => src.Driver != null ? src.Driver.Rating : null))
+                .ForMember(dest => dest.DriverLicenseNumber, opt => opt.MapFrom(src => src.Driver != null ? src.Driver.LicenseNumber : null))
+                .ForMember(dest => dest.DriverLicenseExpiry, opt => opt.MapFrom(src => src.Driver != null ? src.Driver.LicenseExpiry : null))
+                .ForMember(dest => dest.DriverLanguages, opt => opt.MapFrom(src => src.Driver != null ? src.Driver.Languages : null))
+                .ForMember(dest => dest.DriverNotes, opt => opt.MapFrom(src => src.Driver != null ? src.Driver.Notes : null))
+                .ForMember(dest => dest.DriverIsActive, opt => opt.MapFrom(src => src.Driver != null && src.Driver.IsActive))
+                .ForMember(dest => dest.DriverCreatedAt, opt => opt.MapFrom(src => src.Driver != null ? src.Driver.CreatedAt : (DateTime?)null))
+                .ForMember(dest => dest.DriverUpdatedAt, opt => opt.MapFrom(src => src.Driver != null ? src.Driver.UpdatedAt : null))
                 .ReverseMap()
                 .ForMember(dest => dest.User, opt => opt.Ignore()); // Prevent circular reference
 
