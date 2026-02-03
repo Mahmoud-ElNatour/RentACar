@@ -7,5 +7,7 @@ namespace RentACar.Core.Repositories;
 public interface IDriverAvailabilityRepository
 {
     Task<List<DriverAvailability>> GetByDriverIdAsync(int driverId);
+    Task<List<DriverAvailability>> GetByDriverIdAndRangeAsync(int driverId, DateOnly from, DateOnly to);
     Task AddAsync(DriverAvailability availability);
+    Task UpdateAsync(DriverAvailability availability);
 }

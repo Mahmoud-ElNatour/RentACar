@@ -1,6 +1,8 @@
 @{
     ViewData["Title"] = "Change User Role";
+
     Layout = "_Layout";
+
     ViewData["BodyClass"] = "dark bg-background-dark";
 }
 
@@ -10,21 +12,25 @@
             box-shadow: 0 0 20px rgba(242, 185, 13, 0.2);
             border-color: #d4af37 !important;
         }
+
         /* Custom scrollbar for dropdown */
         .custom-scrollbar::-webkit-scrollbar {
             width: 6px;
         }
+
         .custom-scrollbar::-webkit-scrollbar-track {
             background: #141414;
         }
+
         .custom-scrollbar::-webkit-scrollbar-thumb {
             background: #333;
             border-radius: 3px;
         }
+
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
             background: #d4af37;
         }
-        
+
         .role-card.active {
             border-color: #d4af37;
             background-color: rgba(212, 175, 55, 0.1);
@@ -34,7 +40,7 @@
 
 <div class="font-display text-zinc-100 min-h-screen">
     <div class="layout-container flex h-full grow flex-col">
-        
+
         <!-- Header Section -->
         <div class="w-full border-b border-white/5 bg-black/40 backdrop-blur-md sticky top-0 z-20">
             <div class="max-w-[1200px] mx-auto px-6 py-6">
@@ -43,35 +49,45 @@
                         <span class="material-symbols-outlined text-[#d4af37] text-2xl">admin_panel_settings</span>
                         <h1 class="text-xl font-bold tracking-[0.25em] uppercase text-zinc-100">Role Management</h1>
                     </div>
-                    <div class="h-0.5 w-20 bg-gradient-to-r from-transparent via-[#d4af37] to-transparent opacity-60"></div>
+                    <div class="h-0.5 w-20 bg-gradient-to-r from-transparent via-[#d4af37] to-transparent opacity-60">
+                    </div>
                 </div>
             </div>
         </div>
 
         <main class="max-w-[1200px] mx-auto px-6 py-10 w-full flex-1">
-            
+
             <!-- Stats Section -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10" id="statsContainer">
                 <!-- Stats loaded via JS -->
-                <div class="animate-pulse bg-[#121214] border border-white/5 p-6 rounded-xl h-32 flex items-center justify-center text-zinc-600">Loading Stats...</div>
-                <div class="animate-pulse bg-[#121214] border border-white/5 p-6 rounded-xl h-32 flex items-center justify-center text-zinc-600">Loading Stats...</div>
-                <div class="animate-pulse bg-[#121214] border border-white/5 p-6 rounded-xl h-32 flex items-center justify-center text-zinc-600">Loading Stats...</div>
+                <div
+                    class="animate-pulse bg-[#121214] border border-white/5 p-6 rounded-xl h-32 flex items-center justify-center text-zinc-600">
+                    Loading Stats...</div>
+                <div
+                    class="animate-pulse bg-[#121214] border border-white/5 p-6 rounded-xl h-32 flex items-center justify-center text-zinc-600">
+                    Loading Stats...</div>
+                <div
+                    class="animate-pulse bg-[#121214] border border-white/5 p-6 rounded-xl h-32 flex items-center justify-center text-zinc-600">
+                    Loading Stats...</div>
             </div>
 
             <!-- Drill Down Section (Initially Hidden) -->
-            <div id="roleDrillDown" class="hidden mb-10 bg-[#121214] border border-white/5 rounded-xl p-8 backdrop-blur-sm">
+            <div id="roleDrillDown"
+                class="hidden mb-10 bg-[#121214] border border-white/5 rounded-xl p-8 backdrop-blur-sm">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-xl font-bold text-white flex items-center gap-3">
                         <span class="text-[#d4af37]" id="drillDownRoleTitle">Role</span> Users
                     </h2>
                     <div class="flex gap-4">
-                         <button onclick="closeDrillDown()" class="px-4 py-2 rounded-lg hover:bg-white/10 text-zinc-400 font-bold uppercase text-xs tracking-widest">Close</button>
-                         <a id="exportBtn" href="#" target="_blank" class="px-6 py-2 bg-[#d4af37]/10 hover:bg-[#d4af37]/20 text-[#d4af37] border border-[#d4af37]/20 rounded-lg font-bold uppercase text-xs tracking-widest flex items-center gap-2 transition-all">
+                        <button onclick="closeDrillDown()"
+                            class="px-4 py-2 rounded-lg hover:bg-white/10 text-zinc-400 font-bold uppercase text-xs tracking-widest">Close</button>
+                        <a id="exportBtn" href="#" target="_blank"
+                            class="px-6 py-2 bg-[#d4af37]/10 hover:bg-[#d4af37]/20 text-[#d4af37] border border-[#d4af37]/20 rounded-lg font-bold uppercase text-xs tracking-widest flex items-center gap-2 transition-all">
                             <span class="material-symbols-outlined text-sm">download</span> Export CSV
                         </a>
                     </div>
                 </div>
-                
+
                 <div class="overflow-x-auto custom-scrollbar max-h-[400px]">
                     <table class="w-full text-left border-collapse">
                         <thead>
@@ -88,12 +104,14 @@
                     </table>
                 </div>
                 <div class="mt-4 text-center">
-                    <button id="loadMoreBtn" onclick="loadMoreDrillDown()" class="text-[#d4af37] text-xs font-bold uppercase tracking-widest hover:underline hidden">Load More...</button>
+                    <button id="loadMoreBtn" onclick="loadMoreDrillDown()"
+                        class="text-[#d4af37] text-xs font-bold uppercase tracking-widest hover:underline hidden">Load
+                        More...</button>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                
+
                 <!-- Search & Select User Column -->
                 <div class="lg:col-span-5 flex flex-col gap-6">
                     <div class="bg-[#121214] border border-white/5 rounded-xl p-6 md:p-8 relative overflow-visible">
@@ -101,17 +119,17 @@
                             <span class="material-symbols-outlined text-[#d4af37]">person_search</span>
                             Find User
                         </h2>
-                        
+
                         <div class="relative z-50">
                             <div class="relative group">
                                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                     <span class="material-symbols-outlined text-zinc-500">search</span>
                                 </div>
-                                <input type="text" id="userSearchInput" 
-                                    class="block w-full pl-10 pr-3 py-3 border border-white/10 rounded-lg leading-5 bg-[#0a0a0a] text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-[#d4af37] focus:border-[#d4af37] sm:text-sm transition-all" 
-                                    placeholder="Search by Name, Email or Phone..." 
-                                    autocomplete="off">
-                                <div id="searchResults" class="hidden absolute mt-1 w-full bg-[#1a1a1c] border border-white/10 rounded-lg shadow-xl max-h-60 overflow-y-auto custom-scrollbar z-50">
+                                <input type="text" id="userSearchInput"
+                                    class="block w-full pl-10 pr-3 py-3 border border-white/10 rounded-lg leading-5 bg-[#0a0a0a] text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-[#d4af37] focus:border-[#d4af37] sm:text-sm transition-all"
+                                    placeholder="Search by Name, Email or Phone..." autocomplete="off">
+                                <div id="searchResults"
+                                    class="hidden absolute mt-1 w-full bg-[#1a1a1c] border border-white/10 rounded-lg shadow-xl max-h-60 overflow-y-auto custom-scrollbar z-50">
                                     <!-- Results injected here -->
                                 </div>
                             </div>
@@ -120,15 +138,18 @@
                         <!-- Selected User Display -->
                         <div id="selectedUserContainer" class="hidden mt-8 pt-8 border-t border-white/10">
                             <div class="flex items-center gap-4">
-                                <div class="h-14 w-14 rounded-full bg-[#d4af37]/20 flex items-center justify-center text-[#d4af37] font-bold text-xl border border-[#d4af37]/30" id="userAvatar">
+                                <div class="h-14 w-14 rounded-full bg-[#d4af37]/20 flex items-center justify-center text-[#d4af37] font-bold text-xl border border-[#d4af37]/30"
+                                    id="userAvatar">
                                     <!-- Initials -->
                                 </div>
                                 <div class="flex-1 min-w-0">
                                     <h3 class="text-white font-bold truncate" id="userNameDisplay">Name</h3>
-                                    <p class="text-zinc-400 text-sm truncate" id="userEmailDisplay">email@example.com</p>
+                                    <p class="text-zinc-400 text-sm truncate" id="userEmailDisplay">email@example.com
+                                    </p>
                                 </div>
                             </div>
-                            <div class="mt-4 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-zinc-300">
+                            <div
+                                class="mt-4 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-zinc-300">
                                 <span class="material-symbols-outlined text-sm">badge</span>
                                 Current Role: <span class="text-[#d4af37] font-bold" id="currentRoleDisplay">None</span>
                             </div>
@@ -138,8 +159,9 @@
 
                 <!-- Assignment Column -->
                 <div class="lg:col-span-7">
-                    <div class="bg-[#121214] border border-white/5 rounded-xl p-6 md:p-8 h-full relative opacity-50 pointer-events-none transition-all duration-300" id="actionPanel">
-                        
+                    <div class="bg-[#121214] border border-white/5 rounded-xl p-6 md:p-8 h-full relative opacity-50 pointer-events-none transition-all duration-300"
+                        id="actionPanel">
+
                         <div class="absolute -right-10 -top-10 text-[#d4af37]/5 pointer-events-none">
                             <span class="material-symbols-outlined text-[200px] select-none">manage_accounts</span>
                         </div>
@@ -149,14 +171,17 @@
                             Assign New Role
                         </h2>
 
-                        <p class="text-zinc-400 text-sm mb-6 relative z-10">Select a new role for the user. This will instantly update their permissions and access levels across the entire system.</p>
+                        <p class="text-zinc-400 text-sm mb-6 relative z-10">Select a new role for the user. This will
+                            instantly update their permissions and access levels across the entire system.</p>
 
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8 relative z-10" id="roleOptions">
                             <!-- Admin Option -->
                             <label class="cursor-pointer relative">
                                 <input type="radio" name="newRole" value="Admin" class="peer sr-only">
-                                <div class="role-card h-full p-4 rounded-xl bg-[#0a0a0a] border border-white/10 hover:border-[#d4af37]/50 transition-all flex flex-col items-center justify-center gap-3 text-center group peer-checked:border-[#d4af37] peer-checked:bg-[#d4af37]/10">
-                                    <span class="material-symbols-outlined text-zinc-500 group-hover:text-[#d4af37] peer-checked:text-[#d4af37] text-3xl transition-colors">shield_person</span>
+                                <div
+                                    class="role-card h-full p-4 rounded-xl bg-[#0a0a0a] border border-white/10 hover:border-[#d4af37]/50 transition-all flex flex-col items-center justify-center gap-3 text-center group peer-checked:border-[#d4af37] peer-checked:bg-[#d4af37]/10">
+                                    <span
+                                        class="material-symbols-outlined text-zinc-500 group-hover:text-[#d4af37] peer-checked:text-[#d4af37] text-3xl transition-colors">shield_person</span>
                                     <div>
                                         <div class="font-bold text-white text-sm">Administrator</div>
                                         <div class="text-[10px] text-zinc-500 mt-1">Full System Access</div>
@@ -167,8 +192,10 @@
                             <!-- Employee Option -->
                             <label class="cursor-pointer relative">
                                 <input type="radio" name="newRole" value="Employee" class="peer sr-only">
-                                <div class="role-card h-full p-4 rounded-xl bg-[#0a0a0a] border border-white/10 hover:border-[#d4af37]/50 transition-all flex flex-col items-center justify-center gap-3 text-center group peer-checked:border-[#d4af37] peer-checked:bg-[#d4af37]/10">
-                                    <span class="material-symbols-outlined text-zinc-500 group-hover:text-[#d4af37] peer-checked:text-[#d4af37] text-3xl transition-colors">badge</span>
+                                <div
+                                    class="role-card h-full p-4 rounded-xl bg-[#0a0a0a] border border-white/10 hover:border-[#d4af37]/50 transition-all flex flex-col items-center justify-center gap-3 text-center group peer-checked:border-[#d4af37] peer-checked:bg-[#d4af37]/10">
+                                    <span
+                                        class="material-symbols-outlined text-zinc-500 group-hover:text-[#d4af37] peer-checked:text-[#d4af37] text-3xl transition-colors">badge</span>
                                     <div>
                                         <div class="font-bold text-white text-sm">Employee</div>
                                         <div class="text-[10px] text-zinc-500 mt-1">Operational Access</div>
@@ -179,27 +206,43 @@
                             <!-- Customer Option -->
                             <label class="cursor-pointer relative">
                                 <input type="radio" name="newRole" value="Customer" class="peer sr-only">
-                                <div class="role-card h-full p-4 rounded-xl bg-[#0a0a0a] border border-white/10 hover:border-[#d4af37]/50 transition-all flex flex-col items-center justify-center gap-3 text-center group peer-checked:border-[#d4af37] peer-checked:bg-[#d4af37]/10">
-                                    <span class="material-symbols-outlined text-zinc-500 group-hover:text-[#d4af37] peer-checked:text-[#d4af37] text-3xl transition-colors">person</span>
+                                <div
+                                    class="role-card h-full p-4 rounded-xl bg-[#0a0a0a] border border-white/10 hover:border-[#d4af37]/50 transition-all flex flex-col items-center justify-center gap-3 text-center group peer-checked:border-[#d4af37] peer-checked:bg-[#d4af37]/10">
+                                    <span
+                                        class="material-symbols-outlined text-zinc-500 group-hover:text-[#d4af37] peer-checked:text-[#d4af37] text-3xl transition-colors">person</span>
                                     <div>
                                         <div class="font-bold text-white text-sm">Customer</div>
                                         <div class="text-[10px] text-zinc-500 mt-1">Standard Access</div>
                                     </div>
                                 </div>
                             </label>
+
+                            <!-- Driver Option -->
+                            <label class="cursor-pointer relative">
+                                <input type="radio" name="newRole" value="Driver" class="peer sr-only">
+                                <div
+                                    class="role-card h-full p-4 rounded-xl bg-[#0a0a0a] border border-white/10 hover:border-[#d4af37]/50 transition-all flex flex-col items-center justify-center gap-3 text-center group peer-checked:border-[#d4af37] peer-checked:bg-[#d4af37]/10">
+                                    <span
+                                        class="material-symbols-outlined text-zinc-500 group-hover:text-[#d4af37] peer-checked:text-[#d4af37] text-3xl transition-colors">local_taxi</span>
+                                    <div>
+                                        <div class="font-bold text-white text-sm">Driver</div>
+                                        <div class="text-[10px] text-zinc-500 mt-1">Route & GPS Access</div>
+                                    </div>
+                                </div>
+                            </label>
                         </div>
 
                         <div class="flex justify-end relative z-10">
-                             <button id="submitRoleChange" disabled
+                            <button id="submitRoleChange" disabled
                                 class="flex items-center gap-2 px-8 py-3 rounded-lg bg-[#d4af37] text-black font-bold text-sm tracking-wide uppercase hover:bg-[#b08d26] disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-[0_0_20px_rgba(212,175,53,0.3)] hover:shadow-[0_0_30px_rgba(212,175,53,0.5)]">
-                                 <span>Save Changes</span>
-                                 <span class="material-symbols-outlined text-lg">save</span>
-                             </button>
+                                <span>Save Changes</span>
+                                <span class="material-symbols-outlined text-lg">save</span>
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
-            
+
             <div id="notificationArea" class="fixed bottom-6 right-6 z-50"></div>
         </main>
     </div>
@@ -214,34 +257,35 @@
         async function loadStats() {
             try {
                 const res = await fetch('/api/ControlPanel/RoleStats');
-                if(!res.ok) throw new Error("Failed to load stats");
+                if (!res.ok) throw new Error("Failed to load stats");
                 const stats = await res.json();
                 renderStats(stats);
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
             }
         }
 
         function renderStats(stats) {
             const container = document.getElementById('statsContainer');
-            
+
             const cards = [
                 { title: 'Administrators', count: stats.adminCount, icon: 'shield_person', role: 'Admin' },
                 { title: 'Employees', count: stats.employeeCount, icon: 'badge', role: 'Employee' },
+                { title: 'Drivers', count: stats.driverCount || 0, icon: 'local_taxi', role: 'Driver' },
                 { title: 'Customers', count: stats.customerCount, icon: 'group', role: 'Customer' }
             ];
-            
-             container.innerHTML = cards.map(c => `
-                <div onclick="openRoleDrillDown('${c.role}')" class="group bg-[#121214] border border-white/5 p-5 rounded-xl flex items-center justify-between gold-glow-hover transition-all duration-300 cursor-pointer">
-                    <div>
-                        <p class="text-zinc-400 text-xs uppercase tracking-wider font-semibold mb-1">${c.title}</p>
-                        <h3 class="text-3xl font-black text-white">${c.count}</h3>
+
+            container.innerHTML = cards.map(c => `
+                    <div onclick="openRoleDrillDown('${c.role}')" class="group bg-[#121214] border border-white/5 p-5 rounded-xl flex items-center justify-between gold-glow-hover transition-all duration-300 cursor-pointer">
+                        <div>
+                            <p class="text-zinc-400 text-xs uppercase tracking-wider font-semibold mb-1">${c.title}</p>
+                            <h3 class="text-3xl font-black text-white">${c.count}</h3>
+                        </div>
+                        <div class="h-12 w-12 rounded-lg bg-[#d4af37]/10 border border-[#d4af37]/20 flex items-center justify-center text-[#d4af37]">
+                             <span class="material-symbols-outlined text-2xl">${c.icon}</span>
+                        </div>
                     </div>
-                    <div class="h-12 w-12 rounded-lg bg-[#d4af37]/10 border border-[#d4af37]/20 flex items-center justify-center text-[#d4af37]">
-                         <span class="material-symbols-outlined text-2xl">${c.icon}</span>
-                    </div>
-                </div>
-            `).join('');
+                `).join('');
         }
 
         // --- Drill Down Logic ---
@@ -257,7 +301,7 @@
             document.getElementById('roleDrillDown').classList.remove('hidden');
             loadDrillData();
         }
-        
+
         function closeDrillDown() {
             document.getElementById('roleDrillDown').classList.add('hidden');
         }
@@ -268,35 +312,35 @@
             try {
                 const res = await fetch(`/api/ControlPanel/GetUsersByRole?role=${drillRole}&page=${drillPage}&pageSize=10`);
                 const data = await res.json();
-                
+
                 const tbody = document.getElementById('drillDownList');
                 data.items.forEach(u => {
                     const tr = document.createElement('tr');
                     tr.className = "border-b border-white/5 hover:bg-white/5 transition-colors";
                     tr.innerHTML = `
-                        <td class="p-4 font-bold text-white flex items-center gap-3">
-                            <div class="h-8 w-8 rounded-full bg-[#d4af37]/10 flex items-center justify-center text-[#d4af37] text-xs font-bold border border-[#d4af37]/20">
-                                ${u.userName.substring(0,2).toUpperCase()}
-                            </div>
-                            <div>
-                                <div class="text-white text-sm font-bold">${u.name}</div>
-                                <div class="text-zinc-500 text-[10px]">${u.userName}</div>
-                            </div>
-                        </td>
-                        <td class="p-4 text-zinc-400 font-mono">${u.email}</td>
-                        <td class="p-4 text-zinc-400 font-mono text-xs">${u.phoneNumber}</td>
-                        <td class="p-4 text-zinc-500 text-xs">${u.id}</td>
-                    `;
+                            <td class="p-4 font-bold text-white flex items-center gap-3">
+                                <div class="h-8 w-8 rounded-full bg-[#d4af37]/10 flex items-center justify-center text-[#d4af37] text-xs font-bold border border-[#d4af37]/20">
+                                    ${u.userName.substring(0, 2).toUpperCase()}
+                                </div>
+                                <div>
+                                    <div class="text-white text-sm font-bold">${u.name}</div>
+                                    <div class="text-zinc-500 text-[10px]">${u.userName}</div>
+                                </div>
+                            </td>
+                            <td class="p-4 text-zinc-400 font-mono">${u.email}</td>
+                            <td class="p-4 text-zinc-400 font-mono text-xs">${u.phoneNumber}</td>
+                            <td class="p-4 text-zinc-500 text-xs">${u.id}</td>
+                        `;
                     tbody.appendChild(tr);
                 });
 
-                if(data.items.length < 10) {
+                if (data.items.length < 10) {
                     btn.classList.add('hidden');
                 } else {
                     btn.classList.remove('hidden');
                     btn.innerText = 'Load More...';
                 }
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
                 btn.innerText = 'Error loading';
             }
@@ -315,7 +359,7 @@
         searchInput.addEventListener('input', (e) => {
             clearTimeout(debounceTimer);
             const query = e.target.value.trim();
-            if(query.length < 2) {
+            if (query.length < 2) {
                 searchResults.innerHTML = '';
                 searchResults.classList.add('hidden');
                 return;
@@ -327,7 +371,7 @@
         // Hide results when clicking outside
         document.addEventListener('click', (e) => {
             if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
-                 searchResults.classList.add('hidden');
+                searchResults.classList.add('hidden');
             }
         });
 
@@ -335,66 +379,66 @@
             try {
                 const res = await fetch(`/api/ControlPanel/SearchUsers?query=${encodeURIComponent(query)}`);
                 const users = await res.json();
-                
+
                 searchResults.innerHTML = '';
-                if(users.length === 0) {
+                if (users.length === 0) {
                     searchResults.innerHTML = `<div class="p-4 text-zinc-500 text-sm text-center">No users found.</div>`;
                 } else {
                     users.forEach(user => {
                         const div = document.createElement('div');
                         div.className = "flex items-center gap-3 p-3 hover:bg-white/5 cursor-pointer border-b border-white/5 last:border-0 transition-colors";
                         div.innerHTML = `
-                            <div class="h-8 w-8 rounded-full bg-[#d4af37]/10 flex items-center justify-center text-[#d4af37] text-xs font-bold border border-[#d4af37]/20">
-                                ${user.userName.substring(0,2).toUpperCase()}
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <div class="text-white text-sm font-bold truncate">${user.name}</div>
-                                <div class="text-zinc-500 text-xs truncate">${user.email} • ${user.phoneNumber}</div>
-                            </div>
-                            <span class="text-[10px] px-2 py-0.5 rounded bg-white/5 text-zinc-400 border border-white/10">${user.currentRole}</span>
-                        `;
+                                <div class="h-8 w-8 rounded-full bg-[#d4af37]/10 flex items-center justify-center text-[#d4af37] text-xs font-bold border border-[#d4af37]/20">
+                                    ${user.userName.substring(0, 2).toUpperCase()}
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="text-white text-sm font-bold truncate">${user.name}</div>
+                                    <div class="text-zinc-500 text-xs truncate">${user.email} • ${user.phoneNumber}</div>
+                                </div>
+                                <span class="text-[10px] px-2 py-0.5 rounded bg-white/5 text-zinc-400 border border-white/10">${user.currentRole}</span>
+                            `;
                         div.onclick = () => selectUser(user);
                         searchResults.appendChild(div);
                     });
                 }
                 searchResults.classList.remove('hidden');
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
             }
         }
 
         function selectUser(user) {
             selectedUser = user;
-            
+
             // UI Updates
             document.getElementById('searchResults').classList.add('hidden');
-            searchInput.value = ''; 
-            
-            document.getElementById('userAvatar').innerText = user.userName.substring(0,2).toUpperCase();
+            searchInput.value = '';
+
+            document.getElementById('userAvatar').innerText = user.userName.substring(0, 2).toUpperCase();
             document.getElementById('userNameDisplay').innerText = user.name;
             document.getElementById('userEmailDisplay').innerText = `${user.email} • ${user.phoneNumber}`;
             document.getElementById('currentRoleDisplay').innerText = user.currentRole;
-            
+
             document.getElementById('selectedUserContainer').classList.remove('hidden');
-            
+
             // Unlock action panel
             const panel = document.getElementById('actionPanel');
             panel.classList.remove('opacity-50', 'pointer-events-none');
-            
+
             // Reset selection
             document.querySelectorAll('input[name="newRole"]').forEach(r => {
                 r.checked = false;
                 // Enable all first
                 r.disabled = false;
                 r.parentElement.classList.remove('opacity-50', 'pointer-events-none');
-                
+
                 // Disable current role option
-                if(r.value === user.currentRole) {
+                if (r.value === user.currentRole) {
                     r.disabled = true;
                     r.parentElement.classList.add('opacity-50', 'pointer-events-none');
                 }
             });
-            
+
             document.getElementById('submitRoleChange').disabled = true;
         }
 
@@ -406,10 +450,10 @@
         });
 
         document.getElementById('submitRoleChange').addEventListener('click', async () => {
-            if(!selectedUser) return;
-            
+            if (!selectedUser) return;
+
             const newRole = document.querySelector('input[name="newRole"]:checked')?.value;
-            if(!newRole) return;
+            if (!newRole) return;
 
             const btn = document.getElementById('submitRoleChange');
             const originalText = btn.innerHTML;
@@ -427,26 +471,26 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(dto)
                 });
-                
-                if(res.ok) {
+
+                if (res.ok) {
                     showNotification('success', 'Role Updated successfully');
-                    
+
                     // Allow UI to settle, then reload stats and reset user partial state
                     loadStats();
                     // Update current role display without full reset to keep flow fluid
                     selectedUser.currentRole = newRole;
                     selectUser(selectedUser); // Re-run selection logic to update disabled states
-                    
+
                 } else {
                     const data = await res.json();
                     showNotification('error', data.message || 'Failed to update role');
                 }
 
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
                 showNotification('error', 'Network error occurred');
             } finally {
-                btn.disabled = false; 
+                btn.disabled = false;
                 btn.innerHTML = originalText;
                 // If success, button effectively disabled by selectUser() logic until another change
                 // but if we want to force re-selection:
@@ -460,16 +504,16 @@
             const container = document.getElementById('notificationArea');
             const color = type === 'success' ? 'bg-green-500' : 'bg-red-500';
             const icon = type === 'success' ? 'check_circle' : 'error';
-            
+
             const toast = document.createElement('div');
             toast.className = `flex items-center gap-3 px-6 py-4 rounded-xl text-white shadow-2xl transform translate-y-10 opacity-0 transition-all duration-300 mb-4 ${color}`;
             toast.innerHTML = `
-                <span class="material-symbols-outlined">${icon}</span>
-                <span class="font-bold text-sm">${message}</span>
-            `;
-            
+                    <span class="material-symbols-outlined">${icon}</span>
+                    <span class="font-bold text-sm">${message}</span>
+                `;
+
             container.appendChild(toast);
-            
+
             // Animate in
             requestAnimationFrame(() => {
                 toast.classList.remove('translate-y-10', 'opacity-0');

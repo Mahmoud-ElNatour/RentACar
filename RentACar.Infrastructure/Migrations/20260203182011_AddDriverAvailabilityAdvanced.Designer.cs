@@ -3,17 +3,20 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RentACar.Infrastructure.Data;
 
 #nullable disable
 
-namespace RentACar.Infrastructure.Migrations
+namespace RentACar.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(RentACarDbContext))]
-    partial class RentACarDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260203182011_AddDriverAvailabilityAdvanced")]
+    partial class AddDriverAvailabilityAdvanced
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1533,109 +1536,6 @@ namespace RentACar.Infrastructure.Migrations
                     b.ToTable("SenderIdentities");
                 });
 
-            modelBuilder.Entity("RentACar.Core.Entities.SupportConversation", b =>
-                {
-                    b.Property<int>("SupportConversationId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SupportConversationId"));
-
-                    b.Property<int?>("AssignedEmployeeId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("BookingId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Category")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<DateTime?>("ClosedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("CustomerId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("Subject")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("SupportConversationId");
-
-                    b.HasIndex("AssignedEmployeeId");
-
-                    b.HasIndex("BookingId")
-                        .HasDatabaseName("IX_SupportConversations_BookingId");
-
-                    b.HasIndex("CustomerId")
-                        .HasDatabaseName("IX_SupportConversations_CustomerId");
-
-                    b.HasIndex("Status")
-                        .HasDatabaseName("IX_SupportConversations_Status");
-
-                    b.HasIndex("UpdatedAt")
-                        .HasDatabaseName("IX_SupportConversations_UpdatedAt");
-
-                    b.ToTable("SupportConversations");
-                });
-
-            modelBuilder.Entity("RentACar.Core.Entities.SupportMessage", b =>
-                {
-                    b.Property<int>("SupportMessageId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SupportMessageId"));
-
-                    b.Property<string>("AttachmentUrl")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsInternalNote")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("MessageText")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("SenderRole")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("SenderUserId")
-                        .IsRequired()
-                        .HasMaxLength(450)
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<int>("SupportConversationId")
-                        .HasColumnType("int");
-
-                    b.HasKey("SupportMessageId");
-
-                    b.HasIndex("SenderUserId");
-
-                    b.HasIndex("SupportConversationId");
-
-                    b.ToTable("SupportMessages");
-                });
-
             modelBuilder.Entity("RentACar.Core.Entities.Trip", b =>
                 {
                     b.Property<int>("TripId")
@@ -2058,46 +1958,6 @@ namespace RentACar.Infrastructure.Migrations
                     b.Navigation("UpdatedByUser");
                 });
 
-            modelBuilder.Entity("RentACar.Core.Entities.SupportConversation", b =>
-                {
-                    b.HasOne("RentACar.Core.Entities.Employee", "AssignedEmployee")
-                        .WithMany()
-                        .HasForeignKey("AssignedEmployeeId");
-
-                    b.HasOne("RentACar.Core.Entities.Booking", "Booking")
-                        .WithMany()
-                        .HasForeignKey("BookingId");
-
-                    b.HasOne("RentACar.Core.Entities.Customer", "Customer")
-                        .WithMany()
-                        .HasForeignKey("CustomerId")
-                        .IsRequired();
-
-                    b.Navigation("AssignedEmployee");
-
-                    b.Navigation("Booking");
-
-                    b.Navigation("Customer");
-                });
-
-            modelBuilder.Entity("RentACar.Core.Entities.SupportMessage", b =>
-                {
-                    b.HasOne("RentACar.Core.Entities.AspNetUser", "Sender")
-                        .WithMany()
-                        .HasForeignKey("SenderUserId")
-                        .IsRequired();
-
-                    b.HasOne("RentACar.Core.Entities.SupportConversation", "Conversation")
-                        .WithMany("Messages")
-                        .HasForeignKey("SupportConversationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Conversation");
-
-                    b.Navigation("Sender");
-                });
-
             modelBuilder.Entity("RentACar.Core.Entities.Trip", b =>
                 {
                     b.HasOne("RentACar.Core.Entities.Booking", "Booking")
@@ -2195,11 +2055,6 @@ namespace RentACar.Infrastructure.Migrations
             modelBuilder.Entity("RentACar.Core.Entities.Promocode", b =>
                 {
                     b.Navigation("Bookings");
-                });
-
-            modelBuilder.Entity("RentACar.Core.Entities.SupportConversation", b =>
-                {
-                    b.Navigation("Messages");
                 });
 #pragma warning restore 612, 618
         }

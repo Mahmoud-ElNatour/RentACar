@@ -16,7 +16,7 @@ namespace RentACar.Infrastructure.Data.Repository
 
         public BookingRepository(RentACarDbContext dbContext) : base(dbContext)
         {
-        _dbContext = dbContext;
+            _dbContext = dbContext;
 
         }
 
@@ -42,7 +42,10 @@ namespace RentACar.Infrastructure.Data.Repository
 
         public async Task<Booking?> GetBookingByIdAsync(int id)
         {
-            return await _dbContext.Bookings.FindAsync(id);
+            return await _dbContext.Bookings
+                .Include(b => b.Customer)
+                .Include(b => b.Car)
+                .FirstOrDefaultAsync(b => b.BookingId == id);
         }
 
         public async Task<List<Booking>> GetBookingsByEmployeeIdAsync(int employeeId)
@@ -52,7 +55,11 @@ namespace RentACar.Infrastructure.Data.Repository
 
         public async Task<List<Booking>> GetBookingsByDriverIdAsync(int driverId)
         {
-            return await _dbContext.Bookings.Where(b => b.DriverId == driverId).ToListAsync();
+            return await _dbContext.Bookings
+                .Include(b => b.Customer)
+                .Include(b => b.Car)
+                .Where(b => b.DriverId == driverId)
+                .ToListAsync();
         }
         public async Task UpdateCarAvailabilityAsync(int carId, bool isAvailable)
         {

@@ -162,7 +162,7 @@ public partial class RentACarDbContext : DbContext
             // Indexes for Performance
             entity.HasIndex(e => e.Status).HasDatabaseName("IX_Payments_Status");
             entity.HasIndex(e => e.PaymentDate).HasDatabaseName("IX_Payments_PaymentDate");
-            entity.HasIndex(e => e.BookingId).HasDatabaseName("IX_Payments_BookingId"); 
+            entity.HasIndex(e => e.BookingId).HasDatabaseName("IX_Payments_BookingId");
             entity.HasIndex(e => new { e.Status, e.PaymentDate }).HasDatabaseName("IX_Payments_Status_PaymentDate");
         });
 
@@ -198,8 +198,8 @@ public partial class RentACarDbContext : DbContext
             entity.HasOne(d => d.Driver).WithMany(p => p.Bookings)
                 .HasConstraintName("FK_Bookings_Drivers");
 
-             entity.HasOne(d => d.Promocode).WithMany(p => p.Bookings)
-                .HasConstraintName("FK_Bookings_Promocodes1");
+            entity.HasOne(d => d.Promocode).WithMany(p => p.Bookings)
+               .HasConstraintName("FK_Bookings_Promocodes1");
 
             // Indexes for Performance
             entity.HasIndex(e => e.CustomerId).HasDatabaseName("IX_Bookings_CustomerId");
@@ -210,7 +210,7 @@ public partial class RentACarDbContext : DbContext
             entity.HasOne(d => d.Category).WithMany(p => p.Cars)
                 .HasConstraintName("FK_Cars_Categories1");
         });
-        
+
         // Driver Entitites Configuration
 
 
@@ -232,6 +232,8 @@ public partial class RentACarDbContext : DbContext
 
         modelBuilder.Entity<DriverAvailability>(entity =>
         {
+            entity.HasIndex(e => new { e.DriverId, e.Date }).IsUnique();
+
             entity.HasOne(d => d.Driver).WithMany(p => p.DriverAvailabilities)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_DriverAvailability_Drivers");
@@ -247,7 +249,7 @@ public partial class RentACarDbContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_DriverLocationPings_Drivers");
         });
-        
+
         // Trip config
         modelBuilder.Entity<Trip>(entity =>
         {
