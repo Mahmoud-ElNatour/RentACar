@@ -40,6 +40,7 @@ namespace RentACar.Web.Controllers
         [ApiExplorerSettings(IgnoreApi = true)]
         public IActionResult AddForm()
         {
+            ViewBag.Roles = new[] { "Admin", "Employee", "Driver", "Customer" };
             return PartialView("~/Views/ControlPanel/Employee/_EmployeeFormPartial.cshtml", new EmployeeDto { IsActive = true });
         }
 
@@ -49,6 +50,7 @@ namespace RentACar.Web.Controllers
         {
             var emp = await _employeeManager.GetEmployeeById(id);
             if (emp == null) return NotFound();
+            ViewBag.Roles = new[] { "Admin", "Employee", "Driver", "Customer" };
             return PartialView("~/Views/ControlPanel/Employee/_EmployeeFormPartial.cshtml", emp);
         }
 
@@ -63,8 +65,8 @@ namespace RentACar.Web.Controllers
 
         [HttpGet]
         public async Task<ActionResult<PagedResultDto<EmployeeDisplayDto>>> Get(
-            [FromQuery] string? search, 
-            [FromQuery] bool? active, 
+            [FromQuery] string? search,
+            [FromQuery] bool? active,
             [FromQuery] string? role,
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 10,

@@ -95,9 +95,9 @@ public class TrackingController : Controller
 
         ViewData["Title"] = "Live Driver Tracking";
         ViewData["BodyClass"] = "bg-background-dark text-white";
-        ViewBag.GoogleMapsKey = _config["GOOGLE_MAPS_API_KEY"];
+        ViewBag.GoogleMapsKey = _config["GOOGLE_MAPS_API_KEY"] ?? Environment.GetEnvironmentVariable("GOOGLE_MAPS_API_KEY");
         if (string.IsNullOrWhiteSpace(ViewBag.GoogleMapsKey))
-            return StatusCode(500, "Google Maps API key is missing (GOOGLE_MAPS_API_KEY).");
+            return StatusCode(500, "Google Maps API key is missing (GOOGLE_MAPS_API_KEY). Please ensure it is set in appsettings.json or as an environment variable.");
 
 
         return View("~/Views/Tracking/CustomerLive.cshtml", model);

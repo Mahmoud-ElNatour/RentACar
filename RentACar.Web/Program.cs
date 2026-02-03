@@ -40,7 +40,7 @@ builder.Services.AddDbContext<RentACarDbContext>(options =>
     options.UseSqlServer(connectionString));
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString, 
+    options.UseSqlServer(connectionString,
         x => x.MigrationsHistoryTable("__ApplicationHistory", "dbo")));
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
@@ -91,6 +91,7 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddMemoryCache();
+builder.Services.AddSignalR();
 
 // ✅ Register repositories
 builder.Services.AddScoped<IBookingRepository, BookingRepository>();
@@ -106,6 +107,9 @@ builder.Services.AddScoped<IEmailTemplateRepository, EmailTemplateRepository>();
 builder.Services.AddScoped<IEmailDraftRepository, EmailDraftRepository>();
 builder.Services.AddHttpClient<IEmailService, MailjetEmailService>();
 builder.Services.AddScoped<ICustomerRatingRepository, CustomerRatingRepository>();
+builder.Services.AddScoped<IDriverRepository, DriverRepository>();
+builder.Services.AddScoped<IDriverAvailabilityRepository, DriverAvailabilityRepository>();
+builder.Services.AddScoped<ITripRepository, TripRepository>();
 builder.Services.AddScoped<CustomerRatingManager>();
 builder.Services.AddHttpClient<RentACar.Application.Services.IStripePaymentService, RentACar.Application.Services.StripePaymentService>(client =>
 {
@@ -117,6 +121,8 @@ builder.Services.AddScoped<CustomerManager>();
 builder.Services.AddScoped<CategoryManager>();
 builder.Services.AddScoped<RoleManager<IdentityRole>>();
 builder.Services.AddScoped<EmployeeManager>();
+builder.Services.AddScoped<DriverManager>();
+builder.Services.AddScoped<TripManager>();
 builder.Services.AddScoped<CarManager>();
 builder.Services.AddScoped<BlacklistManager>();
 builder.Services.AddScoped<PromocodeManager>();
@@ -155,25 +161,31 @@ using (var scope = app.Services.CreateScope())
     try
     {
         // 1. Identity/App Context (using __ApplicationHistory)
-        try {
+        try
+        {
             var identityContext = services.GetRequiredService<ApplicationDbContext>();
             if (identityContext.Database.GetPendingMigrations().Any())
             {
                 identityContext.Database.Migrate();
             }
-        } catch (Exception ex) {
+        }
+        catch (Exception ex)
+        {
             var logger = services.GetRequiredService<ILogger<Program>>();
             logger.LogWarning(ex, "Identity Migration Skip: Database might already be up to date.");
         }
 
         // 2. Business Context (using __EFMigrationsHistory)
-        try {
+        try
+        {
             var businessContext = services.GetRequiredService<RentACarDbContext>();
             if (businessContext.Database.GetPendingMigrations().Any())
             {
                 businessContext.Database.Migrate();
             }
-        } catch (Exception ex) {
+        }
+        catch (Exception ex)
+        {
             var logger = services.GetRequiredService<ILogger<Program>>();
             logger.LogWarning(ex, "Business Migration Skip: Database might already be up to date.");
         }
@@ -226,4 +238,5 @@ app.MapControllerRoute(
 app.MapRazorPages();
 
 
+app.MapHub<RentACar.Web.Hubs.DriverTrackingHub>("/hubs/driverTracking");
 app.Run();

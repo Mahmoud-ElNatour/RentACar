@@ -1,7 +1,10 @@
 @model RentACar.Application.DTOs.EmployeeDto
+@{
+    var roles = ViewBag.Roles as string[] ?? new string[] { "Employee" };
+}
 
 <div class="modal fade" id="employeeFormModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content bg-[#141414] border border-white/10 shadow-2xl rounded-2xl">
             <!-- Header -->
             <div class="modal-header border-b border-white/5 p-5">
@@ -15,48 +18,104 @@
                     <span class="material-symbols-outlined text-2xl">close</span>
                 </button>
             </div>
-            
+
             <!-- Body -->
             <div class="modal-body p-6">
-                <form id="employeeForm" class="space-y-4">
+                <form id="employeeForm" class="space-y-6">
                     <input type="hidden" asp-for="EmployeeId" />
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                         <div>
-                            <label class="block text-xs font-medium text-gray-500 uppercase mb-1.5">Full Name</label>
-                            <input asp-for="Name" class="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-[#d4af37]/50 focus:ring-1 focus:ring-[#d4af37]/50 placeholder-gray-600" placeholder="e.g. Alice Smith" required />
+
+                    <!-- Basic Info Section -->
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="material-symbols-outlined text-sm text-[#d4af37]">info</span>
+                            <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Basic Information</span>
                         </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                             <div>
+                                <label class="block text-xs font-medium text-gray-500 uppercase mb-1.5 ml-1">Full Name</label>
+                                <input asp-for="Name" class="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-[#d4af37]/50 focus:ring-1 focus:ring-[#d4af37]/50 placeholder-gray-600 transistion-all" placeholder="e.g. Alice Smith" required />
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-500 uppercase mb-1.5 ml-1">Email Address</label>
+                                <input asp-for="Email" class="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-[#d4af37]/50 focus:ring-1 focus:ring-[#d4af37]/50 placeholder-gray-600" placeholder="alice@example.com" required readonly="@(Model.EmployeeId != 0 ? "readonly" : null)" />
+                                <span id="empEmailError" class="text-red-500 text-xs mt-1 hidden">Please enter a valid email address.</span>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-500 uppercase mb-1.5 ml-1">Phone Number</label>
+                                <input asp-for="PhoneNumber" class="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-[#d4af37]/50 focus:ring-1 focus:ring-[#d4af37]/50 placeholder-gray-600" placeholder="+1 234..." />
+                            </div>
+                             <div>
+                                <label class="block text-xs font-medium text-gray-500 uppercase mb-1.5 ml-1">Monthly Salary ($)</label>
+                                <input asp-for="Salary" type="number" step="0.01" class="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-[#d4af37]/50 focus:ring-1 focus:ring-[#d4af37]/50 placeholder-gray-600" placeholder="0.00" />
+                            </div>
+                        </div>
+
+                        @if (Model.EmployeeId == 0)
+
+                        {
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-500 uppercase mb-1.5 ml-1">Initial Password</label>
+                                    <input type="password" name="Password" id="empPassword" class="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-[#d4af37]/50 focus:ring-1 focus:ring-[#d4af37]/50 placeholder-gray-600" required />
+                                    <p id="empPasswordError" class="text-red-500 text-[10px] mt-1 hidden">Password must be 8+ chars (Upper, Lower, Number, Symbol).</p>
+                                     <p class="text-[10px] text-gray-500 mt-1">Must contain uppercase, lowercase, number, and symbol.</p>
+                                </div>
+                        }
+
                         <div>
-                            <label class="block text-xs font-medium text-gray-500 uppercase mb-1.5">Email Address</label>
-                            <input asp-for="Email" class="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-[#d4af37]/50 focus:ring-1 focus:ring-[#d4af37]/50 placeholder-gray-600" placeholder="alice@example.com" required readonly="@(Model.EmployeeId != 0 ? "readonly" : null)" />
-                            <span id="empEmailError" class="text-red-500 text-xs mt-1 hidden">Please enter a valid email address.</span>
+                            <label class="block text-xs font-medium text-gray-500 uppercase mb-1.5 ml-1">Address</label>
+                             <textarea asp-for="Address" rows="2" class="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-[#d4af37]/50 focus:ring-1 focus:ring-[#d4af37]/50 placeholder-gray-600 resize-none" placeholder="Residential Address"></textarea>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-medium text-gray-500 uppercase mb-1.5">Phone Number</label>
-                            <input asp-for="PhoneNumber" class="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-[#d4af37]/50 focus:ring-1 focus:ring-[#d4af37]/50 placeholder-gray-600" placeholder="+1 234..." />
+                    <!-- Roles Selection -->
+                    <div class="space-y-4 pt-2">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="material-symbols-outlined text-sm text-[#d4af37]">security</span>
+                            <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Assigned Roles</span>
                         </div>
-                         <div>
-                            <label class="block text-xs font-medium text-gray-500 uppercase mb-1.5">Monthly Salary ($)</label>
-                            <input asp-for="Salary" type="number" step="0.01" class="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-[#d4af37]/50 focus:ring-1 focus:ring-[#d4af37]/50 placeholder-gray-600" placeholder="0.00" />
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            @foreach (var role in roles)
+
+                            {
+
+                                bool isChecked = Model.Roles != null && Model.Roles.Contains(role);
+                                    <label class="flex items-center gap-3 bg-white/5 border border-white/10 rounded-xl px-4 py-3 cursor-pointer hover:bg-white/10 transition-all group">
+                                        <input type="checkbox" name="Roles" value="@role" class="role-checkbox w-4 h-4 rounded border-white/10 bg-transparent text-[#d4af37] focus:ring-[#d4af37]" @(isChecked ? "checked" : "") onclick="toggleDriverSection()" />
+                                        <span class="text-sm font-medium text-gray-300 group-hover:text-white">@role</span>
+                                    </label>
+                            }
                         </div>
                     </div>
 
-                    @if (Model.EmployeeId == 0)
-                    {
-                        <div>
-                            <label class="block text-xs font-medium text-gray-500 uppercase mb-1.5">Initial Password</label>
-                            <input type="password" name="Password" class="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-[#d4af37]/50 focus:ring-1 focus:ring-[#d4af37]/50 placeholder-gray-600" required />
-                            <span id="empPasswordError" class="text-red-500 text-xs mt-1 hidden">Password must be 8+ chars (Upper, Lower, Number, Symbol).</span>
-                             <p class="text-xs text-gray-500 mt-1">Must contain uppercase, lowercase, number, and symbol.</p>
+                    <!-- Driver Details (Conditional) -->
+                    <div id="driverDetailsSection" class="space-y-4 pt-4 border-t border-white/5 @(Model.Roles != null && Model.Roles.Contains("Driver") ? "" : "hidden")">
+                         <div class="flex items-center gap-2 mb-2">
+                            <span class="material-symbols-outlined text-sm text-[#d4af37]">badge</span>
+                            <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Driver Details</span>
                         </div>
-                    }
-
-                    <div>
-                        <label class="block text-xs font-medium text-gray-500 uppercase mb-1.5">Address</label>
-                         <textarea asp-for="Address" rows="2" class="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-[#d4af37]/50 focus:ring-1 focus:ring-[#d4af37]/50 placeholder-gray-600 resize-none" placeholder="Residential Address"></textarea>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-500 uppercase mb-1.5 ml-1">Driver Code</label>
+                                <input asp-for="DriverCode" class="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-[#d4af37]/50 transition-all font-mono" placeholder="Auto-generated if empty" />
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-500 uppercase mb-1.5 ml-1">License Number</label>
+                                <input asp-for="DriverLicenseNumber" class="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-[#d4af37]/50 transition-all" />
+                            </div>
+                        </div>
+                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-500 uppercase mb-1.5 ml-1">License Expiry</label>
+                                <input asp-for="DriverLicenseExpiry" type="date" class="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-[#d4af37]/50 transition-all" />
+                            </div>
+                             <div>
+                                <label class="block text-xs font-medium text-gray-500 uppercase mb-1.5 ml-1">Languages (comma separated)</label>
+                                <input asp-for="DriverLanguages" class="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-[#d4af37]/50 transition-all" placeholder="English, Arabic..." />
+                            </div>
+                        </div>
                     </div>
 
                     <div class="flex items-center gap-3 pt-2">
@@ -64,18 +123,19 @@
                              <div class="relative">
                                 <input asp-for="IsActive" type="checkbox" class="peer sr-only" />
                                 <div class="w-10 h-6 bg-white/10 rounded-full peer-checked:bg-green-500/50 transition-colors"></div>
-                                <div class="absolute left-1 top-1 w-4 h-4 bg-gray-400 rounded-full transition-transform peer-checked:translate-x-4 peer-checked:bg-white"></div>
+                                <div class="absolute left-1 top-1 w-4 h-4 bg-gray-400 rounded-full transition-transform peer-checked:translate-x-4 peer-checked:bg-white text-[8px] flex items-center justify-center font-bold">@* ✔ *@</div>
                             </div>
                             <span class="text-sm text-gray-300 group-hover:text-white transition-colors">Active Account</span>
                         </label>
                     </div>
 
                     <!-- Footer -->
-                    <div class="pt-4 border-t border-white/5 flex gap-3">
-                         <button type="submit" class="flex-1 bg-[#d4af37] hover:bg-[#b5952f] text-black font-semibold py-2.5 rounded-xl transition-all shadow-[0_0_15px_rgba(212,175,55,0.3)]">
-                            @(Model.EmployeeId == 0 ? "Create Employee" : "Save Changes")
+                    <div class="pt-6 border-t border-white/5 flex gap-3">
+                         <button type="submit" id="submitBtn" class="flex-1 bg-gradient-to-r from-[#d4af37] to-[#f2cf66] hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] text-black font-bold py-3 rounded-xl transition-all flex items-center justify-center gap-2">
+                            @(Model.EmployeeId == 0 ? "Create Employee" : "Update Profile")
+                            <span class="material-symbols-outlined text-sm">arrow_forward</span>
                         </button>
-                         <button type="button" class="flex-1 bg-white/5 hover:bg-white/10 text-white font-medium py-2.5 rounded-xl transition-colors border border-white/10" data-bs-dismiss="modal">
+                         <button type="button" class="flex-1 bg-white/5 hover:bg-white/10 text-white font-medium py-3 rounded-xl transition-colors border border-white/10" data-bs-dismiss="modal">
                             Cancel
                         </button>
                     </div>
@@ -84,22 +144,38 @@
         </div>
     </div>
 </div>
+
 <script>
+    function toggleDriverSection() {
+        const checkBoxes = document.querySelectorAll('.role-checkbox');
+        const driverSection = document.getElementById('driverDetailsSection');
+        let isDriver = false;
+        checkBoxes.forEach(cb => {
+            if(cb.value === 'Driver' && cb.checked) isDriver = true;
+        });
+
+        if(isDriver) {
+            driverSection.classList.remove('hidden');
+        } else {
+            driverSection.classList.add('hidden');
+        }
+    }
+
     document.getElementById('employeeForm').addEventListener('submit', async function (e) {
         e.preventDefault();
         const form = e.target;
-        const btn = form.querySelector('button[type="submit"]');
-        const originalText = btn.textContent;
-        
+        const btn = document.getElementById('submitBtn');
+        const originalText = btn.innerHTML;
+
         // --- Validation Start ---
         const f = form.elements;
         const email = f['Email'].value;
-        const passwordInput = f['Password']; 
+        const passwordInput = document.getElementById('empPassword'); 
         const employeeId = parseInt(form.querySelector('[name="EmployeeId"]').value || '0');
         const emailError = document.getElementById('empEmailError');
         const passwordError = document.getElementById('empPasswordError');
 
-        // Reset
+        // Reset errors
         if(emailError) emailError.classList.add('hidden');
         if(passwordError) passwordError.classList.add('hidden');
 
@@ -121,28 +197,35 @@
                 isValid = false;
             }
         }
-        
-        if(!isValid) {
-            btn.disabled = false;
-            btn.textContent = originalText;
-            return;
-        }
-        // --- Validation End ---
+
+        if(!isValid) return;
 
         btn.disabled = true;
         btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-sm">sync</span> Processing...';
 
+        // Collect Roles
+        const requestedRoles = [];
+        document.querySelectorAll('.role-checkbox:checked').forEach(cb => {
+            requestedRoles.push(cb.value);
+        });
+
         const data = {
             employeeId: employeeId,
-            name: f['Name'].value,
+            name: f['Name'] ? f['Name'].value : '',
             email: email,
             username: email,
-            phoneNumber: f['PhoneNumber'].value,
+            phoneNumber: f['PhoneNumber'] ? f['PhoneNumber'].value : '',
             salary: f['Salary'].value ? parseFloat(f['Salary'].value) : null,
-            address: f['Address'].value,
-            isActive: form.querySelector('[name="IsActive"]').checked
+            address: f['Address'] ? f['Address'].value : '',
+            isActive: form.querySelector('[name="IsActive"]').checked,
+            roles: requestedRoles,
+            // Driver specific fields
+            driverCode: f['DriverCode'] ? f['DriverCode'].value : null,
+            driverLicenseNumber: f['DriverLicenseNumber'] ? f['DriverLicenseNumber'].value : null,
+            driverLicenseExpiry: f['DriverLicenseExpiry'] ? f['DriverLicenseExpiry'].value : null,
+            driverLanguages: f['DriverLanguages'] ? f['DriverLanguages'].value : null
         };
-       
+
         try {
             let url = '/api/Employee';
             let method = 'POST';
@@ -169,7 +252,7 @@
                 } catch { 
                     try { message = await response.text(); } catch {} 
                 }
-                
+
                 if (window.showPopup) window.showPopup(message, 'error');
                 return;
             }
@@ -178,13 +261,13 @@
             bootstrap.Modal.getInstance(modalEl).hide();
             if (window.showPopup) window.showPopup(isUpdate ? 'Employee updated.' : 'Employee created.', 'success');
             if (window.loadEmployees) loadEmployees();
-            
+
         } catch (err) {
             console.error(err);
             if (window.showPopup) window.showPopup('Unexpected error occurred.', 'error');
         } finally {
             btn.disabled = false;
-            btn.textContent = originalText;
+            btn.innerHTML = originalText;
         }
     });
 </script>
