@@ -330,6 +330,11 @@
 
     // Init
     document.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        if(urlParams.has('search')) {
+            document.getElementById('searchInput').value = urlParams.get('search');
+        }
+
         loadBookings();
 
         document.getElementById('filterForm').addEventListener('submit', (e) => {

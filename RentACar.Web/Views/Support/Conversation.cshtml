@@ -1,0 +1,343 @@
+@using RentACar.Application.DTOs.Support
+@using RentACar.Core.Constants
+@using System.Security.Claims
+@model SupportConversationDetailsDto
+
+@{
+    ViewData["Title"] = "Support Chat - " + Model.Subject;
+    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+}
+
+@section Styles {
+    <style>
+        .chat-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+        .chat-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .chat-scroll::-webkit-scrollbar-thumb {
+            background: #494322;
+            border-radius: 10px;
+        }
+        .surface-dark { background-color: #1a1a1a; }
+    </style>
+}
+
+<main class="w-full h-[100dvh] flex flex-col lg:flex-row bg-black/95 relative overflow-hidden">
+    
+    <!-- Chat Area (Left/Center) -->
+    <div class="flex-1 flex flex-col h-full relative z-10">
+        <!-- Mobile Header -->
+        <div class="lg:hidden px-4 py-3 border-b border-white/5 bg-black/50 backdrop-blur-xl flex items-center justify-between shrink-0 z-30">
+            <a asp-action="Index" class="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
+                <span class="material-symbols-outlined">arrow_back</span>
+                <span class="text-sm font-bold">Back</span>
+            </a>
+            <span class="text-white font-bold text-sm">#@Model.ConversationId</span>
+            <button onclick="toggleRightSidebar()" class="text-white/60 hover:text-gold transition-colors">
+                <span class="material-symbols-outlined">info</span>
+            </button>
+        </div>
+
+        <!-- Messages -->
+        <div id="chatMessages" class="flex-1 overflow-y-auto chat-scroll p-4 md:p-8 space-y-6 pb-4">
+            @foreach (var msg in Model.Messages)
+            {
+                var isMe = msg.SenderUserId == userId;
+                if (isMe)
+                {
+                    <div class="flex flex-col items-end gap-1 ml-auto max-w-[85%]">
+                        <div class="relative group flex flex-col items-end">
+                            <p class="text-sm font-medium leading-relaxed rounded-2xl rounded-tr-none px-5 py-3 bg-primary text-black shadow-[0_4px_15px_rgba(212,175,55,0.1)]">
+                                @msg.MessageText
+                            </p>
+                            <span class="text-[10px] text-white/30 mt-1 font-bold tracking-wide mr-1">@msg.CreatedAt.ToLocalTime().ToString("t")</span>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="flex items-start gap-3 max-w-[85%]">
+                        <div class="size-8 rounded-full border border-white/10 flex items-center justify-center bg-slate-800 shrink-0">
+                            <span class="text-white font-bold text-xs">@(string.IsNullOrEmpty(msg.SenderDisplayName) ? "?" : msg.SenderDisplayName.Substring(0, 1).ToUpper())</span>
+                        </div>
+                        <div class="flex flex-col gap-1 items-start">
+                             <div class="flex items-center gap-2 mb-1 ml-1">
+                                <span class="text-white font-bold text-xs">@(msg.SenderDisplayName ?? "Support Agent")</span>
+                                <span class="text-primary text-[9px] font-black uppercase tracking-wider border border-primary/20 px-1 rounded-sm">Support</span>
+                            </div>
+                            <div class="relative group">
+                                <p class="text-sm leading-relaxed rounded-2xl rounded-tl-none px-5 py-3 bg-white/5 border border-white/10 text-white shadow-sm backdrop-blur-sm">
+                                    @msg.MessageText
+                                </p>
+                                <span class="text-[10px] text-white/30 mt-1 font-bold tracking-wide ml-1">@msg.CreatedAt.ToLocalTime().ToString("t")</span>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+
+        <!-- Input Area (Fixed Bottom) -->
+        <div class="p-4 md:p-6 border-t border-white/5 bg-black shrink-0 z-20">
+            @if (Model.Status == SupportStatus.Closed || Model.Status == SupportStatus.Resolved)
+            {
+                <div class="bg-white/5 border border-white/10 rounded-xl p-4 flex items-center justify-center gap-3">
+                    <span class="material-symbols-outlined text-white/30">lock</span>
+                    <p class="text-white/60 text-sm font-medium">This conversation is closed.</p>
+                </div>
+            }
+            else
+            {
+                <div class="flex items-center gap-2 bg-white/5 border border-white/10 rounded-2xl p-1.5 focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/50 transition-all">
+                    <button class="p-3 text-white/40 hover:text-white transition-colors rounded-xl hover:bg-white/5">
+                        <span class="material-symbols-outlined">attach_file</span>
+                    </button>
+                    <input id="messageInput" class="flex-1 bg-transparent border-none focus:ring-0 text-sm text-white placeholder-white/30 px-2" placeholder="Type your message..." type="text" autocomplete="off" />
+                    <button id="sendBtn" class="bg-primary text-black rounded-xl size-10 flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-[0_0_15px_rgba(212,175,55,0.2)]">
+                        <span class="material-symbols-outlined text-[20px] ml-0.5">send</span>
+                    </button>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Right Sidebar Backdrop (Mobile) -->
+    <div id="rightSidebarBackdrop" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[40] hidden lg:hidden" onclick="toggleRightSidebar()"></div>
+
+    <!-- Right Sidebar -->
+    <aside id="rightSidebar" class="fixed inset-y-0 right-0 w-[85%] max-w-[320px] bg-zinc-950/95 backdrop-blur-2xl z-[50] transform translate-x-full transition-transform duration-300 ease-in-out border-l border-white/5 lg:translate-x-0 lg:static lg:flex lg:flex-col lg:h-full lg:z-auto lg:bg-zinc-950/80">
+        
+        <!-- Mobile Sidebar Header -->
+        <div class="lg:hidden p-6 border-b border-white/5 flex items-center justify-between shrink-0">
+            <h3 class="text-white font-bold">Ticket Details</h3>
+            <button onclick="toggleRightSidebar()" class="text-white/50 hover:text-white">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+
+        <div class="p-8 flex flex-col gap-8 overflow-y-auto h-full">
+            <!-- Ticket Overview -->
+            <div>
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-primary font-mono font-bold text-xs tracking-wider">#@Model.ConversationId</span>
+                    @{
+                        var statusColor = Model.Status == SupportStatus.Open ? "bg-red-500/10 text-red-500 border-red-500/20" : 
+                                         Model.Status == SupportStatus.Closed ? "bg-slate-500/10 text-slate-500 border-slate-500/20" :
+                                         "bg-primary/10 text-primary border-primary/20";
+                    }
+                    <span class="px-2.5 py-1 rounded-full @statusColor text-[10px] font-black uppercase tracking-widest border">@Model.Status</span>
+                </div>
+                <h1 class="text-white font-black text-xl leading-tight mb-2">@Model.Subject</h1>
+                <p class="text-white/40 text-xs font-medium">Created @Model.CreatedAt.ToLocalTime().ToString("MMM dd, yyyy")</p>
+            </div>
+
+            <div class="space-y-6">
+                <div class="p-5 bg-white/5 rounded-2xl border border-white/10 hover:border-white/20 transition-all">
+                    <p class="text-white/40 text-[10px] font-black uppercase tracking-widest mb-3">Assigned Agent</p>
+                    @if (!string.IsNullOrEmpty(Model.AssignedEmployeeName))
+                    {
+                        <div class="flex items-center gap-3">
+                            <div class="size-8 rounded-full bg-primary flex items-center justify-center text-black font-black text-xs">
+                                @Model.AssignedEmployeeName.Substring(0, 1).ToUpper()
+                            </div>
+                            <div>
+                                 <p class="text-white font-bold text-sm">@Model.AssignedEmployeeName</p>
+                                 <p class="text-primary text-[10px] uppercase font-bold tracking-wider">Support Team</p>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="flex items-center gap-3 opacity-60">
+                            <div class="size-8 rounded-full bg-slate-800 flex items-center justify-center text-white font-bold text-xs border border-white/10">?</div>
+                            <p class="text-white font-medium text-sm italic">Waiting for assignment...</p>
+                        </div>
+                    }
+                </div>
+
+                @if (Model.BookingId.HasValue)
+                {
+                   <div class="p-5 bg-white/5 rounded-2xl border border-white/10 hover:border-white/20 transition-all group cursor-pointer" onclick="window.location.href='/Bookings/MyBookings'">
+                        <div class="flex items-center justify-between mb-2">
+                            <p class="text-white/40 text-[10px] font-black uppercase tracking-widest">Related Booking</p>
+                            <span class="material-symbols-outlined text-white/20 group-hover:text-primary transition-colors text-sm">open_in_new</span>
+                        </div>
+                        <p class="text-white font-mono font-bold text-sm">#LBR-BK-@Model.BookingId</p>
+                        <p class="text-primary text-xs font-medium mt-1">View Booking Details</p>
+                   </div>
+                }
+            </div>
+            
+            @if (Model.Status != SupportStatus.Closed && Model.Status != SupportStatus.Resolved)
+            {
+                <div class="pt-6 mt-auto border-t border-white/5">
+                     <button onclick="showCloseModal()" class="w-full flex items-center justify-center gap-2 border border-red-500/20 bg-red-500/5 text-red-500 hover:bg-red-500/10 py-3 rounded-xl text-xs font-black transition-all uppercase tracking-widest shadow-lg shadow-red-900/10">
+                        <span class="material-symbols-outlined text-[18px]">close</span>
+                        Close Request
+                    </button>
+                </div>
+            }
+        </div>
+    </aside>
+
+    <!-- Close Confirmation Modal -->
+    <div id="closeModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] hidden flex items-center justify-center p-6 transition-opacity duration-300">
+        <div class="w-full max-w-sm bg-zinc-900 rounded-3xl p-8 border border-white/10 animate-in zoom-in-95 duration-200 shadow-2xl">
+            <div class="size-16 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-6">
+                <span class="material-symbols-outlined text-3xl text-red-500">warning</span>
+            </div>
+            <h4 class="text-white text-xl font-black text-center mb-2">Close Request?</h4>
+            <p class="text-white/40 text-sm text-center mb-8 px-4 leading-relaxed">Are you sure you want to close this ticket? You will not be able to send new messages once it is closed.</p>
+            
+            <div class="space-y-3">
+                <button type="button" onclick="confirmClose()" class="w-full bg-red-500 text-white font-black py-4 rounded-xl shadow-[0_0_40px_rgba(239,68,68,0.2)] hover:scale-[1.02] active:scale-[0.98] transition-all uppercase tracking-widest text-xs">YES, CLOSE TICKET</button>
+                <button type="button" onclick="hideCloseModal()" class="w-full bg-white/5 text-white/40 font-bold py-4 rounded-xl hover:text-white transition-all text-xs uppercase tracking-widest">CANCEL</button>
+            </div>
+        </div>
+    </div>
+</main>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
+    <script>
+        const conversationId = @Model.ConversationId;
+        const currentUserId = "@userId";
+
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/supportChatHub")
+            .withAutomaticReconnect()
+            .build();
+
+        async function start() {
+            try {
+                await connection.start();
+                console.log("SignalR Connected.");
+                await connection.invoke("JoinConversation", conversationId);
+            } catch (err) {
+                console.log(err);
+                setTimeout(start, 5000);
+            }
+        };
+
+        connection.on("ReceiveMessage", function (message) {
+            appendMessage(message);
+            scrollToBottom();
+        });
+
+        connection.onclose(async () => {
+            await start();
+        });
+
+        start();
+
+        function appendMessage(msg) {
+            const isMe = msg.senderUserId === currentUserId;
+            const chatMessages = document.getElementById('chatMessages');
+            
+            const time = new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            let html = "";
+            if (isMe) {
+                html = `
+                    <div class="flex flex-col items-end gap-1 ml-auto max-w-[80%]">
+                        <p class="text-primary/70 text-[12px] font-medium mr-1">You</p>
+                        <div class="relative group flex flex-col items-end">
+                            <p class="text-sm font-normal leading-relaxed rounded-tl-xl rounded-bl-xl rounded-br-xl px-4 py-3 bg-primary text-black font-semibold shadow-lg shadow-primary/10">
+                                ${msg.messageText}
+                            </p>
+                            <span class="text-[10px] text-white/40 mt-1 block">${time}</span>
+                        </div>
+                    </div>`;
+            } else {
+                html = `
+                    <div class="flex items-start gap-3 max-w-[80%]">
+                        <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full w-10 h-10 shrink-0 border border-[#494322] flex items-center justify-center bg-surface-dark">
+                             <span class="text-white font-bold text-xs">${msg.senderDisplayName ? msg.senderDisplayName[0].toUpperCase() : "?"}</span>
+                        </div>
+                        <div class="flex flex-col gap-1 items-start">
+                            <p class="text-[#cbc290] text-[12px] font-medium ml-1">${msg.senderDisplayName || "Agent"} - ${msg.senderRole}</p>
+                            <div class="relative group">
+                                <p class="text-sm font-normal leading-relaxed rounded-tr-xl rounded-br-xl rounded-bl-xl px-4 py-3 bg-[#1a1a1a] border border-[#494322] text-white">
+                                    ${msg.messageText}
+                                </p>
+                                <span class="text-[10px] text-white/40 mt-1 block">${time}</span>
+                            </div>
+                        </div>
+                    </div>`;
+            }
+            
+            chatMessages.insertAdjacentHTML('beforeend', html);
+        }
+
+        function scrollToBottom() {
+            const chatMessages = document.getElementById('chatMessages');
+            if(chatMessages) chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        document.getElementById('sendBtn')?.addEventListener('click', function() {
+            sendMessage();
+        });
+
+        document.getElementById('messageInput')?.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const text = input.value.trim();
+            if (text) {
+                connection.invoke("SendMessage", conversationId, text, null).catch(err => console.error(err));
+                input.value = "";
+            }
+        }
+
+        function showCloseModal() {
+            document.getElementById('closeModal').classList.remove('hidden');
+        }
+
+        function hideCloseModal() {
+            document.getElementById('closeModal').classList.add('hidden');
+        }
+
+        async function confirmClose() {
+             try {
+                const response = await fetch(`/api/SupportApi/inbox/${conversationId}/status`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ conversationId: conversationId, newStatus: '@SupportStatus.Closed' })
+                });
+                if (response.ok) {
+                    window.location.href = '/Support'; // Redirect to Support Hub
+                } else {
+                    alert("Failed to close ticket.");
+                }
+            } catch (err) {
+                console.error(err);
+                alert("An error occurred.");
+            }
+        }
+
+        // Sidebar Toggle Logic
+        function toggleRightSidebar() {
+            const sidebar = document.getElementById('rightSidebar');
+            const backdrop = document.getElementById('rightSidebarBackdrop');
+            if(sidebar) {
+                if (sidebar.classList.contains('translate-x-full')) {
+                    // Open
+                    sidebar.classList.remove('translate-x-full');
+                    if(backdrop) backdrop.classList.remove('hidden');
+                } else {
+                    // Close
+                    sidebar.classList.add('translate-x-full');
+                    if(backdrop) backdrop.classList.add('hidden');
+                }
+            }
+        }
+
+        scrollToBottom();
+    </script>
+}

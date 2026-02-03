@@ -135,6 +135,9 @@
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="~/js/index-script.js" asp-append-version="true"></script>
 
+    @await Html.PartialAsync("_SupportFloatingButton")
+
+    <partial name="_SupportActionPopup" />
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

@@ -1,0 +1,140 @@
+@using RentACar.Application.DTOs.Support
+@using RentACar.Core.Constants
+@model RentACar.Application.DTOs.PagedResultDto<SupportConversationListDto>
+
+@{
+    ViewData["Title"] = "Customer Support Center Hub";
+}
+
+@section Styles {
+    <style>
+        .glass-card {
+            background-color: #161819;
+            border: 1px solid rgba(212, 175, 55, 0.2);
+        }
+        .glass-card:hover {
+            border-color: rgba(212, 175, 55, 0.4);
+        }
+    </style>
+}
+
+<div class="px-6 md:px-20 lg:px-40 flex flex-1 justify-center py-10">
+    <div class="layout-content-container flex flex-col max-w-[960px] flex-1">
+        <div class="flex flex-wrap justify-between items-end gap-4 p-4 mb-6">
+            <div class="flex min-w-72 flex-col gap-2">
+                <h1 class="text-white text-5xl font-extrabold leading-tight tracking-tight">Support Center</h1>
+                <p class="text-primary-gold text-lg font-normal leading-normal">View and manage all your support requests</p>
+            </div>
+            <button onclick="openNewRequestModal()" class="flex min-w-[140px] cursor-pointer items-center justify-center gap-2 rounded-full h-12 px-6 bg-primary text-main-bg text-base font-bold transition-all hover:brightness-110 active:scale-95">
+                <span class="material-symbols-outlined">add</span>
+                <span class="truncate">New Request</span>
+            </button>
+        </div>
+
+        <div class="flex flex-col md:flex-row gap-4 px-4 py-6 border-y border-white/10 mb-6">
+            <div class="flex-1">
+                <label class="flex flex-col min-w-40 h-12 w-full">
+                    <div class="flex w-full flex-1 items-stretch rounded-xl h-full glass-card overflow-hidden">
+                        <div class="text-primary flex items-center justify-center pl-4">
+                            <span class="material-symbols-outlined">search</span>
+                        </div>
+                        <input id="supportSearch" class="form-input flex w-full min-w-0 flex-1 border-none bg-transparent focus:ring-0 text-white placeholder:text-white/30 px-4 text-base font-normal" placeholder="Search requests..." value="" />
+                    </div>
+                </label>
+            </div>
+            <div class="flex gap-3 flex-wrap">
+                <button class="flex h-12 shrink-0 items-center justify-center gap-x-2 rounded-xl glass-card px-5 text-white hover:bg-white/5 transition-colors">
+                    <span class="text-sm font-semibold">Status</span>
+                    <span class="material-symbols-outlined text-primary">expand_more</span>
+                </button>
+                <button class="flex h-12 shrink-0 items-center justify-center gap-x-2 rounded-xl glass-card px-5 text-white hover:bg-white/5 transition-colors">
+                    <span class="text-sm font-semibold">Category</span>
+                    <span class="material-symbols-outlined text-primary">expand_more</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="flex flex-col gap-4 p-4">
+            @if (Model.Items.Any())
+            {
+                @foreach (var item in Model.Items)
+                {
+                    <div class="flex flex-col md:flex-row items-stretch justify-between gap-6 rounded-2xl glass-card p-6 relative overflow-hidden group transition-all duration-300 @(item.Status == SupportStatus.Closed ? "opacity-80" : "")">
+                        @if (item.Status == SupportStatus.Assigned)
+                        {
+                            <div class="absolute left-0 top-0 bottom-0 w-1 bg-primary"></div>
+                        }
+                        <div class="flex flex-1 flex-col gap-4">
+                            <div class="flex flex-col gap-2">
+                                <div class="flex items-center gap-2">
+                                    @if (item.UnreadCount > 0)
+                                    {
+                                        <span class="px-2 py-0.5 rounded bg-primary text-[10px] font-black text-main-bg uppercase tracking-widest">New</span>
+                                    }
+                                    <span class="text-primary text-xs font-semibold uppercase tracking-wide">@item.Category</span>
+                                </div>
+                                <h3 class="text-white text-xl font-bold leading-tight group-hover:text-primary transition-colors">@item.Subject</h3>
+                                <p class="text-white/60 text-sm font-normal leading-relaxed line-clamp-2">"@item.LastMessageSnippet"</p>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-3">
+                                <div class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-white/10">
+                                    <span class="material-symbols-outlined text-[16px] text-primary">confirmation_number</span>
+                                    <span class="text-white/80 text-xs font-medium">#@item.ConversationId</span>
+                                </div>
+                                @{
+                                    var statusClass = item.Status switch
+                                    {
+                                        SupportStatus.Open => "bg-red-500/10 border-red-500/30 text-red-400",
+                                        SupportStatus.Assigned => "bg-primary/10 border-primary/30 text-primary",
+                                        SupportStatus.Resolved => "bg-emerald-500/10 border-emerald-500/30 text-emerald-400",
+                                        SupportStatus.Closed => "bg-white/10 border-white/20 text-white/50",
+                                        _ => "bg-white/5 border-white/10 text-white/80"
+                                    };
+                                }
+                                <div class="flex items-center gap-1.5 px-3 py-1 rounded-full @statusClass border">
+                                    <div class="w-1.5 h-1.5 rounded-full @(item.Status == SupportStatus.Closed ? "bg-white/50" : "bg-current")"></div>
+                                    <span class="text-xs font-medium">@item.Status</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex w-full md:w-auto md:flex-1 flex-row md:flex-col items-center md:items-end justify-between gap-4 mt-4 md:mt-0 border-t md:border-t-0 border-white/10 pt-4 md:pt-0">
+                            <div class="hidden md:block w-32 h-20 bg-center bg-no-repeat bg-cover rounded-xl border border-white/10" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAr_kCn3woqDYhwfTeO-aXXT7Uu9L_ycfJ5pXpkTcORIac_b4AB1HH5LWaduLnKlWEuTxrXqHbBI0WJgsGe2YJjrsijjBT6SpAWeBdgTfHCjww-OU_wo0VPNvrbP3UVCN2SU3q4sY9uVe7e8p0lLeU7ERrKQnLMUE1Cf-X_mmKS32VCC8Dr8mZLZw4EG_iuQZnrkEnsl5MVdSlpsuwPzLgyI0d_IraP3jTobt7wFh37zzf2Vw_rNCaDQFZnww5fPQEHxkZv44al3b5t");'></div>
+                            <a asp-action="Conversation" asp-route-id="@item.ConversationId" class="flex-1 md:flex-none flex items-center justify-center gap-2 rounded-full h-10 px-6 bg-white/5 border border-white/10 text-white text-sm font-bold hover:bg-primary hover:text-black transition-all w-full md:w-auto">
+                                <span>View Details</span>
+                                <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+                            </a>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="p-20 text-center glass-card rounded-2xl">
+                    <span class="material-symbols-outlined text-6xl text-white/20 mb-4">support_agent</span>
+                    <p class="text-white/60">You don't have any support requests yet.</p>
+                </div>
+            }
+        </div>
+        
+        @if (Model.TotalCount > Model.Items.Count())
+        {
+            <div class="p-8 text-center">
+                <p class="text-white/30 text-sm">Showing @Model.Items.Count() of @Model.TotalCount requests</p>
+            </div>
+        }
+    </div>
+</div>
+
+@await Html.PartialAsync("_NewRequestModal")
+
+@section Scripts {
+    <script>
+        function openNewRequestModal() {
+            const modal = document.getElementById('newRequestModal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+        }
+    </script>
+}

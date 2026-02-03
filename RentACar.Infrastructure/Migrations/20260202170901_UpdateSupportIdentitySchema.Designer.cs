@@ -3,17 +3,20 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RentACar.Infrastructure.Data;
 
 #nullable disable
 
-namespace RentACar.Infrastructure.Migrations
+namespace RentACar.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(RentACarDbContext))]
-    partial class RentACarDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260202170901_UpdateSupportIdentitySchema")]
+    partial class UpdateSupportIdentitySchema
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

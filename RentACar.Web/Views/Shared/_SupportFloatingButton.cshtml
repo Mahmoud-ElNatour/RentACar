@@ -1,0 +1,105 @@
+@using RentACar.Application.Managers
+@using RentACar.Application.DTOs.Support
+@using System.Security.Claims
+@inject SupportManager SupportManager
+
+@{
+    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    var isCustomer = User.IsInRole("Customer");
+    
+    // Hide if not a customer or if on a support-related page
+    var currentPath = Context.Request.Path.ToString().ToLower();
+    bool shouldHide = !isCustomer || 
+                      currentPath.Contains("/support/conversation") || 
+                      currentPath.Contains("/admin/supportinbox/details");
+
+    if (shouldHide)
+    {
+        return;
+    }
+
+    SupportConversationListDto lastRequest = null;
+    if (!string.IsNullOrEmpty(userId))
+    {
+        var result = await SupportManager.GetCustomerConversationsPagedAsync(userId, 1, 1);
+        lastRequest = result.Items.FirstOrDefault();
+    }
+}
+
+<div id="supportFloatingContainer" class="relative z-[9999]">
+    <div id="supportPopover" class="fixed bottom-24 right-8 w-[400px] hidden flex-col glass-panel rounded-lg shadow-2xl overflow-hidden transition-all duration-300">
+        <div class="p-6 border-b border-white/5 flex justify-between items-center bg-white/[0.02]">
+            <div>
+                <h3 class="text-xl font-extrabold text-white tracking-tight">Concierge Support</h3>
+                <p class="text-primary text-[10px] font-bold uppercase tracking-[0.2em] mt-1">Excellence in Motion</p>
+            </div>
+            <button onclick="toggleSupportPopover()" class="text-white/40 hover:text-white transition-colors">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <div class="flex flex-col p-4 gap-3">
+            @if (lastRequest != null)
+            {
+                <a asp-controller="Support" asp-action="Conversation" asp-route-id="@lastRequest.ConversationId" class="flex items-center gap-4 bg-white/[0.04] hover:bg-white/[0.08] border border-white/5 transition-all px-4 py-4 rounded-xl cursor-pointer">
+                    <div class="text-primary flex items-center justify-center rounded-lg bg-primary/10 border border-primary/20 shrink-0 size-12">
+                        <span class="material-symbols-outlined">pending_actions</span>
+                    </div>
+                    <div class="flex flex-col justify-center flex-1">
+                        <p class="text-white text-sm font-bold leading-none mb-1">Continue last request</p>
+                        <p class="text-white/40 text-xs font-medium">@lastRequest.Subject • @lastRequest.Status</p>
+                    </div>
+                    <div class="shrink-0 text-white/20">
+                        <span class="material-symbols-outlined text-lg">chevron_right</span>
+                    </div>
+                </a>
+            }
+            
+            <a asp-controller="Support" asp-action="Index" class="flex items-center gap-4 bg-white/[0.02] hover:bg-white/[0.06] border border-white/5 transition-all px-4 py-4 rounded-xl cursor-pointer">
+                <div class="text-white flex items-center justify-center rounded-lg bg-white/5 border border-white/10 shrink-0 size-12">
+                    <span class="material-symbols-outlined">add_comment</span>
+                </div>
+                <div class="flex flex-col justify-center flex-1">
+                    <p class="text-white text-sm font-bold leading-none mb-1">New support request</p>
+                    <p class="text-white/40 text-xs font-medium">Connect with our specialists</p>
+                </div>
+                <div class="shrink-0 text-white/20">
+                    <span class="material-symbols-outlined text-lg">chevron_right</span>
+                </div>
+            </a>
+        </div>
+        </div>
+        <div class="p-3 bg-primary text-black text-center text-[10px] font-extrabold uppercase tracking-[0.15em]">
+            Average response time: 2 mins
+        </div>
+    </div>
+    
+    <div class="fixed bottom-8 right-8">
+        <button onclick="toggleSupportPopover()" class="flex items-center justify-center rounded-full h-16 w-16 bg-primary text-black shadow-2xl hover:scale-105 transition-transform glow-gold">
+            <span class="material-symbols-outlined !text-3xl">support_agent</span>
+        </button>
+    </div>
+</div>
+
+<style>
+    .glass-panel {
+        background: rgba(22, 24, 25, 0.92);
+        backdrop-filter: blur(16px);
+        border: 1px solid rgba(212, 175, 55, 0.3);
+    }
+    .glow-gold {
+        box-shadow: 0 0 25px rgba(212, 175, 55, 0.2);
+    }
+    #supportPopover.flex {
+        display: flex !important;
+    }
+</style>
+
+<script>
+    function toggleSupportPopover() {
+        const popover = document.getElementById('supportPopover');
+        if (popover) {
+            popover.classList.toggle('hidden');
+            popover.classList.toggle('flex');
+        }
+    }
+</script>

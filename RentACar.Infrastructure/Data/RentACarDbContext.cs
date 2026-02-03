@@ -53,6 +53,8 @@ public partial class RentACarDbContext : DbContext
     public virtual DbSet<NotificationLog> NotificationLogs { get; set; }
     public virtual DbSet<SenderIdentity> SenderIdentities { get; set; }
     public virtual DbSet<EmailFeatureConfig> EmailFeatureConfigs { get; set; }
+    public virtual DbSet<SupportConversation> SupportConversations { get; set; }
+    public virtual DbSet<SupportMessage> SupportMessages { get; set; }
 
 
 
@@ -265,6 +267,37 @@ public partial class RentACarDbContext : DbContext
                 .WithMany(p => p.Trips)
                 .HasForeignKey(d => d.DriverId)
                 .HasConstraintName("FK_Trips_Drivers");
+        });
+
+        modelBuilder.Entity<SupportConversation>(entity =>
+        {
+            entity.HasOne(d => d.Customer)
+                .WithMany()
+                .HasForeignKey(d => d.CustomerId)
+                .OnDelete(DeleteBehavior.ClientSetNull);
+
+            entity.HasOne(d => d.AssignedEmployee)
+                .WithMany()
+                .HasForeignKey(d => d.AssignedEmployeeId)
+                .OnDelete(DeleteBehavior.ClientSetNull);
+
+            entity.HasIndex(e => e.CustomerId).HasDatabaseName("IX_SupportConversations_CustomerId");
+            entity.HasIndex(e => e.BookingId).HasDatabaseName("IX_SupportConversations_BookingId");
+            entity.HasIndex(e => e.Status).HasDatabaseName("IX_SupportConversations_Status");
+            entity.HasIndex(e => e.UpdatedAt).HasDatabaseName("IX_SupportConversations_UpdatedAt");
+        });
+
+        modelBuilder.Entity<SupportMessage>(entity =>
+        {
+            entity.HasOne(d => d.Conversation)
+                .WithMany(p => p.Messages)
+                .HasForeignKey(d => d.SupportConversationId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(d => d.Sender)
+                .WithMany()
+                .HasForeignKey(d => d.SenderUserId)
+                .OnDelete(DeleteBehavior.ClientSetNull);
         });
 
         OnModelCreatingPartial(modelBuilder);

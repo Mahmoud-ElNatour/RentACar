@@ -10,6 +10,7 @@ using AutoMapper;
 using RentACar.Infrastructure.Data.Repositories;
 using RentACar.Application.Managers;
 using RentACar.Application.Services;
+using RentACar.Web.Hubs;
 using Serilog;
 using QuestPDF.Infrastructure;
 
@@ -91,6 +92,7 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddMemoryCache();
+builder.Services.AddSignalR();
 
 // ✅ Register repositories
 builder.Services.AddScoped<IBookingRepository, BookingRepository>();
@@ -106,6 +108,8 @@ builder.Services.AddScoped<IEmailTemplateRepository, EmailTemplateRepository>();
 builder.Services.AddScoped<IEmailDraftRepository, EmailDraftRepository>();
 builder.Services.AddHttpClient<IEmailService, MailjetEmailService>();
 builder.Services.AddScoped<ICustomerRatingRepository, CustomerRatingRepository>();
+builder.Services.AddScoped<ISupportConversationRepository, SupportConversationRepository>();
+builder.Services.AddScoped<ISupportMessageRepository, SupportMessageRepository>();
 builder.Services.AddScoped<CustomerRatingManager>();
 builder.Services.AddHttpClient<RentACar.Application.Services.IStripePaymentService, RentACar.Application.Services.StripePaymentService>(client =>
 {
@@ -135,6 +139,7 @@ builder.Services.AddScoped<EmailFeatureConfigManager>();
 builder.Services.AddScoped<EmailRoutingService>();
 builder.Services.AddScoped<NotificationProcessingService>();
 builder.Services.AddScoped<EmailLogManager>();
+builder.Services.AddScoped<SupportManager>();
 
 
 // // ✅ HTTPS redirection
@@ -224,6 +229,7 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.MapRazorPages();
+app.MapHub<SupportChatHub>("/supportChatHub");
 
 
 app.Run();

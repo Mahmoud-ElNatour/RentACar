@@ -1,0 +1,542 @@
+@using RentACar.Application.DTOs.Support
+@using RentACar.Core.Constants
+@using System.Security.Claims
+@model RentACar.Application.DTOs.PagedResultDto<SupportConversationListDto>
+
+@{
+    var isHistoryMode = Context.Request.Query["mode"] == "history";
+    ViewData["Title"] = isHistoryMode ? "Customer Ticket History" : "Employee Support Inbox";
+    Layout = "_Layout"; 
+    var stats = ViewBag.Stats as SupportDashboardStatsDto;
+    var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+}
+
+@section Styles {
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+}
+
+<main class="max-w-[1400px] mx-auto p-6 space-y-6">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+            <h1 class="text-3xl font-black text-white tracking-tight">@(isHistoryMode ? "Customer Ticket History" : "Support Request Inbox")</h1>
+            <p class="text-slate-500 mt-1 font-medium">Manage priority inquiries for premium fleet and VIP clients.</p>
+        </div>
+    </div>
+
+    @if (stats != null)
+    {
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-surface-dark border border-border-dark rounded-xl p-6 relative overflow-hidden group">
+                <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <span class="material-symbols-outlined text-6xl text-primary">pending_actions</span>
+                </div>
+                <p class="text-slate-400 text-sm font-semibold uppercase tracking-wider">Open Requests</p>
+                <div class="mt-2 flex items-baseline gap-3">
+                    <span class="text-4xl font-black text-white tracking-tighter">@stats.OpenTicketsCount</span>
+                    <span class="text-emerald-500 text-sm font-bold flex items-center">
+                        <span class="material-symbols-outlined text-sm">trending_up</span> @stats.OpenTrend%
+                    </span>
+                </div>
+                <div class="mt-4 h-1 w-full bg-border-dark rounded-full overflow-hidden">
+                    <div class="h-full bg-primary w-[65%]"></div>
+                </div>
+            </div>
+            <div class="bg-surface-dark border border-border-dark rounded-xl p-6 relative overflow-hidden group">
+                <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <span class="material-symbols-outlined text-6xl text-orange-400">hourglass_empty</span>
+                </div>
+                <p class="text-slate-400 text-sm font-semibold uppercase tracking-wider">Waiting for Customer</p>
+                <div class="mt-2 flex items-baseline gap-3">
+                    <span class="text-4xl font-black text-white tracking-tighter">@stats.WaitingForCustomerCount</span>
+                    <span class="text-orange-400 text-sm font-bold flex items-center">
+                        <span class="material-symbols-outlined text-sm">trending_down</span> @stats.WaitingTrend%
+                    </span>
+                </div>
+                <div class="mt-4 h-1 w-full bg-border-dark rounded-full overflow-hidden">
+                    <div class="h-full bg-orange-400 w-[30%]"></div>
+                </div>
+            </div>
+            <div class="bg-surface-dark border border-border-dark rounded-xl p-6 relative overflow-hidden group">
+                <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <span class="material-symbols-outlined text-6xl text-emerald-500">task_alt</span>
+                </div>
+                <p class="text-slate-400 text-sm font-semibold uppercase tracking-wider">Resolved Today</p>
+                <div class="mt-2 flex items-baseline gap-3">
+                    <span class="text-4xl font-black text-white tracking-tighter">@stats.ResolvedTodayCount</span>
+                    <span class="text-emerald-500 text-sm font-bold flex items-center">
+                        <span class="material-symbols-outlined text-sm">trending_up</span> @stats.ResolvedTrend%
+                    </span>
+                </div>
+                <div class="mt-4 h-1 w-full bg-border-dark rounded-full overflow-hidden">
+                    <div class="h-full bg-emerald-500 w-[85%]"></div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="bg-surface-dark border border-border-dark rounded-xl p-4 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex flex-wrap items-center gap-3 flex-1">
+            <form method="get" class="flex flex-wrap gap-3 w-full">
+                <div class="relative flex-1 min-w-[300px]">
+                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">search</span>
+                    <input type="text" name="searchQuery" value="@ViewBag.SearchQuery" placeholder="Search by Name, Email, Phone or ID..." 
+                           class="w-full bg-background-dark border-border-dark text-slate-300 text-sm rounded-lg pl-9 pr-4 py-2 focus:ring-primary focus:border-primary outline-none hover:border-slate-600 transition-all">
+                </div>
+                <div class="relative min-w-[200px]">
+                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">filter_list</span>
+                    <select name="status" onchange="this.form.submit()" class="w-full bg-background-dark border-border-dark text-slate-300 text-sm rounded-lg pl-9 pr-8 py-2 focus:ring-primary appearance-none cursor-pointer hover:border-slate-600 outline-none">
+                        <option value="">Status: All</option>
+                        @foreach (var s in SupportStatus.All)
+                        {
+                            <option value="@s" selected="@(ViewBag.Status == s)">@s</option>
+                        }
+                    </select>
+                </div>
+                <div class="relative min-w-[200px]">
+                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">person</span>
+                    <select name="assignedEmployeeId" onchange="this.form.submit()" class="w-full bg-background-dark border-border-dark text-slate-300 text-sm rounded-lg pl-9 pr-8 py-2 focus:ring-primary appearance-none cursor-pointer hover:border-slate-600 outline-none">
+                        <option value="">Assigned To: All</option>
+                        @foreach (var staff in ViewBag.Staff as List<Microsoft.AspNetCore.Identity.IdentityUser>)
+                        {
+                            <option value="@staff.Id" selected="@(ViewBag.AssignedEmployeeId == staff.Id)">@staff.UserName</option>
+                        }
+                    </select>
+                </div>
+                <div class="relative min-w-[150px]">
+                    <select name="category" onchange="this.form.submit()" class="w-full bg-background-dark border-border-dark text-slate-300 text-sm rounded-lg px-4 py-2 focus:ring-primary appearance-none cursor-pointer hover:border-slate-600 outline-none">
+                        <option value="">Category: All</option>
+                        @foreach (var c in SupportCategory.All)
+                        {
+                            <option value="@c" selected="@(ViewBag.Category == c)">@c</option>
+                        }
+                    </select>
+                </div>
+                <div class="flex items-center gap-3 ml-auto">
+                    <button type="submit" class="bg-primary text-black text-xs font-bold uppercase tracking-widest px-6 py-2 rounded-lg hover:brightness-110 transition-all">Apply</button>
+                    <a asp-action="Index" class="text-slate-400 hover:text-white text-xs font-bold uppercase tracking-widest px-2">Clear</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Desktop Table View -->
+    <div class="hidden md:block bg-surface-dark border border-border-dark rounded-xl overflow-hidden shadow-2xl">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="border-b border-border-dark bg-background-dark/50">
+                        <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500 cursor-pointer hover:text-primary transition-colors" onclick="sortTable(0)">Ticket ID <span class="material-symbols-outlined text-[10px] align-middle">unfold_more</span></th>
+                        <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500 cursor-pointer hover:text-primary transition-colors" onclick="sortTable(1)">Customer <span class="material-symbols-outlined text-[10px] align-middle">unfold_more</span></th>
+                        <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500 cursor-pointer hover:text-primary transition-colors" onclick="sortTable(2)">Subject <span class="material-symbols-outlined text-[10px] align-middle">unfold_more</span></th>
+                        <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500 cursor-pointer hover:text-primary transition-colors" onclick="sortTable(3)">Booking <span class="material-symbols-outlined text-[10px] align-middle">unfold_more</span></th>
+                        <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500 cursor-pointer hover:text-primary transition-colors" onclick="sortTable(4)">Status <span class="material-symbols-outlined text-[10px] align-middle">unfold_more</span></th>
+                        <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500 cursor-pointer hover:text-primary transition-colors" onclick="sortTable(5)">Assignee <span class="material-symbols-outlined text-[10px] align-middle">unfold_more</span></th>
+                        <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-border-dark">
+                    @if (Model.Items.Any())
+                    {
+                        @foreach (var item in Model.Items)
+                        {
+                            <tr class="hover:bg-white/10 transition-all group cursor-pointer border-b border-border-dark" 
+                                onclick="window.location.href='@Url.Action("Details", "SupportInbox", new { area = "Admin", id = item.ConversationId })'">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="text-primary font-mono font-bold text-sm">#@item.ConversationId</span>
+                                    <p class="text-[10px] text-slate-500 mt-0.5">@item.LastUpdatedAt.ToLocalTime().ToString("g")</p>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="size-10 rounded bg-slate-800 flex items-center justify-center text-xs font-bold text-white border border-border-dark shrink-0">@item.CustomerName?.Substring(0, Math.Min(2, item.CustomerName.Length)).ToUpper()</div>
+                                        <div class="flex flex-col">
+                                            <p class="text-sm font-bold text-white leading-tight">@item.CustomerName</p>
+                                            <p class="text-[11px] text-slate-400 mt-0.5">@item.CustomerEmail</p>
+                                            <p class="text-[10px] text-primary/70 font-mono mt-0.5">@item.CustomerPhone</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div>
+                                        <p class="text-sm font-medium text-slate-200 truncate max-w-[200px]" title="@item.Subject">@item.Subject</p>
+                                        <span class="inline-block mt-1 text-[10px] font-bold text-primary/80 border border-primary/30 px-1.5 rounded uppercase">@item.Category</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 font-mono text-sm text-slate-400">@(item.BookingId.HasValue ? $"#BK-{item.BookingId}" : "N/A")</td>
+                                <td class="px-6 py-4">
+                                    @{
+                                        var statusClass = item.Status switch
+                                        {
+                                            SupportStatus.Open => "bg-red-500/10 text-red-500 border-red-500/20",
+                                            SupportStatus.Assigned => "bg-primary/10 text-primary border-primary/20",
+                                            SupportStatus.Resolved => "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
+                                            SupportStatus.Closed => "bg-slate-500/10 text-slate-500 border-slate-500/20",
+                                            _ => "bg-blue-500/10 text-blue-500 border-blue-500/20"
+                                        };
+                                    }
+                                    <span class="@statusClass text-[10px] font-black px-2.5 py-1 rounded-full border uppercase">@item.Status</span>
+                                </td>
+                                <td class="px-6 py-4 text-xs text-slate-400">
+                                    @if (!string.IsNullOrEmpty(item.AssignedEmployeeId))
+                                    {
+                                        <div class="flex items-center gap-2">
+                                            <div class="size-6 rounded-full bg-primary flex items-center justify-center text-[8px] font-black text-black">@(item.AssignedEmployeeName?.Length > 0 ? item.AssignedEmployeeName.Substring(0, 1).ToUpper() : "?")</div>
+                                            <span class="text-white font-bold">@item.AssignedEmployeeName</span>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <span class="italic text-slate-500">Unassigned</span>
+                                    }
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                    <div class="flex items-center justify-end">
+                                        @{
+                                            var isMyTicket = item.AssignedEmployeeId == currentUserId;
+                                            var isClosedOrResolved = item.Status == SupportStatus.Closed || item.Status == SupportStatus.Resolved;
+                                            var btnText = (isMyTicket && !isClosedOrResolved) ? "Chat" : "View";
+                                            var btnColor = (isMyTicket && !isClosedOrResolved) ? "bg-primary text-black" : "bg-white/5 text-white/60 border border-white/10 hover:bg-white/10 hover:text-white hover:border-white/20";
+                                        }
+                                        <a href="@Url.Action("Details", "SupportInbox", new { area = "Admin", id = item.ConversationId })" 
+                                           class="inline-flex items-center justify-center @btnColor px-6 py-2.5 rounded-lg text-xs font-black uppercase tracking-widest hover:brightness-110 active:scale-[0.98] transition-all no-underline shadow-[0_4px_15px_rgba(212,175,55,0.1)] relative z-20">
+                                            @btnText
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr id="noResultsRow">
+                            <td colspan="7" class="px-6 py-10 text-center text-slate-500">No support tickets found.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        
+        <div id="loadMoreSection" class="px-6 py-8 border-t border-border-dark flex justify-center @(Model.TotalCount > Model.Items.Count() ? "" : "hidden")">
+            <button id="loadMoreBtn" onclick="loadMore()" class="group flex items-center gap-3 bg-white/5 border border-white/10 hover:border-primary/50 px-8 py-3 rounded-xl text-sm font-bold text-white transition-all">
+                <span class="material-symbols-outlined text-primary group-hover:rotate-180 transition-transform duration-500">refresh</span>
+                Load More Tickets
+            </button>
+        </div>
+        
+        <div id="skeletonTemplate" class="hidden">
+            <table>
+                <tr class="animate-pulse bg-white/[0.02]">
+                    <td class="px-6 py-6"><div class="h-4 bg-slate-700 rounded w-16"></div><div class="h-2 bg-slate-800 rounded w-12 mt-2"></div></td>
+                    <td class="px-6 py-6"><div class="flex items-center gap-3"><div class="size-10 rounded bg-slate-800"></div><div class="space-y-2"><div class="h-3 bg-slate-700 rounded w-24"></div><div class="h-2 bg-slate-800 rounded w-32"></div></div></div></td>
+                    <td class="px-6 py-6"><div class="h-3 bg-slate-700 rounded w-40"></div><div class="h-2 bg-slate-800 rounded w-16 mt-2"></div></td>
+                    <td class="px-6 py-6"><div class="h-3 bg-slate-700 rounded w-12"></div></td>
+                    <td class="px-6 py-6"><div class="h-5 bg-slate-800 rounded-full w-20"></div></td>
+                    <td class="px-6 py-6"><div class="h-3 bg-slate-700 rounded w-24"></div></td>
+                    <td class="px-6 py-6"><div class="h-8 bg-slate-800 rounded w-16"></div></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- Mobile Card View -->
+    <div id="mobileList" class="md:hidden space-y-4">
+        @if (Model.Items.Any())
+        {
+            @foreach (var item in Model.Items)
+            {
+                <div onclick="window.location.href='@Url.Action("Details", "SupportInbox", new { area = "Admin", id = item.ConversationId })'" 
+                     class="bg-surface-dark border border-border-dark rounded-xl p-5 space-y-4 active:scale-[0.98] transition-all">
+                    
+                    <div class="flex justify-between items-start">
+                        <div class="flex items-center gap-3">
+                             <div class="size-10 rounded bg-slate-800 flex items-center justify-center text-xs font-bold text-white border border-border-dark shrink-0">
+                                 @item.CustomerName?.Substring(0, Math.Min(2, item.CustomerName.Length)).ToUpper()
+                             </div>
+                             <div>
+                                 <h4 class="text-white font-bold text-sm">@item.CustomerName</h4>
+                                 <p class="text-[10px] text-slate-400">@item.CustomerEmail</p>
+                             </div>
+                        </div>
+                        <span class="text-primary font-mono font-bold text-xs">#@item.ConversationId</span>
+                    </div>
+
+                    <div>
+                        <p class="text-white font-bold text-base leading-tight">@item.Subject</p>
+                        <div class="flex items-center gap-2 mt-2">
+                             <span class="inline-block text-[10px] font-bold text-primary/80 border border-primary/30 px-1.5 rounded uppercase">@item.Category</span>
+                             <span class="text-[10px] text-slate-500">@item.LastUpdatedAt.ToLocalTime().ToString("g")</span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between border-t border-border-dark pt-4">
+                         @{
+                            var statusClass = item.Status switch
+                            {
+                                SupportStatus.Open => "bg-red-500/10 text-red-500 border-red-500/20",
+                                SupportStatus.Assigned => "bg-primary/10 text-primary border-primary/20",
+                                SupportStatus.Resolved => "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
+                                SupportStatus.Closed => "bg-slate-500/10 text-slate-500 border-slate-500/20",
+                                _ => "bg-blue-500/10 text-blue-500 border-blue-500/20"
+                            };
+                        }
+                        <span class="@statusClass text-[10px] font-black px-2.5 py-1 rounded-full border uppercase">@item.Status</span>
+
+                        @if (!string.IsNullOrEmpty(item.AssignedEmployeeId))
+                        {
+                            <div class="flex items-center gap-2">
+                                <span class="text-[10px] text-slate-500 uppercase font-bold">Assigned to</span>
+                                <div class="size-5 rounded-full bg-primary flex items-center justify-center text-[7px] font-black text-black">@(item.AssignedEmployeeName?.Length > 0 ? item.AssignedEmployeeName.Substring(0, 1).ToUpper() : "?")</div>
+                            </div>
+                        }
+                        else
+                        {
+                            <span class="text-[10px] italic text-slate-500">Unassigned</span>
+                        }
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+             <div class="p-12 text-center text-slate-500 bg-surface-dark border border-border-dark rounded-xl">
+                <span class="material-symbols-outlined text-4xl mb-2 opacity-50">inbox</span>
+                <p>No tickets found</p>
+            </div>
+        }
+    </div>
+</main>
+
+@section Scripts {
+    <script>
+        let currentPage = 1;
+        const pageSize = 10;
+        let isLoading = false;
+        
+        const filters = {
+            status: '@ViewBag.Status',
+            category: '@ViewBag.Category',
+            searchQuery: '@ViewBag.SearchQuery',
+            assignedEmployeeId: '@ViewBag.AssignedEmployeeId'
+        };
+
+        async function loadMore() {
+            if (isLoading) return;
+            
+            const btn = document.getElementById('loadMoreBtn');
+            const tbody = document.querySelector('tbody');
+            const skeletonTemplate = document.getElementById('skeletonTemplate').querySelector('tr');
+            
+            isLoading = true;
+            btn.disabled = true;
+            
+            // Append 3 skeletons
+            const skeletons = [];
+            for (let i = 0; i < 3; i++) {
+                const s = skeletonTemplate.cloneNode(true);
+                tbody.appendChild(s);
+                skeletons.push(s);
+            }
+            
+            currentPage++;
+            
+            const params = new URLSearchParams({
+                page: currentPage,
+                pageSize: pageSize,
+                ...filters
+            });
+
+            try {
+                const response = await fetch(`/api/SupportApi/inbox?${params}`);
+                if (!response.ok) throw new Error('Failed to fetch');
+                
+                const data = await response.json();
+                
+                // Remove skeletons
+                skeletons.forEach(s => tbody.removeChild(s));
+                
+                if (data.items && data.items.length > 0) {
+                    const mobileList = document.getElementById('mobileList');
+                    data.items.forEach(item => {
+                        // Desktop
+                        const row = createRow(item);
+                        tbody.insertAdjacentHTML('beforeend', row);
+                        
+                        // Mobile
+                        if (mobileList) {
+                            const card = createCard(item);
+                            mobileList.insertAdjacentHTML('beforeend', card);
+                        }
+                    });
+                    
+                    if (data.items.length < pageSize || (currentPage * pageSize) >= data.totalCount) {
+                        document.getElementById('loadMoreSection').classList.add('hidden');
+                    }
+                } else {
+                    document.getElementById('loadMoreSection').classList.add('hidden');
+                }
+            } catch (err) {
+                console.error(err);
+                skeletons.forEach(s => {
+                    if (s.parentNode) tbody.removeChild(s);
+                });
+                alert('Failed to load more tickets.');
+            } finally {
+                isLoading = false;
+                btn.disabled = false;
+            }
+        }
+
+        function createRow(item) {
+            const date = new Date(item.lastUpdatedAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' });
+            const statusClass = getStatusClass(item.status);
+            const avatar = (item.customerName || '??').substring(0, 2).toUpperCase();
+            const assigneeInfo = item.assignedEmployeeId 
+                ? `<div class="flex items-center gap-2">
+                     <div class="size-6 rounded-full bg-primary flex items-center justify-center text-[8px] font-black text-black">${(item.assignedEmployeeName || '?')[0].toUpperCase()}</div>
+                     <span class="text-white font-bold">${item.assignedEmployeeName}</span>
+                   </div>`
+                : `<span class="italic text-slate-500">Unassigned</span>`;
+
+            const isMyTicket = item.assignedEmployeeId === currentUserId;
+            const isClosedOrResolved = item.status === 'Closed' || item.status === 'Resolved';
+            const btnText = (isMyTicket && !isClosedOrResolved) ? "Chat" : "View";
+            const btnColor = (isMyTicket && !isClosedOrResolved) ? "bg-primary text-black" : "bg-white/5 text-white/60 border border-white/10 hover:bg-white/10 hover:text-white hover:border-white/20";
+
+            return `
+                <tr class="hover:bg-white/10 transition-all group cursor-pointer border-b border-border-dark" 
+                    onclick="window.location.href='/Admin/SupportInbox/Details/${item.conversationId}'">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="text-primary font-mono font-bold text-sm">#${item.conversationId}</span>
+                        <p class="text-[10px] text-slate-500 mt-0.5">${date}</p>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-3">
+                            <div class="size-10 rounded bg-slate-800 flex items-center justify-center text-xs font-bold text-white border border-border-dark shrink-0">${avatar}</div>
+                            <div class="flex flex-col">
+                                <p class="text-sm font-bold text-white leading-tight">${item.customerName || 'Unknown'}</p>
+                                <p class="text-[11px] text-slate-400 mt-0.5">${item.customerEmail || ''}</p>
+                                <p class="text-[10px] text-primary/70 font-mono mt-0.5">${item.customerPhone || ''}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div>
+                            <p class="text-sm font-medium text-slate-200 truncate max-w-[200px]" title="${item.subject}">${item.subject}</p>
+                            <span class="inline-block mt-1 text-[10px] font-bold text-primary/80 border border-primary/30 px-1.5 rounded uppercase">${item.category}</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 font-mono text-sm text-slate-400">${item.bookingId ? '#BK-' + item.bookingId : 'N/A'}</td>
+                    <td class="px-6 py-4">
+                        <span class="${statusClass} text-[10px] font-black px-2.5 py-1 rounded-full border uppercase">${item.status}</span>
+                    </td>
+                    <td class="px-6 py-4 text-xs text-slate-400 font-medium">
+                        ${assigneeInfo}
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        <div class="flex items-center justify-end">
+                            <a href="/Admin/SupportInbox/Details/${item.conversationId}" 
+                               class="inline-flex items-center justify-center ${btnColor} px-6 py-2.5 rounded-lg text-xs font-black uppercase tracking-widest hover:brightness-110 active:scale-[0.98] transition-all no-underline shadow-[0_4px_15px_rgba(212,175,55,0.1)] relative z-20">
+                                ${btnText}
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
+
+        function getStatusClass(status) {
+            switch(status) {
+                case 'Open': return "bg-red-500/10 text-red-500 border-red-500/20";
+                case 'Assigned': return "bg-primary/10 text-primary border-primary/20";
+                case 'Resolved': return "bg-emerald-500/10 text-emerald-500 border-emerald-500/20";
+                case 'Closed': return "bg-slate-500/10 text-slate-500 border-slate-500/20";
+                default: return "bg-blue-500/10 text-blue-500 border-border-dark/20";
+            }
+        }
+
+        function createCard(item) {
+            const date = new Date(item.lastUpdatedAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' });
+            const statusClass = getStatusClass(item.status);
+            const avatar = (item.customerName || '??').substring(0, 2).toUpperCase();
+            const assigneeInfo = item.assignedEmployeeId 
+                ? `<div class="flex items-center gap-2">
+                     <span class="text-[10px] text-slate-500 uppercase font-bold">Assigned to</span>
+                     <div class="size-5 rounded-full bg-primary flex items-center justify-center text-[7px] font-black text-black">${(item.assignedEmployeeName || '?')[0].toUpperCase()}</div>
+                   </div>`
+                : `<span class="text-[10px] italic text-slate-500">Unassigned</span>`;
+
+            return `
+                <div onclick="window.location.href='/Admin/SupportInbox/Details/${item.conversationId}'" 
+                     class="bg-surface-dark border border-border-dark rounded-xl p-5 space-y-4 active:scale-[0.98] transition-all">
+                    
+                    <div class="flex justify-between items-start">
+                        <div class="flex items-center gap-3">
+                             <div class="size-10 rounded bg-slate-800 flex items-center justify-center text-xs font-bold text-white border border-border-dark shrink-0">
+                                 ${avatar}
+                             </div>
+                             <div>
+                                 <h4 class="text-white font-bold text-sm">${item.customerName || 'Unknown'}</h4>
+                                 <p class="text-[10px] text-slate-400">${item.customerEmail || ''}</p>
+                             </div>
+                        </div>
+                        <span class="text-primary font-mono font-bold text-xs">#${item.conversationId}</span>
+                    </div>
+
+                    <div>
+                        <p class="text-white font-bold text-base leading-tight">${item.subject}</p>
+                        <div class="flex items-center gap-2 mt-2">
+                             <span class="inline-block text-[10px] font-bold text-primary/80 border border-primary/30 px-1.5 rounded uppercase">${item.category}</span>
+                             <span class="text-[10px] text-slate-500">${date}</span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between border-t border-border-dark pt-4">
+                        <span class="${statusClass} text-[10px] font-black px-2.5 py-1 rounded-full border uppercase">${item.status}</span>
+                        ${assigneeInfo}
+                    </div>
+                </div>
+            `;
+        }
+
+        function sortTable(n) {
+            var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+            table = document.querySelector("table");
+            switching = true;
+            dir = "asc";
+            while (switching) {
+                switching = false;
+                rows = table.rows;
+                for (i = 1; i < (rows.length - 1); i++) {
+                    if (rows[i].id === 'noResultsRow' || rows[i].id === 'loadMoreSection') continue;
+                    shouldSwitch = false;
+                    x = rows[i].getElementsByTagName("TD")[n];
+                    y = rows[i + 1].getElementsByTagName("TD")[n];
+                    if (dir == "asc") {
+                        if (x.innerText.toLowerCase() > y.innerText.toLowerCase()) {
+                            shouldSwitch = true;
+                            break;
+                        }
+                    } else if (dir == "desc") {
+                        if (x.innerText.toLowerCase() < y.innerText.toLowerCase()) {
+                            shouldSwitch = true;
+                            break;
+                        }
+                    }
+                }
+                if (shouldSwitch) {
+                    rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                    switching = true;
+                    switchcount++;
+                } else {
+                    if (switchcount == 0 && dir == "asc") {
+                        dir = "desc";
+                        switching = true;
+                    }
+                }
+            }
+        }
+    </script>
+}

@@ -837,7 +837,10 @@ namespace RentACar.Application.Managers
     {
         public BookingProfile()
         {
-            CreateMap<Booking, BookingDto>().ReverseMap();
+            CreateMap<Booking, BookingDto>()
+                .ForMember(dest => dest.CarModel, opt => opt.MapFrom(src => src.Car.ModelName))
+                .ForMember(dest => dest.CarPlate, opt => opt.MapFrom(src => src.Car.PlateNumber))
+                .ReverseMap();
 
             CreateMap<Booking, BookingEditDto>().ReverseMap();
             CreateMap<BookingDto, BookingEditDto>().ReverseMap();

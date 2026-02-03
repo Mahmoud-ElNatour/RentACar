@@ -3,17 +3,20 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RentACar.Infrastructure.Data;
 
 #nullable disable
 
-namespace RentACar.Infrastructure.Migrations
+namespace RentACar.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(RentACarDbContext))]
-    partial class RentACarDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260202160911_AddSupportModule")]
+    partial class AddSupportModule
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1524,8 +1527,9 @@ namespace RentACar.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SupportConversationId"));
 
-                    b.Property<int?>("AssignedEmployeeId")
-                        .HasColumnType("int");
+                    b.Property<string>("AssignedEmployeeId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<int?>("BookingId")
                         .HasColumnType("int");
@@ -1541,8 +1545,10 @@ namespace RentACar.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("CustomerId")
-                        .HasColumnType("int");
+                    b.Property<string>("CustomerId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -2043,7 +2049,7 @@ namespace RentACar.Infrastructure.Migrations
 
             modelBuilder.Entity("RentACar.Core.Entities.SupportConversation", b =>
                 {
-                    b.HasOne("RentACar.Core.Entities.Employee", "AssignedEmployee")
+                    b.HasOne("RentACar.Core.Entities.AspNetUser", "AssignedEmployee")
                         .WithMany()
                         .HasForeignKey("AssignedEmployeeId");
 
@@ -2051,7 +2057,7 @@ namespace RentACar.Infrastructure.Migrations
                         .WithMany()
                         .HasForeignKey("BookingId");
 
-                    b.HasOne("RentACar.Core.Entities.Customer", "Customer")
+                    b.HasOne("RentACar.Core.Entities.AspNetUser", "Customer")
                         .WithMany()
                         .HasForeignKey("CustomerId")
                         .IsRequired();

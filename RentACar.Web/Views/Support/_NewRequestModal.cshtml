@@ -1,0 +1,94 @@
+@using RentACar.Application.DTOs
+@using RentACar.Core.Constants
+@{
+    var bookings = ViewBag.Bookings as List<BookingDto>;
+}
+
+<div id="newRequestModal" class="fixed inset-0 z-50 hidden items-center justify-center p-6 overflow-hidden">
+    <div class="absolute inset-0 bg-dark-bg/90 backdrop-blur-xl" onclick="closeNewRequestModal()"></div>
+    
+    <div class="relative z-20 w-full max-w-[800px] bg-modal-bg/80 border border-white/10 rounded-2xl shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] backdrop-blur-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div class="px-8 pt-8 pb-4 flex flex-col gap-2">
+            <div class="flex justify-between items-start">
+                <div class="flex flex-col gap-1">
+                    <h1 class="text-white tracking-tight text-3xl font-bold leading-tight uppercase">New Support Request</h1>
+                    <p class="text-zinc-400 text-sm font-normal leading-normal">Our concierge team is available 24/7 to assist with your premium rental experience.</p>
+                </div>
+                <button onclick="closeNewRequestModal()" class="text-zinc-500 hover:text-primary transition-colors">
+                    <span class="material-symbols-outlined text-3xl">close</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="px-8 py-4 overflow-y-auto flex-1">
+            <form asp-controller="Support" asp-action="Create" method="post" id="newRequestForm" class="flex flex-col gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="flex flex-col gap-2">
+                        <label class="text-zinc-300 text-xs font-semibold uppercase tracking-widest">Category</label>
+                        <select name="Category" required class="custom-select form-input flex w-full rounded-xl text-white focus:outline-0 focus:ring-1 focus:ring-primary focus:border-primary border border-white/10 bg-black/40 h-14 px-4 text-base font-normal leading-normal">
+                            <option value="">Select a category</option>
+                            @foreach (var category in SupportCategory.All)
+                            {
+                                <option value="@category">@category</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <label class="text-zinc-300 text-xs font-semibold uppercase tracking-widest">Booking Reference</label>
+                        <select name="BookingId" class="custom-select form-input flex w-full rounded-xl text-white focus:outline-0 focus:ring-1 focus:ring-primary focus:border-primary border border-white/10 bg-black/40 h-14 px-4 text-base font-normal leading-normal">
+                            <option value="">General Inquiry (No Booking)</option>
+                            @if (bookings != null)
+                            {
+                                foreach (var booking in bookings)
+                                {
+                                    <option value="@booking.BookingId">#@booking.BookingId - @booking.CarModel (@booking.Startdate.ToString("yyyy-MM-dd"))</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="flex flex-col gap-2">
+                    <label class="text-zinc-300 text-xs font-semibold uppercase tracking-widest">Subject</label>
+                    <input name="Subject" required class="form-input flex w-full rounded-xl text-white focus:outline-0 focus:ring-1 focus:ring-primary focus:border-primary border border-white/10 bg-black/40 h-14 placeholder:text-zinc-600 px-4 text-base font-normal leading-normal" placeholder="What do you need help with?" type="text" />
+                </div>
+                <div class="flex flex-col gap-2">
+                    <label class="text-zinc-300 text-xs font-semibold uppercase tracking-widest">Message</label>
+                    <textarea name="InitialMessage" required class="form-input flex w-full rounded-xl text-white focus:outline-0 focus:ring-1 focus:ring-primary focus:border-primary border border-white/10 bg-black/40 min-h-40 placeholder:text-zinc-600 p-4 text-base font-normal leading-normal" placeholder="Describe your request in detail..."></textarea>
+                </div>
+            </form>
+        </div>
+
+        <div class="p-8 border-t border-white/10 flex flex-col sm:flex-row-reverse gap-4 bg-white/[0.02]">
+            <button type="submit" form="newRequestForm" class="flex-1 sm:flex-none px-12 h-14 bg-primary text-black font-bold text-lg rounded-xl hover:brightness-110 active:scale-[0.98] transition-all shadow-[0_4px_20px_rgba(212,175,55,0.25)]">
+                Send Request
+            </button>
+            <button onclick="closeNewRequestModal()" class="flex-1 sm:flex-none px-12 h-14 bg-transparent border border-white/10 text-white font-semibold text-lg rounded-xl hover:bg-white/5 transition-all">
+                Cancel
+            </button>
+        </div>
+    </div>
+    <div class="fixed top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary to-transparent z-30 opacity-50"></div>
+</div>
+
+<style>
+    .custom-select {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23d4af37'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 1rem center;
+        background-size: 1.25rem;
+    }
+    #newRequestModal.flex {
+        display: flex !important;
+    }
+</style>
+
+<script>
+    function closeNewRequestModal() {
+        const modal = document.getElementById('newRequestModal');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+    }
+</script>
