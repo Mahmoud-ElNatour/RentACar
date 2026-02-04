@@ -2,9 +2,9 @@
 @{
     Layout = "_Layout";
     ViewData["Title"] = "Secure Booking";
-    
+
     string carImg = "~/images/default-car.png";
-    if(Model.CarImage != null && Model.CarImage.Length > 0)
+    if (Model.CarImage != null && Model.CarImage.Length > 0)
     {
         carImg = $"data:image/jpeg;base64,{Convert.ToBase64String(Model.CarImage)}";
     }
@@ -15,49 +15,77 @@
 
 <style>
     /* Custom Scrollbar */
-    ::-webkit-scrollbar { width: 8px; }
-    ::-webkit-scrollbar-track { background: #16181a; }
-    ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
-    ::-webkit-scrollbar-thumb:hover { background: #d4af37; }
+    ::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: #16181a;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: #333;
+        border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: #d4af37;
+    }
 </style>
 
 <div class="min-h-screen bg-[#000000] text-white font-display py-12 px-4 md:px-8">
     <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-12">
-        
+
         <!-- LEFT: Booking Form -->
         <div class="lg:col-span-2 space-y-8">
             <div>
-                <a href="javascript:history.back()" class="text-gray-500 hover:text-white flex items-center gap-2 mb-4 transition-colors">
+                <a href="javascript:history.back()"
+                    class="text-gray-500 hover:text-white flex items-center gap-2 mb-4 transition-colors">
                     <span class="material-symbols-outlined">arrow_back</span> Back
                 </a>
-                <h1 class="text-4xl font-black tracking-tight mb-2">Complete Your <span class="text-gold">Booking</span></h1>
+                <h1 class="text-4xl font-black tracking-tight mb-2">Complete Your <span class="text-gold">Booking</span>
+                </h1>
                 <p class="text-gray-400">Secure your luxury experience in just a few steps.</p>
             </div>
 
             <!-- Steps -->
             <div class="space-y-8">
-                
+
                 <!-- 1. Dates -->
-                <div class="bg-[#16181a] border border-[#262626] rounded-3xl p-8 shadow-2xl relative overflow-hidden group">
-                    <div class="absolute top-0 right-0 w-32 h-32 bg-gold/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
-                    
+                <div
+                    class="bg-[#16181a] border border-[#262626] rounded-3xl p-8 shadow-2xl relative overflow-hidden group">
+                    <div
+                        class="absolute top-0 right-0 w-32 h-32 bg-gold/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none">
+                    </div>
+
                     <h2 class="text-xl font-bold mb-6 flex items-center gap-3">
-                        <span class="w-8 h-8 rounded-full bg-gold text-black flex items-center justify-center font-black text-sm">1</span>
+                        <span
+                            class="w-8 h-8 rounded-full bg-gold text-black flex items-center justify-center font-black text-sm">1</span>
                         Choose Dates
                     </h2>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                         <!-- Custom Calendar -->
+                        <!-- Custom Calendar -->
                         <div class="bg-[#0a0a0a] border border-[#262626] rounded-2xl p-4 select-none">
                             <div class="flex items-center justify-between mb-4">
                                 <h4 id="calMonthYear" class="font-bold text-white">Loading...</h4>
                                 <div class="flex gap-2">
-                                    <button type="button" onclick="changeMonth(-1)" class="text-gold hover:text-white"><span class="material-symbols-outlined">chevron_left</span></button>
-                                    <button type="button" onclick="changeMonth(1)" class="text-gold hover:text-white"><span class="material-symbols-outlined">chevron_right</span></button>
+                                    <button type="button" onclick="changeMonth(-1)"
+                                        class="text-gold hover:text-white"><span
+                                            class="material-symbols-outlined">chevron_left</span></button>
+                                    <button type="button" onclick="changeMonth(1)"
+                                        class="text-gold hover:text-white"><span
+                                            class="material-symbols-outlined">chevron_right</span></button>
                                 </div>
                             </div>
                             <div class="grid grid-cols-7 gap-1 mb-2 text-center text-xs text-gray-500 font-bold">
-                                <div>S</div><div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>S</div>
+                                <div>S</div>
+                                <div>M</div>
+                                <div>T</div>
+                                <div>W</div>
+                                <div>T</div>
+                                <div>F</div>
+                                <div>S</div>
                             </div>
                             <div id="calGrid" class="grid grid-cols-7 gap-1 text-center text-sm"></div>
                         </div>
@@ -65,14 +93,20 @@
                         <!-- Inputs -->
                         <div class="space-y-4 flex flex-col justify-center">
                             <div>
-                                 <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Pick-up Date</label>
-                                 <input type="text" id="startDate" readonly class="w-full bg-[#0a0a0a] border border-[#262626] rounded-xl px-4 py-3 text-white font-mono text-center cursor-not-allowed"
-                                        placeholder="YYYY-MM-DD" />
+                                <label
+                                    class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Pick-up
+                                    Date</label>
+                                <input type="text" id="startDate" readonly
+                                    class="w-full bg-[#0a0a0a] border border-[#262626] rounded-xl px-4 py-3 text-white font-mono text-center cursor-not-allowed"
+                                    placeholder="YYYY-MM-DD" />
                             </div>
                             <div>
-                                 <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Return Date</label>
-                                 <input type="text" id="endDate" readonly class="w-full bg-[#0a0a0a] border border-[#262626] rounded-xl px-4 py-3 text-white font-mono text-center cursor-not-allowed"
-                                        placeholder="YYYY-MM-DD" />
+                                <label
+                                    class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Return
+                                    Date</label>
+                                <input type="text" id="endDate" readonly
+                                    class="w-full bg-[#0a0a0a] border border-[#262626] rounded-xl px-4 py-3 text-white font-mono text-center cursor-not-allowed"
+                                    placeholder="YYYY-MM-DD" />
                             </div>
                         </div>
                     </div>
@@ -81,27 +115,35 @@
                 <!-- 2. Payment -->
                 <div class="bg-[#16181a] border border-[#262626] rounded-3xl p-8 shadow-2xl relative overflow-hidden">
                     <h2 class="text-xl font-bold mb-6 flex items-center gap-3">
-                        <span class="w-8 h-8 rounded-full bg-gold text-black flex items-center justify-center font-black text-sm">2</span>
+                        <span
+                            class="w-8 h-8 rounded-full bg-gold text-black flex items-center justify-center font-black text-sm">2</span>
                         Payment Method
                     </h2>
-                    
+
                     <div class="space-y-6">
                         <!-- Promocode -->
                         <div>
-                             <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Have a Promocode?</label>
-                             <div class="flex gap-2">
+                            <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Have a
+                                Promocode?</label>
+                            <div class="flex gap-2">
                                 <div class="relative flex-1">
-                                    <span class="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-gray-500">sell</span>
-                                    <input type="text" id="promocode" class="w-full bg-[#0a0a0a] border border-[#262626] rounded-xl py-3 pl-12 pr-4 text-white focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-all placeholder-gray-700 uppercase" placeholder="ENTER CODE" />
+                                    <span
+                                        class="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-gray-500">sell</span>
+                                    <input type="text" id="promocode"
+                                        class="w-full bg-[#0a0a0a] border border-[#262626] rounded-xl py-3 pl-12 pr-4 text-white focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-all placeholder-gray-700 uppercase"
+                                        placeholder="ENTER CODE" />
                                 </div>
-                                <button type="button" id="btnApplyPromo" class="px-5 py-3 rounded-xl bg-[#262626] text-white font-bold hover:bg-[#333] transition-all border border-[#404040]">Apply</button>
-                             </div>
+                                <button type="button" id="btnApplyPromo"
+                                    class="px-5 py-3 rounded-xl bg-[#262626] text-white font-bold hover:bg-[#333] transition-all border border-[#404040]">Apply</button>
+                            </div>
                         </div>
 
                         <!-- Card (Selected by default) -->
-                        <label class="flex items-center justify-between p-4 bg-[#0a0a0a] border border-gold rounded-xl cursor-pointer shadow-[0_0_15px_rgba(212,175,55,0.1)]">
+                        <label
+                            class="flex items-center justify-between p-4 bg-[#0a0a0a] border border-gold rounded-xl cursor-pointer shadow-[0_0_15px_rgba(212,175,55,0.1)]">
                             <div class="flex items-center gap-4">
-                                <input type="radio" name="paymentMethod" value="Card" checked class="w-5 h-5 text-gold border-gray-600 focus:ring-gold bg-transparent accent-gold" />
+                                <input type="radio" name="paymentMethod" value="Card" checked
+                                    class="w-5 h-5 text-gold border-gray-600 focus:ring-gold bg-transparent accent-gold" />
                                 <div>
                                     <div class="font-bold text-white">Credit / Debit Card</div>
                                     <div class="text-xs text-gray-400">Secure checkout via Stripe</div>
@@ -114,13 +156,59 @@
                     </div>
                 </div>
 
+                <!-- 3. Driver & Pickup (Conditional) -->
+                <div
+                    class="bg-[#16181a] border border-[#262626] rounded-3xl p-8 shadow-2xl relative overflow-hidden transition-all duration-300">
+                    <h2 class="text-xl font-bold mb-6 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <span
+                                class="w-8 h-8 rounded-full bg-gold text-black flex items-center justify-center font-black text-sm">3</span>
+                            Driver & Pickup
+                        </div>
+
+                        <!-- Toggle -->
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="driverToggle" class="sr-only peer">
+                            <div
+                                class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gold">
+                            </div>
+                        </label>
+                    </h2>
+
+                    <div id="driverSection" class="hidden space-y-6">
+                        <p class="text-sm text-gray-400">Enable this to have a professional driver pick you up.</p>
+
+                        <!-- Location Input -->
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Pickup
+                                Location</label>
+                            <div class="flex gap-2 mb-2">
+                                <input type="text" id="pickupLocationName" readonly
+                                    class="w-full bg-[#0a0a0a] border border-[#262626] rounded-xl px-4 py-3 text-white focus:border-gold outline-none cursor-default"
+                                    placeholder="Select on map..." />
+                                <button type="button" id="btnUseMyLoc"
+                                    class="px-4 py-3 rounded-xl bg-[#262626] hover:bg-[#333] border border-[#404040] text-gold whitespace-nowrap transition-colors flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-lg">my_location</span>
+                                </button>
+                            </div>
+                            <div id="locStatus" class="text-xs text-gold h-4"></div>
+                        </div>
+
+                        <!-- Map Container -->
+                        <div class="h-[300px] w-full rounded-2xl overflow-hidden border border-[#262626] relative">
+                            <div id="gMap" class="w-full h-full bg-[#0a0a0a]"></div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
-            
-            <button id="submitBtn" class="w-full py-4 bg-gold hover:bg-[#b5952f] text-black font-black text-lg uppercase tracking-wider rounded-xl shadow-lg shadow-gold/20 hover:shadow-gold/50 hover:scale-[1.01] transition-all flex items-center justify-center gap-2">
+
+            <button id="submitBtn"
+                class="w-full py-4 bg-gold hover:bg-[#b5952f] text-black font-black text-lg uppercase tracking-wider rounded-xl shadow-lg shadow-gold/20 hover:shadow-gold/50 hover:scale-[1.01] transition-all flex items-center justify-center gap-2">
                 <span>Proceed to Payment</span>
                 <span class="material-symbols-outlined">arrow_forward</span>
             </button>
-             <div id="errorMsg" class="text-red-500 text-center font-bold hidden"></div>
+            <div id="errorMsg" class="text-red-500 text-center font-bold hidden"></div>
 
         </div>
 
@@ -131,13 +219,13 @@
                 <div class="bg-[#16181a] border border-[#262626] rounded-3xl overflow-hidden shadow-2xl">
                     <div class="aspect-video relative bg-[#0a0a0a]">
                         <!-- Skeleton placeholder -->
-                        <div id="imgSkeleton" class="absolute inset-0 bg-gradient-to-r from-[#1a1a1a] via-[#262626] to-[#1a1a1a] animate-pulse"></div>
+                        <div id="imgSkeleton"
+                            class="absolute inset-0 bg-gradient-to-r from-[#1a1a1a] via-[#262626] to-[#1a1a1a] animate-pulse">
+                        </div>
                         <!-- Lazy loaded image -->
-                        <img src="@carImg" 
-                             loading="lazy" 
-                             decoding="async"
-                             class="w-full h-full object-cover opacity-0 transition-opacity duration-500" 
-                             onload="this.classList.remove('opacity-0'); document.getElementById('imgSkeleton').classList.add('hidden');" />
+                        <img src="@carImg" loading="lazy" decoding="async"
+                            class="w-full h-full object-cover opacity-0 transition-opacity duration-500"
+                            onload="this.classList.remove('opacity-0'); document.getElementById('imgSkeleton').classList.add('hidden');" />
                         <div class="absolute inset-0 bg-gradient-to-t from-[#16181a] to-transparent opacity-80"></div>
                         <div class="absolute bottom-4 left-6">
                             <h3 class="text-2xl font-black text-white">@Model.CarModel</h3>
@@ -145,8 +233,9 @@
                         </div>
                     </div>
                     <div class="p-6 space-y-4">
-                        <div id="priceLoading" class="hidden text-center text-gold text-xs animate-pulse">Updating Price...</div>
-                        
+                        <div id="priceLoading" class="hidden text-center text-gold text-xs animate-pulse">Updating
+                            Price...</div>
+
                         <div id="priceContent" class="space-y-4">
                             <div class="flex justify-between text-sm">
                                 <span class="text-gray-400">Duration</span>
@@ -156,7 +245,7 @@
                                 <span class="text-gray-400">Subtotal</span>
                                 <span class="font-bold text-white" id="summSubtotal">$0.00</span>
                             </div>
-                            
+
                             <div id="summPromoRow" class="flex justify-between text-green-500 text-sm hidden">
                                 <span>Discount</span>
                                 <span id="summDiscount">-$0.00</span>
@@ -169,14 +258,16 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Trust Badges -->
                 <div class="grid grid-cols-2 gap-4">
-                    <div class="bg-[#16181a] p-4 rounded-2xl flex flex-col items-center text-center gap-2 border border-[#262626]">
+                    <div
+                        class="bg-[#16181a] p-4 rounded-2xl flex flex-col items-center text-center gap-2 border border-[#262626]">
                         <span class="material-symbols-outlined text-gold">encrypted</span>
                         <span class="text-xs font-bold text-gray-400">Secure Payment</span>
                     </div>
-                     <div class="bg-[#16181a] p-4 rounded-2xl flex flex-col items-center text-center gap-2 border border-[#262626]">
+                    <div
+                        class="bg-[#16181a] p-4 rounded-2xl flex flex-col items-center text-center gap-2 border border-[#262626]">
                         <span class="material-symbols-outlined text-gold">verified</span>
                         <span class="text-xs font-bold text-gray-400">Instant Confirm</span>
                     </div>
@@ -189,7 +280,147 @@
 
 <script>
     const carId = @Model.CarId;
-    let blockedDatesSet = new Set(); 
+    const gMapsKey = '@ViewBag.GoogleMapsKey';
+    let blockedDatesSet = new Set();
+
+    // Driver & Map State
+    let hasDriver = false;
+    let pickupLat = null;
+    let pickupLng = null;
+    let pickupAddress = null;
+    let pickupLocationName = null;
+    let map = null;
+    let marker = null;
+    let mapLoaded = false;
+
+    // Toggle Logic
+    document.getElementById('driverToggle').addEventListener('change', function (e) {
+        hasDriver = e.target.checked;
+        const sec = document.getElementById('driverSection');
+        if (hasDriver) {
+            sec.classList.remove('hidden');
+            if (!mapLoaded) loadGoogleMaps();
+            else if (map) {
+                // Resize trigger needed when showing hidden map
+                setTimeout(() => google.maps.event.trigger(map, "resize"), 100);
+            }
+        } else {
+            sec.classList.add('hidden');
+            // clear values? maybe keep them if user toggles back
+        }
+        calculatePrice(); // If driver adds fee later
+    });
+
+    // --- Google Maps Logic ---
+    function loadGoogleMaps() {
+        if (mapLoaded) return;
+        if (!gMapsKey) {
+            console.error("Google Maps Key missing");
+            document.getElementById('locStatus').innerText = "Map configuration error.";
+            return;
+        }
+
+        // Define callback
+        window.initBookingPickupMap = function () {
+            initMap();
+        };
+
+        const script = document.createElement('script');
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${gMapsKey}&callback=initBookingPickupMap`;
+        script.async = true;
+        document.body.appendChild(script);
+        mapLoaded = true;
+    }
+
+    function initMap() {
+        const defaultLoc = { lat: 33.8938, lng: 35.5018 }; // Beirut
+        map = new google.maps.Map(document.getElementById("gMap"), {
+            zoom: 12,
+            center: defaultLoc,
+            styles: [ // Dark mode style
+                { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
+                { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
+                { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
+                { featureType: "road", elementType: "geometry", stylers: [{ color: "#38414e" }] },
+                { featureType: "water", elementType: "geometry", stylers: [{ color: "#17263c" }] },
+            ],
+            streetViewControl: false,
+            mapTypeControl: false
+        });
+
+        map.addListener("click", (e) => {
+            placeMarker(e.latLng);
+        });
+    }
+
+    function placeMarker(latLng) {
+        if (!marker) {
+            marker = new google.maps.Marker({
+                position: latLng,
+                map: map,
+                animation: google.maps.Animation.DROP
+            });
+        } else {
+            marker.setPosition(latLng);
+        }
+        map.panTo(latLng);
+
+        pickupLat = latLng.lat();
+        pickupLng = latLng.lng();
+        geocodePosition(latLng);
+    }
+
+    function geocodePosition(latLng) {
+        const geocoder = new google.maps.Geocoder();
+        document.getElementById('locStatus').innerText = "Fetching address...";
+
+        geocoder.geocode({ location: latLng }, (results, status) => {
+            if (status === "OK" && results[0]) {
+                pickupAddress = results[0].formatted_address;
+
+                // Try to comply with priority: POI > Neighborhood > Locality > Admin > Formatted
+                // Simplified: Just use formatted or first component for label
+                let label = results[0].formatted_address;
+                // Ideally parse components, but formatted is safe fallback
+
+                pickupLocationName = label;
+                document.getElementById('pickupLocationName').value = label;
+                document.getElementById('locStatus').innerText = "";
+            } else {
+                document.getElementById('locStatus').innerText = "Address not found, using coordinates.";
+                pickupLocationName = "Pinned Location";
+                document.getElementById('pickupLocationName').value = pickupLocationName;
+                pickupAddress = null;
+            }
+        });
+    }
+
+    document.getElementById('btnUseMyLoc').addEventListener('click', () => {
+        if (!map) return;
+        const btn = document.getElementById('btnUseMyLoc');
+        const icon = btn.querySelector('span');
+
+        if (navigator.geolocation) {
+            icon.innerText = 'hourglass_top'; // loading icon
+            document.getElementById('locStatus').innerText = "Locating...";
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const pos = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude,
+                    };
+                    placeMarker(new google.maps.LatLng(pos.lat, pos.lng));
+                    map.setZoom(15);
+                    icon.innerText = 'my_location';
+                },
+                () => {
+                    document.getElementById('locStatus').innerText = "Location access denied.";
+                    icon.innerText = 'location_disabled';
+                }
+            );
+        }
+    });
 
     // --- Custom Calendar Logic ---
     let currDate = new Date();
@@ -197,10 +428,10 @@
     let selEnd = null;
 
     function toISODate(d) {
-        if(!d) return '';
+        if (!d) return '';
         const y = d.getFullYear();
-        const m = String(d.getMonth()+1).padStart(2,'0');
-        const day = String(d.getDate()).padStart(2,'0');
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
         return `${y}-${m}-${day}`;
     }
 
@@ -213,78 +444,78 @@
             const apiMonth = month + 1;
             const url = `/api/Booking/GetBookedDates?carId=${carId}&year=${year}&month=${apiMonth}`;
             const resp = await fetch(url);
-            if(resp.ok) {
+            if (resp.ok) {
                 const dates = await resp.json();
                 dates.forEach(d => blockedDatesSet.add(d));
             }
-        } catch(e) { console.error("Failed to load dates", e); }
+        } catch (e) { console.error("Failed to load dates", e); }
         finally {
             calTitle.classList.remove('animate-pulse', 'text-gold');
         }
     }
 
     async function init() {
-         // Check pre-filled values
-         const s = document.getElementById('startDate').value;
-         const e = document.getElementById('endDate').value;
-         if(s) selStart = new Date(s);
-         if(e) selEnd = new Date(e);
-         
+        // Check pre-filled values
+        const s = document.getElementById('startDate').value;
+        const e = document.getElementById('endDate').value;
+        if (s) selStart = new Date(s);
+        if (e) selEnd = new Date(e);
+
         await fetchMonthDates(currDate.getFullYear(), currDate.getMonth());
         renderGrid();
-        
-        if(selStart && selEnd) calculatePrice();
+
+        if (selStart && selEnd) calculatePrice();
     }
-    
+
     function renderGrid() {
         const year = currDate.getFullYear();
         const month = currDate.getMonth();
-        
+
         document.getElementById('calMonthYear').innerText = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(currDate);
-        
+
         const firstDay = new Date(year, month, 1);
         const lastDay = new Date(year, month + 1, 0);
         const daysInMonth = lastDay.getDate();
         const startDay = firstDay.getDay();
-        
+
         const grid = document.getElementById('calGrid');
         grid.innerHTML = '';
-        
-        for(let i=0; i<startDay; i++) {
+
+        for (let i = 0; i < startDay; i++) {
             grid.innerHTML += '<div></div>';
         }
-        
-        const today = new Date();
-        today.setHours(0,0,0,0);
 
-        for(let i=1; i<=daysInMonth; i++) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        for (let i = 1; i <= daysInMonth; i++) {
             const date = new Date(year, month, i);
             const iso = toISODate(date);
             const isPast = date < today;
             const isBlocked = blockedDatesSet.has(iso);
-            
+
             const btn = document.createElement('button');
             btn.innerText = i;
             btn.className = 'w-8 h-8 rounded-lg flex items-center justify-center transition-all text-gray-300 mx-auto font-medium';
-            
-            if(isPast || isBlocked) {
-                 btn.classList.add('opacity-30', 'cursor-not-allowed');
-                if(isBlocked) btn.classList.add('bg-red-900/50', 'text-red-300'); // Blocked style
+
+            if (isPast || isBlocked) {
+                btn.classList.add('opacity-30', 'cursor-not-allowed');
+                if (isBlocked) btn.classList.add('bg-red-900/50', 'text-red-300'); // Blocked style
                 btn.disabled = true;
             } else {
-                 btn.className += ' hover:bg-white/10';
-                 btn.onclick = () => selectDate(date);
+                btn.className += ' hover:bg-white/10';
+                btn.onclick = () => selectDate(date);
             }
 
-             // Selection styles
+            // Selection styles
             const sTime = selStart ? selStart.getTime() : 0;
             const eTime = selEnd ? selEnd.getTime() : 0;
             const cTime = date.getTime();
 
-            if(sTime && cTime === sTime) btn.className = 'w-8 h-8 rounded-lg flex items-center justify-center mx-auto bg-gold text-black font-bold shadow-lg shadow-gold/20';
-            else if(eTime && cTime === eTime) btn.className = 'w-8 h-8 rounded-lg flex items-center justify-center mx-auto bg-gold text-black font-bold shadow-lg shadow-gold/20';
-            else if(sTime && eTime && cTime > sTime && cTime < eTime) btn.className = 'w-8 h-8 rounded-lg flex items-center justify-center mx-auto bg-gold/20 text-gold font-bold';
-            
+            if (sTime && cTime === sTime) btn.className = 'w-8 h-8 rounded-lg flex items-center justify-center mx-auto bg-gold text-black font-bold shadow-lg shadow-gold/20';
+            else if (eTime && cTime === eTime) btn.className = 'w-8 h-8 rounded-lg flex items-center justify-center mx-auto bg-gold text-black font-bold shadow-lg shadow-gold/20';
+            else if (sTime && eTime && cTime > sTime && cTime < eTime) btn.className = 'w-8 h-8 rounded-lg flex items-center justify-center mx-auto bg-gold/20 text-gold font-bold';
+
             grid.appendChild(btn);
         }
     }
@@ -296,7 +527,7 @@
     }
 
     function selectDate(date) {
-        if(selStart && selEnd) {
+        if (selStart && selEnd) {
             selStart = date;
             selEnd = null;
         } else if (!selStart) {
@@ -304,27 +535,27 @@
         } else if (date < selStart) {
             selStart = date;
         } else if (date.getTime() === selStart.getTime()) {
-            
+
         } else {
             // Validate range
-             let valid = true;
+            let valid = true;
             let check = new Date(selStart);
-            while(check <= date) {
-                if(blockedDatesSet.has(toISODate(check))) {
+            while (check <= date) {
+                if (blockedDatesSet.has(toISODate(check))) {
                     valid = false;
                     break;
                 }
                 check.setDate(check.getDate() + 1);
             }
-            if(valid) selEnd = date;
+            if (valid) selEnd = date;
             else { alert("Selected range includes unavailable dates."); selEnd = null; return; }
         }
-        
+
         document.getElementById('startDate').value = toISODate(selStart);
         document.getElementById('endDate').value = toISODate(selEnd);
         renderGrid();
-        
-        if(selStart && selEnd) calculatePrice();
+
+        if (selStart && selEnd) calculatePrice();
     }
 
     init();
@@ -334,8 +565,8 @@
         const start = document.getElementById('startDate').value;
         const end = document.getElementById('endDate').value;
         const promo = document.getElementById('promocode').value;
-        
-        if(!start || !end) return;
+
+        if (!start || !end) return;
 
         document.getElementById('priceLoading').classList.remove('hidden');
         document.getElementById('priceContent').classList.add('opacity-50');
@@ -352,13 +583,13 @@
                 })
             });
 
-            if(resp.ok) {
+            if (resp.ok) {
                 const data = await resp.json();
-                
+
                 document.getElementById('summDays').innerText = data.days + (data.days === 1 ? " Day" : " Days");
                 document.getElementById('summSubtotal').innerText = "$" + data.subtotal.toFixed(2);
                 document.getElementById('summTotal').innerText = "$" + data.total.toFixed(2);
-                
+
                 if (data.discountAmount > 0) {
                     document.getElementById('summPromoRow').classList.remove('hidden');
                     document.getElementById('summDiscount').innerText = "-$" + data.discountAmount.toFixed(2);
@@ -366,7 +597,7 @@
                     document.getElementById('summPromoRow').classList.add('hidden');
                 }
             }
-        } catch(err) {
+        } catch (err) {
             console.error(err);
         } finally {
             document.getElementById('priceLoading').classList.add('hidden');
@@ -377,14 +608,14 @@
     document.getElementById('btnApplyPromo').addEventListener('click', calculatePrice);
 
     // 3. Submit
-    document.getElementById('submitBtn').addEventListener('click', async function() {
+    document.getElementById('submitBtn').addEventListener('click', async function () {
         const s = document.getElementById('startDate').value;
         const e = document.getElementById('endDate').value;
         const promo = document.getElementById('promocode').value;
         const btn = this;
         const errDiv = document.getElementById('errorMsg');
-        
-        if(!s || !e) {
+
+        if (!s || !e) {
             alert("Please select dates first.");
             return;
         }
@@ -398,8 +629,22 @@
             startdate: s,
             enddate: e,
             paymentMethod: 'Card',
-            promocode: promo || null
+            promocode: promo || null,
+
+            // Driver Fields
+            hasDriver: hasDriver,
+            pickupLatitude: hasDriver ? pickupLat : null,
+            pickupLongitude: hasDriver ? pickupLng : null,
+            pickupAddress: hasDriver ? pickupAddress : null,
+            pickupLocationName: hasDriver ? pickupLocationName : null
         };
+
+        if (hasDriver && (!pickupLat || !pickupLng)) {
+            alert("Please select a pickup location on the map.");
+            btn.disabled = false;
+            btn.innerHTML = '<span>Proceed to Payment</span><span class="material-symbols-outlined">arrow_forward</span>';
+            return;
+        }
 
         try {
             const res = await fetch('/Booking/Create', {
@@ -408,9 +653,9 @@
                 body: JSON.stringify(payload)
             });
 
-            if(res.ok) {
+            if (res.ok) {
                 const data = await res.json();
-                if(data.redirectUrl) {
+                if (data.redirectUrl) {
                     window.location.href = data.redirectUrl;
                 } else {
                     alert("Booking Successful!"); // Fallback
@@ -423,12 +668,12 @@
                 btn.disabled = false;
                 btn.innerHTML = '<span>Proceed to Payment</span><span class="material-symbols-outlined">arrow_forward</span>';
             }
-        } catch(ex) {
-             console.error(ex);
-             errDiv.innerText = "Network Error";
-             errDiv.classList.remove('hidden');
-             btn.disabled = false;
-             btn.innerHTML = '<span>Proceed to Payment</span><span class="material-symbols-outlined">arrow_forward</span>';
+        } catch (ex) {
+            console.error(ex);
+            errDiv.innerText = "Network Error";
+            errDiv.classList.remove('hidden');
+            btn.disabled = false;
+            btn.innerHTML = '<span>Proceed to Payment</span><span class="material-symbols-outlined">arrow_forward</span>';
         }
     });
 </script>

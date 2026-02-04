@@ -71,6 +71,27 @@ namespace RentACar.Infrastructure.Data.Repository
                 await _dbContext.SaveChangesAsync();
             }
         }
+        public async Task<List<int>> GetConflictingDriverIdsAsync(DateOnly start, DateOnly end)
+        {
+            // Identify drivers who have *blocking* bookings overlapping the requested range.
+            // Status logic should match 'IsBlockingStatus' from BookingManager (duplicated here or reused if possible, but repo shouldn't depend on manager).
+            // We'll reimplement the blocking check logic in LINQ/SQL.
+            // Blocking: !Completed && !Returned && !Rejected && !Cancelled
+
+            var conflictDriverIds = await _dbContext.Bookings
+                .Where(b => b.HasDriver && b.DriverId != null) // Only driver bookings
+                .Where(b => b.Startdate <= end && b.Enddate >= start) // Overlap check
+                .Where(b => b.BookingStatus != "Completed"
+                            && b.BookingStatus != "Returned"
+                            && b.BookingStatus != "Rejected"
+                            && b.BookingStatus != "Cancelled")
+                .Select(b => b.DriverId.Value)
+                .Distinct()
+                .ToListAsync();
+
+            return conflictDriverIds;
+        }
+
         public async Task UpdateAsync(Booking booking)
         {
             _dbContext.Entry(booking).State = EntityState.Modified;

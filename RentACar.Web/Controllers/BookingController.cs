@@ -45,7 +45,8 @@ namespace RentACar.Web.Controllers
             UserManager<IdentityUser> userManager,
             IMapper mapper,
             ILogger<BookingController> logger,
-            IPaymentMethodRepository paymentMethodRepository)
+            IPaymentMethodRepository paymentMethodRepository,
+            Microsoft.Extensions.Configuration.IConfiguration configuration)
         {
             _bookingManager = bookingManager;
             _paymentManager = paymentManager;
@@ -57,7 +58,10 @@ namespace RentACar.Web.Controllers
             _mapper = mapper;
             _logger = logger;
             _paymentMethodRepository = paymentMethodRepository;
+            _configuration = configuration;
         }
+
+        private readonly Microsoft.Extensions.Configuration.IConfiguration _configuration;
 
         [HttpGet("~/Booking")]
         [ApiExplorerSettings(IgnoreApi = true)]
@@ -113,6 +117,7 @@ namespace RentACar.Web.Controllers
         [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> AddForCustomer(int? carId = null)
         {
+            ViewBag.GoogleMapsKey = _configuration["GOOGLE_MAPS_API_KEY"]; // ✅ add this
             var user = await _userManager.GetUserAsync(User);
             if (user != null)
             {
@@ -130,15 +135,15 @@ namespace RentACar.Web.Controllers
             if (car == null) return NotFound();
 
             var (start, end) = await _bookingManager.SuggestBookingDatesAsync(carId.Value);
-            
+
             var viewModel = new CustomerBookingViewModel
             {
-                 CarId = car.CarId,
-                 CarModel = car.ModelName,
-                 CarImage = car.CarImage,
-                 PricePerDay = car.PricePerDay ?? 0,
-                 SuggestedStart = start,
-                 SuggestedEnd = end
+                CarId = car.CarId,
+                CarModel = car.ModelName,
+                CarImage = car.CarImage,
+                PricePerDay = car.PricePerDay ?? 0,
+                SuggestedStart = start,
+                SuggestedEnd = end
             };
 
             return View("~/Views/Booking/Add.cshtml", viewModel);
@@ -157,10 +162,10 @@ namespace RentACar.Web.Controllers
             // Map Payment Method string to ID (if provided)
             if (!string.IsNullOrEmpty(dto.PaymentMethod))
             {
-               var methods = await _paymentMethodRepository.GetAllAsync();
-               string target = dto.PaymentMethod.Equals("Card", StringComparison.OrdinalIgnoreCase) ? "CreditCard" : dto.PaymentMethod;
-               var method = methods.FirstOrDefault(m => m.PaymentMethodName.Equals(target, StringComparison.OrdinalIgnoreCase));
-               if (method != null) dto.PaymentMethodId = method.Id;
+                var methods = await _paymentMethodRepository.GetAllAsync();
+                string target = dto.PaymentMethod.Equals("Card", StringComparison.OrdinalIgnoreCase) ? "CreditCard" : dto.PaymentMethod;
+                var method = methods.FirstOrDefault(m => m.PaymentMethodName.Equals(target, StringComparison.OrdinalIgnoreCase));
+                if (method != null) dto.PaymentMethodId = method.Id;
             }
 
             try
@@ -184,66 +189,66 @@ namespace RentACar.Web.Controllers
         [Authorize(Roles = "Customer")]
         public async Task<IActionResult> CreateForCustomer([FromBody] MakeBookingRequestDto dto)
         {
-             if (!ModelState.IsValid) return BadRequest(ModelState);
-             
-             // Security: Enforce Stripe Only
-             if (dto.PaymentMethod?.ToLower() == "cash")
-             {
-                 return BadRequest("Cash payments are not allowed for online bookings.");
-             }
+            if (!ModelState.IsValid) return BadRequest(ModelState);
 
-             // Map Payment Method string to ID (Required for Manager)
-             if (!string.IsNullOrEmpty(dto.PaymentMethod) && dto.PaymentMethodId == 0)
-             {
+            // Security: Enforce Stripe Only
+            if (dto.PaymentMethod?.ToLower() == "cash")
+            {
+                return BadRequest("Cash payments are not allowed for online bookings.");
+            }
+
+            // Map Payment Method string to ID (Required for Manager)
+            if (!string.IsNullOrEmpty(dto.PaymentMethod) && dto.PaymentMethodId == 0)
+            {
                 var methods = await _paymentMethodRepository.GetAllAsync();
                 var searchName = dto.PaymentMethod.Trim();
                 var method = methods.FirstOrDefault(m => m.PaymentMethodName.Equals(searchName, StringComparison.OrdinalIgnoreCase));
-                
+
                 if (method == null && searchName.Equals("Card", StringComparison.OrdinalIgnoreCase))
                 {
-                     method = methods.FirstOrDefault(m => 
-                        m.PaymentMethodName.Equals("CreditCard", StringComparison.OrdinalIgnoreCase) ||
-                        m.PaymentMethodName.Equals("Credit Card", StringComparison.OrdinalIgnoreCase) ||
-                        m.PaymentMethodName.Equals("Stripe", StringComparison.OrdinalIgnoreCase) ||
-                        m.PaymentMethodName.Contains("Credit", StringComparison.OrdinalIgnoreCase)
-                     );
+                    method = methods.FirstOrDefault(m =>
+                       m.PaymentMethodName.Equals("CreditCard", StringComparison.OrdinalIgnoreCase) ||
+                       m.PaymentMethodName.Equals("Credit Card", StringComparison.OrdinalIgnoreCase) ||
+                       m.PaymentMethodName.Equals("Stripe", StringComparison.OrdinalIgnoreCase) ||
+                       m.PaymentMethodName.Contains("Credit", StringComparison.OrdinalIgnoreCase)
+                    );
                 }
-                
+
                 if (method != null) dto.PaymentMethodId = method.Id;
-             }
+            }
 
-             var userId = _userManager.GetUserId(User);
-             if(string.IsNullOrEmpty(userId)) return Unauthorized();
+            var userId = _userManager.GetUserId(User);
+            if (string.IsNullOrEmpty(userId)) return Unauthorized();
 
-             var customer = await _customerManager.GetCustomerByAspNetUserId(userId);
-             if (customer != null && !customer.IsVerified)
-             {
-                 return StatusCode(403, "Account not verified. Please verify your identity to book a car.");
-             }
+            var customer = await _customerManager.GetCustomerByAspNetUserId(userId);
+            if (customer != null && !customer.IsVerified)
+            {
+                return StatusCode(403, "Account not verified. Please verify your identity to book a car.");
+            }
 
-             try 
-             {
-                 var created = await _bookingManager.MakeBookingAsync(dto, userId);
-                 
-                 if (created == null || !created.Success)
-                 {
-                     return BadRequest(created?.ErrorMessage ?? "Booking failed. Please check availability.");
-                 }
-                 
+            try
+            {
+                var created = await _bookingManager.MakeBookingAsync(dto, userId);
+
+                if (created == null || !created.Success)
+                {
+                    return BadRequest(created?.ErrorMessage ?? "Booking failed. Please check availability.");
+                }
+
                 if (!string.IsNullOrEmpty(created.RedirectUrl))
-                 {
-                     // Since this is called via fetch/axios mostly, we return the URL in JSON
-                     // But if form submit? We'll assume JSON API style for now as indicated by [FromBody]
-                     return Ok(new { redirectUrl = created.RedirectUrl });
-                 }
+                {
+                    // Since this is called via fetch/axios mostly, we return the URL in JSON
+                    // But if form submit? We'll assume JSON API style for now as indicated by [FromBody]
+                    return Ok(new { redirectUrl = created.RedirectUrl });
+                }
 
-                 return Ok(new { success = true, bookingId = created.Booking.BookingId });
-             }
-             catch (Exception ex)
-             {
-                  _logger.LogError(ex, "Error creating customer booking");
-                  return StatusCode(500, "An error occurred.");
-             }
+                return Ok(new { success = true, bookingId = created.Booking.BookingId });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating customer booking");
+                return StatusCode(500, "An error occurred.");
+            }
         }
 
         [HttpPut("{id}")]
@@ -417,7 +422,7 @@ namespace RentACar.Web.Controllers
             if (booking == null) return NotFound();
 
             var editDto = _mapper.Map<BookingEditDto>(booking);
-            editDto.BookingStatus = "Booked"; 
+            editDto.BookingStatus = "Booked";
             await _bookingManager.UpdateBookingAsync(editDto);
             return RedirectToAction("Index"); // Redirect to Index instead of Edit as flow might simpler
         }
@@ -466,7 +471,7 @@ namespace RentACar.Web.Controllers
             var days = (dto.EndDate.ToDateTime(TimeOnly.MinValue) - dto.StartDate.ToDateTime(TimeOnly.MinValue)).Days + 1;
             var pricePerDay = car.PricePerDay ?? 0;
             var subtotal = pricePerDay * days;
-            
+
             decimal discountAmount = 0;
             string? promoName = null;
 
@@ -482,7 +487,7 @@ namespace RentACar.Web.Controllers
 
             var total = subtotal - discountAmount;
 
-            return Ok(new 
+            return Ok(new
             {
                 Days = days,
                 PricePerDay = pricePerDay,
@@ -505,7 +510,7 @@ namespace RentACar.Web.Controllers
                     page.Margin(40);
                     page.Size(PageSizes.A4);
                     //page.Background(dark); // Contracts usually white for print, let's keep white but use Dark/Gold text.
-                    
+
                     page.Header().Row(row =>
                     {
                         row.RelativeItem().Column(col =>
@@ -530,7 +535,7 @@ namespace RentACar.Web.Controllers
                             row.RelativeItem().Border(1).BorderColor(Colors.Grey.Lighten2).Padding(10).Column(c =>
                             {
                                 c.Item().Text("LESSEE (CUSTOMER)").FontSize(10).SemiBold().FontColor(gold);
-                                if(customer != null)
+                                if (customer != null)
                                 {
                                     c.Item().Text(customer.Name).Bold().FontSize(12);
                                     c.Item().Text(customer.Email).FontSize(10);
@@ -538,14 +543,14 @@ namespace RentACar.Web.Controllers
                                     c.Item().Text(customer.Address ?? "No Address Provided").FontSize(10);
                                 }
                             });
-                            
+
                             row.ConstantItem(20);
 
                             // Car
                             row.RelativeItem().Border(1).BorderColor(Colors.Grey.Lighten2).Padding(10).Column(c =>
                             {
                                 c.Item().Text("VEHICLE").FontSize(10).SemiBold().FontColor(gold);
-                                if(car != null)
+                                if (car != null)
                                 {
                                     c.Item().Text(car.ModelName).Bold().FontSize(12);
                                     c.Item().Text($"{car.Color} • {car.ModelYear}").FontSize(10);
@@ -583,7 +588,7 @@ namespace RentACar.Web.Controllers
                             });
 
                             var days = (booking.Enddate.ToDateTime(TimeOnly.MinValue) - booking.Startdate.ToDateTime(TimeOnly.MinValue)).Days + 1;
-                            
+
                             table.Cell().Element(CellStyle).Text(booking.Startdate.ToString("dd MMM yyyy"));
                             table.Cell().Element(CellStyle).Text(booking.Enddate.ToString("dd MMM yyyy"));
                             table.Cell().Element(CellStyle).Text($"{days} Days");
@@ -594,39 +599,41 @@ namespace RentACar.Web.Controllers
                                 return container.Padding(10).BorderBottom(1).BorderColor(Colors.Grey.Lighten3);
                             }
                         });
-                        
+
                         // 3. Financials
-                        col.Item().PaddingTop(10).AlignRight().Column(c => 
+                        col.Item().PaddingTop(10).AlignRight().Column(c =>
                         {
                             c.Item().Row(r => { r.RelativeItem().Text("Subtotal:"); r.RelativeItem().AlignRight().Text($"{booking.Subtotal:C}"); });
-                            
+
                             if (promo != null)
                             {
-                                c.Item().Row(r => { 
-                                    r.RelativeItem().Text($"Discount ({promo.Name} {promo.DiscountPercentage}%):").FontColor(Colors.Green.Medium); 
-                                    r.RelativeItem().AlignRight().Text($"-{(booking.Subtotal * promo.DiscountPercentage / 100):C}").FontColor(Colors.Green.Medium); 
+                                c.Item().Row(r =>
+                                {
+                                    r.RelativeItem().Text($"Discount ({promo.Name} {promo.DiscountPercentage}%):").FontColor(Colors.Green.Medium);
+                                    r.RelativeItem().AlignRight().Text($"-{(booking.Subtotal * promo.DiscountPercentage / 100):C}").FontColor(Colors.Green.Medium);
                                 });
                             }
-                            
-                            c.Item().PaddingTop(5).BorderTop(1).BorderColor(Colors.Grey.Lighten2).Row(r => 
-                            { 
-                                r.RelativeItem().Text("TOTAL ESTIMATED CHARGES:").Bold(); 
-                                r.RelativeItem().AlignRight().Text($"{booking.TotalPrice:C}").Bold().FontSize(14).FontColor(gold); 
+
+                            c.Item().PaddingTop(5).BorderTop(1).BorderColor(Colors.Grey.Lighten2).Row(r =>
+                            {
+                                r.RelativeItem().Text("TOTAL ESTIMATED CHARGES:").Bold();
+                                r.RelativeItem().AlignRight().Text($"{booking.TotalPrice:C}").Bold().FontSize(14).FontColor(gold);
                             });
-                             
-                             if(payment != null)
-                             {
-                                 c.Item().PaddingTop(5).Row(r => { 
-                                     r.RelativeItem().Text("Payment Status:"); 
-                                     r.RelativeItem().AlignRight().Text("PAID").Bold().FontColor(Colors.Green.Medium); 
-                                 });
-                             }
+
+                            if (payment != null)
+                            {
+                                c.Item().PaddingTop(5).Row(r =>
+                                {
+                                    r.RelativeItem().Text("Payment Status:");
+                                    r.RelativeItem().AlignRight().Text("PAID").Bold().FontColor(Colors.Green.Medium);
+                                });
+                            }
                         });
 
                         col.Item().Height(30);
 
                         // 4. Terms
-                        col.Item().Background(Colors.Grey.Lighten4).Padding(10).Column(c => 
+                        col.Item().Background(Colors.Grey.Lighten4).Padding(10).Column(c =>
                         {
                             c.Item().Text("TERMS AND CONDITIONS").Bold().FontSize(10);
                             c.Item().Text("1. The Lessee acknowledges that the vehicle is in good operating condition.").FontSize(8);
@@ -647,7 +654,7 @@ namespace RentACar.Web.Controllers
                                 c.Item().Height(30).BorderBottom(1).BorderColor(Colors.Black);
                                 c.Item().Text(customer?.Name ?? "Customer").FontSize(8);
                             });
-                            
+
                             row.ConstantItem(40);
 
                             row.RelativeItem().Column(c =>
@@ -658,7 +665,7 @@ namespace RentACar.Web.Controllers
                             });
                         });
                     });
-                    
+
                     page.Footer().AlignCenter().Text(x =>
                     {
                         x.Span("Lebanon Drive RentACar - Standard Rental Agreement - Page ");
