@@ -11,6 +11,7 @@ public interface IDriverRepository
     Task<Driver?> GetByAspNetUserIdAsync(string aspNetUserId);
     Task<List<Driver>> GetAllAsync();
     Task<List<Driver>> GetActiveAsync();
+    Task<List<Driver>> GetEligibleDriversAsync(DateTime start, DateTime end);
     Task<bool> DriverCodeExistsAsync(string driverCode);
     Task AddAsync(Driver driver);
     Task UpdateAsync(Driver driver);

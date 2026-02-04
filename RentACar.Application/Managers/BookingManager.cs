@@ -29,6 +29,9 @@ namespace RentACar.Application.Managers
         private readonly ILogger<BookingManager> _logger;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly AuditLogManager _auditLogManager;
+        private readonly IDriverRepository _driverRepository;
+        private readonly IDriverAvailabilityRepository _driverAvailabilityRepository;
+        private readonly ITripRepository _tripRepository;
         private readonly EmailManager _emailManager;
 
         public BookingManager(
@@ -36,6 +39,9 @@ namespace RentACar.Application.Managers
             IBookingRepository bookingRepository,
             ICustomerRepository customerRepository,
             ICarRepository carRepository,
+            IDriverRepository driverRepository,
+            IDriverAvailabilityRepository driverAvailabilityRepository,
+            ITripRepository tripRepository,
             IPromocodeRepository promocodeRepository,
             IPaymentMethodRepository paymentMethodRepository,
             IPaymentRepository paymentRepository,
@@ -50,6 +56,9 @@ namespace RentACar.Application.Managers
             _bookingRepository = bookingRepository;
             _customerRepository = customerRepository;
             _carRepository = carRepository;
+            _driverRepository = driverRepository;
+            _driverAvailabilityRepository = driverAvailabilityRepository;
+            _tripRepository = tripRepository;
             _userManager = userManager;
             _promocodeRepository = promocodeRepository;
             _paymentMethodRepository = paymentMethodRepository;
@@ -141,11 +150,88 @@ namespace RentACar.Application.Managers
                     conflictingBookings.Count,
                     firstConflict.Startdate,
                     firstConflict.Enddate);
-                return new BookingCreationResultDto 
-                { 
-                    Success = false, 
-                    ErrorMessage = $"Date conflict: This car is already booked from {firstConflict.Startdate:MMM dd, yyyy} to {firstConflict.Enddate:MMM dd, yyyy}. Please select different dates." 
+                return new BookingCreationResultDto
+                {
+                    Success = false,
+                    ErrorMessage = $"Date conflict: This car is already booked from {firstConflict.Startdate:MMM dd, yyyy} to {firstConflict.Enddate:MMM dd, yyyy}. Please select different dates."
                 };
+            }
+
+            // 🔹 Driver Validation & Logic
+            int? assignedDriverId = null;
+            decimal? driverDailyFee = null;
+
+            if (requestDto.HasDriver)
+            {
+                // 1. Validate Pickup Location
+                if (requestDto.PickupLatitude == null || requestDto.PickupLongitude == null)
+                {
+                    _logger.LogWarning("Booking failed: HasDriver=true but missing pickup coordinates.");
+                    return new BookingCreationResultDto { Success = false, ErrorMessage = "Pickup location is required when booking with a driver." };
+                }
+
+                // Ensure LocationLabel is set (map DTO LocationName to Label if needed, or fallback to Address)
+                if (string.IsNullOrWhiteSpace(requestDto.PickupLocationName) && string.IsNullOrWhiteSpace(requestDto.PickupAddress))
+                {
+                    _logger.LogWarning("Booking failed: HasDriver=true but missing pickup location name/address.");
+                    return new BookingCreationResultDto { Success = false, ErrorMessage = "Pickup location details are required." };
+                }
+
+                // 2. Pricing
+                driverDailyFee = 20.00m; // Fixed fee ($20)
+
+                // 3. Auto-Assign Driver
+                DateTime startDt = requestDto.Startdate.ToDateTime(TimeOnly.MinValue); // 00:00
+                DateTime endDt = requestDto.Enddate.ToDateTime(new TimeOnly(23, 59, 59)); // 23:59:59
+
+                // A. Get Candidates
+                var activeDrivers = await _driverRepository.GetEligibleDriversAsync(startDt, endDt);
+
+                // B. Exclude Conflicts
+                var conflictedDriverIds = await _bookingRepository.GetConflictingDriverIdsAsync(requestDto.Startdate, requestDto.Enddate);
+
+                var candidates = activeDrivers.Where(d => !conflictedDriverIds.Contains(d.DriverId)).ToList();
+
+                // C. Check Availability & Tie-Break
+                Driver? selectedDriver = null;
+
+                var validCandidates = new List<Driver>();
+
+                foreach (var driver in candidates)
+                {
+                    bool isAvailable = await _driverAvailabilityRepository.HasCoveringAvailabilityAsync(driver.DriverId, startDt, endDt);
+                    if (isAvailable)
+                    {
+                        validCandidates.Add(driver);
+                    }
+                }
+
+                if (!validCandidates.Any())
+                {
+                    _logger.LogWarning("Booking failed: No drivers available for dates {Start} to {End}", requestDto.Startdate, requestDto.Enddate);
+                    return new BookingCreationResultDto { Success = false, ErrorMessage = "No drivers available for the selected dates. Please choose different dates." };
+                }
+
+                // Sort Candidates: Rating (Desc) -> Future Bookings (Asc) -> DriverId (Asc)
+                var todayDate = DateOnly.FromDateTime(DateTime.UtcNow);
+                var validDriversWithStats = new List<(Driver Driver, int FutureBookings)>();
+
+                foreach (var d in validCandidates)
+                {
+                    var bookings = await _bookingRepository.GetBookingsByDriverIdAsync(d.DriverId);
+                    int futureCount = bookings.Count(b => b.Startdate > todayDate && IsBlockingStatus(b.BookingStatus));
+                    validDriversWithStats.Add((d, futureCount));
+                }
+
+                selectedDriver = validDriversWithStats
+                    .OrderByDescending(x => x.Driver.Rating ?? 0)
+                    .ThenBy(x => x.FutureBookings)
+                    .ThenBy(x => x.Driver.DriverId)
+                    .Select(x => x.Driver)
+                    .First();
+
+                assignedDriverId = selectedDriver.DriverId;
+                _logger.LogInformation("🚗 Auto-assigned driver: {DriverName} (ID: {DriverId})", selectedDriver.FullName, selectedDriver.DriverId);
             }
 
             // 🔹 Validate promocode
@@ -161,7 +247,16 @@ namespace RentACar.Application.Managers
             }
 
             // 🔹 Calculate price
+            // 🔹 Calculate price
             decimal subtotal = CalculateTotalPrice(car.PricePerDay ?? 0, requestDto.Startdate, requestDto.Enddate);
+
+            // Add Driver Fee to Subtotal
+            if (requestDto.HasDriver && driverDailyFee.HasValue)
+            {
+                decimal totalDriverFee = CalculateTotalPrice(driverDailyFee.Value, requestDto.Startdate, requestDto.Enddate);
+                subtotal += totalDriverFee;
+            }
+
             decimal totalPrice = promocode != null ? ApplyPromocode(subtotal, promocode) : subtotal;
 
             // 🔹 Validate payment method
@@ -173,22 +268,22 @@ namespace RentACar.Application.Managers
 
             if (paymentMethod == null && !string.IsNullOrWhiteSpace(requestDto.PaymentMethod))
             {
-                 var allMethods = await _paymentMethodRepository.GetAllAsync();
-                 var searchName = requestDto.PaymentMethod.Trim();
-                 
-                 // Try finding direct match first
-                 paymentMethod = allMethods.FirstOrDefault(m => m.PaymentMethodName.Equals(searchName, StringComparison.OrdinalIgnoreCase));
+                var allMethods = await _paymentMethodRepository.GetAllAsync();
+                var searchName = requestDto.PaymentMethod.Trim();
 
-                 // If 'Card', try aliases
-                 if (paymentMethod == null && searchName.Equals("Card", StringComparison.OrdinalIgnoreCase))
-                 {
-                     paymentMethod = allMethods.FirstOrDefault(m => 
-                        m.PaymentMethodName.Equals("CreditCard", StringComparison.OrdinalIgnoreCase) ||
-                        m.PaymentMethodName.Equals("Credit Card", StringComparison.OrdinalIgnoreCase) ||
-                        m.PaymentMethodName.Equals("Stripe", StringComparison.OrdinalIgnoreCase) ||
-                        m.PaymentMethodName.Contains("Credit", StringComparison.OrdinalIgnoreCase)
-                     );
-                 }
+                // Try finding direct match first
+                paymentMethod = allMethods.FirstOrDefault(m => m.PaymentMethodName.Equals(searchName, StringComparison.OrdinalIgnoreCase));
+
+                // If 'Card', try aliases
+                if (paymentMethod == null && searchName.Equals("Card", StringComparison.OrdinalIgnoreCase))
+                {
+                    paymentMethod = allMethods.FirstOrDefault(m =>
+                       m.PaymentMethodName.Equals("CreditCard", StringComparison.OrdinalIgnoreCase) ||
+                       m.PaymentMethodName.Equals("Credit Card", StringComparison.OrdinalIgnoreCase) ||
+                       m.PaymentMethodName.Equals("Stripe", StringComparison.OrdinalIgnoreCase) ||
+                       m.PaymentMethodName.Contains("Credit", StringComparison.OrdinalIgnoreCase)
+                    );
+                }
             }
 
             if (paymentMethod == null)
@@ -225,7 +320,7 @@ namespace RentACar.Application.Managers
                     _logger.LogWarning("Booking failed: Cash payment only allowed for employees.");
                     return new BookingCreationResultDto { Success = false, ErrorMessage = "Cash payments are only available for walk-in bookings. Please select a card payment method." };
                 }
-                
+
                 // If today is start date -> InProgress
                 // Else -> Confirmed
                 var today = DateOnly.FromDateTime(DateTime.UtcNow);
@@ -243,6 +338,7 @@ namespace RentACar.Application.Managers
             {
                 CustomerId = requestDto.CustomerId,
                 CarId = requestDto.CarId,
+                Car = car, // Set navigation property to prevent AutoMapper NRE
                 Startdate = requestDto.Startdate,
                 Enddate = requestDto.Enddate,
                 PromocodeId = promocode?.PromocodeId,
@@ -250,7 +346,17 @@ namespace RentACar.Application.Managers
                 BookingStatus = initialStatus,
                 Subtotal = subtotal,
                 IsBookedByEmployee = isBookedByEmployee,
-                EmployeebookerId = isBookedByEmployee ? employeeBookerIntId : null
+                EmployeebookerId = isBookedByEmployee ? employeeBookerIntId : null,
+
+                // Driver Fields
+                HasDriver = requestDto.HasDriver && assignedDriverId.HasValue,
+                DriverId = assignedDriverId,
+                DriverDailyFee = assignedDriverId.HasValue ? driverDailyFee : null,
+                PickupLatitude = assignedDriverId.HasValue ? requestDto.PickupLatitude : null,
+                PickupLongitude = assignedDriverId.HasValue ? requestDto.PickupLongitude : null,
+                PickupAddress = assignedDriverId.HasValue ? requestDto.PickupAddress : null,
+                PickupLocationLabel = assignedDriverId.HasValue ? requestDto.PickupLocationName : null,
+                PickupDateTime = assignedDriverId.HasValue ? requestDto.PickupDateTime : null
             };
 
             // Save booking first to generate BookingId
@@ -268,32 +374,79 @@ namespace RentACar.Application.Managers
                 Amount = payableAmount,
                 PaymentDate = DateOnly.FromDateTime(DateTime.UtcNow),
                 PaymentMethod = paymentMethod.PaymentMethodName,
-                Status = isCash ? PaymentStatus.Paid : PaymentStatus.Pending, 
+                Status = isCash ? PaymentStatus.Paid : PaymentStatus.Pending,
                 PaymentProvider = isCash ? "Cash" : "Stripe"
             };
 
             var addedPayment = await _paymentRepository.AddAsync(payment);
 
             _logger.LogInformation("✅ Booking created with ID: {BookingId} Status: {Status}", addedBooking.BookingId, addedBooking.BookingStatus);
-            
+
             await _auditLogManager.LogEventAsync("Booking.Created", "Booking", addedBooking.BookingId.ToString(), $"Created new booking for Car {addedBooking.CarId}. Status: {addedBooking.BookingStatus}", null, "Success");
-            
-            // 📨 Send Booking Status Email (Pending)
-            if (isCustomer) 
+
+            // 🔹 Create Trip if Driver Assigned
+            if (addedBooking.HasDriver && addedBooking.DriverId.HasValue)
             {
-                 // We need customer email. If loggedInUser is customer we have it.
-                 // RequestDto has CustomerId.
-                 // We fetched customerEntity earlier.
-                 // If isCustomer is true, customerEntity is set.
-                 // If admin booked for customer, requestDto.CustomerId is set.
-                 var cust = await _customerRepository.GetByIdAsync(addedBooking.CustomerId);
-                 var custUser = await _userManager.FindByIdAsync(cust.aspNetUserId);
-                 if (custUser != null)
-                 {
-                     await _emailManager.SendBookingStatusEmail(custUser.Email, cust.Name, addedBooking);
-                 }
+                try
+                {
+                    var newTrip = new Trip
+                    {
+                        BookingId = addedBooking.BookingId,
+                        DriverId = addedBooking.DriverId,
+                        TripStatus = TripStatus.Assigned,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow
+                    };
+                    await _tripRepository.CreateTripAsync(newTrip);
+                    _logger.LogInformation("✅ Trip created for Booking {BookingId}, Driver {DriverId}", addedBooking.BookingId, addedBooking.DriverId);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to create trip for confirmed driver booking {BookingId}", addedBooking.BookingId);
+                }
             }
-            
+
+            // 🔹 Create Trip if Driver Assigned
+            if (addedBooking.HasDriver && addedBooking.DriverId.HasValue)
+            {
+                try
+                {
+                    var newTrip = new Trip
+                    {
+                        BookingId = addedBooking.BookingId,
+                        DriverId = addedBooking.DriverId,
+                        TripStatus = TripStatus.Assigned,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow
+                    };
+                    await _tripRepository.CreateTripAsync(newTrip);
+                    _logger.LogInformation("✅ Trip created for Booking {BookingId}, Driver {DriverId}", addedBooking.BookingId, addedBooking.DriverId);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to create trip for confirmed driver booking {BookingId}", addedBooking.BookingId);
+                    // Do not fail the whole booking if possible, or decide policy. 
+                    // Requirement says "Trip Creation (Recommended)". 
+                    // We'll log error but proceed since Booking is valid.
+                }
+            }
+
+            // 📨 Send Booking Status Email (Pending)
+            if (isCustomer)
+            {
+                // We need customer email. If loggedInUser is customer we have it.
+                // RequestDto has CustomerId.
+                // We fetched customerEntity earlier.
+                // If isCustomer is true, customerEntity is set.
+                // If admin booked for customer, requestDto.CustomerId is set.
+                var cust = await _customerRepository.GetByIdAsync(addedBooking.CustomerId);
+                var custUser = await _userManager.FindByIdAsync(cust.aspNetUserId);
+                if (custUser != null)
+                {
+                    await _emailManager.SendBookingStatusEmail(custUser.Email, cust.Name, addedBooking);
+                }
+            }
+
             string? checkoutUrl = null;
             if (!isCash)
             {
@@ -377,40 +530,42 @@ namespace RentACar.Application.Managers
             }
 
             var oldStatus = booking.BookingStatus;
-            
+
             // Capture Snapshot Before
-            var before = new { 
-                booking.BookingStatus, 
-                booking.Startdate, 
-                booking.Enddate, 
-                booking.CarId, 
-                booking.TotalPrice 
+            var before = new
+            {
+                booking.BookingStatus,
+                booking.Startdate,
+                booking.Enddate,
+                booking.CarId,
+                booking.TotalPrice
             };
 
             _mapper.Map(bookingDto, booking);
             await _bookingRepository.UpdateAsync(booking);
 
             // Capture Snapshot After
-            var after = new { 
-                booking.BookingStatus, 
-                booking.Startdate, 
-                booking.Enddate, 
-                booking.CarId, 
-                booking.TotalPrice 
+            var after = new
+            {
+                booking.BookingStatus,
+                booking.Startdate,
+                booking.Enddate,
+                booking.CarId,
+                booking.TotalPrice
             };
 
             await _auditLogManager.LogEventAsync(
-                "Booking.StatusChanged", 
-                "Booking", 
-                bookingDto.BookingId.ToString(), 
-                $"Updated booking details. Status: {booking.BookingStatus}", 
-                null, 
+                "Booking.StatusChanged",
+                "Booking",
+                bookingDto.BookingId.ToString(),
+                $"Updated booking details. Status: {booking.BookingStatus}",
+                null,
                 "Success",
                 oldValues: before,
                 newValues: after);
 
             // 📨 Send Email if Status Changed
-            if (oldStatus != booking.BookingStatus) 
+            if (oldStatus != booking.BookingStatus)
             {
                 var cust = await _customerRepository.GetByIdAsync(booking.CustomerId);
                 var custUser = await _userManager.FindByIdAsync(cust.aspNetUserId);
@@ -463,21 +618,21 @@ namespace RentACar.Application.Managers
                 CustomerName = b.Customer != null ? b.Customer.Name : null,
                 CustomerUsername = b.Customer != null && b.Customer.User != null ? b.Customer.User.UserName : null,
                 CustomerEmail = b.Customer != null && b.Customer.User != null ? b.Customer.User.Email : null,
-                
+
                 CarId = b.CarId,
                 CarModel = b.Car != null ? b.Car.ModelName : null,
                 CarPlate = b.Car != null ? b.Car.PlateNumber : null,
-                
+
                 EmployeebookerId = b.EmployeebookerId,
                 EmployeeName = b.Employeebooker != null ? b.Employeebooker.Name : null,
-                
+
                 Subtotal = b.Subtotal,
                 TotalPrice = b.TotalPrice,
-                
+
                 PromocodeId = b.PromocodeId,
                 PromocodeName = b.Promocode != null ? b.Promocode.Name : null,
                 PromocodeDiscount = b.Promocode != null ? b.Promocode.DiscountPercentage : null,
-                
+
                 Startdate = b.Startdate.ToString(),
                 Enddate = b.Enddate.ToString(),
                 BookingStatus = b.BookingStatus
@@ -488,7 +643,7 @@ namespace RentACar.Application.Managers
 
             // 2. Fetch Payments (Batch)
             var bookingIds = bookings.Select(b => b.BookingId).ToList();
-            
+
             // Chunking to avoid SQL limit if necessary, but assuming reasonable count for now.
             var payments = await _paymentRepository.Query()
                 .Where(p => bookingIds.Contains(p.BookingId))
@@ -518,8 +673,8 @@ namespace RentACar.Application.Managers
         }
 
         public async Task<PagedResultDto<BookingListDto>> GetBookingsPagedAsync(
-            int page, int pageSize, string? search, string? status, 
-            string? sortColumn, string? sortDirection, 
+            int page, int pageSize, string? search, string? status,
+            string? sortColumn, string? sortDirection,
             DateOnly? startDate, DateOnly? endDate)
         {
             var query = _bookingRepository.Query()
@@ -533,7 +688,7 @@ namespace RentACar.Application.Managers
             if (!string.IsNullOrEmpty(search))
             {
                 search = search.ToLower();
-                query = query.Where(b => 
+                query = query.Where(b =>
                     b.BookingId.ToString().Contains(search) ||
                     (b.Customer != null && b.Customer.Name.ToLower().Contains(search)) ||
                     (b.Car != null && (b.Car.ModelName.ToLower().Contains(search) || b.Car.PlateNumber.ToLower().Contains(search)))
@@ -556,7 +711,7 @@ namespace RentACar.Application.Managers
             }
 
             // 📊 Stats Calculation (Pre-Pagination)
-            var statsQuery = query; 
+            var statsQuery = query;
             // Note: If you want global stats ignoring filters, use _bookingRepository.Query() base.
             // Usually dashboard stats are filtered if filters are applied, but "Widgets" often want global or specific logic.
             // For now, let's return stats based on the *current filtered view* which is more dynamic for reports, 
@@ -614,21 +769,21 @@ namespace RentACar.Application.Managers
 
                 foreach (var item in mappedItems)
                 {
-                     var latest = payments.Where(p => p.BookingId == item.BookingId)
-                        .OrderByDescending(p => p.PaymentDate)
-                        .ThenByDescending(p => p.PaymentId)
-                        .FirstOrDefault();
-                     
-                     if (latest != null)
-                     {
-                         item.PaymentId = latest.PaymentId;
-                         item.PaymentAmount = latest.Amount;
-                         item.PaymentStatus = latest.Status;
-                     }
-                     else
-                     {
-                         item.PaymentStatus = "Unpaid";
-                     }
+                    var latest = payments.Where(p => p.BookingId == item.BookingId)
+                       .OrderByDescending(p => p.PaymentDate)
+                       .ThenByDescending(p => p.PaymentId)
+                       .FirstOrDefault();
+
+                    if (latest != null)
+                    {
+                        item.PaymentId = latest.PaymentId;
+                        item.PaymentAmount = latest.Amount;
+                        item.PaymentStatus = latest.Status;
+                    }
+                    else
+                    {
+                        item.PaymentStatus = "Unpaid";
+                    }
                 }
             }
 
@@ -649,7 +804,7 @@ namespace RentACar.Application.Managers
             if (!string.IsNullOrEmpty(search))
             {
                 search = search.ToLower();
-                query = query.Where(b => 
+                query = query.Where(b =>
                     b.BookingId.ToString().Contains(search) ||
                     (b.Customer != null && b.Customer.Name.ToLower().Contains(search)) ||
                     (b.Car != null && (b.Car.ModelName.ToLower().Contains(search) || b.Car.PlateNumber.ToLower().Contains(search)))
@@ -674,7 +829,7 @@ namespace RentACar.Application.Managers
             // 📊 Stats Calculation
             var stats = await query
                 .GroupBy(x => 1)
-                .Select(g => new 
+                .Select(g => new
                 {
                     Total = g.Count(),
                     Active = g.Count(b => b.BookingStatus == BookingStatus.InProgress || b.BookingStatus == BookingStatus.Confirmed),
@@ -683,12 +838,12 @@ namespace RentACar.Application.Managers
                 })
                 .FirstOrDefaultAsync();
 
-            return new 
-            { 
-                Total = stats?.Total ?? 0, 
-                Active = stats?.Active ?? 0, 
-                Pending = stats?.Pending ?? 0, 
-                Revenue = stats?.Revenue ?? 0 
+            return new
+            {
+                Total = stats?.Total ?? 0,
+                Active = stats?.Active ?? 0,
+                Pending = stats?.Pending ?? 0,
+                Revenue = stats?.Revenue ?? 0
             };
         }
 
@@ -726,7 +881,7 @@ namespace RentACar.Application.Managers
         {
             var bookings = await _bookingRepository.GetBookingsByCarIdAsync(carId);
             var blocking = bookings.Where(b => IsBlockingStatus(b.BookingStatus)).ToList();
-            
+
             // Filter by overlap if month is specified
             if (year.HasValue && month.HasValue)
             {
@@ -798,38 +953,38 @@ namespace RentACar.Application.Managers
 
         public async Task ProcessOverdueBookingsAsync()
         {
-           _logger.LogInformation("Checking for overdue bookings...");
-           var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            _logger.LogInformation("Checking for overdue bookings...");
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
-           // Find InProgress bookings where EndDate < Today
-           var overdue = await _bookingRepository.Query()
-               .Include(b => b.Customer).ThenInclude(c => c.User)
-               .Where(b => b.BookingStatus == BookingStatus.InProgress && b.Enddate < today)
-               .ToListAsync();
+            // Find InProgress bookings where EndDate < Today
+            var overdue = await _bookingRepository.Query()
+                .Include(b => b.Customer).ThenInclude(c => c.User)
+                .Where(b => b.BookingStatus == BookingStatus.InProgress && b.Enddate < today)
+                .ToListAsync();
 
-           foreach (var booking in overdue)
-           {
-               _logger.LogInformation("Booking {Id} is overdue. Moving to AwaitingReturn.", booking.BookingId);
-               booking.BookingStatus = BookingStatus.AwaitingReturn;
-               await _bookingRepository.UpdateAsync(booking);
-               
-               await _auditLogManager.LogEventAsync("Booking.Overdue", "Booking", booking.BookingId.ToString(), "Auto-moved to AwaitingReturn", null, "System");
+            foreach (var booking in overdue)
+            {
+                _logger.LogInformation("Booking {Id} is overdue. Moving to AwaitingReturn.", booking.BookingId);
+                booking.BookingStatus = BookingStatus.AwaitingReturn;
+                await _bookingRepository.UpdateAsync(booking);
 
-               // Notify
+                await _auditLogManager.LogEventAsync("Booking.Overdue", "Booking", booking.BookingId.ToString(), "Auto-moved to AwaitingReturn", null, "System");
+
+                // Notify
                 var custUser = booking.Customer?.User;
                 if (custUser != null)
                 {
-                    try 
+                    try
                     {
                         // We can reuse SendBookingStatusEmail or a specific one. Use StatusEmail for now.
-                        await _emailManager.SendBookingStatusEmail(custUser.Email, booking.Customer.Name, booking); 
+                        await _emailManager.SendBookingStatusEmail(custUser.Email, booking.Customer.Name, booking);
                     }
-                    catch(Exception ex)
+                    catch (Exception ex)
                     {
                         _logger.LogError(ex, "Failed to send overdue email for booking {Id}", booking.BookingId);
                     }
                 }
-           }
+            }
         }
     }
 

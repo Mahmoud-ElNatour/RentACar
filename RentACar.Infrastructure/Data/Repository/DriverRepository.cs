@@ -57,6 +57,24 @@ public class DriverRepository : IDriverRepository
             .ToListAsync();
     }
 
+    public async Task<List<Driver>> GetEligibleDriversAsync(DateTime start, DateTime end)
+    {
+        // For now, return all active drivers. Filtering by availability happens in manager or via separate call.
+        // User requirements say "fetch eligible drivers using repository methods" but also "Satisfy driver availability windows".
+        // The implementation plan splits this: Get eligible (active) drivers, then filter by availability.
+        // However, the interface suggests filtering by start/end here?
+        // User spec: "Task<List<Driver>> GetEligibleDriversAsync(DateTime start, DateTime end); - Returns active drivers (and optionally include Rating)"
+        // It doesn't explicitly say "filter by availability" INSIDE this method, but the signature implies it might be relevant?
+        // But simpler to return active drivers here (maybe pre-filtered if possible, but availability is complex).
+        // I will return *active* drivers (same as GetActiveAsync essentially but maybe optimized or ready for future).
+        // Actually, let's just use GetActiveAsync logic but ensure we validly implement the interface method.
+        return await _dbContext.Drivers
+            .Include(d => d.User)
+            .Include(d => d.Employee)
+            .Where(d => d.IsActive && d.Employee.IsActive)
+            .ToListAsync();
+    }
+
     public async Task<bool> DriverCodeExistsAsync(string driverCode)
     {
         return await _dbContext.Drivers.AnyAsync(d => d.DriverCode == driverCode);
