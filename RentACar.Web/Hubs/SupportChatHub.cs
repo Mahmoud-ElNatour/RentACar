@@ -69,6 +69,48 @@ namespace RentACar.Web.Hubs
                     attachmentUrl = attachmentUrl,
                     isInternalNote = false
                 });
+
+                // If customer message, poll for AI response after a short delay
+                if (!isEmployee)
+                {
+                    _ = Task.Run(async () =>
+                    {
+                        await Task.Delay(2000); // Wait 2 seconds for AI to respond
+                        await CheckForNewMessages(conversationId);
+                    });
+                }
+            }
+        }
+
+        private async Task CheckForNewMessages(int conversationId)
+        {
+            try
+            {
+                // Fetch recent messages to see if AI replied
+                var conversation = await _supportManager.GetConversationDetailsForCustomerAsync(conversationId, Context.UserIdentifier);
+                if (conversation != null && conversation.Messages.Any())
+                {
+                    var lastMessage = conversation.Messages.OrderByDescending(m => m.CreatedAt).FirstOrDefault();
+                    if (lastMessage != null && lastMessage.SenderUserId == "AI_AGENT")
+                    {
+                        // Broadcast AI message
+                        await Clients.Group($"support_conversation_{conversationId}").SendAsync("ReceiveMessage", new
+                        {
+                            conversationId = conversationId,
+                            senderUserId = "AI_AGENT",
+                            senderDisplayName = "AI Assistant",
+                            senderRole = "Employee",
+                            messageText = lastMessage.MessageText,
+                            createdAt = lastMessage.CreatedAt,
+                            attachmentUrl = (string?)null,
+                            isInternalNote = false
+                        });
+                    }
+                }
+            }
+            catch
+            {
+                // Silently fail - not critical
             }
         }
 

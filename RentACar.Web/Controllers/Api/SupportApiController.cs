@@ -67,6 +67,22 @@ namespace RentACar.Web.Controllers.Api
             return Ok();
         }
 
+        [HttpPost("{id}/escalate")]
+        public async Task<IActionResult> EscalateToHuman(int id)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+            // Verify ownership
+            var conversation = await _supportManager.GetConversationDetailsForCustomerAsync(id, userId);
+            if (conversation == null) return NotFound();
+
+            var success = await _supportManager.EscalateToHumanAsync(id);
+            if (!success) return BadRequest("Could not escalate conversation.");
+
+            return Ok(new { message = "Your request has been escalated to a human agent. An employee will assist you shortly." });
+        }
+
         // --- Employee Endpoints ---
 
         [Authorize(Roles = "Admin,Employee")]

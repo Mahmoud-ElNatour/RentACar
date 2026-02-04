@@ -33,6 +33,8 @@ namespace RentACar.Core.Entities
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? ClosedAt { get; set; }
 
+        public bool RequiresHumanIntervention { get; set; } = false;
+
         // Navigation Properties
         [ForeignKey("CustomerId")]
         public virtual Customer Customer { get; set; }
