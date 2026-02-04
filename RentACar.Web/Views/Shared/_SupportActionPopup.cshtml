@@ -1,0 +1,46 @@
+@if (TempData["SupportActionSuccess"] != null || TempData["SupportActionError"] != null)
+{
+    var isSuccess = TempData["SupportActionSuccess"] != null;
+    var message = isSuccess ? TempData["SupportActionSuccess"] : TempData["SupportActionError"];
+    var icon = isSuccess ? "check_circle" : "error";
+    var colorClass = isSuccess ? "text-primary" : "text-red-500";
+    var borderColor = isSuccess ? "border-primary/20" : "border-red-500/20";
+    var shadowColor = isSuccess ? "rgba(212,175,55,0.2)" : "rgba(239,68,68,0.2)";
+
+    <div id="statusPopupFn" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[200] flex items-center justify-center p-6 animate-in zoom-in-95 duration-300">
+        <div class="w-full max-w-sm glass-panel rounded-3xl p-8 border @borderColor shadow-[0_0_40px_@shadowColor] relative">
+            <button onclick="document.getElementById('statusPopupFn').remove()" class="absolute top-4 right-4 text-white/40 hover:text-white transition-colors">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+            
+            <div class="flex flex-col items-center text-center">
+                <div class="size-20 rounded-full @(isSuccess ? "bg-primary/10" : "bg-red-500/10") flex items-center justify-center mb-6 ring-4 @(isSuccess ? "ring-primary/5" : "ring-red-500/5")">
+                    <span class="material-symbols-outlined text-4xl @colorClass">@icon</span>
+                </div>
+                
+                <h3 class="text-white text-xl font-black mb-2">@(isSuccess ? "Success!" : "Failed")</h3>
+                <p class="text-white/60 text-sm leading-relaxed mb-8">@message</p>
+                
+                <button onclick="document.getElementById('statusPopupFn').remove()" class="w-full @(isSuccess ? "bg-primary text-black" : "bg-white/10 text-white hover:bg-white/20") font-black py-3.5 rounded-xl transition-all uppercase tracking-widest text-xs">
+                    @(isSuccess ? "Continue" : "Try Again")
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Auto dismiss after 3 seconds for success
+        @if (isSuccess)
+        {
+            <text>
+            setTimeout(() => {
+                const popup = document.getElementById('statusPopupFn');
+                if(popup) {
+                    popup.classList.add('opacity-0');
+                    setTimeout(() => popup.remove(), 300);
+                }
+            }, 3000);
+            </text>
+        }
+    </script>
+}

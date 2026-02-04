@@ -72,6 +72,19 @@
                 Browse Cars
             </a>
 
+            <!-- Customer Section -->
+            @if (User.IsInRole("Customer"))
+            {
+                <a href="/Bookings/MyBookings" class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors group @(ViewContext.RouteData.Values["controller"]?.ToString() == "Bookings" && ViewContext.RouteData.Values["action"]?.ToString() == "MyBookings" ? "bg-gold/10 text-gold shadow-glow" : "text-gray-400 hover:text-white hover:bg-white/5")">
+                    <span class="material-symbols-outlined text-[22px] group-hover:scale-110 transition-transform">calendar_month</span>
+                    My Bookings
+                </a>
+                <a href="/Support" class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors group @(ViewContext.RouteData.Values["controller"]?.ToString() == "Support" ? "bg-gold/10 text-gold shadow-glow" : "text-gray-400 hover:text-white hover:bg-white/5")">
+                    <span class="material-symbols-outlined text-[22px] group-hover:scale-110 transition-transform">support_agent</span>
+                    Help & Support
+                </a>
+            }
+
             <!-- Admin & Employee Section -->
             @if (User.IsInRole("Admin") || User.IsInRole("Employee"))
             {
@@ -133,6 +146,12 @@
                      <a href="/ControlPanel/Ratings" class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors group mt-1 text-gray-400 hover:text-white hover:bg-white/5">
                         <span class="material-symbols-outlined text-[22px] group-hover:scale-110 transition-transform">star</span>
                         Ratings
+                     </a>
+
+                     <!-- Support Inbox -->
+                     <a href="/Admin/SupportInbox" class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors group mt-1 text-gray-400 hover:text-white hover:bg-white/5">
+                        <span class="material-symbols-outlined text-[22px] group-hover:scale-110 transition-transform">support_agent</span>
+                        Support Inbox
                      </a>
 
                      <!-- Email Services Group -->

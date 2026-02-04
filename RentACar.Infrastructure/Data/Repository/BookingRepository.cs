@@ -22,7 +22,10 @@ namespace RentACar.Infrastructure.Data.Repository
 
         public async Task<List<Booking>> GetBookingsByCustomerIdAsync(int customerId)
         {
-            return await _dbContext.Bookings.Where(b => b.CustomerId == customerId).ToListAsync();
+            return await _dbContext.Bookings
+                .Include(b => b.Car)
+                .Where(b => b.CustomerId == customerId)
+                .ToListAsync();
         }
 
         public async Task<List<Booking>> GetBookingsByCarIdAsync(int carId)

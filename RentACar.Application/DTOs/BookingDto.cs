@@ -14,6 +14,8 @@ namespace RentACar.Application.DTOs
         public decimal TotalPrice { get; set; }
         public bool IsBookedByEmployee { get; set; }
         public int? EmployeebookerId { get; set; }
+        public string? CarModel { get; set; }
+        public string? CarPlate { get; set; }
         
         [StringLength(50)]
         public string BookingStatus { get; set; } = "Pending";

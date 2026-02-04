@@ -3,17 +3,20 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RentACar.Infrastructure.Data;
 
 #nullable disable
 
-namespace RentACar.Infrastructure.Migrations
+namespace RentACar.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(RentACarDbContext))]
-    partial class RentACarDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260202170901_UpdateSupportIdentitySchema")]
+    partial class UpdateSupportIdentitySchema
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -885,46 +888,29 @@ namespace RentACar.Infrastructure.Migrations
                         .HasColumnType("datetime2")
                         .HasColumnName("createdAt");
 
-                    b.Property<DateOnly>("Date")
-                        .HasColumnType("date")
-                        .HasColumnName("date");
-
                     b.Property<int>("DriverId")
                         .HasColumnType("int")
                         .HasColumnName("driverID");
 
-                    b.Property<DateTime?>("EndDateTime")
+                    b.Property<DateTime>("EndDateTime")
                         .HasColumnType("datetime2")
                         .HasColumnName("endDateTime");
-
-                    b.Property<TimeOnly?>("EndTime")
-                        .HasColumnType("time")
-                        .HasColumnName("endTime");
 
                     b.Property<bool>("IsAvailable")
                         .HasColumnType("bit")
                         .HasColumnName("isAvailable");
 
-                    b.Property<bool?>("IsRecurringWeekly")
+                    b.Property<bool>("IsRecurringWeekly")
                         .HasColumnType("bit")
                         .HasColumnName("isRecurringWeekly");
 
-                    b.Property<DateTime?>("StartDateTime")
+                    b.Property<DateTime>("StartDateTime")
                         .HasColumnType("datetime2")
                         .HasColumnName("startDateTime");
 
-                    b.Property<TimeOnly?>("StartTime")
-                        .HasColumnType("time")
-                        .HasColumnName("startTime");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("updatedAt");
-
                     b.HasKey("DriverAvailabilityId");
 
-                    b.HasIndex("DriverId", "Date")
-                        .IsUnique();
+                    b.HasIndex("DriverId");
 
                     b.ToTable("DriverAvailabilities");
                 });
