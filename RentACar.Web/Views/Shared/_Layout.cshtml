@@ -136,7 +136,10 @@
     <script src="~/js/index-script.js" asp-append-version="true"></script>
 
     <partial name="_SupportActionPopup" />
-    <partial name="_AiChatWidget" />
+    @if (User.IsInRole("Customer"))
+    {
+        <partial name="_AiChatWidget" />
+    }
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

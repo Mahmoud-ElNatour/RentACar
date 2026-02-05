@@ -5,10 +5,10 @@
 @if (SignInManager.IsSignedIn(User))
 {
     <!-- AI Chat Widget Float -->
-    <div id="aiChatWidget" class="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-4 font-sans antialiased">
+    <div id="aiChatWidget" class="fixed bottom-6 right-6 z-[9999] flex flex-col items-end gap-4 font-sans antialiased">
         
         <!-- Chat Window (Hidden by Default) -->
-        <div id="aiChatWindow" class="hidden w-[380px] h-[600px] bg-black/90 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl flex flex-col overflow-hidden transition-all duration-300 origin-bottom-right">
+        <div id="aiChatWindow" class="hidden w-[380px] h-[600px] max-h-[80vh] bg-black/90 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl flex flex-col overflow-hidden transition-all duration-300 origin-bottom-right">
             
             <!-- Header -->
             <div class="h-16 bg-gradient-to-r from-zinc-900 to-black border-b border-white/10 flex items-center justify-between px-4 shrink-0">
@@ -17,7 +17,7 @@
                         <span class="material-symbols-outlined text-black text-lg">smart_toy</span>
                     </div>
                     <div class="flex flex-col">
-                        <span class="text-white font-bold text-sm tracking-wide">Prestige AI</span>
+                        <span class="text-white font-bold text-sm tracking-wide">LB Drive - Chatbot (AI)</span>
                         <span class="text-emerald-400 text-[10px] font-medium flex items-center gap-1">
                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                             Always Available
@@ -47,6 +47,9 @@
                 </div>
             </div>
 
+            <!-- Escalation Modal Injection -->
+            <partial name="_AiEscalationModal" />
+
             <!-- Input Area -->
             <div class="p-4 border-t border-white/10 bg-black/50 backdrop-blur-md shrink-0">
                 <form onsubmit="sendMessage(event)" class="relative">
@@ -58,7 +61,7 @@
                     </button>
                 </form>
                 <div class="flex justify-between items-center mt-2 px-1">
-                     <button onclick="escalateToTicket()" class="text-[10px] uppercase tracking-wider text-zinc-600 hover:text-primary transition-colors flex items-center gap-1">
+                     <button onclick="showEscalationModal()" class="text-[10px] uppercase tracking-wider text-zinc-600 hover:text-primary transition-colors flex items-center gap-1">
                         <span class="material-symbols-outlined text-[10px]">support_agent</span> Specialist Support
                     </button>
                     <span class="text-[10px] text-zinc-600">AI Concierge</span>
@@ -83,6 +86,20 @@
         const aiChatWindow = document.getElementById('aiChatWindow');
         const aiChatMessages = document.getElementById('aiChatMessages');
         const aiChatInput = document.getElementById('aiChatInput');
+        
+        // Modal Logic
+        function showEscalationModal() {
+            document.getElementById('aiEscalationModal').classList.remove('hidden');
+        }
+
+        function hideEscalationModal() {
+            document.getElementById('aiEscalationModal').classList.add('hidden');
+        }
+
+        async function confirmEscalation() {
+            hideEscalationModal();
+            await escalateToTicket();
+        }
 
         async function initAiChat() {
             if (aiConnection) return;
@@ -154,8 +171,6 @@
         }
         
         async function escalateToTicket() {
-            if(!confirm("Create an official support ticket from this conversation?")) return;
-            
             try {
                 appendMessage("System", "Creating ticket...");
                 await aiConnection.invoke("Escalate");
