@@ -158,6 +158,10 @@ builder.Services.AddScoped<SupportManager>();
 
 // ✅ Register Hosted Services
 builder.Services.AddHostedService<RentACar.Web.Services.NotificationBackgroundService>();
+builder.Services.AddHostedService<RentACar.Web.Services.AiCleanupService>();
+
+// ✅ Register AI Managers
+builder.Services.AddScoped<AiManager>();
 
 var app = builder.Build();
 
@@ -244,6 +248,7 @@ app.MapControllerRoute(
 
 app.MapRazorPages();
 app.MapHub<SupportChatHub>("/supportChatHub");
+app.MapHub<AiChatHub>("/aiChatHub");
 
 
 app.MapHub<RentACar.Web.Hubs.DriverTrackingHub>("/hubs/driverTracking");

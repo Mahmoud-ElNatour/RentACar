@@ -40,6 +40,7 @@ namespace RentACar.Application.Managers
             AuditLogManager auditLogManager,
             UserManager<IdentityUser> userManager,
             EmailManager emailManager,
+            AiManager aiManager,
             IServiceScopeFactory serviceScopeFactory)
         {
             _conversationRepository = conversationRepository;
@@ -51,8 +52,11 @@ namespace RentACar.Application.Managers
             _auditLogManager = auditLogManager;
             _userManager = userManager;
             _emailManager = emailManager;
+            _aiManager = aiManager;
             _serviceScopeFactory = serviceScopeFactory;
         }
+
+        private readonly AiManager _aiManager;
 
         // --- Customer Methods ---
 
@@ -660,6 +664,73 @@ namespace RentACar.Application.Managers
                 WaitingTrend = 0,
                 ResolvedTrend = 0
             };
+        }
+
+        public async Task<int> EscalateToTicketAsync(string userId, int aiConversationId)
+        {
+            // 1. Validate AI Conversation
+            var aiMessages = await _aiManager.GetHistoryAsync(aiConversationId);
+            if (!aiMessages.Any()) return 0;
+
+            var customer = await _customerRepository.GetByIdAsync(userId);
+            if (customer == null) throw new Exception("Customer not found");
+
+            // 2. Create Support Conversation
+            var conversation = new SupportConversation
+            {
+                CustomerId = customer.UserId,
+                Subject = "Escalated AI Conversation",
+                Category = "General",
+                Status = SupportStatus.Open,
+                RequiresHumanIntervention = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            await _conversationRepository.AddAsync(conversation);
+            await _conversationRepository.SaveChangesAsync();
+
+            // 3. Compile History
+            var recentMessages = aiMessages.OrderByDescending(m => m.CreatedAt).Take(20).OrderBy(m => m.CreatedAt).ToList();
+            var summaryText = "### Escalated Conversation History\n\n";
+            
+            foreach (var msg in recentMessages)
+            {
+                var role = msg.Sender == RentACar.Core.Enums.AiSenderType.User ? "Customer" : "AI";
+                summaryText += $"**{role}**: {msg.Content}\n\n";
+            }
+
+            // 4. Create Initial Message
+            var supportMsg = new SupportMessage
+            {
+                SupportConversationId = conversation.SupportConversationId,
+                SenderUserId = userId,
+                SenderRole = SenderRole.Customer,
+                MessageText = "Please help me with the following inquiry (Escalated from AI Chat).",
+                IsInternalNote = false,
+                CreatedAt = DateTime.UtcNow
+            };
+            await _messageRepository.AddAsync(supportMsg);
+
+            // 5. Add History as Internal Note
+            var historyNote = new SupportMessage
+            {
+                SupportConversationId = conversation.SupportConversationId,
+                SenderUserId = userId,
+                SenderRole = SenderRole.Employee,
+                MessageText = summaryText,
+                IsInternalNote = true, 
+                CreatedAt = DateTime.UtcNow.AddSeconds(1)
+            };
+            await _messageRepository.AddAsync(historyNote);
+            await _messageRepository.SaveChangesAsync();
+
+            // 6. Mark AI as Escalated
+            await _aiManager.MarkEscalatedAsync(aiConversationId);
+
+            await _auditLogManager.LogAsync("Escalate", "SupportConversation", conversation.SupportConversationId.ToString(), "Created from AI Chat #" + aiConversationId);
+
+            return conversation.SupportConversationId;
         }
         public async Task<bool> EscalateToHumanAsync(int conversationId)
         {
