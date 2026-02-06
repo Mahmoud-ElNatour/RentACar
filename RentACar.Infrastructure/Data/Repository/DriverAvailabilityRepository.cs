@@ -1,144 +1,140 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using RentACar.Core.Entities;
 using RentACar.Core.Repositories;
 
-namespace RentACar.Infrastructure.Data.Repository;
-
-public class DriverAvailabilityRepository : IDriverAvailabilityRepository
+namespace RentACar.Infrastructure.Data.Repository
 {
-    private readonly RentACarDbContext _dbContext;
-
-    public DriverAvailabilityRepository(RentACarDbContext dbContext)
+    public class DriverAvailabilityRepository : IDriverAvailabilityRepository
     {
-        _dbContext = dbContext;
-    }
+        private readonly RentACarDbContext _dbContext;
+        private readonly Microsoft.Extensions.Logging.ILogger<DriverAvailabilityRepository> _logger;
 
-    public async Task<List<DriverAvailability>> GetByDriverIdAsync(int driverId)
-    {
-        return await _dbContext.DriverAvailabilities
-            .Where(a => a.DriverId == driverId)
-            .OrderByDescending(a => a.Date)
-            .ToListAsync();
-    }
-
-    public async Task<List<DriverAvailability>> GetByDriverIdAndRangeAsync(int driverId, DateOnly from, DateOnly to)
-    {
-        return await _dbContext.DriverAvailabilities
-            .Where(a => a.DriverId == driverId && a.Date >= from && a.Date <= to)
-            .OrderBy(a => a.Date)
-            .ToListAsync();
-    }
-
-    public async Task<bool> HasCoveringAvailabilityAsync(int driverId, DateTime start, DateTime end)
-    {
-        var startDate = DateOnly.FromDateTime(start);
-        var endDate = DateOnly.FromDateTime(end);
-
-        // Fetch user availabilities that *might* cover the range
-        // For "IsRecurringWeekly", we need to check if we have a match.
-        // Simple logic for now: Check if there is ANY availability that covers the range.
-
-        var availabilities = await _dbContext.DriverAvailabilities
-            .Where(a => a.DriverId == driverId && a.IsAvailable)
-            .ToListAsync();
-
-        // Check if any single availability record covers the ENTIRE requested range 
-        // OR if the combination of them does.
-        // User spec implies "There exists **at least one** availability entry... that covers the booking range"
-        // Wait, "covers the booking range". 
-        // "If IsRecurringWeekly == true: interpret as weekly... confirm each day in booking period is covered"
-        // This is complex for a single SQL query unless we simplify.
-        // The user prompted: "Do NOT scan huge tables in memory".
-        // But verifying recurrence logic usually requires client-side (in-app) evaluation of a smaller subset.
-        // We will fetch potentially relevant availabilities and check in memory (filtered set for 1 driver is small).
-
-        // Let's implement the memory check logic here after fetching for the specific driver.
-        return CheckAvailability(availabilities, start, end);
-    }
-
-    private bool CheckAvailability(List<DriverAvailability> availabilities, DateTime bookStart, DateTime bookEnd)
-    {
-        // 1. Check specific date overrides first?
-        // User spec: "Satisfy driver availability windows: There exists at least one availability entry... such that... window covers the booking range"
-        // Does "one entry" mean a single row must cover the whole range? 
-        // "IsRecurringWeekly... confirm each day in the booking period is covered". This implies checking coverage day-by-day.
-
-        // Let's go day by day.
-        for (var dt = bookStart.Date; dt <= bookEnd.Date; dt = dt.AddDays(1))
+        public DriverAvailabilityRepository(RentACarDbContext dbContext, Microsoft.Extensions.Logging.ILogger<DriverAvailabilityRepository> logger)
         {
-            // For this day 'dt', is there a covering availability?
-            bool covered = availabilities.Any(a => IsDayCovered(a, dt, bookStart, bookEnd));
-            if (!covered) return false;
+            _dbContext = dbContext;
+            _logger = logger;
         }
-        return true;
-    }
 
-    private bool IsDayCovered(DriverAvailability a, DateTime currentDay, DateTime bookStart, DateTime bookEnd)
-    {
-        // If a.IsRecurringWeekly, we check DayOfWeek.
-        // If not, we check exact Date.
-
-        if (a.IsRecurringWeekly == true)
+        public async Task<List<DriverAvailability>> GetByDriverIdAsync(int driverId)
         {
-            // Check if 'a' covers 'currentDay' (weekday match)
-            if (a.StartDateTime.HasValue) // Legacy field often used for Start info
+            return await _dbContext.DriverAvailabilities
+                .Where(a => a.DriverId == driverId)
+                .OrderByDescending(a => a.Date)
+                .ToListAsync();
+        }
+
+        public async Task<List<DriverAvailability>> GetByDriverIdAndRangeAsync(int driverId, DateOnly from, DateOnly to)
+        {
+            return await _dbContext.DriverAvailabilities
+                .Where(a => a.DriverId == driverId && a.Date >= from && a.Date <= to)
+                .OrderBy(a => a.Date)
+                .ToListAsync();
+        }
+
+        /// <summary>
+        /// FULL-DAY (Option 1):
+        /// Driver is eligible only if ALL days in [startDate..endDate] exist with IsAvailable = true.
+        /// Times (StartTime/EndTime) are ignored completely.
+        /// </summary>
+        public async Task<bool> HasCoveringAvailabilityAsync(int driverId, DateTime start, DateTime end)
+        {
+            // Normalize: booking logic passes start at 00:00 and end at 23:59 (or similar).
+            // We only care about dates.
+            var startDate = DateOnly.FromDateTime(start);
+            var endDate = DateOnly.FromDateTime(end);
+
+            if (endDate < startDate) return false;
+
+            // required days inclusive
+            var requiredDays = (endDate.DayNumber - startDate.DayNumber) + 1;
+
+            _logger.LogInformation("Checking availability for Driver {DriverId}: Range {Start} to {End} ({Required} days)", driverId, startDate, endDate, requiredDays);
+
+            // Count how many available rows exist in the range
+            var availableDays = await _dbContext.DriverAvailabilities
+                .Where(a => a.DriverId == driverId)
+                .Where(a => a.IsAvailable)
+                .Where(a => a.Date >= startDate && a.Date <= endDate)
+                .Select(a => a.Date)        // protect against duplicates (until unique index exists)
+                .Distinct()
+                .CountAsync();
+
+            _logger.LogInformation("Found {Found} available days for Driver {DriverId}. Match: {Match}", availableDays, driverId, availableDays == requiredDays);
+
+            return availableDays == requiredDays;
+        }
+
+        public async Task UpsertRangeAsync(int driverId, DateOnly from, DateOnly to, bool isAvailable)
+        {
+            if (from > to) (from, to) = (to, from); // Ensure correct order
+
+            // 1. Fetch existing rows in this range
+            var existingRows = await _dbContext.DriverAvailabilities
+                .Where(a => a.DriverId == driverId && a.Date >= from && a.Date <= to)
+                .ToListAsync();
+
+            var existingMap = existingRows.ToDictionary(r => r.Date);
+
+            var now = DateTime.UtcNow;
+            var newRows = new List<DriverAvailability>();
+
+            // 2. Iterate through every day in range
+            for (var dt = from; dt <= to; dt = dt.AddDays(1))
             {
-                if (a.StartDateTime.Value.DayOfWeek != currentDay.DayOfWeek) return false;
+                // Full-Day Logic enforcement
+                TimeOnly? sTime = isAvailable ? new TimeOnly(0, 0) : null;
+                TimeOnly? eTime = isAvailable ? new TimeOnly(23, 59) : null;
+
+                if (existingMap.TryGetValue(dt, out var row))
+                {
+                    // Update existing
+                    row.IsAvailable = isAvailable;
+                    row.StartTime = sTime;
+                    row.EndTime = eTime;
+                    row.UpdatedAt = now;
+                    // StartDateTime/EndDateTime legacy fields - kept null or could specific if needed.
+                    // Ideally keep them ignored as we moved to Option 1.
+                }
+                else
+                {
+                    // Create new
+                    newRows.Add(new DriverAvailability
+                    {
+                        DriverId = driverId,
+                        Date = dt,
+                        IsAvailable = isAvailable,
+                        StartTime = sTime,
+                        EndTime = eTime,
+                        CreatedAt = now,
+                        UpdatedAt = now
+                    });
+                }
             }
-            // Actually, recurring logic usually relies on DayOfWeek of StartDateTime or similar.
-            // If schema has StartTime/EndTime (TimeOnly), use that + DayOfWeek? 
-            // DriverAvailability entity has: Date, StartTime, EndTime, StartDateTime, EndDateTime.
-            // Let's assume StartDateTime is the reference for DayOfWeek if recurring.
+
+            if (newRows.Any())
+            {
+                await _dbContext.DriverAvailabilities.AddRangeAsync(newRows);
+            }
+
+            // 3. Save Changes
+            await _dbContext.SaveChangesAsync();
         }
-        else
+
+        public async Task AddAsync(DriverAvailability availability)
         {
-            if (a.Date != DateOnly.FromDateTime(currentDay)) return false;
+            await _dbContext.DriverAvailabilities.AddAsync(availability);
+            await _dbContext.SaveChangesAsync();
         }
 
-        // Now check time range?
-        // User prompt validation says: "bookingStartDt = requestDto.Startdate at 00:00... bookingEndDt ... at 23:59:59"
-        // Basically full days are booked.
-        // So availability must cover 00:00 to 23:59? 
-        // Or just "IsAvailable == true"?
-        // Most "Rent a Car" drivers are Daily. 
-        // User spec: "IsAvailable == true".
-        // Let's assume if the row exists and IsAvailable is true for that date, it's covered.
-        // Time checks (StartTime/EndTime) only needed if partial availability supported?
-        // User spec says: "window covers the booking range".
-        // If booking is FULL DAY, then availability must be FULL DAY (or cover 00:00-23:59).
-        // If availability has StartTime/EndTime, we should check.
-        // If StartTime/EndTime null, assume full day?
-
-        // Simplified Coverage Check:
-        // 1. Matches Date (or recurrence DayOfWeek)
-        // 2. IsAvailable
-
-        // Let's rely on Date match first.
-        // If IsRecurringWeekly:
-        //   Check if DayOfWeek matches. 
-        //   Check if StartTime <= 00:00 and EndTime >= 23:59 (effectively).
-
-        // Given ambiguity and existing codebase style, let's look at `DriverAvailability.cs`.
-        // It has `Date` (DateOnly).
-        // It has `StartDateTime`/`EndDateTime` (Legacy).
-
-        // I will implement a robust check:
-        // Match Date (or DOW).
-        return true; // Placeholder for logic inside lambda
-    }
-
-    public async Task AddAsync(DriverAvailability availability)
-    {
-        await _dbContext.DriverAvailabilities.AddAsync(availability);
-        await _dbContext.SaveChangesAsync();
-    }
-
-    public async Task UpdateAsync(DriverAvailability availability)
-    {
-        _dbContext.DriverAvailabilities.Update(availability);
-        await _dbContext.SaveChangesAsync();
+        public async Task UpdateAsync(DriverAvailability availability)
+        {
+            _dbContext.DriverAvailabilities.Update(availability);
+            await _dbContext.SaveChangesAsync();
+        }
     }
 }

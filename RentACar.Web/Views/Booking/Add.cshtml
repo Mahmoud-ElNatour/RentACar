@@ -246,6 +246,11 @@
                                 <span class="font-bold text-white" id="summSubtotal">$0.00</span>
                             </div>
 
+                            <div id="summDriverRow" class="flex justify-between text-sm hidden">
+                                <span class="text-gray-400">Driver Fee</span>
+                                <span class="font-bold text-white" id="summDriverFee">$0.00</span>
+                            </div>
+
                             <div id="summPromoRow" class="flex justify-between text-green-500 text-sm hidden">
                                 <span>Discount</span>
                                 <span id="summDiscount">-$0.00</span>
@@ -585,10 +590,26 @@
 
             if (resp.ok) {
                 const data = await resp.json();
+                
+                let finalSubtotal = data.subtotal;
+                let finalTotal = data.total;
+                
+                // --- Driver Fee Logic (UI Only) ---
+                if (hasDriver) {
+                    const driverFee = data.days * 20;
+                    finalSubtotal += driverFee;
+                    finalTotal += driverFee;
+                    
+                    document.getElementById('summDriverRow').classList.remove('hidden');
+                    document.getElementById('summDriverFee').innerText = "$" + driverFee.toFixed(2);
+                } else {
+                    document.getElementById('summDriverRow').classList.add('hidden');
+                }
+                // ----------------------------------
 
                 document.getElementById('summDays').innerText = data.days + (data.days === 1 ? " Day" : " Days");
-                document.getElementById('summSubtotal').innerText = "$" + data.subtotal.toFixed(2);
-                document.getElementById('summTotal').innerText = "$" + data.total.toFixed(2);
+                document.getElementById('summSubtotal').innerText = "$" + finalSubtotal.toFixed(2); // Updated subtotal
+                document.getElementById('summTotal').innerText = "$" + finalTotal.toFixed(2);       // Updated total
 
                 if (data.discountAmount > 0) {
                     document.getElementById('summPromoRow').classList.remove('hidden');
