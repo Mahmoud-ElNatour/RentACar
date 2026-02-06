@@ -44,6 +44,68 @@ public class DriverTrackingHub : Hub
     }
 
     [Authorize(Roles = "Driver")]
+    public async Task UpdateLocationForActiveTrips(double latitude, double longitude, DateTime timestamp,
+        double? speed = null, double? heading = null, double? accuracy = null)
+    {
+        var userId = _userManager.GetUserId(Context.User);
+        if (string.IsNullOrWhiteSpace(userId)) throw new HubException("Unauthorized");
+
+        var driver = await _driverRepository.GetByAspNetUserIdAsync(userId);
+        if (driver == null) throw new HubException("Driver not found");
+
+        var activeBookingIds = await _tripManager.GetActiveBookingIdsForDriverAsync(driver.DriverId);
+
+        if (!activeBookingIds.Any()) return;
+
+        // Save ONE ping based on the first booking (or most relevant)
+        // Ideally we associate with all, but DB schema usually links 1-to-1 or need pure logs table.
+        // Assuming current Ping table has BookingId foreign key. We pick the first one to satisfy FK constraint.
+        // Or if you want robust history, iterate and save for all. Choosing SAVE FOR ALL for completeness.
+
+        foreach (var bookingId in activeBookingIds)
+        {
+            // Fanout Broadcast
+            await Clients.Group($"booking-{bookingId}").SendAsync("DriverLocationUpdated", new
+            {
+                bookingId = bookingId,
+                driverId = driver.DriverId,
+                latitude,
+                longitude,
+                speed,
+                heading,
+                accuracy,
+                createdAt = timestamp == default ? DateTime.UtcNow : timestamp
+            });
+        }
+
+        // Save Ping Record (Limit to ONE record to avoid DB spam, linked to the first booking found)
+        // If we want detailed history per trip, we'd save for all. 
+        // Strategy: Save once linked to the first booking ID found.
+        var primaryBookingId = activeBookingIds.First();
+
+        var ping = new DriverLocationPing
+        {
+            BookingId = primaryBookingId,
+            DriverId = driver.DriverId,
+            Latitude = (decimal)latitude,
+            Longitude = (decimal)longitude,
+            Speed = speed.HasValue ? (decimal?)speed.Value : null,
+            Heading = heading.HasValue ? (decimal?)heading.Value : null,
+            AccuracyMeters = accuracy.HasValue ? (decimal?)accuracy.Value : null,
+            CreatedAt = timestamp == default ? DateTime.UtcNow : timestamp
+        };
+
+        _dbContext.DriverLocationPings.Add(ping);
+        await _dbContext.SaveChangesAsync();
+
+        // Also update Trip table (LastLocation) for ALL active trips
+        foreach (var bid in activeBookingIds)
+        {
+            await _tripManager.UpdateDriverLocationAsync(bid, driver.DriverId, (decimal)latitude, (decimal)longitude, timestamp);
+        }
+    }
+
+    [Authorize(Roles = "Driver")]
     public async Task UpdateLocation(int bookingId, int driverId, double latitude, double longitude, DateTime timestamp,
         double? speed = null, double? heading = null, double? accuracy = null)
     {

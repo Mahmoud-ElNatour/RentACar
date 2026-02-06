@@ -9,43 +9,12 @@
         backdrop-filter: blur(12px);
         border: 1px solid rgba(244, 195, 37, 0.1);
     }
-
-    .pulse-dot {
-        width: 8px;
-        height: 8px;
-        background-color: #f4c325;
-        border-radius: 50%;
-        position: relative;
-    }
-
-    .pulse-dot::after {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background-color: #f4c325;
-        border-radius: 50%;
-        animation: pulse 2s infinite;
-        opacity: 0.6;
-    }
-
-    @@keyframes pulse {
-        0% {
-            transform: scale(1);
-            opacity: .8;
-        }
-
-        100% {
-            transform: scale(3);
-            opacity: 0;
-        }
-    }
 </style>
 
 <main class="w-full px-4 md:px-8 py-8">
     <div class="max-w-6xl mx-auto flex flex-col gap-6">
         <!-- TOP INFO CARD -->
-        <div
-            class="glass-panel rounded-2xl p-4 md:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-2xl">
+        <div class="glass-panel rounded-2xl p-4 md:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-2xl">
             <div class="flex items-center gap-4">
                 <div class="flex flex-col">
                     <p class="text-[10px] font-bold uppercase tracking-widest text-primary/80">
@@ -73,11 +42,11 @@
             <div class="flex flex-col gap-4">
                 <div class="glass-panel rounded-xl p-4">
                     <div class="flex items-center gap-3 mb-1">
-                        <div class="pulse-dot"></div>
+                        <div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
                         <p class="text-xs font-bold uppercase tracking-widest text-white/50">Status</p>
                     </div>
                     <p class="text-xl font-bold text-primary" id="trackingStatus">
-                        Live Tracking ON
+                        Connecting...
                     </p>
                 </div>
 
@@ -94,6 +63,16 @@
                             @Model.LastLatitude?.ToString("F4"),
                             @Model.LastLongitude?.ToString("F4")
                         </span>
+                    </div>
+                </div>
+
+                <!-- Customer Loc Status -->
+                <div class="glass-panel rounded-xl p-4">
+                     <p class="text-xs font-bold uppercase tracking-widest text-white/50 mb-1">
+                        My Location
+                    </p>
+                    <div id="myLocStatus" class="text-xs text-yellow-500 font-mono">
+                        Requesting...
                     </div>
                 </div>
             </div>
@@ -116,38 +95,190 @@
 <!-- SIGNALR -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
 
-
 <script>
     window.map = null;
     window.driverMarker = null;
     window.pickupMarker = null;
+    window.customerMarker = null; // Custom Overlay
+    window.watchId = null;
+
+    // --- Assets ---
+    // White car icon (data URI for performance/reliability)
+    const CAR_ICON_SVG = `data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffffff' stroke='%23000000' stroke-width='0.5'%3E%3Cpath d='M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z'/%3E%3C/svg%3E`;
+
+     const mapStyles = [
+        { "elementType": "geometry", "stylers": [{ "color": "#0f172a" }] },
+        { "elementType": "labels.text.stroke", "stylers": [{ "color": "#0f172a" }, { "weight": 2 }] },
+        { "elementType": "labels.text.fill", "stylers": [{ "color": "#475569" }] },
+        { "featureType": "road", "elementType": "geometry", "stylers": [{ "color": "#1e293b" }] },
+        { "featureType": "road", "elementType": "geometry.stroke", "stylers": [{ "color": "#334155" }] },
+        { "featureType": "water", "elementType": "geometry", "stylers": [{ "color": "#020617" }] }
+    ];
+
+    // --- Custom Marker Class ---
+    let CustomMarkerClass = null;
+
+    function defineCustomMarker() {
+        if (CustomMarkerClass) return;
+        CustomMarkerClass = class extends google.maps.OverlayView {
+            constructor(pos, map) {
+                super();
+                this.pos = pos;
+                this.setMap(map);
+            }
+            onAdd() {
+                const div = document.createElement('div');
+                div.className = 'glowing-dot-container';
+                div.style.position = 'absolute';
+                div.innerHTML = '<div class="glowing-pulse"></div><div class="glowing-dot"></div>';
+                this.div = div;
+                const panes = this.getPanes();
+                panes.overlayMouseTarget.appendChild(div);
+            }
+            draw() {
+                const overlayProjection = this.getProjection();
+                const sw = overlayProjection.fromLatLngToDivPixel(this.pos);
+                const div = this.div;
+                if (sw && div) {
+                    div.style.left = (sw.x - 16) + 'px'; // Center 32px
+                    div.style.top = (sw.y - 16) + 'px';
+                }
+            }
+            onRemove() {
+                if (this.div) {
+                    this.div.parentNode.removeChild(this.div);
+                    this.div = null;
+                }
+            }
+            updatePosition(pos) {
+                this.pos = pos;
+                this.draw();
+            }
+        };
+    }
+
 
     window.initMap = function () {
+        defineCustomMarker();
+
         const driverLat = @(Model.LastLatitude?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "33.8938");
         const driverLng = @(Model.LastLongitude?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "35.5018");
         const pickupLat = @(Model.PickupLatitude?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? Model.LastLatitude?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "33.8938");
         const pickupLng = @(Model.PickupLongitude?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? Model.LastLongitude?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "35.5018");
         const hasPickup = @(Model.PickupLatitude.HasValue && Model.PickupLongitude.HasValue ? "true" : "false");
 
+        const driverPos = { lat: Number(driverLat), lng: Number(driverLng) };
+        const pickupPos = { lat: Number(pickupLat), lng: Number(pickupLng) };
+
         window.map = new google.maps.Map(document.getElementById("map"), {
-            center: { lat: Number(driverLat), lng: Number(driverLng) },
+            center: driverPos,
             zoom: 14,
+            styles: mapStyles, // Dark Mode
             disableDefaultUI: true,
             gestureHandling: "greedy"
         });
 
+        // Driver Marker (Car Icon)
         window.driverMarker = new google.maps.Marker({
-            position: { lat: Number(driverLat), lng: Number(driverLng) },
+            position: driverPos,
             map: window.map,
-            title: "Driver"
+            title: "Driver",
+            icon: {
+                url: CAR_ICON_SVG,
+                scaledSize: new google.maps.Size(40, 40),
+                anchor: new google.maps.Point(20, 20),
+                // Heading rotation handled in update
+            }
         });
 
+        // Pickup Marker (Standard Pin)
         window.pickupMarker = new google.maps.Marker({
-            position: { lat: Number(pickupLat), lng: Number(pickupLng) },
+            position: pickupPos,
             map: window.map,
-            title: hasPickup ? "Pickup" : "Pickup (estimated)"
+            title: hasPickup ? "Pickup Location" : "Pickup (Estimated)",
+            // Use default red pin or custom if desired
         });
+
+        // Fit Bounds initially
+        const bounds = new google.maps.LatLngBounds();
+        bounds.extend(driverPos);
+        bounds.extend(pickupPos);
+        window.map.fitBounds(bounds);
+
+        // Start watching customer location
+        if (navigator.geolocation) {
+             window.watchId = navigator.geolocation.watchPosition(
+                (pos) => {
+                    const lat = pos.coords.latitude;
+                    const lng = pos.coords.longitude;
+                    const loc = new google.maps.LatLng(lat, lng);
+
+                    if (!window.customerMarker) {
+                        window.customerMarker = new CustomMarkerClass(loc, window.map);
+                        document.getElementById('myLocStatus').innerText = "Active";
+                        document.getElementById('myLocStatus').classList.replace('text-yellow-500', 'text-green-500');
+                        
+                        // Optionally include in bounds on first lock
+                         const b = window.map.getBounds();
+                         if(b) {
+                             b.extend(loc);
+                             window.map.fitBounds(b);
+                         }
+
+                    } else {
+                        window.customerMarker.updatePosition(loc);
+                    }
+                },
+                (err) => {
+                    console.warn("Geo error", err);
+                    document.getElementById('myLocStatus').innerText = "Permission Denied";
+                    document.getElementById('myLocStatus').classList.replace('text-yellow-500', 'text-red-500');
+                },
+                { enableHighAccuracy: true }
+            );
+        } else {
+             document.getElementById('myLocStatus').innerText = "Not Supported";
+             document.getElementById('myLocStatus').classList.replace('text-yellow-500', 'text-red-500');
+        }
     };
+
+    // --- Animation Logic ---
+    function animateMarkerTo(marker, newLat, newLng) {
+        const startPos = marker.getPosition();
+        const endPos = new google.maps.LatLng(newLat, newLng);
+        if(!startPos) {
+            marker.setPosition(endPos);
+            return;
+        }
+
+        const duration = 800; // ms
+        const start = performance.now();
+
+        function step(now) {
+            const elapsed = now - start;
+            const progress = Math.min(elapsed / duration, 1);
+
+            const lat = startPos.lat() + (newLat - startPos.lat()) * progress;
+            const lng = startPos.lng() + (newLng - startPos.lng()) * progress;
+            const newPos = new google.maps.LatLng(lat, lng);
+
+            marker.setPosition(newPos);
+
+            if (progress < 1) {
+                requestAnimationFrame(step);
+            }
+        }
+        requestAnimationFrame(step);
+    }
+    
+    // Rotate Icon Helper (Optional, simplified)
+    // Google Maps Markers with SVG url don't support simple 'rotation' property easily without complex SVG manipulation 
+    // or using SymbolPath. For data-uri SVG, CSS rotation on the internal img element is hard to access.
+    // We will skip rotation for now to keep it robust, or use Symbol path if requested. 
+    // User asked "If heading isn’t sent... rotation becomes optional." 
+    // Implementing rotation for Image-based markers needs custom Overlay or Symbol. 
+    // Let's stick to smooth movement for reliability as per "Simpler is better" constraint for "Must not add heavy dependencies".
+    
 
     (function () {
         const bookingId = @Model.BookingId;
@@ -164,25 +295,32 @@
         connection.on("DriverLocationUpdated", payload => {
             if (payload.bookingId !== bookingId) return;
 
-            const pos = { lat: Number(payload.latitude), lng: Number(payload.longitude) };
-
+            // Animate
             if (window.map && window.driverMarker) {
-                window.driverMarker.setPosition(pos);
-                const bounds = window.map.getBounds();
-                if (bounds && !bounds.contains(pos)) {
+                 animateMarkerTo(window.driverMarker, Number(payload.latitude), Number(payload.longitude));
+                 
+                 // Panning
+                 const pos = { lat: Number(payload.latitude), lng: Number(payload.longitude) };
+                 const bounds = window.map.getBounds();
+                 if (bounds && !bounds.contains(pos)) {
                     window.map.panTo(pos);
-                }
+                 }
             }
 
             statusEl.textContent = "Live Tracking ON";
+            statusEl.classList.add('text-emerald-400'); // Green glow hint
+            
             lastPingEl.textContent = new Date(payload.createdAt).toLocaleTimeString();
             lastCoordinatesEl.textContent =
                 `${payload.latitude.toFixed(4)}, ${payload.longitude.toFixed(4)}`;
         });
 
         connection.start()
-            .then(() => connection.invoke("JoinBookingGroup", bookingId))
-            .catch(() => statusEl.textContent = "Tracking unavailable");
+            .then(() => {
+                connection.invoke("JoinBookingGroup", bookingId);
+                statusEl.textContent = "Waiting for driver...";
+            })
+            .catch(() => statusEl.textContent = "Tracking unavailable (Connection Failed)");
     })();
 </script>
 

@@ -18,15 +18,17 @@ public class DriverAvailabilityController : ControllerBase
     private readonly UserManager<IdentityUser> _userManager;
     private readonly IDriverRepository _driverRepository;
     private readonly IDriverAvailabilityRepository _availabilityRepository;
-
+    private readonly ILogger<DriverAvailabilityController> _logger;
     public DriverAvailabilityController(
         UserManager<IdentityUser> userManager,
         IDriverRepository driverRepository,
-        IDriverAvailabilityRepository availabilityRepository)
+        IDriverAvailabilityRepository availabilityRepository,
+        ILogger<DriverAvailabilityController> logger)
     {
         _userManager = userManager;
         _driverRepository = driverRepository;
         _availabilityRepository = availabilityRepository;
+        _logger = logger;
     }
 
     [HttpGet]
@@ -54,14 +56,27 @@ public class DriverAvailabilityController : ControllerBase
         var driver = await _driverRepository.GetByAspNetUserIdAsync(userId!);
         if (driver == null) return Forbid();
 
-        var existing = (await _availabilityRepository.GetByDriverIdAndRangeAsync(driver.DriverId, request.Date, request.Date)).FirstOrDefault();
+        // FULL-DAY enforcement (Option 1)
+        TimeOnly? startTime = null;
+        TimeOnly? endTime = null;
+
+        if (request.IsAvailable)
+        {
+            startTime = new TimeOnly(0, 0);
+            endTime = new TimeOnly(23, 59);
+        }
+
+        var existing = (await _availabilityRepository
+            .GetByDriverIdAndRangeAsync(driver.DriverId, request.Date, request.Date))
+            .FirstOrDefault();
 
         if (existing != null)
         {
             existing.IsAvailable = request.IsAvailable;
-            existing.StartTime = request.StartTime;
-            existing.EndTime = request.EndTime;
+            existing.StartTime = startTime;
+            existing.EndTime = endTime;
             existing.UpdatedAt = DateTime.UtcNow;
+
             await _availabilityRepository.UpdateAsync(existing);
         }
         else
@@ -71,13 +86,36 @@ public class DriverAvailabilityController : ControllerBase
                 DriverId = driver.DriverId,
                 Date = request.Date,
                 IsAvailable = request.IsAvailable,
-                StartTime = request.StartTime,
-                EndTime = request.EndTime,
+                StartTime = startTime,
+                EndTime = endTime,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
+
             await _availabilityRepository.AddAsync(record);
         }
+
+        return Ok(new { success = true });
+    }
+
+    [HttpPost("range")]
+    public async Task<IActionResult> UpsertAvailabilityRange([FromBody] AvailabilityRangeRequest request)
+    {
+        var userId = _userManager.GetUserId(User);
+        _logger.LogInformation("UpsertAvailabilityRange Request: User {UserId}, Range {From} to {To}, Available: {IsAvailable}", userId, request.From, request.To, request.IsAvailable);
+
+        var driver = await _driverRepository.GetByAspNetUserIdAsync(userId!);
+        if (driver == null)
+        {
+            _logger.LogWarning("UpsertAvailabilityRange: Driver not found for user {UserId}", userId);
+            return Forbid();
+        }
+
+        _logger.LogInformation("UpsertAvailabilityRange: Found Driver {DriverId}. Saving range...", driver.DriverId);
+
+        await _availabilityRepository.UpsertRangeAsync(driver.DriverId, request.From, request.To, request.IsAvailable);
+
+        _logger.LogInformation("UpsertAvailabilityRange: Successfully saved range for Driver {DriverId}.", driver.DriverId);
 
         return Ok(new { success = true });
     }
@@ -88,5 +126,12 @@ public class DriverAvailabilityController : ControllerBase
         public bool IsAvailable { get; set; }
         public TimeOnly? StartTime { get; set; }
         public TimeOnly? EndTime { get; set; }
+    }
+
+    public class AvailabilityRangeRequest
+    {
+        public DateOnly From { get; set; }
+        public DateOnly To { get; set; }
+        public bool IsAvailable { get; set; }
     }
 }

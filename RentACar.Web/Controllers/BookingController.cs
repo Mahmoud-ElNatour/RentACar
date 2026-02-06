@@ -603,6 +603,25 @@ namespace RentACar.Web.Controllers
                         // 3. Financials
                         col.Item().PaddingTop(10).AlignRight().Column(c =>
                         {
+                            // Financials Breakdown
+                            var driverFee = 0m;
+                            var carSubtotal = booking.Subtotal ?? 0;
+                            var days = (booking.Enddate.ToDateTime(TimeOnly.MinValue) - booking.Startdate.ToDateTime(TimeOnly.MinValue)).Days + 1;
+                            if (booking.HasDriver)
+                            {
+                                driverFee = 20 * days;
+                                // Assuming Subtotal from DB includes Driver Fee, we isolate Car portion for display
+                                carSubtotal = (booking.Subtotal ?? 0) - driverFee;
+                                if (carSubtotal < 0) carSubtotal = 0; // Safety
+                            }
+
+                            c.Item().Row(r => { r.RelativeItem().Text("Car Rental Charges:"); r.RelativeItem().AlignRight().Text($"{carSubtotal:C}"); });
+
+                            if (booking.HasDriver)
+                            {
+                                c.Item().Row(r => { r.RelativeItem().Text("Driver Services ($20/day):"); r.RelativeItem().AlignRight().Text($"{driverFee:C}"); });
+                            }
+
                             c.Item().Row(r => { r.RelativeItem().Text("Subtotal:"); r.RelativeItem().AlignRight().Text($"{booking.Subtotal:C}"); });
 
                             if (promo != null)

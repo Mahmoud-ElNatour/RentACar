@@ -42,6 +42,11 @@ public class TripManager
         return _mapper.Map<List<TripDto>>(trips);
     }
 
+    public async Task<List<int>> GetActiveBookingIdsForDriverAsync(int driverId)
+    {
+        return await _tripRepository.GetActiveBookingIdsForDriverAsync(driverId);
+    }
+
     public async Task<TripActionResult> StartTrackingAsync(int bookingId, int driverId)
     {
         return await ChangeStatusAsync(bookingId, driverId, TripStatus.OnTheWay, "Trip.StartTracking");

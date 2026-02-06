@@ -182,15 +182,18 @@ namespace RentACar.Application.Managers
 
                 // 3. Auto-Assign Driver
                 DateTime startDt = requestDto.Startdate.ToDateTime(TimeOnly.MinValue); // 00:00
-                DateTime endDt = requestDto.Enddate.ToDateTime(new TimeOnly(23, 59, 59)); // 23:59:59
+                DateTime endDt = requestDto.Enddate.ToDateTime(new TimeOnly(23, 59)); // 23:59
 
                 // A. Get Candidates
                 var activeDrivers = await _driverRepository.GetEligibleDriversAsync(startDt, endDt);
+                _logger.LogInformation("Found {Count} active drivers initially eligible (before conflict check)", activeDrivers.Count);
 
                 // B. Exclude Conflicts
                 var conflictedDriverIds = await _bookingRepository.GetConflictingDriverIdsAsync(requestDto.Startdate, requestDto.Enddate);
+                _logger.LogInformation("Found {Count} conflicted drivers: {Ids}", conflictedDriverIds.Count, string.Join(",", conflictedDriverIds));
 
                 var candidates = activeDrivers.Where(d => !conflictedDriverIds.Contains(d.DriverId)).ToList();
+                _logger.LogInformation("{Count} candidates remaining after conflict check. Checking individual availability...", candidates.Count);
 
                 // C. Check Availability & Tie-Break
                 Driver? selectedDriver = null;
@@ -204,7 +207,13 @@ namespace RentACar.Application.Managers
                     {
                         validCandidates.Add(driver);
                     }
+                    else
+                    {
+                        _logger.LogInformation("Driver {Id} excluded due to missing availability records.", driver.DriverId);
+                    }
                 }
+
+                _logger.LogInformation("Final valid candidates count: {Count}", validCandidates.Count);
 
                 if (!validCandidates.Any())
                 {
