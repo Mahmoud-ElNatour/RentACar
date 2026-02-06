@@ -3,17 +3,20 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RentACar.Infrastructure.Data;
 
 #nullable disable
 
-namespace RentACar.Infrastructure.Migrations
+namespace RentACar.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(RentACarDbContext))]
-    partial class RentACarDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260204002104_AddRequiresHumanIntervention")]
+    partial class AddRequiresHumanIntervention
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -48,66 +51,6 @@ namespace RentACar.Infrastructure.Migrations
                     b.HasIndex("RoleId");
 
                     b.ToTable("AspNetUserRoles", (string)null);
-                });
-
-            modelBuilder.Entity("RentACar.Core.Entities.AiConversation", b =>
-                {
-                    b.Property<int>("AiConversationId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AiConversationId"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("CustomerId")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsEscalated")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime>("LastActiveAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("AiConversationId");
-
-                    b.HasIndex("CustomerId")
-                        .HasDatabaseName("IX_AiConversations_CustomerId");
-
-                    b.HasIndex("LastActiveAt")
-                        .HasDatabaseName("IX_AiConversations_LastActiveAt");
-
-                    b.ToTable("AiConversations");
-                });
-
-            modelBuilder.Entity("RentACar.Core.Entities.AiMessage", b =>
-                {
-                    b.Property<int>("AiMessageId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AiMessageId"));
-
-                    b.Property<int>("AiConversationId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Content")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Sender")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("AiMessageId");
-
-                    b.HasIndex("AiConversationId");
-
-                    b.ToTable("AiMessages");
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.AspNetRole", b =>
@@ -872,7 +815,8 @@ namespace RentACar.Infrastructure.Migrations
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                        .HasColumnType("nvarchar(256)")
+                        .HasColumnName("email");
 
                     b.Property<int>("EmployeeId")
                         .HasColumnType("int")
@@ -1791,28 +1735,6 @@ namespace RentACar.Infrastructure.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("RentACar.Core.Entities.AiConversation", b =>
-                {
-                    b.HasOne("RentACar.Core.Entities.Customer", "Customer")
-                        .WithMany()
-                        .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Customer");
-                });
-
-            modelBuilder.Entity("RentACar.Core.Entities.AiMessage", b =>
-                {
-                    b.HasOne("RentACar.Core.Entities.AiConversation", "Conversation")
-                        .WithMany("Messages")
-                        .HasForeignKey("AiConversationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Conversation");
-                });
-
             modelBuilder.Entity("RentACar.Core.Entities.AspNetRoleClaim", b =>
                 {
                     b.HasOne("RentACar.Core.Entities.AspNetRole", "Role")
@@ -2199,11 +2121,6 @@ namespace RentACar.Infrastructure.Migrations
                     b.Navigation("Booking");
 
                     b.Navigation("Driver");
-                });
-
-            modelBuilder.Entity("RentACar.Core.Entities.AiConversation", b =>
-                {
-                    b.Navigation("Messages");
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.AspNetRole", b =>

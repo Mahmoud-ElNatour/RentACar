@@ -55,6 +55,8 @@ public partial class RentACarDbContext : DbContext
     public virtual DbSet<EmailFeatureConfig> EmailFeatureConfigs { get; set; }
     public virtual DbSet<SupportConversation> SupportConversations { get; set; }
     public virtual DbSet<SupportMessage> SupportMessages { get; set; }
+    public virtual DbSet<AiConversation> AiConversations { get; set; }
+    public virtual DbSet<AiMessage> AiMessages { get; set; }
 
 
 
@@ -300,6 +302,28 @@ public partial class RentACarDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(d => d.SenderUserId)
                 .OnDelete(DeleteBehavior.ClientSetNull);
+        });
+
+        modelBuilder.Entity<AiConversation>(entity =>
+        {
+            entity.HasOne(d => d.Customer)
+                .WithMany()
+                .HasForeignKey(d => d.CustomerId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasIndex(e => e.CustomerId).HasDatabaseName("IX_AiConversations_CustomerId");
+            entity.HasIndex(e => e.LastActiveAt).HasDatabaseName("IX_AiConversations_LastActiveAt");
+        });
+
+        modelBuilder.Entity<AiMessage>(entity =>
+        {
+            entity.HasOne(d => d.Conversation)
+                .WithMany(p => p.Messages)
+                .HasForeignKey(d => d.AiConversationId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.Property(e => e.Sender)
+                .HasConversion<string>(); // Store Enum as String for readability
         });
 
         OnModelCreatingPartial(modelBuilder);

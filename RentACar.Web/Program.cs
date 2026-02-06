@@ -108,8 +108,11 @@ builder.Services.AddScoped<IEmailTemplateRepository, EmailTemplateRepository>();
 builder.Services.AddScoped<IEmailDraftRepository, EmailDraftRepository>();
 builder.Services.AddHttpClient<IEmailService, MailjetEmailService>();
 builder.Services.AddScoped<ICustomerRatingRepository, CustomerRatingRepository>();
+builder.Services.AddScoped<IGeminiAgentService, GeminiAgentService>();
+builder.Services.AddScoped<AiSupportContextManager>();
 builder.Services.AddScoped<ISupportConversationRepository, SupportConversationRepository>();
 builder.Services.AddScoped<ISupportMessageRepository, SupportMessageRepository>();
+builder.Services.AddScoped<RentACar.Application.Services.ISignalRBroadcaster, RentACar.Web.Services.SignalRBroadcaster>();
 builder.Services.AddScoped<IDriverRepository, DriverRepository>();
 builder.Services.AddScoped<IDriverAvailabilityRepository, DriverAvailabilityRepository>();
 builder.Services.AddScoped<ITripRepository, TripRepository>();
@@ -155,6 +158,10 @@ builder.Services.AddScoped<SupportManager>();
 
 // ✅ Register Hosted Services
 builder.Services.AddHostedService<RentACar.Web.Services.NotificationBackgroundService>();
+builder.Services.AddHostedService<RentACar.Web.Services.AiCleanupService>();
+
+// ✅ Register AI Managers
+builder.Services.AddScoped<AiManager>();
 
 var app = builder.Build();
 
@@ -241,6 +248,7 @@ app.MapControllerRoute(
 
 app.MapRazorPages();
 app.MapHub<SupportChatHub>("/supportChatHub");
+app.MapHub<AiChatHub>("/aiChatHub");
 
 
 app.MapHub<RentACar.Web.Hubs.DriverTrackingHub>("/hubs/driverTracking");

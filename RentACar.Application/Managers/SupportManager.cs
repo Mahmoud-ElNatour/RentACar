@@ -11,6 +11,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection; // For Scope
+using Microsoft.AspNetCore.SignalR; // For HubContext
+using RentACar.Application.Services;
 
 namespace RentACar.Application.Managers
 {
@@ -25,6 +28,7 @@ namespace RentACar.Application.Managers
         private readonly AuditLogManager _auditLogManager;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly EmailManager _emailManager;
+        private readonly IServiceScopeFactory _serviceScopeFactory;
 
         public SupportManager(
             ISupportConversationRepository conversationRepository,
@@ -35,7 +39,9 @@ namespace RentACar.Application.Managers
             ILogger<SupportManager> logger,
             AuditLogManager auditLogManager,
             UserManager<IdentityUser> userManager,
-            EmailManager emailManager)
+            EmailManager emailManager,
+            AiManager aiManager,
+            IServiceScopeFactory serviceScopeFactory)
         {
             _conversationRepository = conversationRepository;
             _messageRepository = messageRepository;
@@ -46,7 +52,11 @@ namespace RentACar.Application.Managers
             _auditLogManager = auditLogManager;
             _userManager = userManager;
             _emailManager = emailManager;
+            _aiManager = aiManager;
+            _serviceScopeFactory = serviceScopeFactory;
         }
+
+        private readonly AiManager _aiManager;
 
         // --- Customer Methods ---
 
@@ -84,6 +94,7 @@ namespace RentACar.Application.Managers
                 .Include(c => c.Customer)
                 .Include(c => c.AssignedEmployee)
                 .Include(c => c.Messages)
+                    .ThenInclude(m => m.Sender)
                 .FirstOrDefaultAsync(c => c.SupportConversationId == conversationId && c.Customer.aspNetUserId == customerId);
 
             if (conversation == null) return null;
@@ -163,11 +174,173 @@ namespace RentACar.Application.Managers
             // If customer replies to a Resolved ticket, should it remain Resolved or move back?
             // Usually it stays Assigned if someone is on it.
             
+            
             conversation.UpdatedAt = DateTime.UtcNow;
             await _conversationRepository.UpdateAsync(conversation);
 
             await _messageRepository.SaveChangesAsync();
             await _conversationRepository.SaveChangesAsync();
+
+            // --- AI Agent Trigger ---
+            // Fire and forget so we don't block the HTTP request 
+            // (In production, use BackgroundJob/Hangfire. Here valid to simple Task.Run for demo)
+            _logger.LogInformation("AI Agent: Starting background task for conversation {ConversationId}", dto.ConversationId);
+            
+            _ = Task.Run(async () => 
+            {
+                try
+                {
+                    _logger.LogInformation("AI Agent: Background task started for conversation {ConversationId}", dto.ConversationId);
+                    
+                    using var scope = _serviceScopeFactory.CreateScope();
+                    _logger.LogInformation("AI Agent: Service scope created");
+
+                    // --- Update: Ensure AI User Exists (Fix for FK Constraint) ---
+                    try 
+                    {
+                        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
+                        var aiUserId = "AI_AGENT";
+                        var aiUser = await userManager.FindByIdAsync(aiUserId);
+                        if (aiUser == null)
+                        {
+                            _logger.LogInformation("AI Agent: 'AI_AGENT' user missing. Creating it now...");
+                            aiUser = new IdentityUser 
+                            { 
+                                Id = aiUserId, 
+                                UserName = "ai_agent@rentacar.com", 
+                                Email = "ai_agent@rentacar.com",
+                                EmailConfirmed = true 
+                            };
+                            var result = await userManager.CreateAsync(aiUser);
+                            if (!result.Succeeded)
+                            {
+                                _logger.LogError("AI Agent: Failed to create AI user. {Errors}", string.Join(", ", result.Errors.Select(e => e.Description)));
+                            }
+                            else
+                            {
+                                _logger.LogInformation("AI Agent: 'AI_AGENT' user created successfully.");
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "AI Agent: Error checking/creating AI user. Message saving might fail.");
+                    }
+                    // -----------------------------------------------------------
+                    
+                    var geminiService = scope.ServiceProvider.GetRequiredService<RentACar.Application.Services.IGeminiAgentService>();
+                    _logger.LogInformation("AI Agent: GeminiService resolved");
+                    
+                    var contextManager = scope.ServiceProvider.GetRequiredService<AiSupportContextManager>();
+                    _logger.LogInformation("AI Agent: ContextManager resolved");
+                    
+                    var messageRepo = scope.ServiceProvider.GetRequiredService<ISupportMessageRepository>();
+                    var convRepo = scope.ServiceProvider.GetRequiredService<ISupportConversationRepository>();
+                    _logger.LogInformation("AI Agent: Repositories resolved");
+
+                    var freshConv = await convRepo.GetByIdAsync(dto.ConversationId);
+                    if (freshConv == null)
+                    {
+                        _logger.LogWarning("AI Agent: Conversation {ConversationId} not found", dto.ConversationId);
+                        return;
+                    }
+                    
+                    if (freshConv.RequiresHumanIntervention)
+                    {
+                        _logger.LogInformation("AI Agent: Conversation {ConversationId} requires human intervention, skipping AI", dto.ConversationId);
+                        return;
+                    }
+
+                    // Strategy: Only reply if unassigned OR no employee reply yet (excluding AI itself).
+                    bool hasEmployeeReply = await messageRepo.Query().AnyAsync(m => m.SupportConversationId == dto.ConversationId && m.SenderRole == SenderRole.Employee && m.SenderUserId != "AI_AGENT");
+                    _logger.LogInformation("AI Agent: HasEmployeeReply={HasEmployeeReply}", hasEmployeeReply);
+                    
+                    if (!hasEmployeeReply && !freshConv.RequiresHumanIntervention)
+                    {
+                        _logger.LogInformation("AI Agent: Fetching customer context for CustomerId={CustomerId}", freshConv.CustomerId);
+                        var context = await contextManager.GetContextForCustomerAsync(freshConv.CustomerId);
+                        
+                        // Fetch history (last 6 messages)
+                        var historyMessages = await messageRepo.Query()
+                            .Where(m => m.SupportConversationId == dto.ConversationId)
+                            .OrderByDescending(m => m.CreatedAt)
+                            .Take(6)
+                            .ToListAsync();
+                        
+                        var formattedHistory = historyMessages
+                            .OrderBy(m => m.CreatedAt) // Oldest first
+                            .Select(m => $"{(m.SenderRole == SenderRole.Employee ? (m.SenderUserId == "AI_AGENT" ? "AI" : "Agent") : "User")}: {m.MessageText}")
+                            .ToList();
+
+                        _logger.LogInformation("AI Agent: Generating AI response with {Count} history items...", formattedHistory.Count);
+                        var response = await geminiService.GenerateResponseAsync(dto.MessageText, context, formattedHistory);
+
+                        if (!string.IsNullOrEmpty(response))
+                        {
+                            _logger.LogInformation("AI Agent: Response generated, length={Length}", response.Length);
+                            
+                            // Save AI Response - SignalR Hub will broadcast when fetched
+                            var aiMsg = new SupportMessage
+                            {
+                                SupportConversationId = dto.ConversationId,
+                                SenderUserId = "AI_AGENT", // Special ID for AI
+                                SenderRole = SenderRole.Employee, // Display as support agent
+                                MessageText = response,
+                                CreatedAt = DateTime.UtcNow
+                            };
+                            
+                            
+                            await messageRepo.AddAsync(aiMsg);
+                            await messageRepo.SaveChangesAsync();
+                            
+                            _logger.LogInformation("AI Agent: Response saved successfully for conversation {ConversationId}", dto.ConversationId);
+
+                            // --- SignalR Broadcast ---
+                            try 
+                            {
+                                // Use the decoupled broadcaster interface
+                                var broadcaster = scope.ServiceProvider.GetService<RentACar.Application.Services.ISignalRBroadcaster>();
+                                
+                                if (broadcaster != null)
+                                {
+                                    var msgDto = new SupportMessageDto
+                                    {
+                                        MessageId = aiMsg.SupportMessageId, // Fixed property name
+                                        ConversationId = aiMsg.SupportConversationId, // Fixed property name
+                                        SenderUserId = aiMsg.SenderUserId,
+                                        SenderRole = aiMsg.SenderRole.ToString(),
+                                        MessageText = aiMsg.MessageText,
+                                        AttachmentUrl = aiMsg.AttachmentUrl,
+                                        CreatedAt = aiMsg.CreatedAt,
+                                        IsInternalNote = aiMsg.IsInternalNote
+                                    };
+
+                                    await broadcaster.BroadcastSupportMessageAsync(dto.ConversationId, msgDto);
+                                    _logger.LogInformation("AI Agent: Response broadcasted via SignalR");
+                                }
+                                else
+                                {
+                                    _logger.LogWarning("AI Agent: ISignalRBroadcaster not registered, skipping broadcast");
+                                }
+                            }
+                            catch (Exception hubEx)
+                            {
+                                 _logger.LogError(hubEx, "AI Agent: Failed to broadcast via SignalR");
+                            }
+                            // -------------------------
+                        }
+                        else
+                        {
+                            _logger.LogWarning("AI Agent: Empty response from Gemini API");
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Log but don't crash
+                    _logger.LogError(ex, "AI Agent: Error in background task processing for conversation {ConversationId}", dto.ConversationId);
+                }
+            });
 
             return true;
         }
@@ -491,6 +664,90 @@ namespace RentACar.Application.Managers
                 WaitingTrend = 0,
                 ResolvedTrend = 0
             };
+        }
+
+        public async Task<int> EscalateToTicketAsync(string userId, int aiConversationId)
+        {
+            // 1. Validate AI Conversation
+            var aiMessages = await _aiManager.GetHistoryAsync(aiConversationId);
+            if (!aiMessages.Any()) return 0;
+
+            var customer = await _customerRepository.GetByIdAsync(userId);
+            if (customer == null) throw new Exception("Customer not found");
+
+            // 2. Create Support Conversation
+            var conversation = new SupportConversation
+            {
+                CustomerId = customer.UserId,
+                Subject = "Escalated AI Conversation",
+                Category = "General",
+                Status = SupportStatus.Open,
+                RequiresHumanIntervention = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            await _conversationRepository.AddAsync(conversation);
+            await _conversationRepository.SaveChangesAsync();
+
+            // 3. Compile History
+            var recentMessages = aiMessages.OrderByDescending(m => m.CreatedAt).Take(20).OrderBy(m => m.CreatedAt).ToList();
+            var summaryText = "### Escalated Conversation History\n\n";
+            
+            foreach (var msg in recentMessages)
+            {
+                var role = msg.Sender == RentACar.Core.Enums.AiSenderType.User ? "Customer" : "AI";
+                summaryText += $"**{role}**: {msg.Content}\n\n";
+            }
+
+            // 4. Create Initial Message
+            var supportMsg = new SupportMessage
+            {
+                SupportConversationId = conversation.SupportConversationId,
+                SenderUserId = userId,
+                SenderRole = SenderRole.Customer,
+                MessageText = "Please help me with the following inquiry (Escalated from AI Chat).",
+                IsInternalNote = false,
+                CreatedAt = DateTime.UtcNow
+            };
+            await _messageRepository.AddAsync(supportMsg);
+
+            // 5. Add History as Internal Note
+            var historyNote = new SupportMessage
+            {
+                SupportConversationId = conversation.SupportConversationId,
+                SenderUserId = userId,
+                SenderRole = SenderRole.Employee,
+                MessageText = summaryText,
+                IsInternalNote = true, 
+                CreatedAt = DateTime.UtcNow.AddSeconds(1)
+            };
+            await _messageRepository.AddAsync(historyNote);
+            await _messageRepository.SaveChangesAsync();
+
+            // 6. Mark AI as Escalated
+            await _aiManager.MarkEscalatedAsync(aiConversationId);
+
+            await _auditLogManager.LogAsync("Escalate", "SupportConversation", conversation.SupportConversationId.ToString(), "Created from AI Chat #" + aiConversationId);
+
+            return conversation.SupportConversationId;
+        }
+        public async Task<bool> EscalateToHumanAsync(int conversationId)
+        {
+            var conversation = await _conversationRepository.GetByIdAsync(conversationId);
+            if (conversation == null) return false;
+
+            if (!conversation.RequiresHumanIntervention)
+            {
+                conversation.RequiresHumanIntervention = true;
+                conversation.UpdatedAt = DateTime.UtcNow;
+                await _conversationRepository.UpdateAsync(conversation);
+                await _conversationRepository.SaveChangesAsync();
+
+                await _auditLogManager.LogAsync("Escalate", "SupportConversation", conversationId.ToString(), "Ticket escalated to human agent by user request.");
+                return true;
+            }
+            return true;
         }
     }
 

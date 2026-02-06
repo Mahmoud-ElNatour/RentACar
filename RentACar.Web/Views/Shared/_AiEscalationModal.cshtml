@@ -1,0 +1,33 @@
+<!-- AI Escalation Confirmation Modal -->
+<div id="aiEscalationModal" class="hidden absolute inset-0 z-[10000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity duration-300">
+    <div class="w-full max-w-[320px] bg-zinc-900 border border-white/10 rounded-2xl shadow-2xl p-6 flex flex-col gap-4 animate-in zoom-in-95 duration-200">
+        
+        <!-- Icon -->
+        <div class="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center mx-auto border border-red-500/20">
+            <span class="material-symbols-outlined text-red-500 text-2xl">warning</span>
+        </div>
+
+        <!-- Text -->
+        <div class="text-center space-y-2">
+            <h3 class="text-white font-bold text-lg">Escalate to Human?</h3>
+            <p class="text-zinc-400 text-xs leading-relaxed">
+                Are you sure you want to create an official ticket and chat with our support team?
+            </p>
+            <p class="text-red-400 text-[10px] bg-red-500/5 p-2 rounded-lg border border-red-500/10 font-medium">
+                <span class="material-symbols-outlined text-[10px] align-middle mr-1">history</span>
+                This will delete your AI chat history from this view.
+            </p>
+        </div>
+
+        <!-- Buttons -->
+        <div class="grid grid-cols-2 gap-3 mt-2">
+            <button onclick="hideEscalationModal()" class="px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white text-xs font-bold transition-colors">
+                CANCEL
+            </button>
+            <button onclick="confirmEscalation()" class="px-4 py-3 rounded-xl bg-primary hover:bg-yellow-500 text-black text-xs font-bold transition-colors shadow-lg shadow-primary/20">
+                CONFIRM
+            </button>
+        </div>
+
+    </div>
+</div>

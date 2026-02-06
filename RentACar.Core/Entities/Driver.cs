@@ -31,7 +31,6 @@ public partial class Driver
     [StringLength(30)]
     public string? Phone { get; set; }
 
-    [Column("email")]
     [StringLength(256)]
     public string Email { get; set; } = null!;
 
