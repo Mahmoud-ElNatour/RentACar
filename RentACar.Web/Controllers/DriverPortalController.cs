@@ -168,6 +168,10 @@ namespace RentACar.Web.Controllers
             var userId = _userManager.GetUserId(User);
             var driver = await _driverRepository.GetByAspNetUserIdAsync(userId!);
             var result = await _tripManager.StartTrackingAsync(bookingId, driver!.DriverId);
+
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                return Json(new { success = result.Success, message = result.Message });
+
             if (!result.Success) TempData["TripError"] = result.Message;
             return RedirectToAction(nameof(BookingDetails), new { id = bookingId });
         }
@@ -179,6 +183,10 @@ namespace RentACar.Web.Controllers
             var userId = _userManager.GetUserId(User);
             var driver = await _driverRepository.GetByAspNetUserIdAsync(userId!);
             var result = await _tripManager.MarkArrivedAsync(bookingId, driver!.DriverId);
+
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                return Json(new { success = result.Success, message = result.Message });
+
             if (!result.Success) TempData["TripError"] = result.Message;
             return RedirectToAction(nameof(BookingDetails), new { id = bookingId });
         }
@@ -190,6 +198,10 @@ namespace RentACar.Web.Controllers
             var userId = _userManager.GetUserId(User);
             var driver = await _driverRepository.GetByAspNetUserIdAsync(userId!);
             var result = await _tripManager.StartTripAsync(bookingId, driver!.DriverId);
+
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                return Json(new { success = result.Success, message = result.Message });
+
             if (!result.Success) TempData["TripError"] = result.Message;
             return RedirectToAction(nameof(BookingDetails), new { id = bookingId });
         }
@@ -201,6 +213,10 @@ namespace RentACar.Web.Controllers
             var userId = _userManager.GetUserId(User);
             var driver = await _driverRepository.GetByAspNetUserIdAsync(userId!);
             var result = await _tripManager.CompleteTripAsync(bookingId, driver!.DriverId);
+
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                return Json(new { success = result.Success, message = result.Message });
+
             if (!result.Success) TempData["TripError"] = result.Message;
             return RedirectToAction(nameof(BookingDetails), new { id = bookingId });
         }
@@ -212,6 +228,10 @@ namespace RentACar.Web.Controllers
             var userId = _userManager.GetUserId(User);
             var driver = await _driverRepository.GetByAspNetUserIdAsync(userId!);
             var result = await _tripManager.CancelTripAsync(bookingId, driver!.DriverId, reason);
+
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                return Json(new { success = result.Success, message = result.Message });
+
             if (!result.Success) TempData["TripError"] = result.Message;
             return RedirectToAction(nameof(BookingDetails), new { id = bookingId });
         }
@@ -275,6 +295,66 @@ namespace RentACar.Web.Controllers
             }
 
             return PartialView("_MapPanelPartial", model);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetActiveTrips()
+        {
+            var userId = _userManager.GetUserId(User);
+            var driver = await _driverRepository.GetByAspNetUserIdAsync(userId!);
+            if (driver == null) return Forbid();
+
+            var activeIds = await _tripManager.GetActiveBookingIdsForDriverAsync(driver.DriverId);
+
+            // Fetch bookings
+            var bookings = await _bookingRepository.GetBookingsByDriverIdAsync(driver.DriverId);
+            var activeBookings = bookings
+                .Where(b => activeIds.Contains(b.BookingId))
+                .Select(b => new
+                {
+                    bookingId = b.BookingId,
+                    customerName = b.Customer?.Name ?? "N/A",
+                    pickupLocationLabel = b.PickupLocationLabel ?? "N/A",
+                    status = b.BookingStatus
+                }).ToList();
+
+            return Json(activeBookings);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> TripDetailsPartial(int bookingId)
+        {
+            var userId = _userManager.GetUserId(User);
+            var driver = await _driverRepository.GetByAspNetUserIdAsync(userId!);
+            if (driver == null) return Forbid();
+
+            var booking = await _bookingRepository.GetBookingByIdAsync(bookingId);
+            if (booking == null || booking.DriverId != driver.DriverId) return NotFound();
+
+            var trips = await _tripManager.GetTripsByDriverIdAsync(driver.DriverId);
+            var currentTrip = trips.FirstOrDefault(t => t.BookingId == bookingId);
+
+            ViewBag.GoogleMapsKey = _config["GOOGLE_MAPS_API_KEY"];
+
+            var model = new DriverBookingDetailsViewModel
+            {
+                BookingId = booking.BookingId,
+                BookingStatus = booking.BookingStatus ?? "Pending",
+                TripStatus = currentTrip?.TripStatus ?? "Assigned",
+                CarName = booking.Car?.ModelName ?? "N/A",
+                CarPlate = booking.Car?.PlateNumber ?? "N/A",
+                CustomerName = booking.Customer?.Name ?? "N/A",
+                PickupLocationLabel = booking.PickupLocationLabel ?? "N/A",
+                PickupLatitude = (double?)booking.PickupLatitude,
+                PickupLongitude = (double?)booking.PickupLongitude,
+                DriverLatitude = currentTrip != null ? (double?)currentTrip.LastDriverLatitude : null,
+                DriverLongitude = currentTrip != null ? (double?)currentTrip.LastDriverLongitude : null,
+                PickupDateTime = booking.PickupDateTime,
+                DriverCode = driver.DriverCode,
+                DriverId = driver.DriverId
+            };
+
+            return PartialView("_TripDetails", model);
         }
     }
 }

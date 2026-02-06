@@ -1,0 +1,172 @@
+@model RentACar.Web.Models.DriverBookingDetailsViewModel
+@{
+    var statusLabel = Model.TripStatus?.ToLowerInvariant() switch
+    {
+        "assigned" => "Assigned",
+        "pending" => "Scheduled",
+        "booked" => "Scheduled",
+        "ontheway" => "On the way",
+        "on the way" => "On the way",
+        "on_the_way" => "On the way",
+        "arrived" => "Arrived",
+        "intrip" => "In Trip",
+        "in trip" => "In Trip",
+        "in_trip" => "In Trip",
+        "completed" => "Completed",
+        "cancelled" => "Cancelled",
+        _ => string.IsNullOrWhiteSpace(Model.TripStatus) ? "Assigned" : Model.TripStatus
+    };
+    var normalizedTripStatus = (Model.TripStatus ?? "Assigned").Trim().ToLowerInvariant();
+    var isTerminal = normalizedTripStatus == "completed" || normalizedTripStatus == "cancelled";
+
+    var badgeColor = normalizedTripStatus switch
+    {
+        "completed" => "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
+        "cancelled" => "bg-red-500/10 text-red-500 border-red-500/20",
+        "intrip" => "bg-blue-500/10 text-blue-500 border-blue-500/20",
+        "arrived" => "bg-purple-500/10 text-purple-500 border-purple-500/20",
+        _ => "bg-primary/10 text-primary border-primary/20"
+    };
+}
+
+<div class="h-full flex flex-col p-6 overflow-y-auto custom-scrollbar">
+    <!-- Header -->
+    <div class="flex items-start justify-between mb-6">
+        <div>
+            <div class="flex items-center gap-2 mb-1">
+                <span class="px-2 py-1 rounded text-[10px] bg-white/5 border border-white/10 font-mono text-white/60">
+                    #@Model.BookingId
+                </span>
+                <span class="text-xs text-white/40">Trips</span>
+            </div>
+            <h2 class="text-2xl font-bold text-white">Trip Details</h2>
+        </div>
+        <div class="px-3 py-1 rounded-full border text-[10px] font-black uppercase tracking-widest @badgeColor">
+            @statusLabel
+        </div>
+    </div>
+
+    <!-- Map Preview -->
+    <div class="relative w-full h-48 rounded-2xl overflow-hidden border border-white/10 mb-6 bg-surface-deep/50">
+        <div id="modal-map-inner" class="w-full h-full"></div>
+        <!-- Route Overlay -->
+        <div id="directions-overlay" class="absolute bottom-3 left-3 right-3 hidden">
+            <div
+                class="bg-black/80 backdrop-blur-md rounded-xl p-3 border border-white/10 flex items-center justify-between">
+                <div>
+                    <div class="text-[10px] uppercase tracking-widest text-white/50">Estimates</div>
+                    <div class="flex items-center gap-3">
+                        <div class="flex items-center gap-1.5">
+                            <span class="material-symbols-outlined text-sm text-primary">distance</span>
+                            <span class="text-sm font-bold text-white" id="dist-val">--</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <span class="material-symbols-outlined text-sm text-primary">schedule</span>
+                            <span class="text-sm font-bold text-white" id="time-val">--</span>
+                        </div>
+                    </div>
+                </div>
+                <a href="https://www.google.com/maps/dir/?api=1&destination=@(Model.PickupLatitude),@(Model.PickupLongitude)"
+                    target="_blank"
+                    class="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
+                    <span class="material-symbols-outlined text-white">navigation</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customer & Car -->
+    <div class="grid grid-cols-2 gap-4 mb-6">
+        <div class="p-4 rounded-2xl bg-white/5 border border-white/5">
+            <div class="text-[10px] uppercase tracking-widest text-white/40 mb-2">Customer</div>
+            <div class="font-bold text-white">@Model.CustomerName</div>
+            <div class="text-xs text-white/50 mt-1 truncate">@Model.PickupLocationLabel</div>
+        </div>
+        <div class="p-4 rounded-2xl bg-white/5 border border-white/5">
+            <div class="text-[10px] uppercase tracking-widest text-white/40 mb-2">Vehicle</div>
+            <div class="font-bold text-white">@Model.CarName</div>
+            <div class="text-xs font-mono text-primary mt-1">@Model.CarPlate</div>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="mt-auto">
+        <h3 class="text-xs font-bold uppercase tracking-widest text-white/40 mb-3">Action Required</h3>
+
+        <div class="flex flex-col gap-3" id="tripActionsContainer">
+            @if (normalizedTripStatus == "assigned")
+            {
+                <form action="/DriverPortal/StartTracking" method="post" class="trip-action-form">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="bookingId" value="@Model.BookingId" />
+                    <button type="submit"
+                        class="w-full py-4 rounded-xl bg-primary text-black font-black uppercase tracking-wider shadow-[0_0_20px_rgba(212,175,55,0.3)] hover:brightness-110 transition-all">
+                        Start Job
+                    </button>
+                </form>
+            }
+            else if (normalizedTripStatus == "ontheway" || normalizedTripStatus == "on_the_way")
+            {
+                <form action="/DriverPortal/MarkArrived" method="post" class="trip-action-form">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="bookingId" value="@Model.BookingId" />
+                    <button type="submit"
+                        class="w-full py-4 rounded-xl bg-purple-500 text-white font-black uppercase tracking-wider hover:bg-purple-600 transition-all">
+                        I Arrived
+                    </button>
+                </form>
+            }
+            else if (normalizedTripStatus == "arrived")
+            {
+                <form action="/DriverPortal/StartTrip" method="post" class="trip-action-form">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="bookingId" value="@Model.BookingId" />
+                    <button type="submit"
+                        class="w-full py-4 rounded-xl bg-blue-500 text-white font-black uppercase tracking-wider shadow-[0_0_20px_rgba(59,130,246,0.5)] hover:bg-blue-600 transition-all">
+                        Start Trip
+                    </button>
+                </form>
+            }
+            else if (normalizedTripStatus == "intrip" || normalizedTripStatus == "in_trip")
+            {
+                <form action="/DriverPortal/CompleteTrip" method="post" class="trip-action-form">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="bookingId" value="@Model.BookingId" />
+                    <button type="submit"
+                        class="w-full py-4 rounded-xl bg-emerald-500 text-white font-black uppercase tracking-wider shadow-[0_0_20px_rgba(16,185,129,0.5)] hover:bg-emerald-600 transition-all">
+                        Complete Trip
+                    </button>
+                </form>
+            }
+            else if (isTerminal)
+            {
+                <div class="w-full py-4 rounded-xl bg-white/5 border border-white/10 text-center text-white/40 font-bold">
+                    Trip is @normalizedTripStatus
+                </div>
+            }
+
+            @if (!isTerminal)
+            {
+                <button onclick="document.getElementById('cancelForm').classList.toggle('hidden')"
+                    class="w-full py-3 rounded-xl border border-red-500/20 text-red-400 font-bold hover:bg-red-500/10 transition-all text-xs uppercase tracking-widest">
+                    Cancel Trip
+                </button>
+                <form id="cancelForm" action="/DriverPortal/CancelTrip" method="post"
+                    class="hidden trip-action-form mt-2 p-3 bg-red-500/5 rounded-xl border border-red-500/20">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="bookingId" value="@Model.BookingId" />
+                    <input type="text" name="reason" placeholder="Reason..."
+                        class="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-white text-sm mb-2"
+                        required />
+                    <button type="submit"
+                        class="w-full py-2 bg-red-500 text-white rounded-lg font-bold text-xs uppercase">Confirm
+                        Cancel</button>
+                </form>
+            }
+        </div>
+    </div>
+
+    <!-- Hidden Data for Map Init -->
+    <div id="mapPanelRoot" data-booking-id="@Model.BookingId" data-pickup-lat="@Model.PickupLatitude"
+        data-pickup-lng="@Model.PickupLongitude" class="hidden"></div>
+</div>

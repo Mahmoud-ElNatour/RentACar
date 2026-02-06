@@ -77,7 +77,8 @@ namespace RentACar.Web.Controllers
                     enddate = b.Enddate.ToString("yyyy-MM-dd"),
                     totalPrice = b.TotalPrice,
                     employeeId = b.EmployeebookerId,
-                    bookingStatus = b.BookingStatus
+                    bookingStatus = b.BookingStatus,
+                    hasDriver = b.HasDriver
                 });
             }
             return Ok(result);
@@ -160,7 +161,7 @@ namespace RentACar.Web.Controllers
             var car = await _carManager.GetCarByIdAsync(booking.CarId);
             var payments = await _paymentManager.GetPaymentsByBookingIdAsync(booking.BookingId);
             var payment = payments.OrderByDescending(p => p.PaymentDate).ThenByDescending(p => p.PaymentId).FirstOrDefault();
-            
+
             // Re-using the same DTO as admin panel is fine since it's just data transfer
             var dto = new BookingDetailsDto
             {

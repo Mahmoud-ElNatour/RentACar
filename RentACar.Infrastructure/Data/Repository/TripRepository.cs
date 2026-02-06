@@ -54,4 +54,20 @@ public class TripRepository : ITripRepository
         _dbContext.Entry(trip).State = EntityState.Modified;
         await _dbContext.SaveChangesAsync();
     }
+
+    public async Task<List<int>> GetActiveBookingIdsForDriverAsync(int driverId)
+    {
+        var activeStatuses = new[] {
+            TripStatus.Assigned,
+            TripStatus.OnTheWay,
+            TripStatus.Arrived,
+            TripStatus.InTrip
+        };
+
+        return await _dbContext.Trips
+            .AsNoTracking()
+            .Where(t => t.DriverId == driverId && activeStatuses.Contains(t.TripStatus))
+            .Select(t => t.BookingId)
+            .ToListAsync();
+    }
 }

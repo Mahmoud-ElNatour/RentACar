@@ -11,4 +11,5 @@ public interface ITripRepository
     Task<List<Trip>> GetTripsByDriverIdAsync(int driverId);
     Task<Trip> CreateTripAsync(Trip trip);
     Task UpdateTripAsync(Trip trip);
+    Task<List<int>> GetActiveBookingIdsForDriverAsync(int driverId);
 }
