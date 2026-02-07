@@ -550,6 +550,7 @@
                     modelYear: Number(data.ModelYear || 0),
                     color: data.Color,
                     pricePerDay: Number(data.PricePerDay || 0),
+                    extraDriverFeePerDay: data.ExtraDriverFeePerDay ? Number(data.ExtraDriverFeePerDay) : null,
                     categoryId: Number(data.CategoryId || 0),
                     isAvailable: !!carForm.querySelector('[name="IsAvailable"]')?.checked
                 };

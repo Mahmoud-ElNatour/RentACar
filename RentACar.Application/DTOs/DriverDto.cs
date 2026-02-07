@@ -21,6 +21,8 @@ public class DriverDto
 
     public bool IsActive { get; set; }
 
+    public decimal DailyFeePerDay { get; set; }
+
     public decimal? Rating { get; set; }
 
     public string? LicenseNumber { get; set; }

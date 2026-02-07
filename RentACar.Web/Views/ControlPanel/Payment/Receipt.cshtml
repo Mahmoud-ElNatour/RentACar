@@ -1,6 +1,18 @@
 @model RentACar.Application.DTOs.PaymentDetailsDto
+@using RentACar.Application.Services
 @{
     Layout = null;
+    var hasDates = Model.BookingStartDate.HasValue && Model.BookingEndDate.HasValue;
+    var pricing = hasDates
+        ? BookingPricingCalculator.Calculate(
+            Model.CarPricePerDay ?? 0m,
+            Model.BookingStartDate!.Value,
+            Model.BookingEndDate!.Value,
+            Model.BookingHasDriver ?? false,
+            Model.BookingDriverDailyFee,
+            Model.CarExtraDriverFeePerDay,
+            Model.PromocodeDiscountPercentage)
+        : null;
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -72,13 +84,31 @@
         <div class="space-y-3 mb-6">
             <div class="flex justify-between text-sm">
                 <span>Rental Charge</span>
-                <span>$@Model.BookingSubtotal?.ToString("N2")</span>
+                <span>$@(pricing?.BaseRental.ToString("N2") ?? Model.BookingSubtotal?.ToString("N2"))</span>
+            </div>
+            @if (pricing?.DriverService > 0)
+            {
+                <div class="flex justify-between text-sm">
+                    <span>Driver Service Fee</span>
+                    <span>$@pricing.DriverService.ToString("N2")</span>
+                </div>
+            }
+            @if (pricing?.CarExtraDriverFee > 0)
+            {
+                <div class="flex justify-between text-sm">
+                    <span>Car Extra Driver Fee</span>
+                    <span>$@pricing.CarExtraDriverFee.ToString("N2")</span>
+                </div>
+            }
+            <div class="flex justify-between text-sm font-semibold">
+                <span>Subtotal</span>
+                <span>$@(pricing?.Subtotal.ToString("N2") ?? Model.BookingSubtotal?.ToString("N2"))</span>
             </div>
             @if (!string.IsNullOrEmpty(Model.PromocodeName))
             {
                 <div class="flex justify-between text-sm text-green-600">
                     <span>Promo: @Model.PromocodeName (@Model.PromocodeDiscountPercentage%)</span>
-                    <span>-</span>
+                    <span>-$@(pricing?.Discount.ToString("N2") ?? "0.00")</span>
                 </div>
             }
         </div>

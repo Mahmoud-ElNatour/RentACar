@@ -37,6 +37,9 @@ public partial class Driver
     [Column("isActive")]
     public bool IsActive { get; set; }
 
+    [Column("dailyFeePerDay", TypeName = "decimal(10, 2)")]
+    public decimal DailyFeePerDay { get; set; }
+
     [Column("createdAt")]
     public DateTime CreatedAt { get; set; }
 

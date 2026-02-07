@@ -1,0 +1,354 @@
+What’s in your project right now (drivers + booking + payment)
+Core entities (important fields)
+RentACar.Core/Entities/Car.cs
+
+CarId, ModelName, PlateNumber, PricePerDay, IsAvailable, CarImage, CategoryId
+
+No “IsActive” field (your “active/inactive” is effectively IsAvailable right now).
+
+RentACar.Core/Entities/Booking.cs
+
+BookingId, CustomerId, CarId, Startdate, Enddate
+
+BookingStatus (string), TotalPrice, Subtotal, PromocodeId
+
+Driver-related:
+
+HasDriver
+
+DriverId (nullable)
+
+DriverDailyFee (nullable, snapshot at booking time)
+
+Pickup fields: PickupAddress, PickupLocationLabel, PickupLatitude/Longitude, PickupDateTime
+
+RentACar.Core/Entities/Driver.cs
+
+DriverId, EmployeeId, AspNetUserId, DriverCode, IsActive
+
+Also stores FullName, Email, Phone (but you can read Name from Employee.Name and Email/Phone from AspNetUser via nav props)
+
+RentACar.Core/Entities/Payment.cs
+
+PaymentId, BookingId, Amount, PaymentStatus, PaymentMethod, TransactionId, PaidAt
+
+RentACar.Core/Constants/StatusConstants.cs
+
+Booking: Pending, Confirmed, InProgress, AwaitingReturn, Completed, Cancelled, Rejected
+Payment: Pending, Paid, Cancelled, Refunded, Failed
+
+DTOs / Managers / Repos involved
+Booking DTOs
+
+RentACar.Application/DTOs/BookingDto.cs contains MakeBookingRequestDto
+(includes HasDriver — DriverDailyFee must NOT be accepted from client)
+
+BookingListDto.cs used for ControlPanel Booking list
+(missing HasDriver + DriverId fields currently)
+
+Managers
+
+BookingManager.MakeBookingAsync currently auto-assigns a driver and hardcodes fee 20/day if HasDriver==true.
+
+Contract PDF generation in RentACar.Web/Controllers/BookingController.cs also hardcodes driver fee 20/day.
+
+Browse bug
+
+BrowseController uses CarManager.SearchCarsForListAsync / GetAvailableCarsInTimelineAsync without forcing IsAvailable==true, so inactive/unavailable cars can appear.
+
+Customer “My Bookings”
+
+Views/Bookings/MyBookings.cshtml shows car images in the list (you want them removed).
+
+Details modal already shows only the chosen car photo (good).
+
+Payments
+
+Stripe checkout session is created with one total line item (no breakdown).
+
+Receipt view Views/ControlPanel/Payment/Receipt.cshtml shows BookingSubtotal and discount, but no driver/extra fee lines.
+
+Detailed implementation plan
+
+(Single payment, auto-assign driver, editable later by admin/employee)
+
+Phase 1 — Database + entity model updates
+Add nullable car extra driver fee
+
+Cars.extraDriverFeePerDay (nullable decimal(10,2)).
+
+Add driver daily fee
+
+Drivers.dailyFeePerDay (non-null decimal(10,2) with a default, e.g. 20.00 so old rows don’t break).
+
+Update entities
+
+Car.cs → public decimal? ExtraDriverFeePerDay { get; set; }
+Driver.cs → public decimal DailyFeePerDay { get; set; }
+
+Phase 2 — Pricing rules (single source of truth)
+
+Create a single pricing calculation used by:
+
+Booking creation
+
+Driver reassignment (admin/employee)
+
+PDF / receipt display
+
+Rules:
+
+baseRental = PricePerDay * rentalDays
+
+driverService = DriverDailyFee * rentalDays
+
+carExtra = Car.ExtraDriverFeePerDay * rentalDays (only if not null AND HasDriver==true)
+
+subtotal = baseRental + driverService + carExtra
+
+discount = subtotal * promo%
+
+total = subtotal - discount
+
+Important:
+DriverDailyFee is a snapshot stored on Booking and does NOT change automatically if the driver changes later.
+
+Phase 3 — Driver assignment at booking creation (AUTO-ASSIGN)
+Edit BookingManager.MakeBookingAsync
+
+If HasDriver == true:
+
+Auto-assign a driver BEFORE payment
+
+Select driver using:
+
+IsActive == true
+
+Available for full booking dates
+
+Allowed to drive the car’s category
+
+No conflicting bookings
+
+If no driver available → fail booking creation (do not proceed to payment)
+
+On successful assignment:
+
+booking.DriverId = selectedDriverId
+
+booking.DriverDailyFee = selectedDriver.DailyFeePerDay (snapshot)
+
+Pricing includes:
+
+base rental
+
+driver service
+
+car extra driver fee (if exists)
+
+Trip creation:
+
+Create Trip record immediately (TripStatus = Pending)
+
+Payment behavior (single payment only)
+
+Create Stripe Checkout Session immediately
+
+Charge full total (car + driver + car extra fees)
+
+No second payment, no deferred payment, no “pay later”
+
+Security:
+
+Ignore requestDto.DriverDailyFee (client must not set fees)
+
+Phase 4 — Manual driver change in Booking Management (ADMIN / EMPLOYEE)
+
+This phase stays, but behavior is adjusted to preserve single payment
+
+Update Booking list API to include
+
+HasDriver
+
+DriverId
+
+Update ControlPanel booking list UI (Index.cshtml)
+
+Under status, show:
+
+Green clickable “Assigned” if HasDriver==true && DriverId != null
+
+(No “Has driver but not assigned” state anymore for customer bookings)
+
+Click opens Driver Assignment partial.
+
+Partial modal behavior (UPDATED, NOT REMOVED)
+
+Shows driver details:
+
+Name: driver.Employee.Name
+
+Email + Phone: driver.User.Email, driver.User.PhoneNumber
+
+If assigned:
+
+Dropdown locked to current driver
+
+Show “OK” button
+
+Show small “Edit” button
+
+On clicking Edit:
+
+Dropdown unlocks
+
+Shows Save / Cancel
+
+On Save:
+
+Validate new driver availability + category eligibility
+
+Update booking.DriverId ONLY
+
+DO NOT change booking.DriverDailyFee
+
+DO NOT recalculate totals
+
+Update Trip assignment
+
+Send notification emails:
+
+Old driver (optional: cancellation)
+
+New driver
+
+Customer (driver changed notice)
+
+This guarantees price stability after payment, even if driver changes due to emergencies.
+
+Phase 5 — My Bookings UI
+
+Views/Bookings/MyBookings.cshtml:
+
+Remove car thumbnails from booking list
+
+Keep details modal unchanged
+
+Payment button:
+
+Always enabled for paid/unpaid bookings
+
+No “waiting for driver assignment” state anymore
+
+(Optional bandwidth optimization)
+
+Remove carImage from booking list payload
+
+Phase 6 — Fix browse “inactive cars displayed”
+
+Unchanged from original plan:
+
+Force IsAvailable == true
+
+Filter Category.IsActive == true if applicable
+
+Phase 7 — PDF / receipt updates
+Contract PDF
+
+Remove hardcoded 20/day
+
+Use Booking.DriverDailyFee snapshot
+
+Show:
+
+Car rental
+
+Driver service
+
+Car extra driver fee (if applicable)
+
+Discount
+
+Total
+
+Ticket PDF
+
+Same breakdown.
+
+Receipt view
+
+Add rows for:
+
+Driver service fee
+
+Car extra driver fee
+
+Totals must match Booking.Subtotal / Booking.TotalPrice exactly.
+
+requirements.txt (Antigravity / Codex agent)
+GOAL (UPDATED)
+
+Implement auto driver assignment at booking creation, single-payment flow, driver fee snapshotting, and safe admin/employee driver replacement without price changes.
+
+CORE RULES (UPDATED)
+
+Single payment only (no deferred or second payments)
+
+Driver must be assigned BEFORE payment
+
+Driver fee is SNAPSHOTTED on booking
+
+Changing driver NEVER changes totals
+
+Partial view + status MUST remain
+
+Acceptance Tests (UPDATED)
+A) Car extra fee
+
+Unchanged.
+
+B) Driver fee
+
+Admin sets driver.dailyFeePerDay
+
+At booking creation:
+
+booking.DriverDailyFee is snapshotted
+
+Driver replacement does NOT change price
+
+C) Auto assignment
+
+Booking with HasDriver must fail if no driver available
+
+Booking always has DriverId when paid
+
+D) Driver replacement
+
+Admin/employee can change driver
+
+Booking status unchanged
+
+Payment unchanged
+
+Trip reassigned correctly
+
+E) Browse + Emails
+
+Unchanged, plus:
+
+Email on driver reassignment (customer + new driver)
+
+Final verdict (no sugar-coating)
+
+This version is:
+
+Financially correct
+
+Operationally realistic
+
+Stripe-safe
+
+Defensible in a graduation review
+
+Future-proof (no refund hell)

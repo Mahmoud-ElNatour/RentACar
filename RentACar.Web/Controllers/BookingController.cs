@@ -16,6 +16,7 @@ using RentACar.Web.Models;
 using System.Security.Claims;
 using System.Linq;
 using RentACar.Core.Repositories;
+using RentACar.Application.Services;
 
 namespace RentACar.Web.Controllers
 {
@@ -30,6 +31,7 @@ namespace RentACar.Web.Controllers
         private readonly CustomerManager _customerManager;
         private readonly PromocodeManager _promocodeManager;
         private readonly EmployeeManager _employeeManager;
+        private readonly DriverManager _driverManager;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly IMapper _mapper;
         private readonly ILogger<BookingController> _logger;
@@ -42,6 +44,7 @@ namespace RentACar.Web.Controllers
             CustomerManager customerManager,
             PromocodeManager promocodeManager,
             EmployeeManager employeeManager,
+            DriverManager driverManager,
             UserManager<IdentityUser> userManager,
             IMapper mapper,
             ILogger<BookingController> logger,
@@ -54,6 +57,7 @@ namespace RentACar.Web.Controllers
             _customerManager = customerManager;
             _promocodeManager = promocodeManager;
             _employeeManager = employeeManager;
+            _driverManager = driverManager;
             _userManager = userManager;
             _mapper = mapper;
             _logger = logger;
@@ -89,6 +93,35 @@ namespace RentACar.Web.Controllers
             var booking = await _bookingManager.GetBookingByIdAsync(id);
             if (booking == null) return NotFound();
             return PartialView("~/Views/ControlPanel/Booking/_DeleteBookingPartial.cshtml", booking);
+        }
+
+        [HttpGet("~/Booking/AssignDriver/{id}")]
+        [Authorize(Roles = "Admin,Employee")]
+        [ApiExplorerSettings(IgnoreApi = true)]
+        public async Task<IActionResult> AssignDriverForm(int id)
+        {
+            var booking = await _bookingManager.GetBookingByIdAsync(id);
+            if (booking == null) return NotFound();
+
+            var drivers = await _driverManager.GetActiveDriversAsync();
+            DriverDto? currentDriver = null;
+            if (booking.DriverId.HasValue)
+            {
+                currentDriver = await _driverManager.GetDriverByIdAsync(booking.DriverId.Value);
+            }
+
+            var model = new RentACar.Web.Models.DriverAssignmentViewModel
+            {
+                BookingId = booking.BookingId,
+                HasDriver = booking.HasDriver,
+                DriverId = booking.DriverId,
+                DriverName = currentDriver?.FullName,
+                DriverEmail = currentDriver?.Email,
+                DriverPhone = currentDriver?.Phone,
+                Drivers = drivers
+            };
+
+            return PartialView("~/Views/ControlPanel/Booking/_DriverAssignmentPartial.cshtml", model);
         }
 
         [HttpGet("~/Booking/Employee/Add")]
@@ -359,6 +392,24 @@ namespace RentACar.Web.Controllers
             return Ok(result.Payment);
         }
 
+        [HttpPost("AssignDriver")]
+        [Authorize(Roles = "Admin,Employee")]
+        public async Task<IActionResult> AssignDriver([FromBody] BookingDriverAssignmentRequestDto dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var result = await _bookingManager.UpdateDriverAssignmentAsync(dto.BookingId, dto.DriverId);
+            if (!result.Success)
+            {
+                return BadRequest(result.ErrorMessage ?? "Unable to assign driver.");
+            }
+
+            return Ok(result);
+        }
+
         [HttpGet("{id}")]
         [Authorize(Roles = "Admin,Employee")]
         public async Task<ActionResult<BookingDto>> Get(int id)
@@ -603,40 +654,42 @@ namespace RentACar.Web.Controllers
                         // 3. Financials
                         col.Item().PaddingTop(10).AlignRight().Column(c =>
                         {
-                            // Financials Breakdown
-                            var driverFee = 0m;
-                            var carSubtotal = booking.Subtotal ?? 0;
-                            var days = (booking.Enddate.ToDateTime(TimeOnly.MinValue) - booking.Startdate.ToDateTime(TimeOnly.MinValue)).Days + 1;
-                            if (booking.HasDriver)
+                            var pricing = BookingPricingCalculator.Calculate(
+                                car?.PricePerDay ?? 0m,
+                                booking.Startdate,
+                                booking.Enddate,
+                                booking.HasDriver,
+                                booking.DriverDailyFee,
+                                car?.ExtraDriverFeePerDay,
+                                promo?.DiscountPercentage);
+
+                            c.Item().Row(r => { r.RelativeItem().Text("Car Rental Charges:"); r.RelativeItem().AlignRight().Text($"{pricing.BaseRental:C}"); });
+
+                            if (pricing.DriverService > 0)
                             {
-                                driverFee = 20 * days;
-                                // Assuming Subtotal from DB includes Driver Fee, we isolate Car portion for display
-                                carSubtotal = (booking.Subtotal ?? 0) - driverFee;
-                                if (carSubtotal < 0) carSubtotal = 0; // Safety
+                                c.Item().Row(r => { r.RelativeItem().Text("Driver Services:"); r.RelativeItem().AlignRight().Text($"{pricing.DriverService:C}"); });
                             }
 
-                            c.Item().Row(r => { r.RelativeItem().Text("Car Rental Charges:"); r.RelativeItem().AlignRight().Text($"{carSubtotal:C}"); });
-
-                            if (booking.HasDriver)
+                            if (pricing.CarExtraDriverFee > 0)
                             {
-                                c.Item().Row(r => { r.RelativeItem().Text("Driver Services ($20/day):"); r.RelativeItem().AlignRight().Text($"{driverFee:C}"); });
+                                c.Item().Row(r => { r.RelativeItem().Text("Car Extra Driver Fee:"); r.RelativeItem().AlignRight().Text($"{pricing.CarExtraDriverFee:C}"); });
                             }
 
-                            c.Item().Row(r => { r.RelativeItem().Text("Subtotal:"); r.RelativeItem().AlignRight().Text($"{booking.Subtotal:C}"); });
+                            c.Item().Row(r => { r.RelativeItem().Text("Subtotal:"); r.RelativeItem().AlignRight().Text($"{pricing.Subtotal:C}"); });
 
                             if (promo != null)
                             {
                                 c.Item().Row(r =>
                                 {
                                     r.RelativeItem().Text($"Discount ({promo.Name} {promo.DiscountPercentage}%):").FontColor(Colors.Green.Medium);
-                                    r.RelativeItem().AlignRight().Text($"-{(booking.Subtotal * promo.DiscountPercentage / 100):C}").FontColor(Colors.Green.Medium);
+                                    r.RelativeItem().AlignRight().Text($"-{pricing.Discount:C}").FontColor(Colors.Green.Medium);
                                 });
                             }
 
                             c.Item().PaddingTop(5).BorderTop(1).BorderColor(Colors.Grey.Lighten2).Row(r =>
                             {
                                 r.RelativeItem().Text("TOTAL ESTIMATED CHARGES:").Bold();
-                                r.RelativeItem().AlignRight().Text($"{booking.TotalPrice:C}").Bold().FontSize(14).FontColor(gold);
+                                r.RelativeItem().AlignRight().Text($"{pricing.Total:C}").Bold().FontSize(14).FontColor(gold);
                             });
 
                             if (payment != null)

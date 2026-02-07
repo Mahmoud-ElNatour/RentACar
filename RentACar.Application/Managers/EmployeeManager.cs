@@ -221,6 +221,7 @@ namespace RentACar.Application.Managers
             string? fullName = GetPropValue(dto, "DriverFullName")?.ToString() ?? employee.Name;
             string? phone = GetPropValue(dto, "DriverPhone")?.ToString();
             string? email = GetPropValue(dto, "DriverEmail")?.ToString();
+            decimal? dailyFee = GetPropValue(dto, "DriverDailyFeePerDay") as decimal?;
             decimal? rating = GetPropValue(dto, "DriverRating") as decimal?;
             string? license = GetPropValue(dto, "DriverLicenseNumber")?.ToString();
             DateOnly? expiry = GetPropValue(dto, "DriverLicenseExpiry") as DateOnly?;
@@ -237,6 +238,7 @@ namespace RentACar.Application.Managers
                     FullName = fullName,
                     Phone = phone,
                     Email = email ?? employee.User?.Email ?? "N/A",
+                    DailyFeePerDay = dailyFee ?? 20m,
                     Rating = rating,
                     LicenseNumber = license,
                     LicenseExpiry = expiry,
@@ -254,6 +256,7 @@ namespace RentACar.Application.Managers
                     driver.FullName = fullName;
                     driver.Phone = phone;
                     driver.Email = email ?? driver.Email;
+                    driver.DailyFeePerDay = dailyFee ?? driver.DailyFeePerDay;
                     driver.Rating = rating ?? driver.Rating;
                     driver.LicenseNumber = license ?? driver.LicenseNumber;
                     driver.LicenseExpiry = expiry ?? driver.LicenseExpiry;
@@ -644,6 +647,7 @@ namespace RentACar.Application.Managers
                 .ForMember(dest => dest.DriverFullName, opt => opt.MapFrom(src => src.Driver != null ? src.Driver.FullName : null))
                 .ForMember(dest => dest.DriverPhone, opt => opt.MapFrom(src => src.Driver != null ? src.Driver.Phone : null))
                 .ForMember(dest => dest.DriverEmail, opt => opt.MapFrom(src => src.Driver != null ? src.Driver.Email : null))
+                .ForMember(dest => dest.DriverDailyFeePerDay, opt => opt.MapFrom(src => src.Driver != null ? src.Driver.DailyFeePerDay : (decimal?)null))
                 .ForMember(dest => dest.DriverRating, opt => opt.MapFrom(src => src.Driver != null ? src.Driver.Rating : null))
                 .ForMember(dest => dest.DriverLicenseNumber, opt => opt.MapFrom(src => src.Driver != null ? src.Driver.LicenseNumber : null))
                 .ForMember(dest => dest.DriverLicenseExpiry, opt => opt.MapFrom(src => src.Driver != null ? src.Driver.LicenseExpiry : null))

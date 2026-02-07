@@ -6,6 +6,7 @@ using RentACar.Application.Managers;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using System.Linq;
+using RentACar.Application.Services;
 
 namespace RentACar.Web.Controllers
 {
@@ -70,7 +71,6 @@ namespace RentACar.Web.Controllers
                     bookingId = b.BookingId,
                     carName = car?.ModelName,
                     plateNumber = car?.PlateNumber,
-                    carImage = car?.CarImage != null ? $"data:image/jpeg;base64,{Convert.ToBase64String(car.CarImage)}" : null,
                     paymentId = latestPayment?.PaymentId,
                     paymentStatus = latestPayment?.Status,
                     startdate = b.Startdate.ToString("yyyy-MM-dd"),
@@ -143,6 +143,31 @@ namespace RentACar.Web.Controllers
                             col.Item().Text($"Payment ID: {payment.PaymentId}");
                         col.Item().Text($"Start Date: {booking.Startdate:yyyy-MM-dd}");
                         col.Item().Text($"End Date: {booking.Enddate:yyyy-MM-dd}");
+                        var pricing = BookingPricingCalculator.Calculate(
+                            car?.PricePerDay ?? 0m,
+                            booking.Startdate,
+                            booking.Enddate,
+                            booking.HasDriver,
+                            booking.DriverDailyFee,
+                            car?.ExtraDriverFeePerDay,
+                            null);
+
+                        col.Item().Text($"Car Rental: {pricing.BaseRental:C}");
+                        if (pricing.DriverService > 0)
+                        {
+                            col.Item().Text($"Driver Service: {pricing.DriverService:C}");
+                        }
+                        if (pricing.CarExtraDriverFee > 0)
+                        {
+                            col.Item().Text($"Car Extra Driver Fee: {pricing.CarExtraDriverFee:C}");
+                        }
+                        var subtotal = booking.Subtotal ?? pricing.Subtotal;
+                        var discount = subtotal - booking.TotalPrice;
+                        col.Item().Text($"Subtotal: {subtotal:C}");
+                        if (discount > 0)
+                        {
+                            col.Item().Text($"Discount: -{discount:C}");
+                        }
                         col.Item().Text($"Total Price: {booking.TotalPrice:C}");
                     });
                 });

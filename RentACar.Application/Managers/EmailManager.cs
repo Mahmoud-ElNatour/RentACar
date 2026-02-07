@@ -204,6 +204,52 @@ namespace RentACar.Application.Managers
             await SendTemplatedEmailAsync(email, "PaymentFailed", "CUST-PAY-FAILED", placeholders, "Action Required: Payment Failed", fallbackBody, "Payment Failed Alert");
         }
 
+        public async Task SendDriverReassignmentEmails(Booking booking, Driver? oldDriver, Driver newDriver)
+        {
+            var carLabel = booking.Car != null ? $"{booking.Car.ModelName} ({booking.Car.ModelYear})" : "Vehicle";
+            var placeholders = new Dictionary<string, string>
+            {
+                { "CustomerName", booking.Customer?.Name ?? "Customer" },
+                { "BookingId", booking.BookingId.ToString() },
+                { "CarModel", carLabel },
+                { "StartDate", booking.Startdate.ToString("dd MMM yyyy") },
+                { "EndDate", booking.Enddate.ToString("dd MMM yyyy") },
+                { "DriverName", newDriver.FullName },
+                { "DriverEmail", newDriver.User?.Email ?? newDriver.Email },
+                { "DriverPhone", newDriver.User?.PhoneNumber ?? newDriver.Phone ?? "-" },
+                { "Year", DateTime.UtcNow.Year.ToString() }
+            };
+
+            var customerEmail = booking.Customer?.User?.Email;
+            if (!string.IsNullOrWhiteSpace(customerEmail))
+            {
+                var customerBody = $@"<h2>Driver Update</h2><p>Your driver for booking #{booking.BookingId} has been updated.</p>
+<p><strong>New Driver:</strong> {newDriver.FullName} ({newDriver.User?.Email ?? newDriver.Email})</p>";
+                customerBody = EmailTemplates.GetStandardTemplate(customerBody, "Driver Update");
+
+                await SendTemplatedEmailAsync(customerEmail, "DriverReassignedCustomer", "CUST-DRIVER-UPDATE", placeholders, "Driver Update", customerBody, "Driver Update");
+            }
+
+            var newDriverEmail = newDriver.User?.Email ?? newDriver.Email;
+            if (!string.IsNullOrWhiteSpace(newDriverEmail))
+            {
+                var driverBody = $@"<h2>New Driver Assignment</h2><p>You have been assigned to booking #{booking.BookingId}.</p>
+<p><strong>Vehicle:</strong> {carLabel}</p>";
+                driverBody = EmailTemplates.GetStandardTemplate(driverBody, "Driver Assignment");
+
+                await SendTemplatedEmailAsync(newDriverEmail, "DriverAssigned", "DRV-ASSIGNED", placeholders, "New Driver Assignment", driverBody, "Driver Assignment");
+            }
+
+            var oldDriverEmail = oldDriver?.User?.Email ?? oldDriver?.Email;
+            if (!string.IsNullOrWhiteSpace(oldDriverEmail))
+            {
+                var oldDriverBody = $@"<h2>Driver Assignment Updated</h2><p>You have been unassigned from booking #{booking.BookingId}.</p>";
+                oldDriverBody = EmailTemplates.GetStandardTemplate(oldDriverBody, "Driver Unassigned");
+
+                await SendTemplatedEmailAsync(oldDriverEmail, "DriverUnassigned", "DRV-UNASSIGNED", placeholders, "Driver Assignment Updated", oldDriverBody, "Driver Assignment Update");
+            }
+        }
+
         public async Task SendPaymentCancelledEmail(string email, string customerName, decimal amount)
         {
             var placeholders = new Dictionary<string, string>

@@ -35,6 +35,7 @@ namespace RentACar.Application.DTOs
         public string? DriverFullName { get; set; }
         public string? DriverPhone { get; set; }
         public string? DriverEmail { get; set; }
+        public decimal? DriverDailyFeePerDay { get; set; }
         public decimal? DriverRating { get; set; }
         public string? DriverLicenseNumber { get; set; }
         public DateOnly? DriverLicenseExpiry { get; set; }
@@ -73,6 +74,7 @@ namespace RentACar.Application.DTOs
         public string? DriverFullName { get; set; }
         public string? DriverPhone { get; set; }
         public string? DriverEmail { get; set; }
+        public decimal? DriverDailyFeePerDay { get; set; }
         public decimal? DriverRating { get; set; }
         public string? DriverLicenseNumber { get; set; }
         public DateOnly? DriverLicenseExpiry { get; set; }

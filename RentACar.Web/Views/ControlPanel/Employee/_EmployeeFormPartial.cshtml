@@ -106,6 +106,12 @@
                                 <input asp-for="DriverLicenseNumber" class="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-[#d4af37]/50 transition-all" />
                             </div>
                         </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-500 uppercase mb-1.5 ml-1">Daily Fee (per day)</label>
+                                <input asp-for="DriverDailyFeePerDay" type="number" step="0.01" min="0" class="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-[#d4af37]/50 transition-all" />
+                            </div>
+                        </div>
                          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-xs font-medium text-gray-500 uppercase mb-1.5 ml-1">License Expiry</label>
@@ -223,7 +229,8 @@
             driverCode: f['DriverCode'] ? f['DriverCode'].value : null,
             driverLicenseNumber: f['DriverLicenseNumber'] ? f['DriverLicenseNumber'].value : null,
             driverLicenseExpiry: f['DriverLicenseExpiry'] ? f['DriverLicenseExpiry'].value : null,
-            driverLanguages: f['DriverLanguages'] ? f['DriverLanguages'].value : null
+            driverLanguages: f['DriverLanguages'] ? f['DriverLanguages'].value : null,
+            driverDailyFeePerDay: f['DriverDailyFeePerDay'] && f['DriverDailyFeePerDay'].value ? parseFloat(f['DriverDailyFeePerDay'].value) : null
         };
 
         try {

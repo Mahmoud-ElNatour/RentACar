@@ -53,9 +53,25 @@ public class DriverManager
             {
                 DriverId = d.DriverId,
                 DriverCode = d.DriverCode,
-                FullName = d.FullName,
-                Email = d.Email,
-                Phone = d.Phone,
+                FullName = d.Employee?.Name ?? d.FullName,
+                Email = d.User?.Email ?? d.Email,
+                Phone = d.User?.PhoneNumber ?? d.Phone,
+                IsActive = d.IsActive
+            })
+            .ToList();
+    }
+
+    public async Task<List<DriverDisplayDto>> GetActiveDriversAsync()
+    {
+        var drivers = await _driverRepository.GetActiveAsync();
+        return drivers
+            .Select(d => new DriverDisplayDto
+            {
+                DriverId = d.DriverId,
+                DriverCode = d.DriverCode,
+                FullName = d.Employee?.Name ?? d.FullName,
+                Email = d.User?.Email ?? d.Email,
+                Phone = d.User?.PhoneNumber ?? d.Phone,
                 IsActive = d.IsActive
             })
             .ToList();
@@ -90,8 +106,13 @@ public class DriverProfile : Profile
 {
     public DriverProfile()
     {
-        CreateMap<Driver, DriverDto>().ReverseMap()
-            .ForMember(dest => dest.User, opt => opt.Ignore());
+        CreateMap<Driver, DriverDto>()
+            .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => src.Employee != null ? src.Employee.Name : src.FullName))
+            .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.User != null ? src.User.Email : src.Email))
+            .ForMember(dest => dest.Phone, opt => opt.MapFrom(src => src.User != null ? src.User.PhoneNumber : src.Phone))
+            .ReverseMap()
+            .ForMember(dest => dest.User, opt => opt.Ignore())
+            .ForMember(dest => dest.Employee, opt => opt.Ignore());
 
         CreateMap<DriverCreateDto, Driver>();
         CreateMap<DriverAvailability, DriverAvailabilityDto>().ReverseMap()

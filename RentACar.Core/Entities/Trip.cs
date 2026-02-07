@@ -18,7 +18,7 @@ public class Trip
     public int? DriverId { get; set; }
 
     [Column("tripStatus")]
-    public TripStatus TripStatus { get; set; } = TripStatus.Assigned;
+    public TripStatus TripStatus { get; set; } = TripStatus.Pending;
 
     [Column("startedAt")]
     public DateTime? StartedAt { get; set; }

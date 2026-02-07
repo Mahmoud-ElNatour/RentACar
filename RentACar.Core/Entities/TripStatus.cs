@@ -7,5 +7,6 @@ public enum TripStatus
     Arrived = 2,
     InTrip = 3,
     Completed = 4,
-    Cancelled = 5
+    Cancelled = 5,
+    Pending = 6
 }

@@ -29,6 +29,9 @@ public partial class Car
 
     [Column("pricePerDay", TypeName = "decimal(18, 2)")]
     public decimal? PricePerDay { get; set; }
+
+    [Column("extraDriverFeePerDay", TypeName = "decimal(10, 2)")]
+    public decimal? ExtraDriverFeePerDay { get; set; }
     [Column("isAvailable")]
     public bool IsAvailable { get; set; }
 

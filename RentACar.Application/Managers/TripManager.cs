@@ -18,6 +18,7 @@ public class TripManager
 
     private static readonly Dictionary<TripStatus, TripStatus[]> AllowedTransitions = new()
     {
+        { TripStatus.Pending, new[] { TripStatus.Assigned, TripStatus.OnTheWay, TripStatus.Cancelled } },
         { TripStatus.Assigned, new[] { TripStatus.OnTheWay, TripStatus.Cancelled } },
         { TripStatus.OnTheWay, new[] { TripStatus.Arrived, TripStatus.Cancelled } },
         { TripStatus.Arrived, new[] { TripStatus.InTrip, TripStatus.Cancelled } },
@@ -203,7 +204,7 @@ public class TripManager
             {
                 BookingId = bookingId,
                 DriverId = booking.DriverId,
-                TripStatus = TripStatus.Assigned,
+                TripStatus = TripStatus.Pending,
                 CreatedAt = now,
                 UpdatedAt = now
             };
