@@ -19,6 +19,8 @@
             
             <form id="editBookingForm">
                 <input type="hidden" name="bookingId" value="@Model.BookingId" />
+                <input type="hidden" name="carId" value="@Model.CarId" />
+                <input type="hidden" name="customerId" value="@Model.CustomerId" />
                 
                 <!-- Body -->
                 <div class="modal-body p-6 space-y-6">
@@ -96,6 +98,8 @@
         
         const dto = {
             BookingId: parseInt(id),
+            CarId: parseInt(this.querySelector('[name="carId"]').value),
+            CustomerId: parseInt(this.querySelector('[name="customerId"]').value),
             Startdate: this.querySelector('[name="startdate"]').value,
             Enddate: this.querySelector('[name="enddate"]').value,
             BookingStatus: this.querySelector('[name="bookingStatus"]').value,

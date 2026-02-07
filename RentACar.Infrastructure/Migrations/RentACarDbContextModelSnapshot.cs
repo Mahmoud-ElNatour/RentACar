@@ -555,6 +555,10 @@ namespace RentACar.Infrastructure.Migrations
                         .HasColumnType("nvarchar(50)")
                         .HasColumnName("color");
 
+                    b.Property<decimal?>("ExtraDriverFeePerDay")
+                        .HasColumnType("decimal(10, 2)")
+                        .HasColumnName("extraDriverFeePerDay");
+
                     b.Property<bool>("IsAvailable")
                         .HasColumnType("bit")
                         .HasColumnName("isAvailable");
@@ -578,10 +582,6 @@ namespace RentACar.Infrastructure.Migrations
                     b.Property<decimal?>("PricePerDay")
                         .HasColumnType("decimal(18, 2)")
                         .HasColumnName("pricePerDay");
-
-                    b.Property<decimal?>("ExtraDriverFeePerDay")
-                        .HasColumnType("decimal(10, 2)")
-                        .HasColumnName("extraDriverFeePerDay");
 
                     b.HasKey("CarId");
 
@@ -867,6 +867,10 @@ namespace RentACar.Infrastructure.Migrations
                         .HasColumnType("datetime2")
                         .HasColumnName("createdAt");
 
+                    b.Property<decimal>("DailyFeePerDay")
+                        .HasColumnType("decimal(10, 2)")
+                        .HasColumnName("dailyFeePerDay");
+
                     b.Property<string>("DriverCode")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -893,10 +897,6 @@ namespace RentACar.Infrastructure.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(true)
                         .HasColumnName("isActive");
-
-                    b.Property<decimal>("DailyFeePerDay")
-                        .HasColumnType("decimal(10, 2)")
-                        .HasColumnName("dailyFeePerDay");
 
                     b.Property<string>("Languages")
                         .HasMaxLength(200)
@@ -958,8 +958,6 @@ namespace RentACar.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CategoryId");
-
-                    b.HasIndex("DriverId");
 
                     b.HasIndex("DriverId", "CategoryId")
                         .IsUnique();
@@ -2063,17 +2061,6 @@ namespace RentACar.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("RentACar.Core.Entities.DriverAvailability", b =>
-                {
-                    b.HasOne("RentACar.Core.Entities.Driver", "Driver")
-                        .WithMany("DriverAvailabilities")
-                        .HasForeignKey("DriverId")
-                        .IsRequired()
-                        .HasConstraintName("FK_DriverAvailability_Drivers");
-
-                    b.Navigation("Driver");
-                });
-
             modelBuilder.Entity("RentACar.Core.Entities.DriverAllowedCategory", b =>
                 {
                     b.HasOne("RentACar.Core.Entities.Category", "Category")
@@ -2089,6 +2076,17 @@ namespace RentACar.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Category");
+
+                    b.Navigation("Driver");
+                });
+
+            modelBuilder.Entity("RentACar.Core.Entities.DriverAvailability", b =>
+                {
+                    b.HasOne("RentACar.Core.Entities.Driver", "Driver")
+                        .WithMany("DriverAvailabilities")
+                        .HasForeignKey("DriverId")
+                        .IsRequired()
+                        .HasConstraintName("FK_DriverAvailability_Drivers");
 
                     b.Navigation("Driver");
                 });
@@ -2320,9 +2318,9 @@ namespace RentACar.Infrastructure.Migrations
 
             modelBuilder.Entity("RentACar.Core.Entities.Driver", b =>
                 {
-                    b.Navigation("Bookings");
-
                     b.Navigation("AllowedCategories");
+
+                    b.Navigation("Bookings");
 
                     b.Navigation("DriverAvailabilities");
 
