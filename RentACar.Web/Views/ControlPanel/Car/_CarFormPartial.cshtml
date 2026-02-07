@@ -52,6 +52,13 @@
                                     <input asp-for="PricePerDay" type="number" step="0.01" class="w-full bg-[#0a0a0a] border border-[#262626] rounded-xl py-3 pl-8 pr-4 text-white font-mono font-bold focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all" />
                                 </div>
                             </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Extra Driver Fee / Day ($)</label>
+                                <div class="relative">
+                                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gold font-bold">$</span>
+                                    <input asp-for="ExtraDriverFeePerDay" type="number" step="0.01" min="0" class="w-full bg-[#0a0a0a] border border-[#262626] rounded-xl py-3 pl-8 pr-4 text-white font-mono font-bold focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all" />
+                                </div>
+                            </div>
 
                             <div>
                                 <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Category</label>

@@ -106,6 +106,12 @@
                                 <input asp-for="DriverLicenseNumber" class="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-[#d4af37]/50 transition-all" />
                             </div>
                         </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-500 uppercase mb-1.5 ml-1">Daily Fee (per day)</label>
+                                <input asp-for="DriverDailyFeePerDay" type="number" step="0.01" min="0" class="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-[#d4af37]/50 transition-all" />
+                            </div>
+                        </div>
                          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-xs font-medium text-gray-500 uppercase mb-1.5 ml-1">License Expiry</label>
@@ -115,6 +121,20 @@
                                 <label class="block text-xs font-medium text-gray-500 uppercase mb-1.5 ml-1">Languages (comma separated)</label>
                                 <input asp-for="DriverLanguages" class="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-[#d4af37]/50 transition-all" placeholder="English, Arabic..." />
                             </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="block text-xs font-medium text-gray-500 uppercase mb-1.5 ml-1">Allowed Categories</label>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                @foreach (var category in (ViewBag.Categories as List<RentACar.Application.DTOs.CategoryDto> ?? new List<RentACar.Application.DTOs.CategoryDto>()))
+                                {
+                                    <label class="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-3 py-2 cursor-pointer">
+                                        <input type="checkbox" name="AllowedCategoryIds" value="@category.CategoryId" class="allowed-category-checkbox w-4 h-4 rounded border-white/10 bg-transparent text-[#d4af37] focus:ring-[#d4af37]" @(Model.AllowedCategoryIds.Contains(category.CategoryId) ? "checked" : "") />
+                                        <span class="text-xs text-gray-300">@category.Name</span>
+                                    </label>
+                                }
+                            </div>
+                            <p id="driverCategoryError" class="text-xs text-red-500 hidden">Select at least one category for drivers.</p>
                         </div>
                     </div>
 
@@ -174,6 +194,7 @@
         const employeeId = parseInt(form.querySelector('[name="EmployeeId"]').value || '0');
         const emailError = document.getElementById('empEmailError');
         const passwordError = document.getElementById('empPasswordError');
+        const driverCategoryError = document.getElementById('driverCategoryError');
 
         // Reset errors
         if(emailError) emailError.classList.add('hidden');
@@ -196,6 +217,15 @@
                 if(passwordError) passwordError.classList.remove('hidden');
                 isValid = false;
             }
+        }
+
+        const selectedRoles = Array.from(document.querySelectorAll('.role-checkbox:checked')).map(cb => cb.value);
+        const isDriver = selectedRoles.some(r => r.toLowerCase() === 'driver');
+        const selectedCategories = Array.from(document.querySelectorAll('.allowed-category-checkbox:checked')).map(cb => parseInt(cb.value));
+        if (driverCategoryError) driverCategoryError.classList.add('hidden');
+        if (isDriver && selectedCategories.length === 0) {
+            if (driverCategoryError) driverCategoryError.classList.remove('hidden');
+            isValid = false;
         }
 
         if(!isValid) return;
@@ -223,7 +253,9 @@
             driverCode: f['DriverCode'] ? f['DriverCode'].value : null,
             driverLicenseNumber: f['DriverLicenseNumber'] ? f['DriverLicenseNumber'].value : null,
             driverLicenseExpiry: f['DriverLicenseExpiry'] ? f['DriverLicenseExpiry'].value : null,
-            driverLanguages: f['DriverLanguages'] ? f['DriverLanguages'].value : null
+            driverLanguages: f['DriverLanguages'] ? f['DriverLanguages'].value : null,
+            driverDailyFeePerDay: f['DriverDailyFeePerDay'] && f['DriverDailyFeePerDay'].value ? parseFloat(f['DriverDailyFeePerDay'].value) : null,
+            allowedCategoryIds: selectedCategories
         };
 
         try {

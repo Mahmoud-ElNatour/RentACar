@@ -57,7 +57,6 @@ namespace RentACar.Application.DTOs
         public string? PaymentMethod { get; set; } // For string input (Card/Cash)
         // Driver features
         public bool HasDriver { get; set; }
-        public decimal? DriverDailyFee { get; set; }
         public string? PickupAddress { get; set; }
         public string? PickupLocationName { get; set; }
         public DateTime? PickupDateTime { get; set; }
@@ -78,5 +77,32 @@ namespace RentACar.Application.DTOs
         public BookingDto Booking { get; set; } = new();
         public string? RedirectUrl { get; set; }
         public int? PaymentId { get; set; }
+    }
+
+    public class DriverOptionDto
+    {
+        public int DriverId { get; set; }
+        public string DriverName { get; set; } = string.Empty;
+    }
+
+    public class DriverAvailabilityPreviewDto
+    {
+        public int AvailableCount { get; set; }
+        public List<string> DriverNames { get; set; } = new();
+    }
+
+    public class BookingDriverAssignmentRequestDto
+    {
+        [Required]
+        public int BookingId { get; set; }
+
+        [Required]
+        public int DriverId { get; set; }
+    }
+
+    public class BookingDriverAssignmentResultDto
+    {
+        public bool Success { get; set; }
+        public string? ErrorMessage { get; set; }
     }
 }

@@ -33,6 +33,7 @@ public partial class RentACarDbContext : DbContext
     public virtual DbSet<Category> Categories { get; set; }
     public virtual DbSet<Customer> Customers { get; set; }
     public virtual DbSet<Driver> Drivers { get; set; }
+    public virtual DbSet<DriverAllowedCategory> DriverAllowedCategories { get; set; }
     public virtual DbSet<DriverAvailability> DriverAvailabilities { get; set; }
     public virtual DbSet<DriverLocationPing> DriverLocationPings { get; set; }
     public virtual DbSet<Employee> Employees { get; set; }
@@ -207,6 +208,21 @@ public partial class RentACarDbContext : DbContext
             entity.HasIndex(e => e.CustomerId).HasDatabaseName("IX_Bookings_CustomerId");
         });
 
+        modelBuilder.Entity<DriverAllowedCategory>(entity =>
+        {
+            entity.HasIndex(e => new { e.DriverId, e.CategoryId }).IsUnique();
+
+            entity.HasOne(d => d.Driver)
+                .WithMany(p => p.AllowedCategories)
+                .HasForeignKey(d => d.DriverId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(d => d.Category)
+                .WithMany(p => p.DriverAllowedCategories)
+                .HasForeignKey(d => d.CategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
         modelBuilder.Entity<Car>(entity =>
         {
             entity.HasOne(d => d.Category).WithMany(p => p.Cars)
@@ -332,4 +348,3 @@ public partial class RentACarDbContext : DbContext
 
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
 }
-

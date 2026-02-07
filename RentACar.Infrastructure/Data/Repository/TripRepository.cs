@@ -58,6 +58,7 @@ public class TripRepository : ITripRepository
     public async Task<List<int>> GetActiveBookingIdsForDriverAsync(int driverId)
     {
         var activeStatuses = new[] {
+            TripStatus.Pending,
             TripStatus.Assigned,
             TripStatus.OnTheWay,
             TripStatus.Arrived,

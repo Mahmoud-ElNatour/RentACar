@@ -21,7 +21,11 @@ public class DriverDto
 
     public bool IsActive { get; set; }
 
+    public decimal DailyFeePerDay { get; set; }
+
     public decimal? Rating { get; set; }
+
+    public List<int> AllowedCategoryIds { get; set; } = new();
 
     public string? LicenseNumber { get; set; }
 
@@ -58,6 +62,8 @@ public class DriverCreateDto
     public string? Languages { get; set; }
 
     public string? Notes { get; set; }
+
+    public List<int> AllowedCategoryIds { get; set; } = new();
 }
 
 public class DriverDisplayDto

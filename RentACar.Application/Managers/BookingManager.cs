@@ -11,6 +11,7 @@ using RentACar.Core.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 using RentACar.Core.Constants;
+using RentACar.Application.Services;
 
 namespace RentACar.Application.Managers
 {
@@ -31,6 +32,7 @@ namespace RentACar.Application.Managers
         private readonly AuditLogManager _auditLogManager;
         private readonly IDriverRepository _driverRepository;
         private readonly IDriverAvailabilityRepository _driverAvailabilityRepository;
+        private readonly IDriverAllowedCategoryRepository _driverAllowedCategoryRepository;
         private readonly ITripRepository _tripRepository;
         private readonly EmailManager _emailManager;
 
@@ -41,6 +43,7 @@ namespace RentACar.Application.Managers
             ICarRepository carRepository,
             IDriverRepository driverRepository,
             IDriverAvailabilityRepository driverAvailabilityRepository,
+            IDriverAllowedCategoryRepository driverAllowedCategoryRepository,
             ITripRepository tripRepository,
             IPromocodeRepository promocodeRepository,
             IPaymentMethodRepository paymentMethodRepository,
@@ -58,6 +61,7 @@ namespace RentACar.Application.Managers
             _carRepository = carRepository;
             _driverRepository = driverRepository;
             _driverAvailabilityRepository = driverAvailabilityRepository;
+            _driverAllowedCategoryRepository = driverAllowedCategoryRepository;
             _tripRepository = tripRepository;
             _userManager = userManager;
             _promocodeRepository = promocodeRepository;
@@ -177,69 +181,37 @@ namespace RentACar.Application.Managers
                     return new BookingCreationResultDto { Success = false, ErrorMessage = "Pickup location details are required." };
                 }
 
-                // 2. Pricing
-                driverDailyFee = 20.00m; // Fixed fee ($20)
-
-                // 3. Auto-Assign Driver
-                DateTime startDt = requestDto.Startdate.ToDateTime(TimeOnly.MinValue); // 00:00
-                DateTime endDt = requestDto.Enddate.ToDateTime(new TimeOnly(23, 59)); // 23:59
-
-                // A. Get Candidates
-                var activeDrivers = await _driverRepository.GetEligibleDriversAsync(startDt, endDt);
-                _logger.LogInformation("Found {Count} active drivers initially eligible (before conflict check)", activeDrivers.Count);
-
-                // B. Exclude Conflicts
-                var conflictedDriverIds = await _bookingRepository.GetConflictingDriverIdsAsync(requestDto.Startdate, requestDto.Enddate);
-                _logger.LogInformation("Found {Count} conflicted drivers: {Ids}", conflictedDriverIds.Count, string.Join(",", conflictedDriverIds));
-
-                var candidates = activeDrivers.Where(d => !conflictedDriverIds.Contains(d.DriverId)).ToList();
-                _logger.LogInformation("{Count} candidates remaining after conflict check. Checking individual availability...", candidates.Count);
-
-                // C. Check Availability & Tie-Break
-                Driver? selectedDriver = null;
-
-                var validCandidates = new List<Driver>();
-
-                foreach (var driver in candidates)
+                if (!car.CategoryId.HasValue)
                 {
-                    bool isAvailable = await _driverAvailabilityRepository.HasCoveringAvailabilityAsync(driver.DriverId, startDt, endDt);
-                    if (isAvailable)
-                    {
-                        validCandidates.Add(driver);
-                    }
-                    else
-                    {
-                        _logger.LogInformation("Driver {Id} excluded due to missing availability records.", driver.DriverId);
-                    }
+                    _logger.LogWarning("Booking failed: Car {CarId} missing category.", requestDto.CarId);
+                    return new BookingCreationResultDto { Success = false, ErrorMessage = "Car category is not configured. Please contact support." };
                 }
 
-                _logger.LogInformation("Final valid candidates count: {Count}", validCandidates.Count);
-
-                if (!validCandidates.Any())
+                var availableDrivers = await _driverRepository.GetAvailableDriversForBookingAsync(requestDto.Startdate, requestDto.Enddate, car.CategoryId.Value);
+                if (!availableDrivers.Any())
                 {
-                    _logger.LogWarning("Booking failed: No drivers available for dates {Start} to {End}", requestDto.Startdate, requestDto.Enddate);
-                    return new BookingCreationResultDto { Success = false, ErrorMessage = "No drivers available for the selected dates. Please choose different dates." };
+                    _logger.LogWarning("Booking failed: No drivers available for dates {Start} to {End} and category {CategoryId}", requestDto.Startdate, requestDto.Enddate, car.CategoryId.Value);
+                    return new BookingCreationResultDto { Success = false, ErrorMessage = "No drivers available for the selected dates/car category." };
                 }
 
-                // Sort Candidates: Rating (Desc) -> Future Bookings (Asc) -> DriverId (Asc)
                 var todayDate = DateOnly.FromDateTime(DateTime.UtcNow);
-                var validDriversWithStats = new List<(Driver Driver, int FutureBookings)>();
+                var driversWithUpcoming = new List<(Driver Driver, int FutureBookings)>();
 
-                foreach (var d in validCandidates)
+                foreach (var d in availableDrivers)
                 {
                     var bookings = await _bookingRepository.GetBookingsByDriverIdAsync(d.DriverId);
-                    int futureCount = bookings.Count(b => b.Startdate > todayDate && IsBlockingStatus(b.BookingStatus));
-                    validDriversWithStats.Add((d, futureCount));
+                    var futureCount = bookings.Count(b => b.Startdate > todayDate && IsBlockingStatus(b.BookingStatus));
+                    driversWithUpcoming.Add((d, futureCount));
                 }
 
-                selectedDriver = validDriversWithStats
-                    .OrderByDescending(x => x.Driver.Rating ?? 0)
-                    .ThenBy(x => x.FutureBookings)
+                var selectedDriver = driversWithUpcoming
+                    .OrderBy(x => x.FutureBookings)
                     .ThenBy(x => x.Driver.DriverId)
                     .Select(x => x.Driver)
                     .First();
 
                 assignedDriverId = selectedDriver.DriverId;
+                driverDailyFee = selectedDriver.DailyFeePerDay;
                 _logger.LogInformation("🚗 Auto-assigned driver: {DriverName} (ID: {DriverId})", selectedDriver.FullName, selectedDriver.DriverId);
             }
 
@@ -255,18 +227,17 @@ namespace RentACar.Application.Managers
                 }
             }
 
-            // 🔹 Calculate price
-            // 🔹 Calculate price
-            decimal subtotal = CalculateTotalPrice(car.PricePerDay ?? 0, requestDto.Startdate, requestDto.Enddate);
+            var pricing = BookingPricingCalculator.Calculate(
+                car.PricePerDay ?? 0,
+                requestDto.Startdate,
+                requestDto.Enddate,
+                requestDto.HasDriver && assignedDriverId.HasValue,
+                driverDailyFee,
+                car.ExtraDriverFeePerDay,
+                promocode?.DiscountPercentage);
 
-            // Add Driver Fee to Subtotal
-            if (requestDto.HasDriver && driverDailyFee.HasValue)
-            {
-                decimal totalDriverFee = CalculateTotalPrice(driverDailyFee.Value, requestDto.Startdate, requestDto.Enddate);
-                subtotal += totalDriverFee;
-            }
-
-            decimal totalPrice = promocode != null ? ApplyPromocode(subtotal, promocode) : subtotal;
+            decimal subtotal = pricing.Subtotal;
+            decimal totalPrice = pricing.Total;
 
             // 🔹 Validate payment method
             PaymentMethod? paymentMethod = null;
@@ -402,29 +373,7 @@ namespace RentACar.Application.Managers
                     {
                         BookingId = addedBooking.BookingId,
                         DriverId = addedBooking.DriverId,
-                        TripStatus = TripStatus.Assigned,
-                        CreatedAt = DateTime.UtcNow,
-                        UpdatedAt = DateTime.UtcNow
-                    };
-                    await _tripRepository.CreateTripAsync(newTrip);
-                    _logger.LogInformation("✅ Trip created for Booking {BookingId}, Driver {DriverId}", addedBooking.BookingId, addedBooking.DriverId);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to create trip for confirmed driver booking {BookingId}", addedBooking.BookingId);
-                }
-            }
-
-            // 🔹 Create Trip if Driver Assigned
-            if (addedBooking.HasDriver && addedBooking.DriverId.HasValue)
-            {
-                try
-                {
-                    var newTrip = new Trip
-                    {
-                        BookingId = addedBooking.BookingId,
-                        DriverId = addedBooking.DriverId,
-                        TripStatus = TripStatus.Assigned,
+                        TripStatus = TripStatus.Pending,
                         CreatedAt = DateTime.UtcNow,
                         UpdatedAt = DateTime.UtcNow
                     };
@@ -592,6 +541,112 @@ namespace RentACar.Application.Managers
             return _mapper.Map<BookingEditDto>(booking);
         }
 
+        public async Task<BookingDriverAssignmentResultDto> UpdateDriverAssignmentAsync(int bookingId, int newDriverId)
+        {
+            var booking = await _bookingRepository.Query()
+                .Include(b => b.Driver).ThenInclude(d => d.User)
+                .Include(b => b.Driver).ThenInclude(d => d.Employee)
+                .Include(b => b.Customer).ThenInclude(c => c.User)
+                .Include(b => b.Car)
+                .FirstOrDefaultAsync(b => b.BookingId == bookingId);
+
+            if (booking == null)
+            {
+                return new BookingDriverAssignmentResultDto { Success = false, ErrorMessage = "Booking not found." };
+            }
+
+            if (!booking.HasDriver)
+            {
+                return new BookingDriverAssignmentResultDto { Success = false, ErrorMessage = "This booking does not include a driver." };
+            }
+
+            var newDriver = await _driverRepository.GetByIdAsync(newDriverId);
+            if (newDriver == null || !newDriver.IsActive || !newDriver.Employee.IsActive)
+            {
+                return new BookingDriverAssignmentResultDto { Success = false, ErrorMessage = "Selected driver is not active." };
+            }
+
+            if (booking.DriverId == newDriverId)
+            {
+                return new BookingDriverAssignmentResultDto { Success = true };
+            }
+
+            if (booking.Car?.CategoryId != null)
+            {
+                var canDriveCategory = await _driverAllowedCategoryRepository.DriverCanDriveCategoryAsync(newDriverId, booking.Car.CategoryId.Value);
+                if (!canDriveCategory)
+                {
+                    return new BookingDriverAssignmentResultDto { Success = false, ErrorMessage = "Driver is not allowed to drive this car category." };
+                }
+            }
+
+            var startDt = booking.Startdate.ToDateTime(TimeOnly.MinValue);
+            var endDt = booking.Enddate.ToDateTime(new TimeOnly(23, 59));
+
+            var hasAvailability = await _driverAvailabilityRepository.HasCoveringAvailabilityAsync(newDriverId, startDt, endDt);
+            if (!hasAvailability)
+            {
+                return new BookingDriverAssignmentResultDto { Success = false, ErrorMessage = "Driver is not available for the full booking dates." };
+            }
+
+            var existingBookings = await _bookingRepository.GetBookingsByDriverIdAsync(newDriverId);
+            var hasConflict = existingBookings.Any(b =>
+                b.BookingId != booking.BookingId
+                && IsBlockingStatus(b.BookingStatus)
+                && DatesOverlap(b.Startdate, b.Enddate, booking.Startdate, booking.Enddate));
+
+            if (hasConflict)
+            {
+                return new BookingDriverAssignmentResultDto { Success = false, ErrorMessage = "Driver has a conflicting booking." };
+            }
+
+            var oldDriver = booking.Driver;
+            booking.DriverId = newDriverId;
+            await _bookingRepository.UpdateAsync(booking);
+
+            var trip = await _tripRepository.GetTripByBookingIdAsync(bookingId);
+            if (trip != null)
+            {
+                trip.DriverId = newDriverId;
+                trip.UpdatedAt = DateTime.UtcNow;
+                await _tripRepository.UpdateTripAsync(trip);
+            }
+            else
+            {
+                var newTrip = new Trip
+                {
+                    BookingId = booking.BookingId,
+                    DriverId = newDriverId,
+                    TripStatus = TripStatus.Pending,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+                await _tripRepository.CreateTripAsync(newTrip);
+            }
+
+            await _emailManager.SendDriverReassignmentEmails(booking, oldDriver, newDriver);
+
+            return new BookingDriverAssignmentResultDto { Success = true };
+        }
+
+        public async Task<List<DriverOptionDto>> GetAvailableDriversPreviewAsync(DateOnly start, DateOnly end, int carId)
+        {
+            var car = await _carRepository.GetByIdAsync(carId);
+            if (car == null || !car.CategoryId.HasValue)
+            {
+                return new List<DriverOptionDto>();
+            }
+
+            var drivers = await _driverRepository.GetAvailableDriversForBookingAsync(start, end, car.CategoryId.Value);
+            return drivers
+                .Select(d => new DriverOptionDto
+                {
+                    DriverId = d.DriverId,
+                    DriverName = d.Employee?.Name ?? d.FullName
+                })
+                .ToList();
+        }
+
 
         public async Task<List<BookingDto>> GetBookingHistoryAsync(int customerId)
         {
@@ -644,7 +699,9 @@ namespace RentACar.Application.Managers
 
                 Startdate = b.Startdate.ToString(),
                 Enddate = b.Enddate.ToString(),
-                BookingStatus = b.BookingStatus
+                BookingStatus = b.BookingStatus,
+                HasDriver = b.HasDriver,
+                DriverId = b.DriverId
             }).ToListAsync();
 
             if (!bookings.Any())
@@ -763,7 +820,9 @@ namespace RentACar.Application.Managers
                 PromocodeDiscount = b.Promocode?.DiscountPercentage,
                 Startdate = b.Startdate.ToString("yyyy-MM-dd"), // Ensure format
                 Enddate = b.Enddate.ToString("yyyy-MM-dd"),
-                BookingStatus = b.BookingStatus
+                BookingStatus = b.BookingStatus,
+                HasDriver = b.HasDriver,
+                DriverId = b.DriverId
             }).ToList();
 
             // 🔗 Fetch Payments for this batch to show status

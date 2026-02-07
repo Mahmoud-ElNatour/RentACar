@@ -29,7 +29,7 @@ namespace RentACar.Web.Controllers
             string? sortOrder = null,
             int page = 1)
         {
-            var categories = await _categoryManager.GetAllCategoriesAsync();
+            var categories = await _categoryManager.GetAllActiveCategoriesAsync();
 
             var cars = await GetFilteredCarsInternal(name, categoryIds, minPrice, maxPrice, startDate, endDate, sortOrder);
             
@@ -89,6 +89,13 @@ namespace RentACar.Web.Controllers
         {
             // Initial Fetch (Lightweight DTOs)
             var cars = await _carManager.SearchCarsForListAsync(modelName: name);
+
+            cars = cars.Where(c => c.IsAvailable).ToList();
+
+            var activeCategoryIds = (await _categoryManager.GetAllActiveCategoriesAsync())
+                .Select(c => c.CategoryId)
+                .ToHashSet();
+            cars = cars.Where(c => c.CategoryId.HasValue && activeCategoryIds.Contains(c.CategoryId.Value)).ToList();
 
             // Filter by Categories
             if (categoryIds != null && categoryIds.Any())

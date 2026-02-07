@@ -29,6 +29,11 @@ namespace RentACar.Application.DTOs
 
         public decimal? PromocodeDiscountPercentage { get; set; }
 
+        public bool? BookingHasDriver { get; set; }
+        public decimal? BookingDriverDailyFee { get; set; }
+        public decimal? CarExtraDriverFeePerDay { get; set; }
+        public decimal? CarPricePerDay { get; set; }
+
         public string? CarModel { get; set; }
 
         public string? CarPlateNumber { get; set; }

@@ -502,6 +502,11 @@
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold \${statusClass}">
                             ${b.bookingStatus}
                         </span>
+                        ${b.hasDriver && b.driverId ? `
+                            <button class="assign-driver mt-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-green-500/10 text-green-500 border border-green-500/20 hover:bg-green-500/20 transition-colors" data-id="${b.bookingId}">
+                                Assigned
+                            </button>
+                        ` : ''}
                     </td>
                     <td class="px-6 py-4 text-right">
                         <div class="font-bold text-white">${formatMoney(b.totalPrice)}</div>
@@ -602,6 +607,7 @@
         const view = e.target.closest('.view-details');
         const del = e.target.closest('.delete-booking');
         const edit = e.target.closest('.edit-booking');
+        const assign = e.target.closest('.assign-driver');
 
         if(view) {
              loadModal('/Booking/Details/' + view.dataset.id);
@@ -609,6 +615,8 @@
              loadModal('/Booking/Edit/' + edit.dataset.id); 
         } else if(del) {
              loadModal('/Booking/Delete/' + del.dataset.id);
+        } else if(assign) {
+             loadModal('/Booking/AssignDriver/' + assign.dataset.id);
         }
     });
 

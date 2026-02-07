@@ -19,6 +19,7 @@ public class DriverRepository : IDriverRepository
     public async Task<Driver?> GetByIdAsync(int id)
     {
         return await _dbContext.Drivers
+            .Include(d => d.AllowedCategories)
             .Include(d => d.User)
             .Include(d => d.Employee)
             .FirstOrDefaultAsync(d => d.DriverId == id);
@@ -27,6 +28,7 @@ public class DriverRepository : IDriverRepository
     public async Task<Driver?> GetByEmployeeIdAsync(int employeeId)
     {
         return await _dbContext.Drivers
+            .Include(d => d.AllowedCategories)
             .Include(d => d.User)
             .Include(d => d.Employee)
             .FirstOrDefaultAsync(d => d.EmployeeId == employeeId);
@@ -35,6 +37,7 @@ public class DriverRepository : IDriverRepository
     public async Task<Driver?> GetByAspNetUserIdAsync(string aspNetUserId)
     {
         return await _dbContext.Drivers
+            .Include(d => d.AllowedCategories)
             .Include(d => d.User)
             .Include(d => d.Employee)
             .FirstOrDefaultAsync(d => d.AspNetUserId == aspNetUserId);
@@ -43,6 +46,7 @@ public class DriverRepository : IDriverRepository
     public async Task<List<Driver>> GetAllAsync()
     {
         return await _dbContext.Drivers
+            .Include(d => d.AllowedCategories)
             .Include(d => d.User)
             .Include(d => d.Employee)
             .ToListAsync();
@@ -51,6 +55,7 @@ public class DriverRepository : IDriverRepository
     public async Task<List<Driver>> GetActiveAsync()
     {
         return await _dbContext.Drivers
+            .Include(d => d.AllowedCategories)
             .Include(d => d.User)
             .Include(d => d.Employee)
             .Where(d => d.IsActive && d.Employee.IsActive)
@@ -69,9 +74,46 @@ public class DriverRepository : IDriverRepository
         // I will return *active* drivers (same as GetActiveAsync essentially but maybe optimized or ready for future).
         // Actually, let's just use GetActiveAsync logic but ensure we validly implement the interface method.
         return await _dbContext.Drivers
+            .Include(d => d.AllowedCategories)
             .Include(d => d.User)
             .Include(d => d.Employee)
             .Where(d => d.IsActive && d.Employee.IsActive)
+            .ToListAsync();
+    }
+
+    public async Task<List<Driver>> GetAvailableDriversForBookingAsync(DateOnly start, DateOnly end, int categoryId)
+    {
+        if (end < start) (start, end) = (end, start);
+
+        var requiredDays = (end.DayNumber - start.DayNumber) + 1;
+
+        var conflictedDriverIds = await _dbContext.Bookings
+            .Where(b => b.HasDriver && b.DriverId != null)
+            .Where(b => b.Startdate <= end && b.Enddate >= start)
+            .Where(b => b.BookingStatus != "Completed"
+                        && b.BookingStatus != "Returned"
+                        && b.BookingStatus != "Rejected"
+                        && b.BookingStatus != "Cancelled")
+            .Select(b => b.DriverId!.Value)
+            .Distinct()
+            .ToListAsync();
+
+        var availableDriverIds = await _dbContext.DriverAvailabilities
+            .Where(a => a.IsAvailable)
+            .Where(a => a.Date >= start && a.Date <= end)
+            .GroupBy(a => a.DriverId)
+            .Where(g => g.Select(x => x.Date).Distinct().Count() == requiredDays)
+            .Select(g => g.Key)
+            .ToListAsync();
+
+        return await _dbContext.Drivers
+            .Include(d => d.User)
+            .Include(d => d.Employee)
+            .Where(d => d.IsActive && d.Employee.IsActive)
+            .Where(d => d.AllowedCategories.Any(ac => ac.CategoryId == categoryId))
+            .Where(d => availableDriverIds.Contains(d.DriverId))
+            .Where(d => !conflictedDriverIds.Contains(d.DriverId))
+            .AsNoTracking()
             .ToListAsync();
     }
 

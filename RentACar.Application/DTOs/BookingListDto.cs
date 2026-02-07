@@ -33,5 +33,6 @@ namespace RentACar.Application.DTOs
 
         public string BookingStatus { get; set; } = null!;
         public bool HasDriver { get; set; }
+        public int? DriverId { get; set; }
     }
 }

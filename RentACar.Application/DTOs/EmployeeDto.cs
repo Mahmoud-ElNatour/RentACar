@@ -35,6 +35,7 @@ namespace RentACar.Application.DTOs
         public string? DriverFullName { get; set; }
         public string? DriverPhone { get; set; }
         public string? DriverEmail { get; set; }
+        public decimal? DriverDailyFeePerDay { get; set; }
         public decimal? DriverRating { get; set; }
         public string? DriverLicenseNumber { get; set; }
         public DateOnly? DriverLicenseExpiry { get; set; }
@@ -43,6 +44,7 @@ namespace RentACar.Application.DTOs
         public bool DriverIsActive { get; set; } = true;
         public DateTime? DriverCreatedAt { get; set; }
         public DateTime? DriverUpdatedAt { get; set; }
+        public List<int> AllowedCategoryIds { get; set; } = new();
     }
 
 
@@ -73,12 +75,14 @@ namespace RentACar.Application.DTOs
         public string? DriverFullName { get; set; }
         public string? DriverPhone { get; set; }
         public string? DriverEmail { get; set; }
+        public decimal? DriverDailyFeePerDay { get; set; }
         public decimal? DriverRating { get; set; }
         public string? DriverLicenseNumber { get; set; }
         public DateOnly? DriverLicenseExpiry { get; set; }
         public string? DriverLanguages { get; set; }
         public string? DriverNotes { get; set; }
         public bool DriverIsActive { get; set; } = true;
+        public List<int> AllowedCategoryIds { get; set; } = new();
     }
 
     public class EmployeeDisplayDto

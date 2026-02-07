@@ -166,16 +166,8 @@
                 const bookingStatus = (b.bookingStatus ?? 'Unknown').toString();
 
                 // --- Vehicle Column ---
-                let carImageHtml = '';
-                if (b.carImage) {
-                    carImageHtml = `<img src="${b.carImage}" loading="lazy" class="w-16 h-10 object-cover rounded-md border border-white/10" alt="Car">`;
-                } else {
-                    carImageHtml = `<div class="w-16 h-10 bg-white/5 rounded-md flex items-center justify-center border border-white/10"><span class="material-symbols-outlined text-gray-600">directions_car</span></div>`;
-                }
-
                 const vehicleHtml = `
                         <div class="flex items-center gap-4">
-                            ${carImageHtml}
                             <div class="flex flex-col">
                                 <span class="text-white font-bold text-lg">${b.carName ?? 'Unknown Car'}</span>
                             </div>

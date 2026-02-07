@@ -21,6 +21,8 @@ namespace RentACar.Application.DTOs
 
         public decimal? PricePerDay { get; set; }
 
+        public decimal? ExtraDriverFeePerDay { get; set; }
+
         public bool IsAvailable { get; set; }
 
         public int? CategoryId { get; set; }
