@@ -138,9 +138,14 @@
                         <span class="text-gray-400">Rate</span>
                         <span class="text-white" id="summRate">$@car?.PricePerDay / day</span>
                     </div>
-                     <div class="flex justify-between text-gray-300 pt-2 border-t border-[#262626]">
+                    <div class="flex justify-between text-gray-300 pt-2 border-t border-[#262626]">
                         <span>Subtotal</span>
                         <span id="summSubtotal">$0.00</span>
+                    </div>
+
+                    <div id="summDriverRow" class="flex justify-between text-gray-400 hidden">
+                        <span>Driver Service</span>
+                        <span>Calculated at checkout</span>
                     </div>
                     
                     <div id="summPromoRow" class="flex justify-between text-green-500 hidden">
@@ -213,10 +218,50 @@
 
                  <hr class="border-[#262626]" />
 
-                <!-- 3. Payment & Promo -->
+                <!-- 3. Driver & Pickup -->
                 <section>
                     <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
                         <span class="flex items-center justify-center w-8 h-8 rounded-full bg-gold/10 text-gold border border-gold/20 font-bold text-sm">3</span>
+                        Driver & Pickup
+                    </h3>
+
+                    <div class="flex items-center justify-between bg-[#0a0a0a] border border-[#262626] rounded-xl px-4 py-3">
+                        <span class="text-sm text-gray-300">Include Driver</span>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="driverToggle" class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gold"></div>
+                        </label>
+                    </div>
+                    <div id="driverAvailabilityStatus" class="text-xs text-gray-400 mt-2"></div>
+
+                    <div id="driverSection" class="hidden space-y-4 mt-4">
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-gray-500 mb-2">Pickup Location Label</label>
+                            <input type="text" id="pickupLocationName" class="w-full bg-[#0a0a0a] border border-[#262626] rounded-xl py-3 px-4 text-white" placeholder="Location name" />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-gray-500 mb-2">Pickup Address</label>
+                            <input type="text" id="pickupAddress" class="w-full bg-[#0a0a0a] border border-[#262626] rounded-xl py-3 px-4 text-white" placeholder="Address details" />
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold uppercase text-gray-500 mb-2">Pickup Latitude</label>
+                                <input type="number" step="0.000001" id="pickupLatitude" class="w-full bg-[#0a0a0a] border border-[#262626] rounded-xl py-3 px-4 text-white" placeholder="Latitude" />
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold uppercase text-gray-500 mb-2">Pickup Longitude</label>
+                                <input type="number" step="0.000001" id="pickupLongitude" class="w-full bg-[#0a0a0a] border border-[#262626] rounded-xl py-3 px-4 text-white" placeholder="Longitude" />
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <hr class="border-[#262626]" />
+
+                <!-- 4. Payment & Promo -->
+                <section>
+                    <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                        <span class="flex items-center justify-center w-8 h-8 rounded-full bg-gold/10 text-gold border border-gold/20 font-bold text-sm">4</span>
                         Payment
                     </h3>
                     <div class="grid grid-cols-1 gap-6">
@@ -271,6 +316,8 @@
 <script>
     const carId = @car?.CarId;
     let blockedDates = []; // List of YYYY-MM-DD
+    let hasDriver = false;
+    let hasAvailableDriver = true;
     
     // --- Autocomplete ---
     new TomSelect("#customerSelect", {
@@ -441,10 +488,30 @@
         document.getElementById('Enddate').value = toISODate(selEnd);
         
         renderGrid();
-        if(selStart && selEnd) calculatePrice();
+        if (selStart && selEnd) {
+            calculatePrice();
+            if (hasDriver) {
+                checkDriverAvailability();
+            }
+        }
     }
     
     initCalendar();
+
+    document.getElementById('driverToggle').addEventListener('change', (e) => {
+        hasDriver = e.target.checked;
+        const section = document.getElementById('driverSection');
+        if (hasDriver) {
+            section.classList.remove('hidden');
+            checkDriverAvailability();
+            document.getElementById('summDriverRow').classList.remove('hidden');
+        } else {
+            section.classList.add('hidden');
+            hasAvailableDriver = true;
+            updateDriverAvailabilityStatus(null);
+            document.getElementById('summDriverRow').classList.add('hidden');
+        }
+    });
 
     // --- Pricing ---
     async function calculatePrice() {
@@ -485,6 +552,44 @@
         } catch(e) { console.error(e); }
         finally { document.getElementById('priceLoading').classList.add('hidden'); }
     }
+
+    async function checkDriverAvailability() {
+        const start = document.getElementById('Startdate').value;
+        const end = document.getElementById('Enddate').value;
+        if (!hasDriver || !start || !end) return;
+
+        updateDriverAvailabilityStatus("Checking driver availability...");
+        try {
+            const resp = await fetch(`/Booking/AvailableDrivers?carId=${carId}&start=${start}&end=${end}`);
+            if (!resp.ok) {
+                updateDriverAvailabilityStatus("Unable to check driver availability.");
+                return;
+            }
+            const data = await resp.json();
+            hasAvailableDriver = data.availableCount > 0;
+            if (!hasAvailableDriver) {
+                updateDriverAvailabilityStatus("No drivers available for the selected dates/car category.");
+            } else {
+                const names = data.driverNames && data.driverNames.length > 0 ? ` (${data.driverNames.join(', ')})` : '';
+                updateDriverAvailabilityStatus(`Drivers available: ${data.availableCount}${names}`);
+            }
+        } catch (err) {
+            console.error(err);
+            updateDriverAvailabilityStatus("Unable to check driver availability.");
+        }
+    }
+
+    function updateDriverAvailabilityStatus(message) {
+        const statusEl = document.getElementById('driverAvailabilityStatus');
+        const submitBtn = document.querySelector('#bookingForm button[type="submit"]');
+        if (!message) {
+            statusEl.innerText = '';
+            submitBtn.disabled = false;
+            return;
+        }
+        statusEl.innerText = message;
+        submitBtn.disabled = hasDriver && !hasAvailableDriver;
+    }
     
     document.getElementById('btnApplyPromo').addEventListener('click', calculatePrice);
 
@@ -505,6 +610,25 @@
             else alert("Select dates");
             return; 
         }
+
+        if (hasDriver && !hasAvailableDriver) {
+            if(window.showPopup) window.showPopup("No drivers available for the selected dates/car category.", "error");
+            else alert("No drivers available for the selected dates/car category.");
+            return;
+        }
+
+        if (hasDriver) {
+            const pickupLocationName = document.getElementById('pickupLocationName').value;
+            const pickupAddress = document.getElementById('pickupAddress').value;
+            const pickupLatitude = document.getElementById('pickupLatitude').value;
+            const pickupLongitude = document.getElementById('pickupLongitude').value;
+
+            if (!pickupLocationName || !pickupAddress || !pickupLatitude || !pickupLongitude) {
+                if(window.showPopup) window.showPopup("Pickup details are required for driver bookings.", "error");
+                else alert("Pickup details are required for driver bookings.");
+                return;
+            }
+        }
         
         const btn = e.submitter;
         const orig = btn.innerHTML;
@@ -522,7 +646,12 @@
                     Startdate: s,
                     Enddate: end,
                     PaymentMethod: document.querySelector('input[name="paymentType"]:checked').value,
-                    Promocode: document.getElementById('promocode').value || null
+                    Promocode: document.getElementById('promocode').value || null,
+                    HasDriver: hasDriver,
+                    PickupLocationName: hasDriver ? document.getElementById('pickupLocationName').value : null,
+                    PickupAddress: hasDriver ? document.getElementById('pickupAddress').value : null,
+                    PickupLatitude: hasDriver ? parseFloat(document.getElementById('pickupLatitude').value) : null,
+                    PickupLongitude: hasDriver ? parseFloat(document.getElementById('pickupLongitude').value) : null
                 })
             });
             

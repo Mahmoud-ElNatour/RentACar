@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Linq;
+using System.Threading.Tasks;
 using AutoMapper;
 using RentACar.Application.DTOs;
 using RentACar.Core.Entities;
@@ -110,9 +111,11 @@ public class DriverProfile : Profile
             .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => src.Employee != null ? src.Employee.Name : src.FullName))
             .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.User != null ? src.User.Email : src.Email))
             .ForMember(dest => dest.Phone, opt => opt.MapFrom(src => src.User != null ? src.User.PhoneNumber : src.Phone))
+            .ForMember(dest => dest.AllowedCategoryIds, opt => opt.MapFrom(src => src.AllowedCategories.Select(ac => ac.CategoryId)))
             .ReverseMap()
             .ForMember(dest => dest.User, opt => opt.Ignore())
-            .ForMember(dest => dest.Employee, opt => opt.Ignore());
+            .ForMember(dest => dest.Employee, opt => opt.Ignore())
+            .ForMember(dest => dest.AllowedCategories, opt => opt.Ignore());
 
         CreateMap<DriverCreateDto, Driver>();
         CreateMap<DriverAvailability, DriverAvailabilityDto>().ReverseMap()

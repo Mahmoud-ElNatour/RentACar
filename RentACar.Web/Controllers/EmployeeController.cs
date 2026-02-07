@@ -19,12 +19,14 @@ namespace RentACar.Web.Controllers
     public class EmployeeController : Controller
     {
         private readonly EmployeeManager _employeeManager;
+        private readonly CategoryManager _categoryManager;
         private readonly IMapper _mapper;
         private readonly ILogger<EmployeeController> _logger;
 
-        public EmployeeController(EmployeeManager employeeManager, IMapper mapper, ILogger<EmployeeController> logger)
+        public EmployeeController(EmployeeManager employeeManager, CategoryManager categoryManager, IMapper mapper, ILogger<EmployeeController> logger)
         {
             _employeeManager = employeeManager;
+            _categoryManager = categoryManager;
             _mapper = mapper;
             _logger = logger;
         }
@@ -38,9 +40,10 @@ namespace RentACar.Web.Controllers
 
         [HttpGet("~/Employee/Add")]
         [ApiExplorerSettings(IgnoreApi = true)]
-        public IActionResult AddForm()
+        public async Task<IActionResult> AddForm()
         {
             ViewBag.Roles = new[] { "Admin", "Employee", "Driver", "Customer" };
+            ViewBag.Categories = await _categoryManager.GetAllActiveCategoriesAsync();
             return PartialView("~/Views/ControlPanel/Employee/_EmployeeFormPartial.cshtml", new EmployeeDto { IsActive = true });
         }
 
@@ -51,6 +54,7 @@ namespace RentACar.Web.Controllers
             var emp = await _employeeManager.GetEmployeeById(id);
             if (emp == null) return NotFound();
             ViewBag.Roles = new[] { "Admin", "Employee", "Driver", "Customer" };
+            ViewBag.Categories = await _categoryManager.GetAllActiveCategoriesAsync();
             return PartialView("~/Views/ControlPanel/Employee/_EmployeeFormPartial.cshtml", emp);
         }
 
@@ -181,4 +185,3 @@ namespace RentACar.Web.Controllers
         }
     }
 }
-

@@ -24,15 +24,17 @@ namespace RentACar.Application.Managers
         private readonly ILogger<EmployeeManager> _logger;
         private readonly IBookingRepository _bookingRepository;
         private readonly IDriverRepository _driverRepository;
+        private readonly IDriverAllowedCategoryRepository _driverAllowedCategoryRepository;
         private readonly AuditLogManager _auditLogManager;
         private readonly EmailManager _emailManager;
 
-        public EmployeeManager(UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager, IEmployeeRepository employeeRepository, IDriverRepository driverRepository, IBookingRepository bookingRepository, IMapper mapper, CustomerManager customerManager, ILogger<EmployeeManager> logger, AuditLogManager auditLogManager, EmailManager emailManager)
+        public EmployeeManager(UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager, IEmployeeRepository employeeRepository, IDriverRepository driverRepository, IDriverAllowedCategoryRepository driverAllowedCategoryRepository, IBookingRepository bookingRepository, IMapper mapper, CustomerManager customerManager, ILogger<EmployeeManager> logger, AuditLogManager auditLogManager, EmailManager emailManager)
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _employeeRepository = employeeRepository;
             _driverRepository = driverRepository;
+            _driverAllowedCategoryRepository = driverAllowedCategoryRepository;
             _mapper = mapper;
             _customerManager = customerManager;
             _logger = logger;
@@ -48,6 +50,11 @@ namespace RentACar.Application.Managers
             // 1. Validate role combinations
             var requestedRoles = createDto.Roles ?? new List<string> { "Employee" };
             ValidateRoles(requestedRoles);
+            var requiresDriverCategories = requestedRoles.Contains("Driver", StringComparer.OrdinalIgnoreCase);
+            if (requiresDriverCategories && (createDto.AllowedCategoryIds == null || !createDto.AllowedCategoryIds.Any()))
+            {
+                throw new InvalidOperationException("Driver must be assigned to at least one category.");
+            }
 
             var username = createDto.Email;
 
@@ -87,7 +94,11 @@ namespace RentACar.Application.Managers
                 // 3. Handle Driver Sync
                 if (requestedRoles.Contains("Driver", StringComparer.OrdinalIgnoreCase))
                 {
-                    await SyncDriverRecord(employee, createDto, user.Id);
+                    var driver = await SyncDriverRecord(employee, createDto, user.Id);
+                    if (driver != null)
+                    {
+                        await _driverAllowedCategoryRepository.SetAllowedCategoriesAsync(driver.DriverId, createDto.AllowedCategoryIds);
+                    }
                 }
 
                 _logger.LogInformation("Employee created with id {Id}", employee.EmployeeId);
@@ -122,7 +133,12 @@ namespace RentACar.Application.Managers
         public async Task<EmployeeDto?> GetEmployeeById(int id)
         {
             var employee = await _employeeRepository.GetByIdAsync(id);
-            return _mapper.Map<EmployeeDto>(employee);
+            var dto = _mapper.Map<EmployeeDto>(employee);
+            if (employee?.Driver != null)
+            {
+                dto.AllowedCategoryIds = await _driverAllowedCategoryRepository.GetAllowedCategoryIdsByDriverIdAsync(employee.Driver.DriverId);
+            }
+            return dto;
         }
 
         public async Task<List<EmployeeDto>> GetAllEmployees()
@@ -186,7 +202,16 @@ namespace RentACar.Application.Managers
 
             // 3. Sync Driver Data
             bool isDriver = employeeDto.Roles?.Contains("Driver", StringComparer.OrdinalIgnoreCase) ?? false;
-            await SyncDriverRecord(employeeEntity, employeeDto, employeeEntity.aspNetUserId, isDriver);
+            if (isDriver && (employeeDto.AllowedCategoryIds == null || !employeeDto.AllowedCategoryIds.Any()))
+            {
+                throw new InvalidOperationException("Driver must be assigned to at least one category.");
+            }
+
+            var driver = await SyncDriverRecord(employeeEntity, employeeDto, employeeEntity.aspNetUserId, isDriver);
+            if (isDriver && driver != null)
+            {
+                await _driverAllowedCategoryRepository.SetAllowedCategoriesAsync(driver.DriverId, employeeDto.AllowedCategoryIds);
+            }
 
             await _auditLogManager.LogAsync("Update", "Employee", employeeDto.EmployeeId.ToString(), $"Updated employee profile: {employeeDto.Name}", oldValues: before, newValues: employeeDto);
 
@@ -212,7 +237,7 @@ namespace RentACar.Application.Managers
                 throw new InvalidOperationException("Admin role cannot be combined with Customer role.");
         }
 
-        private async Task SyncDriverRecord(Employee employee, object dto, string aspNetUserId, bool shouldBeActive = true)
+        private async Task<Driver?> SyncDriverRecord(Employee employee, object dto, string aspNetUserId, bool shouldBeActive = true)
         {
             var driver = await _driverRepository.GetByEmployeeIdAsync(employee.EmployeeId);
 
@@ -272,6 +297,8 @@ namespace RentACar.Application.Managers
                 }
                 await _driverRepository.UpdateAsync(driver);
             }
+
+            return driver;
         }
 
         private object? GetPropValue(object src, string propName)

@@ -579,6 +579,10 @@ namespace RentACar.Infrastructure.Migrations
                         .HasColumnType("decimal(18, 2)")
                         .HasColumnName("pricePerDay");
 
+                    b.Property<decimal?>("ExtraDriverFeePerDay")
+                        .HasColumnType("decimal(10, 2)")
+                        .HasColumnName("extraDriverFeePerDay");
+
                     b.HasKey("CarId");
 
                     b.HasIndex("CategoryId");
@@ -890,6 +894,10 @@ namespace RentACar.Infrastructure.Migrations
                         .HasDefaultValue(true)
                         .HasColumnName("isActive");
 
+                    b.Property<decimal>("DailyFeePerDay")
+                        .HasColumnType("decimal(10, 2)")
+                        .HasColumnName("dailyFeePerDay");
+
                     b.Property<string>("Languages")
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)")
@@ -929,6 +937,34 @@ namespace RentACar.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("Drivers");
+                });
+
+            modelBuilder.Entity("RentACar.Core.Entities.DriverAllowedCategory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CategoryId")
+                        .HasColumnType("int")
+                        .HasColumnName("categoryID");
+
+                    b.Property<int>("DriverId")
+                        .HasColumnType("int")
+                        .HasColumnName("driverID");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
+
+                    b.HasIndex("DriverId");
+
+                    b.HasIndex("DriverId", "CategoryId")
+                        .IsUnique();
+
+                    b.ToTable("DriverAllowedCategories");
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.DriverAvailability", b =>
@@ -2038,6 +2074,25 @@ namespace RentACar.Infrastructure.Migrations
                     b.Navigation("Driver");
                 });
 
+            modelBuilder.Entity("RentACar.Core.Entities.DriverAllowedCategory", b =>
+                {
+                    b.HasOne("RentACar.Core.Entities.Category", "Category")
+                        .WithMany("DriverAllowedCategories")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("RentACar.Core.Entities.Driver", "Driver")
+                        .WithMany("AllowedCategories")
+                        .HasForeignKey("DriverId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Category");
+
+                    b.Navigation("Driver");
+                });
+
             modelBuilder.Entity("RentACar.Core.Entities.DriverLocationPing", b =>
                 {
                     b.HasOne("RentACar.Core.Entities.Booking", "Booking")
@@ -2245,6 +2300,8 @@ namespace RentACar.Infrastructure.Migrations
             modelBuilder.Entity("RentACar.Core.Entities.Category", b =>
                 {
                     b.Navigation("Cars");
+
+                    b.Navigation("DriverAllowedCategories");
                 });
 
             modelBuilder.Entity("RentACar.Core.Entities.Customer", b =>
@@ -2264,6 +2321,8 @@ namespace RentACar.Infrastructure.Migrations
             modelBuilder.Entity("RentACar.Core.Entities.Driver", b =>
                 {
                     b.Navigation("Bookings");
+
+                    b.Navigation("AllowedCategories");
 
                     b.Navigation("DriverAvailabilities");
 

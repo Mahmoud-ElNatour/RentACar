@@ -115,6 +115,7 @@ builder.Services.AddScoped<ISupportMessageRepository, SupportMessageRepository>(
 builder.Services.AddScoped<RentACar.Application.Services.ISignalRBroadcaster, RentACar.Web.Services.SignalRBroadcaster>();
 builder.Services.AddScoped<IDriverRepository, DriverRepository>();
 builder.Services.AddScoped<IDriverAvailabilityRepository, DriverAvailabilityRepository>();
+builder.Services.AddScoped<IDriverAllowedCategoryRepository, DriverAllowedCategoryRepository>();
 builder.Services.AddScoped<ITripRepository, TripRepository>();
 builder.Services.AddScoped<CustomerRatingManager>();
 builder.Services.AddHttpClient<RentACar.Application.Services.IStripePaymentService, RentACar.Application.Services.StripePaymentService>(client =>

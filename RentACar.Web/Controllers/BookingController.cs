@@ -410,6 +410,22 @@ namespace RentACar.Web.Controllers
             return Ok(result);
         }
 
+        [HttpGet("~/Booking/AvailableDrivers")]
+        public async Task<IActionResult> AvailableDrivers([FromQuery] int carId, [FromQuery] DateTime start, [FromQuery] DateTime end)
+        {
+            var startDate = DateOnly.FromDateTime(start);
+            var endDate = DateOnly.FromDateTime(end);
+            var drivers = await _bookingManager.GetAvailableDriversPreviewAsync(startDate, endDate, carId);
+
+            var response = new DriverAvailabilityPreviewDto
+            {
+                AvailableCount = drivers.Count,
+                DriverNames = drivers.Select(d => d.DriverName).Take(3).ToList()
+            };
+
+            return Ok(response);
+        }
+
         [HttpGet("{id}")]
         [Authorize(Roles = "Admin,Employee")]
         public async Task<ActionResult<BookingDto>> Get(int id)

@@ -44,6 +44,7 @@ namespace RentACar.Application.DTOs
         public bool DriverIsActive { get; set; } = true;
         public DateTime? DriverCreatedAt { get; set; }
         public DateTime? DriverUpdatedAt { get; set; }
+        public List<int> AllowedCategoryIds { get; set; } = new();
     }
 
 
@@ -81,6 +82,7 @@ namespace RentACar.Application.DTOs
         public string? DriverLanguages { get; set; }
         public string? DriverNotes { get; set; }
         public bool DriverIsActive { get; set; } = true;
+        public List<int> AllowedCategoryIds { get; set; } = new();
     }
 
     public class EmployeeDisplayDto

@@ -79,6 +79,18 @@ namespace RentACar.Application.DTOs
         public int? PaymentId { get; set; }
     }
 
+    public class DriverOptionDto
+    {
+        public int DriverId { get; set; }
+        public string DriverName { get; set; } = string.Empty;
+    }
+
+    public class DriverAvailabilityPreviewDto
+    {
+        public int AvailableCount { get; set; }
+        public List<string> DriverNames { get; set; } = new();
+    }
+
     public class BookingDriverAssignmentRequestDto
     {
         [Required]

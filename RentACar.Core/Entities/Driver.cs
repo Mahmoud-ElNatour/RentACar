@@ -82,4 +82,7 @@ public partial class Driver
 
     [InverseProperty("Driver")]
     public virtual ICollection<Trip> Trips { get; set; } = new List<Trip>();
+
+    [InverseProperty("Driver")]
+    public virtual ICollection<DriverAllowedCategory> AllowedCategories { get; set; } = new List<DriverAllowedCategory>();
 }

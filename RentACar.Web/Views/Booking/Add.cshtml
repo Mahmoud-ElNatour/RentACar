@@ -177,6 +177,7 @@
 
                     <div id="driverSection" class="hidden space-y-6">
                         <p class="text-sm text-gray-400">Enable this to have a professional driver pick you up.</p>
+                        <div id="driverAvailabilityStatus" class="text-xs text-gray-400"></div>
 
                         <!-- Location Input -->
                         <div>
@@ -247,8 +248,8 @@
                             </div>
 
                             <div id="summDriverRow" class="flex justify-between text-sm hidden">
-                                <span class="text-gray-400">Driver Fee</span>
-                                <span class="font-bold text-white" id="summDriverFee">$0.00</span>
+                                <span class="text-gray-400">Driver Service</span>
+                                <span class="font-bold text-white" id="summDriverFee">Calculated at checkout</span>
                             </div>
 
                             <div id="summPromoRow" class="flex justify-between text-green-500 text-sm hidden">
@@ -297,6 +298,7 @@
     let map = null;
     let marker = null;
     let mapLoaded = false;
+    let hasAvailableDriver = true;
 
     // Toggle Logic
     document.getElementById('driverToggle').addEventListener('change', function (e) {
@@ -309,9 +311,12 @@
                 // Resize trigger needed when showing hidden map
                 setTimeout(() => google.maps.event.trigger(map, "resize"), 100);
             }
+            checkDriverAvailability();
         } else {
             sec.classList.add('hidden');
             // clear values? maybe keep them if user toggles back
+            hasAvailableDriver = true;
+            updateDriverAvailabilityStatus(null);
         }
         calculatePrice(); // If driver adds fee later
     });
@@ -469,7 +474,12 @@
         await fetchMonthDates(currDate.getFullYear(), currDate.getMonth());
         renderGrid();
 
-        if (selStart && selEnd) calculatePrice();
+        if (selStart && selEnd) {
+            calculatePrice();
+            if (hasDriver) {
+                checkDriverAvailability();
+            }
+        }
     }
 
     function renderGrid() {
@@ -593,19 +603,12 @@
                 
                 let finalSubtotal = data.subtotal;
                 let finalTotal = data.total;
-                
-                // --- Driver Fee Logic (UI Only) ---
+
                 if (hasDriver) {
-                    const driverFee = data.days * 20;
-                    finalSubtotal += driverFee;
-                    finalTotal += driverFee;
-                    
                     document.getElementById('summDriverRow').classList.remove('hidden');
-                    document.getElementById('summDriverFee').innerText = "$" + driverFee.toFixed(2);
                 } else {
                     document.getElementById('summDriverRow').classList.add('hidden');
                 }
-                // ----------------------------------
 
                 document.getElementById('summDays').innerText = data.days + (data.days === 1 ? " Day" : " Days");
                 document.getElementById('summSubtotal').innerText = "$" + finalSubtotal.toFixed(2); // Updated subtotal
@@ -626,6 +629,46 @@
         }
     }
 
+    async function checkDriverAvailability() {
+        const start = document.getElementById('startDate').value;
+        const end = document.getElementById('endDate').value;
+        if (!hasDriver) return;
+        if (!start || !end) return;
+
+        updateDriverAvailabilityStatus("Checking driver availability...");
+        try {
+            const resp = await fetch(`/Booking/AvailableDrivers?carId=${carId}&start=${start}&end=${end}`);
+            if (!resp.ok) {
+                updateDriverAvailabilityStatus("Unable to check driver availability.");
+                return;
+            }
+
+            const data = await resp.json();
+            hasAvailableDriver = data.availableCount > 0;
+            if (!hasAvailableDriver) {
+                updateDriverAvailabilityStatus("No drivers available for the selected dates/car category.");
+            } else {
+                const names = data.driverNames && data.driverNames.length > 0 ? ` (${data.driverNames.join(', ')})` : '';
+                updateDriverAvailabilityStatus(`Drivers available: ${data.availableCount}${names}`);
+            }
+        } catch (err) {
+            console.error(err);
+            updateDriverAvailabilityStatus("Unable to check driver availability.");
+        }
+    }
+
+    function updateDriverAvailabilityStatus(message) {
+        const statusEl = document.getElementById('driverAvailabilityStatus');
+        const submitBtn = document.getElementById('submitBtn');
+        if (!message) {
+            statusEl.innerText = '';
+            submitBtn.disabled = false;
+            return;
+        }
+        statusEl.innerText = message;
+        submitBtn.disabled = hasDriver && !hasAvailableDriver;
+    }
+
     document.getElementById('btnApplyPromo').addEventListener('click', calculatePrice);
 
     // 3. Submit
@@ -638,6 +681,12 @@
 
         if (!s || !e) {
             alert("Please select dates first.");
+            return;
+        }
+
+        if (hasDriver && !hasAvailableDriver) {
+            errDiv.innerText = "No drivers available for the selected dates/car category.";
+            errDiv.classList.remove('hidden');
             return;
         }
 

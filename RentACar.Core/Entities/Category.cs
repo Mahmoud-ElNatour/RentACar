@@ -23,4 +23,7 @@ public partial class Category
 
     [InverseProperty("Category")]
     public virtual ICollection<Car> Cars { get; set; } = new List<Car>();
+
+    [InverseProperty("Category")]
+    public virtual ICollection<DriverAllowedCategory> DriverAllowedCategories { get; set; } = new List<DriverAllowedCategory>();
 }
