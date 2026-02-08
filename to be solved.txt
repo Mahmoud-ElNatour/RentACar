@@ -1,11 +1,8 @@
 remaining:
-finalize add booking --> with driver later
-finalize driver
 Report index page
 
 -----------------------------------------
 major new features:
-- customer support with AI chatbot (and customer - employee chat) !important
 - HR
 - Accouting
 - Reports 
@@ -14,6 +11,3 @@ Maybe (mesh medtarin 3laya hl2):
 - cancelation / refunded for requests to be done onlie by Customers
 
 - theme panel 
-
-hi
-testing

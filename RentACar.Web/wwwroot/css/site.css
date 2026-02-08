@@ -56,7 +56,25 @@ html {
     color: var(--accent-yellow, #d4af37);
     border: 1px solid rgba(212, 175, 55, 0.35);
     border-radius: 0.5rem;
+    border-radius: 0.5rem;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: none;
+}
+
+.no-arrow {
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    appearance: none !important;
+    background-image: none !important;
+    text-indent: 1px;
+    text-overflow: '';
+}
+
+.form-select::-ms-expand {
+    display: none;
 }
 
 .form-select:focus {

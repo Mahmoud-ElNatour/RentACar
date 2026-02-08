@@ -522,6 +522,7 @@
         } else if (date.getTime() === selStart.getTime()) {
             // User clicked same date -> Single day rental
             selEnd = date;
+            updateDriverToggleState();
         } else {
             // Check range for blocking
             let valid = true;
@@ -539,7 +540,6 @@
                 check.setDate(check.getDate() + 1);
             }
             
-            if(valid) selEnd = date;
             if(valid) {
                  selEnd = date;
                  
@@ -547,8 +547,7 @@
                  
                  if (hasDriver) {
                      // If still has driver (didn't get disabled), status is green
-                     document.getElementById('driverAvailabilityStatus').innerText = "Driver available.";
-                     document.getElementById('driverAvailabilityStatus').className = "text-xs text-green-500";
+                     // This part overlaps with updateDriverToggleState logic but keeps "local" green status if needed
                  }
             } else {
                 if(window.showPopup) window.showPopup("Selected range includes unavailable dates.", "error");
@@ -565,9 +564,7 @@
         renderGrid();
         if (selStart && selEnd) {
             calculatePrice();
-            if (hasDriver) {
-                checkDriverAvailability();
-            }
+            // checkDriverAvailability(); // REMOVED: Now handled by updateDriverToggleState logic
         }
     }
     
@@ -785,6 +782,47 @@
         }
     }
 
+    function updateDriverToggleState() {
+        if (!selStart || !selEnd) return;
+        
+        // Check if any date in range is in driverUnavailableSet (which contains YYYY-MM-DD strings)
+        let driverAvailableForRange = true;
+        let check = new Date(selStart);
+        let limit = new Date(selEnd);
+        
+        while (check <= limit) {
+            if (driverUnavailableSet.has(toISODate(check))) {
+                driverAvailableForRange = false;
+                break;
+            }
+            check.setDate(check.getDate() + 1);
+        }
+
+        const toggle = document.getElementById('driverToggle');
+        const status = document.getElementById('driverAvailabilityStatus');
+        
+        if (!driverAvailableForRange) {
+            if (toggle.checked) {
+                toggle.checked = false;
+                // Trigger change event to update UI (hide map, etc)
+                toggle.dispatchEvent(new Event('change'));
+            }
+            toggle.disabled = true;
+            toggle.parentElement.classList.add('opacity-50', 'cursor-not-allowed');
+            status.innerText = "Driver service unavailable for selected dates.";
+            status.className = "text-xs text-red-500 font-bold mt-2";
+        } else {
+            if (isDriverServiceAvailable) {
+                toggle.disabled = false;
+                toggle.parentElement.classList.remove('opacity-50', 'cursor-not-allowed');
+                // Clear status only if it was showing the unavailable message
+                if (status.innerText.includes("unavailable")) {
+                     status.innerText = "";
+                }
+            }
+        }
+    }
+
     function updateDriverAvailabilityStatus(message) {
         const statusEl = document.getElementById('driverAvailabilityStatus');
         const submitBtn = document.querySelector('#bookingForm button[type="submit"]');
@@ -794,7 +832,7 @@
             return;
         }
         statusEl.innerText = message;
-        submitBtn.disabled = hasDriver && !hasAvailableDriver;
+        // submitBtn.disabled = hasDriver && !hasAvailableDriver; // This logic might need review if we use updateDriverToggleState
     }
     
     document.getElementById('btnApplyPromo').addEventListener('click', calculatePrice);
@@ -879,39 +917,5 @@
         }
     }); 
 
-    function updateDriverToggleState() {
-        if (!selStart || !selEnd) return;
-        
-        let driverAvailableForRange = true;
-        let check = new Date(selStart);
-        let limit = new Date(selEnd);
-        
-        while (check <= limit) {
-            if (driverUnavailableSet.has(toISODate(check))) {
-                driverAvailableForRange = false;
-                break;
-            }
-            check.setDate(check.getDate() + 1);
-        }
 
-        const toggle = document.getElementById('driverToggle');
-        const status = document.getElementById('driverAvailabilityStatus');
-        
-        if (!driverAvailableForRange) {
-            if (toggle.checked) {
-                toggle.checked = false;
-                toggle.dispatchEvent(new Event('change'));
-            }
-            toggle.disabled = true;
-            status.innerText = "Driver service unavailable for selected dates.";
-            status.className = "text-xs text-red-500 font-bold";
-        } else {
-            if (isDriverServiceAvailable) {
-                toggle.disabled = false;
-                if (!hasDriver) {
-                     status.innerText = "";
-                }
-            }
-        }
-    }
 </script>

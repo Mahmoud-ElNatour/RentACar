@@ -179,7 +179,7 @@ namespace RentACar.Web.Controllers
         {
             _logger.LogInformation("🗑️ [Delete] Request to delete car ID {Id}", id);
             await _carManager.DeleteCarAsync(id);
-            _logger.LogInformation("✅ [Delete] Car processed (Deleted or Deactivated)", id);
+            _logger.LogInformation("✅ [Delete] Car ID {Id} processed (Deleted or Deactivated)", id);
             return NoContent();
         }
 

@@ -19,14 +19,14 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="space-y-2">
                         <p class="text-xs font-bold uppercase text-gray-500">Current Driver</p>
-                        <div class="text-white font-semibold">@Model.DriverName ?? "Not Assigned"</div>
-                        <div class="text-sm text-gray-400">@Model.DriverEmail ?? "-"</div>
-                        <div class="text-sm text-gray-400">@Model.DriverPhone ?? "-"</div>
+                        <div class="text-white font-semibold">@(Model.DriverName ?? "Not Assigned")</div>
+                        <div class="text-sm text-gray-400">@(Model.DriverEmail ?? "-")</div>
+                        <div class="text-sm text-gray-400">@(Model.DriverPhone ?? "-")</div>
                     </div>
                     <div>
                         <label class="block text-xs font-bold uppercase text-gray-500 mb-2">Assign Driver</label>
                         <div class="relative">
-                            <select id="driverSelect" class="w-full bg-[#0a0a0a] border border-[#262626] rounded-xl py-3 px-4 text-white appearance-none focus:border-gold focus:ring-1 focus:ring-gold" @(Model.DriverId.HasValue ? "disabled" : "")>
+                            <select id="driverSelect" class="form-select no-arrow w-full bg-[#0a0a0a] border border-[#262626] rounded-xl py-3 px-4 text-white appearance-none focus:border-gold focus:ring-1 focus:ring-gold" @(Model.DriverId.HasValue ? "disabled" : "")>
                                 <option value="">Select Driver</option>
                                 @foreach (var driver in Model.Drivers)
                                 {

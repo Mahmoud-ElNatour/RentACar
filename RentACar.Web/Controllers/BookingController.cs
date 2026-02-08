@@ -103,7 +103,32 @@ namespace RentACar.Web.Controllers
             var booking = await _bookingManager.GetBookingByIdAsync(id);
             if (booking == null) return NotFound();
 
+            // Filter available drivers for this booking's dates and car category
+            var availablePreview = await _bookingManager.GetAvailableDriversPreviewAsync(booking.Startdate, booking.Enddate, booking.CarId);
+            var availableIds = availablePreview.Select(d => d.DriverId).ToHashSet();
+
             var drivers = await _driverManager.GetActiveDriversAsync();
+            drivers = drivers.Where(d => availableIds.Contains(d.DriverId)).ToList();
+
+            // Ensure current driver is in the list (mapped to DriverDisplayDto) even if technicall unavailable
+            if (booking.DriverId.HasValue && !drivers.Any(d => d.DriverId == booking.DriverId.Value))
+            {
+                var current = await _driverManager.GetDriverByIdAsync(booking.DriverId.Value);
+                if (current != null)
+                {
+                    drivers.Add(new DriverDisplayDto
+                    {
+                        DriverId = current.DriverId,
+                        FullName = current.FullName,
+                        Email = current.Email,
+                        Phone = current.Phone,
+                        IsActive = current.IsActive,
+                        AllowedCategoryIds = current.AllowedCategoryIds,
+                        DailyFeePerDay = current.DailyFeePerDay
+                    });
+                }
+            }
+
             DriverDto? currentDriver = null;
             if (booking.DriverId.HasValue)
             {

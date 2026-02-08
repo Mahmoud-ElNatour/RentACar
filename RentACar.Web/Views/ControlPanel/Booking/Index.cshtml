@@ -225,7 +225,7 @@
                 <span class="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Status</span>
                 <div class="relative">
                      <select name="status" id="statusFilter"
-                            class="w-full bg-[#0a0a0a] bg-none border border-[#262626] rounded-xl py-3 pl-4 pr-10 text-white placeholder-gray-600 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold appearance-none cursor-pointer">
+                            class="no-arrow w-full bg-[#0a0a0a] border border-[#262626] rounded-xl py-3 pl-4 pr-10 text-white focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold appearance-none cursor-pointer">
                         <option value="">All Statuses</option>
                         <option value="Pending">Pending</option>
                         <option value="Confirmed">Confirmed</option>
@@ -499,14 +499,16 @@
                         <div><span class="font-bold text-gray-300">End:</span> ${formatDate(b.enddate)}</div>
                     </td>
                     <td class="px-6 py-4 text-center">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold \${statusClass}">
-                            ${b.bookingStatus}
-                        </span>
-                        ${b.hasDriver && b.driverId ? `
-                            <button class="assign-driver mt-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-green-500/10 text-green-500 border border-green-500/20 hover:bg-green-500/20 transition-colors" data-id="${b.bookingId}">
-                                Assigned
-                            </button>
-                        ` : ''}
+                        <div class="flex flex-col items-center justify-center gap-2">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold \${statusClass}">
+                                ${b.bookingStatus}
+                            </span>
+                            ${b.hasDriver && b.driverId ? `
+                                <button class="assign-driver inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-green-500/10 text-green-500 border border-green-500/20 hover:bg-green-500/20 transition-colors" data-id="${b.bookingId}">
+                                    Assigned
+                                </button>
+                            ` : ''}
+                        </div>
                     </td>
                     <td class="px-6 py-4 text-right">
                         <div class="font-bold text-white">${formatMoney(b.totalPrice)}</div>
