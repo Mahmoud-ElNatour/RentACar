@@ -7,7 +7,6 @@ public class DriverDashboardViewModel
 {
     public int DriverId { get; set; }
     public string DriverName { get; set; } = string.Empty;
-    public string DriverCode { get; set; } = string.Empty;
     public bool IsAvailable { get; set; }
     public List<DriverPortalBookingViewModel> TodayBookings { get; set; } = new();
 }
@@ -38,7 +37,6 @@ public class DriverBookingDetailsViewModel
     public double? DriverLatitude { get; set; }
     public double? DriverLongitude { get; set; }
     public DateTime? PickupDateTime { get; set; }
-    public string DriverCode { get; set; } = string.Empty;
     public int DriverId { get; set; }
 }
 

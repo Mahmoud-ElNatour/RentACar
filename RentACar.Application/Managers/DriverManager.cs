@@ -53,10 +53,9 @@ public class DriverManager
             .Select(d => new DriverDisplayDto
             {
                 DriverId = d.DriverId,
-                DriverCode = d.DriverCode,
                 FullName = d.Employee?.Name ?? d.FullName,
-                Email = d.User?.Email ?? d.Email,
-                Phone = d.User?.PhoneNumber ?? d.Phone,
+                Email = d.User?.Email ?? "N/A",
+                Phone = d.User?.PhoneNumber ?? "N/A",
                 IsActive = d.IsActive
             })
             .ToList();
@@ -69,11 +68,12 @@ public class DriverManager
             .Select(d => new DriverDisplayDto
             {
                 DriverId = d.DriverId,
-                DriverCode = d.DriverCode,
                 FullName = d.Employee?.Name ?? d.FullName,
-                Email = d.User?.Email ?? d.Email,
-                Phone = d.User?.PhoneNumber ?? d.Phone,
-                IsActive = d.IsActive
+                Email = d.User?.Email ?? "N/A",
+                Phone = d.User?.PhoneNumber ?? "N/A",
+                IsActive = d.IsActive,
+                DailyFeePerDay = d.DailyFeePerDay,
+                AllowedCategoryIds = d.AllowedCategories.Select(c => c.CategoryId).ToList()
             })
             .ToList();
     }
@@ -109,8 +109,8 @@ public class DriverProfile : Profile
     {
         CreateMap<Driver, DriverDto>()
             .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => src.Employee != null ? src.Employee.Name : src.FullName))
-            .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.User != null ? src.User.Email : src.Email))
-            .ForMember(dest => dest.Phone, opt => opt.MapFrom(src => src.User != null ? src.User.PhoneNumber : src.Phone))
+            .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.User != null ? src.User.Email : null))
+            .ForMember(dest => dest.Phone, opt => opt.MapFrom(src => src.User != null ? src.User.PhoneNumber : null))
             .ForMember(dest => dest.AllowedCategoryIds, opt => opt.MapFrom(src => src.AllowedCategories.Select(ac => ac.CategoryId)))
             .ReverseMap()
             .ForMember(dest => dest.User, opt => opt.Ignore())

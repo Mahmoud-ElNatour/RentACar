@@ -16,4 +16,5 @@ public interface IDriverAvailabilityRepository
 
     Task AddAsync(DriverAvailability availability);
     Task UpdateAsync(DriverAvailability availability);
+    Task<List<DriverAvailability>> GetAvailabilitiesForDriversAsync(List<int> driverIds, DateOnly from, DateOnly to);
 }

@@ -80,7 +80,6 @@ public class TrackingController : Controller
             BookingStatus = booking.BookingStatus,
             CustomerName = customer.Name,
             DriverName = driver?.FullName ?? "Assigned Driver",
-            DriverCode = driver?.DriverCode ?? "DR-0000",
             CarName = car?.ModelName ?? "Vehicle",
             CarPlate = car?.PlateNumber ?? "N/A",
             PickupAddress = booking.PickupAddress ?? "Pickup location",

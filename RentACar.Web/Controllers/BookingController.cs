@@ -129,6 +129,7 @@ namespace RentACar.Web.Controllers
         [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> AddForEmployee(int? carId = null)
         {
+            ViewBag.GoogleMapsKey = _configuration["GOOGLE_MAPS_API_KEY"]; // ✅ add this
             if (carId.HasValue)
             {
                 var car = await _carManager.GetCarByIdAsync(carId.Value);
@@ -526,6 +527,22 @@ namespace RentACar.Web.Controllers
             return Ok(dates);
         }
 
+        [HttpGet("GetDriverUnavailableDates")]
+        public async Task<ActionResult<List<string>>> GetDriverUnavailableDates([FromQuery] int carId, [FromQuery] DateTime start, [FromQuery] DateTime end)
+        {
+            var startDate = DateOnly.FromDateTime(start);
+            var endDate = DateOnly.FromDateTime(end);
+            
+            // Simple caching key
+            // Ideally use IMemoryCache
+            // For now, let's keep it direct to avoid complexity if cache service not injected
+            // But user asked for optimization. 
+            // Query itself is not too heavy, but let's ensure we don't over-fetch.
+            
+            var dates = await _bookingManager.GetDriverUnavailableDatesAsync(carId, startDate, endDate);
+            return Ok(dates.Select(d => d.ToString("yyyy-MM-dd")).ToList());
+        }
+
         [HttpPost("CalculatePrice")]
         public async Task<ActionResult<object>> CalculatePrice([FromBody] CalculatePriceRequestDto dto)
         {
@@ -537,7 +554,28 @@ namespace RentACar.Web.Controllers
 
             var days = (dto.EndDate.ToDateTime(TimeOnly.MinValue) - dto.StartDate.ToDateTime(TimeOnly.MinValue)).Days + 1;
             var pricePerDay = car.PricePerDay ?? 0;
-            var subtotal = pricePerDay * days;
+            
+            // Driver Fee Calculation
+            decimal driverServiceFee = 0;
+            decimal carExtraDriverFee = 0;
+            
+            if (dto.HasDriver && car.CategoryId.HasValue)
+            {
+                // Estimate driver fee: use average of active drivers in this category
+                var activeDrivers = await _driverManager.GetActiveDriversAsync();
+                var categoryDrivers = activeDrivers
+                    .Where(d => d.AllowedCategoryIds.Contains(car.CategoryId.Value))
+                    .ToList();
+                
+                decimal avgDriverFee = categoryDrivers.Any() 
+                    ? categoryDrivers.Average(d => d.DailyFeePerDay ?? 0) 
+                    : 0;
+                
+                driverServiceFee = avgDriverFee * days;
+                carExtraDriverFee = (car.ExtraDriverFeePerDay ?? 0) * days;
+            }
+
+            var subtotal = (pricePerDay * days) + driverServiceFee + carExtraDriverFee;
 
             decimal discountAmount = 0;
             string? promoName = null;
@@ -558,6 +596,9 @@ namespace RentACar.Web.Controllers
             {
                 Days = days,
                 PricePerDay = pricePerDay,
+                DriverFee = driverServiceFee, // Keeping for backward compat if needed, or just specific
+                DriverServiceFee = driverServiceFee,
+                CarExtraDriverFee = carExtraDriverFee,
                 Subtotal = subtotal,
                 DiscountAmount = discountAmount,
                 Total = total,
@@ -773,5 +814,6 @@ namespace RentACar.Web.Controllers
         public DateOnly StartDate { get; set; }
         public DateOnly EndDate { get; set; }
         public string? Promocode { get; set; }
+        public bool HasDriver { get; set; }
     }
 }

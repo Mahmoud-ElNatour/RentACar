@@ -36,6 +36,17 @@ namespace RentACar.Infrastructure.Data.Repository
                 .ToListAsync();
         }
 
+        public async Task<List<DriverAvailability>> GetAvailabilitiesForDriversAsync(List<int> driverIds, DateOnly from, DateOnly to)
+        {
+            if (driverIds == null || !driverIds.Any())
+                return new List<DriverAvailability>();
+
+            return await _dbContext.DriverAvailabilities
+                .Where(a => driverIds.Contains(a.DriverId) && a.IsAvailable && a.Date >= from && a.Date <= to)
+                .AsNoTracking()
+                .ToListAsync();
+        }
+
         /// <summary>
         /// FULL-DAY (Option 1):
         /// Driver is eligible only if ALL days in [startDate..endDate] exist with IsAvailable = true.

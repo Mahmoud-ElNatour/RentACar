@@ -215,8 +215,8 @@ namespace RentACar.Application.Managers
                 { "StartDate", booking.Startdate.ToString("dd MMM yyyy") },
                 { "EndDate", booking.Enddate.ToString("dd MMM yyyy") },
                 { "DriverName", newDriver.FullName },
-                { "DriverEmail", newDriver.User?.Email ?? newDriver.Email },
-                { "DriverPhone", newDriver.User?.PhoneNumber ?? newDriver.Phone ?? "-" },
+                { "DriverEmail", newDriver.User?.Email ?? "N/A" },
+                { "DriverPhone", newDriver.User?.PhoneNumber ?? "-" },
                 { "Year", DateTime.UtcNow.Year.ToString() }
             };
 
@@ -224,13 +224,13 @@ namespace RentACar.Application.Managers
             if (!string.IsNullOrWhiteSpace(customerEmail))
             {
                 var customerBody = $@"<h2>Driver Update</h2><p>Your driver for booking #{booking.BookingId} has been updated.</p>
-<p><strong>New Driver:</strong> {newDriver.FullName} ({newDriver.User?.Email ?? newDriver.Email})</p>";
+<p><strong>New Driver:</strong> {newDriver.FullName} ({newDriver.User?.Email})</p>";
                 customerBody = EmailTemplates.GetStandardTemplate(customerBody, "Driver Update");
 
                 await SendTemplatedEmailAsync(customerEmail, "DriverReassignedCustomer", "CUST-DRIVER-UPDATE", placeholders, "Driver Update", customerBody, "Driver Update");
             }
 
-            var newDriverEmail = newDriver.User?.Email ?? newDriver.Email;
+            var newDriverEmail = newDriver.User?.Email;
             if (!string.IsNullOrWhiteSpace(newDriverEmail))
             {
                 var driverBody = $@"<h2>New Driver Assignment</h2><p>You have been assigned to booking #{booking.BookingId}.</p>
@@ -240,7 +240,7 @@ namespace RentACar.Application.Managers
                 await SendTemplatedEmailAsync(newDriverEmail, "DriverAssigned", "DRV-ASSIGNED", placeholders, "New Driver Assignment", driverBody, "Driver Assignment");
             }
 
-            var oldDriverEmail = oldDriver?.User?.Email ?? oldDriver?.Email;
+            var oldDriverEmail = oldDriver?.User?.Email;
             if (!string.IsNullOrWhiteSpace(oldDriverEmail))
             {
                 var oldDriverBody = $@"<h2>Driver Assignment Updated</h2><p>You have been unassigned from booking #{booking.BookingId}.</p>";

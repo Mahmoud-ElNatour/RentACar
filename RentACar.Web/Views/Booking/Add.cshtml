@@ -174,10 +174,11 @@
                             </div>
                         </label>
                     </h2>
+                    
+                    <div id="driverAvailabilityStatus" class="text-xs text-gray-400 mb-4"></div>
 
                     <div id="driverSection" class="hidden space-y-6">
                         <p class="text-sm text-gray-400">Enable this to have a professional driver pick you up.</p>
-                        <div id="driverAvailabilityStatus" class="text-xs text-gray-400"></div>
 
                         <!-- Location Input -->
                         <div>
@@ -247,9 +248,13 @@
                                 <span class="font-bold text-white" id="summSubtotal">$0.00</span>
                             </div>
 
-                            <div id="summDriverRow" class="flex justify-between text-sm hidden">
-                                <span class="text-gray-400">Driver Service</span>
-                                <span class="font-bold text-white" id="summDriverFee">Calculated at checkout</span>
+                            <div id="summDriverServiceRow" class="flex justify-between text-sm hidden">
+                                <span class="text-gray-400">Driver Fee</span>
+                                <span class="font-bold text-white" id="summDriverServiceFee">$0.00</span>
+                            </div>
+                            <div id="summCarDriverRow" class="flex justify-between text-sm hidden">
+                                <span class="text-gray-400">Car Driver Fee</span>
+                                <span class="font-bold text-white" id="summCarDriverFee">$0.00</span>
                             </div>
 
                             <div id="summPromoRow" class="flex justify-between text-green-500 text-sm hidden">
@@ -288,6 +293,8 @@
     const carId = @Model.CarId;
     const gMapsKey = '@ViewBag.GoogleMapsKey';
     let blockedDatesSet = new Set();
+    let driverUnavailableSet = new Set();
+    let isDriverServiceAvailable = true;
 
     // Driver & Map State
     let hasDriver = false;
@@ -301,6 +308,7 @@
     let hasAvailableDriver = true;
 
     // Toggle Logic
+    // Toggle Logic
     document.getElementById('driverToggle').addEventListener('change', function (e) {
         hasDriver = e.target.checked;
         const sec = document.getElementById('driverSection');
@@ -308,17 +316,18 @@
             sec.classList.remove('hidden');
             if (!mapLoaded) loadGoogleMaps();
             else if (map) {
-                // Resize trigger needed when showing hidden map
                 setTimeout(() => google.maps.event.trigger(map, "resize"), 100);
             }
-            checkDriverAvailability();
+            document.getElementById('summDriverServiceRow').classList.remove('hidden');
+            document.getElementById('summCarDriverRow').classList.remove('hidden');
         } else {
             sec.classList.add('hidden');
-            // clear values? maybe keep them if user toggles back
-            hasAvailableDriver = true;
             updateDriverAvailabilityStatus(null);
+            document.getElementById('summDriverServiceRow').classList.add('hidden');
+            document.getElementById('summCarDriverRow').classList.add('hidden');
         }
-        calculatePrice(); // If driver adds fee later
+        renderGrid(); // Re-render to show/hide blocked driver dates
+        calculatePrice(); 
     });
 
     // --- Google Maps Logic ---
@@ -464,6 +473,46 @@
         }
     }
 
+    async function fetchDriverUnavailableDates() {
+        // Fetch next 90 days to determine global availability and blocking
+        const today = new Date();
+        const end = new Date();
+        end.setDate(today.getDate() + 90);
+        
+        const s = toISODate(today);
+        const e = toISODate(end);
+
+        try {
+            const url = `/api/Booking/GetDriverUnavailableDates?carId=${carId}&start=${s}&end=${e}`;
+            const resp = await fetch(url);
+            if (resp.ok) {
+                const dates = await resp.json();
+                dates.forEach(d => driverUnavailableSet.add(d));
+                
+                // If ALL 90 days are unavailable, assume no service exists
+                // Approx check: if count > 89
+                if (dates.length >= 90) {
+                     isDriverServiceAvailable = false;
+                     // Hide toggle wrapper
+                     const toggleWrapper = document.getElementById('driverToggle').closest('label'); // The label wrapping the input
+                     if(toggleWrapper) {
+                         toggleWrapper.classList.add('hidden');
+                         
+                         // Add message
+                         const h2 = toggleWrapper.closest('h2');
+                         // Check if message already exists
+                         if(!h2.querySelector('.driver-unavailable-msg')) {
+                             const msg = document.createElement('span');
+                             msg.className = "driver-unavailable-msg text-xs text-red-500 font-normal ml-auto";
+                             msg.innerText = "Unavailable (No Drivers)";
+                             h2.appendChild(msg);
+                         }
+                     }
+                }
+            }
+        } catch (e) { console.error("Failed to load driver dates", e); }
+    }
+
     async function init() {
         // Check pre-filled values
         const s = document.getElementById('startDate').value;
@@ -471,14 +520,15 @@
         if (s) selStart = new Date(s);
         if (e) selEnd = new Date(e);
 
-        await fetchMonthDates(currDate.getFullYear(), currDate.getMonth());
+        await Promise.all([
+            fetchMonthDates(currDate.getFullYear(), currDate.getMonth()),
+            fetchDriverUnavailableDates()
+        ]);
+        
         renderGrid();
 
         if (selStart && selEnd) {
             calculatePrice();
-            if (hasDriver) {
-                checkDriverAvailability();
-            }
         }
     }
 
@@ -508,14 +558,17 @@
             const iso = toISODate(date);
             const isPast = date < today;
             const isBlocked = blockedDatesSet.has(iso);
+            // Driver block: ONLY if hasDriver is checked
+            const isDriverBlocked = hasDriver && driverUnavailableSet.has(iso);
 
             const btn = document.createElement('button');
             btn.innerText = i;
             btn.className = 'w-8 h-8 rounded-lg flex items-center justify-center transition-all text-gray-300 mx-auto font-medium';
 
-            if (isPast || isBlocked) {
+            if (isPast || isBlocked || isDriverBlocked) {
                 btn.classList.add('opacity-30', 'cursor-not-allowed');
                 if (isBlocked) btn.classList.add('bg-red-900/50', 'text-red-300'); // Blocked style
+                if (isDriverBlocked && !isBlocked) btn.classList.add('bg-orange-900/50', 'text-orange-300'); // Driver blocked style
                 btn.disabled = true;
             } else {
                 btn.className += ' hover:bg-white/10';
@@ -550,20 +603,68 @@
         } else if (date < selStart) {
             selStart = date;
         } else if (date.getTime() === selStart.getTime()) {
-
+             // Allow single day selection
+             selEnd = date;
+             // Check if blocked
+             let iso = toISODate(date);
+             if (blockedDatesSet.has(iso) || (hasDriver && driverUnavailableSet.has(iso))) {
+                  // Actually if it was blocked it wouldn't be clickable? 
+                  // But just in case
+                  selEnd = null;
+                  return;
+             }
+             
+             // Update UI
+             document.getElementById('errorMsg').classList.add('hidden');
+             updateDriverToggleState();
+             
+             if (hasDriver) {
+                 document.getElementById('driverAvailabilityStatus').innerText = "Driver available.";
+                 document.getElementById('driverAvailabilityStatus').className = "text-xs text-green-500";
+             }
         } else {
             // Validate range
             let valid = true;
             let check = new Date(selStart);
-            while (check <= date) {
-                if (blockedDatesSet.has(toISODate(check))) {
+            let limit = new Date(date);
+            // Optimize loop direction or swap if needed (selStart is always < date here usually due to logic above)
+            // Logic above: date < selStart checked. date == selStart checked. so date > selStart.
+            
+            while (check <= limit) {
+                let iso = toISODate(check);
+                if (blockedDatesSet.has(iso)) {
                     valid = false;
+                    document.getElementById('errorMsg').innerText = "Selected range includes already booked dates.";
+                    document.getElementById('errorMsg').classList.remove('hidden');
+                    break;
+                }
+                if (hasDriver && driverUnavailableSet.has(iso)) {
+                    valid = false;
+                     document.getElementById('driverAvailabilityStatus').innerText = "No drivers available for these dates.";
+                     document.getElementById('driverAvailabilityStatus').className = "text-xs text-red-500 font-bold";
                     break;
                 }
                 check.setDate(check.getDate() + 1);
             }
-            if (valid) selEnd = date;
-            else { alert("Selected range includes unavailable dates."); selEnd = null; return; }
+            
+            if (valid) {
+                selEnd = date;
+                // Clear errors
+                 document.getElementById('errorMsg').classList.add('hidden');
+                 
+                 // Check driver availability for this range
+                 updateDriverToggleState();
+                 
+                 if (hasDriver) {
+                     // If still has driver (didn't get disabled), status is green
+                     document.getElementById('driverAvailabilityStatus').innerText = "Driver available.";
+                     document.getElementById('driverAvailabilityStatus').className = "text-xs text-green-500";
+                 }
+            }
+            else { 
+                selEnd = null; 
+                return; 
+            }
         }
 
         document.getElementById('startDate').value = toISODate(selStart);
@@ -594,7 +695,8 @@
                     carId: carId,
                     startDate: start,
                     endDate: end,
-                    promocode: promo
+                    promocode: promo,
+                    hasDriver: hasDriver
                 })
             });
 
@@ -605,9 +707,14 @@
                 let finalTotal = data.total;
 
                 if (hasDriver) {
-                    document.getElementById('summDriverRow').classList.remove('hidden');
+                    document.getElementById('summDriverServiceRow').classList.remove('hidden');
+                    document.getElementById('summCarDriverRow').classList.remove('hidden');
+                    
+                    document.getElementById('summDriverServiceFee').innerText = "$" + data.driverServiceFee.toFixed(2);
+                    document.getElementById('summCarDriverFee').innerText = "$" + (data.carExtraDriverFee || 0).toFixed(2);
                 } else {
-                    document.getElementById('summDriverRow').classList.add('hidden');
+                    document.getElementById('summDriverServiceRow').classList.add('hidden');
+                    document.getElementById('summCarDriverRow').classList.add('hidden');
                 }
 
                 document.getElementById('summDays').innerText = data.days + (data.days === 1 ? " Day" : " Days");
@@ -629,32 +736,10 @@
         }
     }
 
+    // Old checkDriverAvailability removed/replaced by local logic
     async function checkDriverAvailability() {
-        const start = document.getElementById('startDate').value;
-        const end = document.getElementById('endDate').value;
-        if (!hasDriver) return;
-        if (!start || !end) return;
-
-        updateDriverAvailabilityStatus("Checking driver availability...");
-        try {
-            const resp = await fetch(`/Booking/AvailableDrivers?carId=${carId}&start=${start}&end=${end}`);
-            if (!resp.ok) {
-                updateDriverAvailabilityStatus("Unable to check driver availability.");
-                return;
-            }
-
-            const data = await resp.json();
-            hasAvailableDriver = data.availableCount > 0;
-            if (!hasAvailableDriver) {
-                updateDriverAvailabilityStatus("No drivers available for the selected dates/car category.");
-            } else {
-                const names = data.driverNames && data.driverNames.length > 0 ? ` (${data.driverNames.join(', ')})` : '';
-                updateDriverAvailabilityStatus(`Drivers available: ${data.availableCount}${names}`);
-            }
-        } catch (err) {
-            console.error(err);
-            updateDriverAvailabilityStatus("Unable to check driver availability.");
-        }
+        // Redundant with new logic, but kept placeholder or simple status update
+        // We rely on driverUnavailableSet now
     }
 
     function updateDriverAvailabilityStatus(message) {
@@ -746,4 +831,40 @@
             btn.innerHTML = '<span>Proceed to Payment</span><span class="material-symbols-outlined">arrow_forward</span>';
         }
     });
+
+    function updateDriverToggleState() {
+        if (!selStart || !selEnd) return;
+        
+        let driverAvailableForRange = true;
+        let check = new Date(selStart);
+        let limit = new Date(selEnd);
+        
+        while (check <= limit) {
+            if (driverUnavailableSet.has(toISODate(check))) {
+                driverAvailableForRange = false;
+                break;
+            }
+            check.setDate(check.getDate() + 1);
+        }
+
+        const toggle = document.getElementById('driverToggle');
+        const status = document.getElementById('driverAvailabilityStatus');
+        
+        if (!driverAvailableForRange) {
+            if (toggle.checked) {
+                toggle.checked = false;
+                toggle.dispatchEvent(new Event('change'));
+            }
+            toggle.disabled = true;
+            status.innerText = "Driver service unavailable for selected dates.";
+            status.className = "text-xs text-red-500 font-bold";
+        } else {
+            if (isDriverServiceAvailable) {
+                toggle.disabled = false;
+                if (!hasDriver) {
+                     status.innerText = "";
+                }
+            }
+        }
+    }
 </script>

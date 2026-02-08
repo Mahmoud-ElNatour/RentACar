@@ -65,7 +65,6 @@ namespace RentACar.Web.Controllers
             {
                 DriverId = driver.DriverId,
                 DriverName = driver.FullName,
-                DriverCode = driver.DriverCode,
                 IsAvailable = driver.IsActive,
                 TodayBookings = todayBookings
             };
@@ -154,7 +153,6 @@ namespace RentACar.Web.Controllers
                 DriverLatitude = currentTrip != null ? (double?)currentTrip.LastDriverLatitude : null,
                 DriverLongitude = currentTrip != null ? (double?)currentTrip.LastDriverLongitude : null,
                 PickupDateTime = booking.PickupDateTime,
-                DriverCode = driver.DriverCode,
                 DriverId = driver.DriverId
             };
 
@@ -288,7 +286,6 @@ namespace RentACar.Web.Controllers
                         DriverLatitude = currentTrip != null ? (double?)currentTrip.LastDriverLatitude : null,
                         DriverLongitude = currentTrip != null ? (double?)currentTrip.LastDriverLongitude : null,
                         PickupDateTime = booking.PickupDateTime,
-                        DriverCode = driver.DriverCode,
                         DriverId = driver.DriverId
                     };
                 }
@@ -350,7 +347,6 @@ namespace RentACar.Web.Controllers
                 DriverLatitude = currentTrip != null ? (double?)currentTrip.LastDriverLatitude : null,
                 DriverLongitude = currentTrip != null ? (double?)currentTrip.LastDriverLongitude : null,
                 PickupDateTime = booking.PickupDateTime,
-                DriverCode = driver.DriverCode,
                 DriverId = driver.DriverId
             };
 

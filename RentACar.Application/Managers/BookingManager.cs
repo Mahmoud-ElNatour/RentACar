@@ -647,6 +647,101 @@ namespace RentACar.Application.Managers
                 .ToList();
         }
 
+        public async Task<List<DateOnly>> GetDriverUnavailableDatesAsync(int carId, DateOnly start, DateOnly end)
+        {
+            // 1. Get Car Category
+            var car = await _carRepository.GetByIdAsync(carId);
+            if (car == null || !car.CategoryId.HasValue)
+            {
+                return new List<DateOnly>();
+            }
+            var categoryId = car.CategoryId.Value;
+
+            // 2. Get All Active Drivers for this Category
+            var allDrivers = await _driverRepository.GetAllAsync();
+            var eligibleDrivers = allDrivers
+                .Where(d => d.IsActive && d.Employee != null && d.Employee.IsActive && d.AllowedCategories.Any(c => c.CategoryId == categoryId))
+                .ToList();
+
+            if (!eligibleDrivers.Any())
+            {
+                // If no drivers exist for this category, ALL dates are unavailable.
+                // Return all dates in range.
+                var allDates = new List<DateOnly>();
+                for (var d = start; d <= end; d = d.AddDays(1))
+                {
+                    allDates.Add(d);
+                }
+                return allDates;
+            }
+
+            var driverIds = eligibleDrivers.Select(d => d.DriverId).ToList();
+
+            // 3. Get Availabilities (Capacity per day)
+            // Assumes OPT-IN: Driver must have IsAvailable=true record to be counted.
+            var availabilities = await _driverAvailabilityRepository.GetAvailabilitiesForDriversAsync(driverIds, start, end);
+            
+            // Map: Date -> Count of Available Drivers
+            var capacityMap = availabilities
+                .GroupBy(a => a.Date)
+                .ToDictionary(g => g.Key, g => g.Select(a => a.DriverId).Distinct().Count());
+
+            // 4. Get Existing Bookings (Usage per day)
+            var blockingStatuses = new[] { "Confirmed", "Pending", "InProgress" }; // status strings
+            
+            // Fetch bookings that overlap with range, rely on pulling to memory if needed but better to filter
+            // Using existing repository method if possible, or Query()
+            // Drivers can only be in one place at a time.
+            
+            var bookings = await _bookingRepository.Query()
+                .Where(b => b.HasDriver && b.DriverId.HasValue 
+                            && driverIds.Contains(b.DriverId.Value)
+                            && b.Startdate <= end && b.Enddate >= start)
+                .ToListAsync();
+
+            // Filter status in memory if complex status logic needed, or use IsBlockingStatus helper if we can access it (it's private static)
+            // We'll reimplement specific check or assume repo returns active ones? No, Query() returns all.
+            var activeBookings = bookings
+                .Where(b => IsBlockingStatus(b.BookingStatus))
+                .ToList();
+
+            // Map: Date -> Count of Booked Drivers
+            var usageMap = new Dictionary<DateOnly, int>();
+
+            foreach (var booking in activeBookings)
+            {
+                // Intersect booking range with request range
+                var bStart = booking.Startdate < start ? start : booking.Startdate;
+                var bEnd = booking.Enddate > end ? end : booking.Enddate;
+
+                for (var d = bStart; d <= bEnd; d = d.AddDays(1))
+                {
+                    if (!usageMap.ContainsKey(d)) usageMap[d] = 0;
+                    usageMap[d]++;
+                }
+            }
+
+            // 5. Compare
+            var unavailableDates = new List<DateOnly>();
+            for (var d = start; d <= end; d = d.AddDays(1))
+            {
+                // Capacity: How many drivers said "I am free" on this day?
+                // If capacity is 0 (no one opted in), it's unavailable.
+                var capacity = capacityMap.ContainsKey(d) ? capacityMap[d] : 0;
+                
+                // Usage: How many are already booked?
+                var usage = usageMap.ContainsKey(d) ? usageMap[d] : 0;
+
+                // Remaining
+                if (capacity - usage <= 0)
+                {
+                    unavailableDates.Add(d);
+                }
+            }
+
+            return unavailableDates;
+        }
+
 
         public async Task<List<BookingDto>> GetBookingHistoryAsync(int customerId)
         {

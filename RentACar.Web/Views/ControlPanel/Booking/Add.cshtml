@@ -143,9 +143,13 @@
                         <span id="summSubtotal">$0.00</span>
                     </div>
 
-                    <div id="summDriverRow" class="flex justify-between text-gray-400 hidden">
-                        <span>Driver Service</span>
-                        <span>Calculated at checkout</span>
+                    <div id="summDriverServiceRow" class="flex justify-between text-gray-400 hidden">
+                        <span>Driver Fee</span>
+                        <span id="summDriverServiceFee">$0.00</span>
+                    </div>
+                    <div id="summCarDriverRow" class="flex justify-between text-gray-400 hidden">
+                        <span>Car Driver Fee</span>
+                        <span id="summCarDriverFee">$0.00</span>
                     </div>
                     
                     <div id="summPromoRow" class="flex justify-between text-green-500 hidden">
@@ -235,24 +239,30 @@
                     <div id="driverAvailabilityStatus" class="text-xs text-gray-400 mt-2"></div>
 
                     <div id="driverSection" class="hidden space-y-4 mt-4">
+                        <!-- Location Input -->
                         <div>
-                            <label class="block text-xs font-bold uppercase text-gray-500 mb-2">Pickup Location Label</label>
-                            <input type="text" id="pickupLocationName" class="w-full bg-[#0a0a0a] border border-[#262626] rounded-xl py-3 px-4 text-white" placeholder="Location name" />
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold uppercase text-gray-500 mb-2">Pickup Address</label>
-                            <input type="text" id="pickupAddress" class="w-full bg-[#0a0a0a] border border-[#262626] rounded-xl py-3 px-4 text-white" placeholder="Address details" />
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs font-bold uppercase text-gray-500 mb-2">Pickup Latitude</label>
-                                <input type="number" step="0.000001" id="pickupLatitude" class="w-full bg-[#0a0a0a] border border-[#262626] rounded-xl py-3 px-4 text-white" placeholder="Latitude" />
+                            <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Pickup Location</label>
+                            <div class="flex gap-2 mb-2">
+                                <input type="text" id="pickupLocationName" readonly
+                                    class="w-full bg-[#0a0a0a] border border-[#262626] rounded-xl px-4 py-3 text-white focus:border-gold outline-none cursor-default"
+                                    placeholder="Select on map..." />
+                                <button type="button" id="btnUseMyLoc"
+                                    class="px-4 py-3 rounded-xl bg-[#262626] hover:bg-[#333] border border-[#404040] text-gold whitespace-nowrap transition-colors flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-lg">my_location</span>
+                                </button>
                             </div>
-                            <div>
-                                <label class="block text-xs font-bold uppercase text-gray-500 mb-2">Pickup Longitude</label>
-                                <input type="number" step="0.000001" id="pickupLongitude" class="w-full bg-[#0a0a0a] border border-[#262626] rounded-xl py-3 px-4 text-white" placeholder="Longitude" />
-                            </div>
+                            <div id="locStatus" class="text-xs text-gold h-4"></div>
                         </div>
+
+                        <!-- Map Container -->
+                        <div class="h-[300px] w-full rounded-2xl overflow-hidden border border-[#262626] relative">
+                            <div id="gMap" class="w-full h-full bg-[#0a0a0a]"></div>
+                        </div>
+
+                        <!-- Hidden Fields for Submission -->
+                        <input type="hidden" id="pickupAddress" />
+                        <input type="hidden" id="pickupLatitude" />
+                        <input type="hidden" id="pickupLongitude" />
                     </div>
                 </section>
 
@@ -315,9 +325,21 @@
 
 <script>
     const carId = @car?.CarId;
+    const gMapsKey = '@ViewBag.GoogleMapsKey';
     let blockedDates = []; // List of YYYY-MM-DD
     let hasDriver = false;
     let hasAvailableDriver = true;
+    let driverUnavailableSet = new Set();
+    let isDriverServiceAvailable = true;
+
+    // Driver & Map State
+    let pickupLat = null;
+    let pickupLng = null;
+    let pickupAddress = null;
+    let pickupLocationName = null;
+    let map = null;
+    let marker = null;
+    let mapLoaded = false;
     
     // --- Autocomplete ---
     new TomSelect("#customerSelect", {
@@ -365,7 +387,6 @@
         calTitle.classList.add('animate-pulse', 'text-gold');
 
         try {
-            // Month is 0-indexed in JS, but API expects 1-12
             const apiMonth = month + 1;
             const url = `/api/Booking/GetBookedDates?carId=${carId}&year=${year}&month=${apiMonth}`;
             const resp = await fetch(url);
@@ -379,8 +400,46 @@
         }
     }
 
+    async function fetchDriverUnavailableDates() {
+        const today = new Date();
+        const end = new Date();
+        end.setDate(today.getDate() + 90);
+        
+        const s = toISODate(today);
+        const e = toISODate(end);
+
+        try {
+            const url = `/api/Booking/GetDriverUnavailableDates?carId=${carId}&start=${s}&end=${e}`;
+            const resp = await fetch(url);
+            if (resp.ok) {
+                const dates = await resp.json();
+                dates.forEach(d => driverUnavailableSet.add(d));
+                
+                if (dates.length >= 90) {
+                     isDriverServiceAvailable = false;
+                     // Hide toggle wrapper
+                     const toggleWrapper = document.getElementById('driverToggle').closest('label');
+                     if(toggleWrapper) {
+                         toggleWrapper.classList.add('hidden');
+                         // Add message
+                         const h2 = toggleWrapper.closest('h2');
+                         if(!h2.querySelector('.driver-unavailable-msg')) {
+                             const msg = document.createElement('span');
+                             msg.className = "driver-unavailable-msg text-xs text-red-500 font-normal ml-auto";
+                             msg.innerText = "Unavailable (No Drivers)";
+                             h2.appendChild(msg);
+                         }
+                     }
+                }
+            }
+        } catch (e) { console.error("Failed to load driver dates", e); }
+    }
+
     async function initCalendar() {
-        await fetchMonthDates(currDate.getFullYear(), currDate.getMonth());
+        await Promise.all([
+            fetchMonthDates(currDate.getFullYear(), currDate.getMonth()),
+            fetchDriverUnavailableDates()
+        ]);
         renderGrid();
     }
 
@@ -410,15 +469,17 @@
             const iso = toISODate(date);
             const isPast = date < today;
             const isBlocked = blockedDatesSet.has(iso);
+            const isDriverBlocked = hasDriver && driverUnavailableSet.has(iso);
             
             const btn = document.createElement('button');
             btn.type = 'button';
             btn.innerText = i;
             btn.className = 'w-8 h-8 rounded-lg flex items-center justify-center transition-all text-gray-300 mx-auto font-medium';
             
-            if(isPast || isBlocked) {
+            if(isPast || isBlocked || isDriverBlocked) {
                 btn.classList.add('opacity-30', 'cursor-not-allowed');
                 if(isBlocked) btn.classList.add('bg-red-900/50', 'text-red-300'); // Blocked style
+                if(isDriverBlocked && !isBlocked) btn.classList.add('bg-orange-900/50', 'text-orange-300');
                 btn.disabled = true;
             } else {
                 btn.className += ' hover:bg-white/10';
@@ -470,12 +531,26 @@
                     valid = false;
                     break;
                 }
+                if(hasDriver && driverUnavailableSet.has(toISODate(check))) {
+                    valid = false;
+                    // update status?
+                    break;
+                }
                 check.setDate(check.getDate() + 1);
             }
             
             if(valid) selEnd = date;
-            if(valid) selEnd = date;
-            else {
+            if(valid) {
+                 selEnd = date;
+                 
+                 updateDriverToggleState();
+                 
+                 if (hasDriver) {
+                     // If still has driver (didn't get disabled), status is green
+                     document.getElementById('driverAvailabilityStatus').innerText = "Driver available.";
+                     document.getElementById('driverAvailabilityStatus').className = "text-xs text-green-500";
+                 }
+            } else {
                 if(window.showPopup) window.showPopup("Selected range includes unavailable dates.", "error");
                 else alert("Selected range includes unavailable dates.");
                 selEnd = null; // Enforce re-select
@@ -503,13 +578,139 @@
         const section = document.getElementById('driverSection');
         if (hasDriver) {
             section.classList.remove('hidden');
-            checkDriverAvailability();
-            document.getElementById('summDriverRow').classList.remove('hidden');
+            // checkDriverAvailability(); // Removed in favor of bulk check
+            document.getElementById('summDriverServiceRow').classList.remove('hidden');
+            document.getElementById('summCarDriverRow').classList.remove('hidden');
+            
+            if (!mapLoaded) loadGoogleMaps();
+            else if (map) {
+                setTimeout(() => google.maps.event.trigger(map, "resize"), 100);
+            }
         } else {
             section.classList.add('hidden');
-            hasAvailableDriver = true;
+            // hasAvailableDriver = true;
             updateDriverAvailabilityStatus(null);
-            document.getElementById('summDriverRow').classList.add('hidden');
+            document.getElementById('summDriverServiceRow').classList.add('hidden');
+            document.getElementById('summCarDriverRow').classList.add('hidden');
+        }
+        renderGrid(); // Update blocking
+        calculatePrice();
+    });
+
+    // --- Google Maps Logic ---
+    function loadGoogleMaps() {
+        if (mapLoaded) return;
+        if (!gMapsKey) {
+            console.error("Google Maps Key missing");
+            // document.getElementById('locStatus').innerText = "Map configuration error."; // locStatus might not exist yet if HTML not fully ready? No, it is.
+            return;
+        }
+
+        // Define callback
+        window.initBookingPickupMap = function () {
+            initMap();
+        };
+
+        const script = document.createElement('script');
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${gMapsKey}&callback=initBookingPickupMap`;
+        script.async = true;
+        document.body.appendChild(script);
+        mapLoaded = true;
+    }
+
+    function initMap() {
+        const defaultLoc = { lat: 33.8938, lng: 35.5018 }; // Beirut
+        map = new google.maps.Map(document.getElementById("gMap"), {
+            zoom: 12,
+            center: defaultLoc,
+            styles: [ // Dark mode style
+                { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
+                { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
+                { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
+                { featureType: "road", elementType: "geometry", stylers: [{ color: "#38414e" }] },
+                { featureType: "water", elementType: "geometry", stylers: [{ color: "#17263c" }] },
+            ],
+            streetViewControl: false,
+            mapTypeControl: false
+        });
+
+        map.addListener("click", (e) => {
+            placeMarker(e.latLng);
+        });
+    }
+
+    function placeMarker(latLng) {
+        if (!marker) {
+            marker = new google.maps.Marker({
+                position: latLng,
+                map: map,
+                animation: google.maps.Animation.DROP
+            });
+        } else {
+            marker.setPosition(latLng);
+        }
+        map.panTo(latLng);
+
+        pickupLat = latLng.lat();
+        pickupLng = latLng.lng();
+        
+        // Update inputs
+        document.getElementById('pickupLatitude').value = pickupLat;
+        document.getElementById('pickupLongitude').value = pickupLng;
+        
+        geocodePosition(latLng);
+    }
+
+    function geocodePosition(latLng) {
+        const geocoder = new google.maps.Geocoder();
+        document.getElementById('locStatus').innerText = "Fetching address...";
+
+        geocoder.geocode({ location: latLng }, (results, status) => {
+            if (status === "OK" && results[0]) {
+                pickupAddress = results[0].formatted_address;
+                let label = results[0].formatted_address;
+                pickupLocationName = label;
+                
+                document.getElementById('pickupLocationName').value = label;
+                document.getElementById('pickupAddress').value = pickupAddress;
+                document.getElementById('locStatus').innerText = "";
+            } else {
+                document.getElementById('locStatus').innerText = "Address not found, using coordinates.";
+                pickupLocationName = "Pinned Location";
+                
+                document.getElementById('pickupLocationName').value = pickupLocationName;
+                document.getElementById('pickupAddress').value = ""; // Or lat/lng string
+                pickupAddress = null;
+            }
+        });
+    }
+    
+    document.getElementById('btnUseMyLoc').addEventListener('click', () => {
+        if (!map) return;
+        const btn = document.getElementById('btnUseMyLoc');
+        const icon = btn.querySelector('span');
+
+        if (navigator.geolocation) {
+            icon.innerText = 'hourglass_top'; // loading icon
+            document.getElementById('locStatus').innerText = "Locating...";
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const pos = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude,
+                    };
+                    placeMarker(new google.maps.LatLng(pos.lat, pos.lng));
+                    map.setZoom(15);
+                    icon.innerText = 'my_location';
+                },
+                () => {
+                    document.getElementById('locStatus').innerText = "Error: The Geolocation service failed.";
+                    icon.innerText = 'location_disabled';
+                }
+            );
+        } else {
+             document.getElementById('locStatus').innerText = "Error: Your browser doesn't support geolocation.";
         }
     });
 
@@ -526,7 +727,7 @@
             const resp = await fetch('/api/Booking/CalculatePrice', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ carId, startDate: start, endDate: end, promocode: promo })
+                body: JSON.stringify({ carId, startDate: start, endDate: end, promocode: promo, hasDriver: hasDriver })
             });
 
             if(resp.ok) {
@@ -535,18 +736,23 @@
                 document.getElementById('summSubtotal').innerText = "$" + data.subtotal.toFixed(2);
                 document.getElementById('summTotal').innerText = "$" + data.total.toFixed(2);
                 
+                if (hasDriver) {
+                    document.getElementById('summDriverServiceRow').classList.remove('hidden');
+                    document.getElementById('summCarDriverRow').classList.remove('hidden');
+                    
+                    document.getElementById('summDriverServiceFee').innerText = "$" + data.driverServiceFee.toFixed(2);
+                    document.getElementById('summCarDriverFee').innerText = "$" + (data.carExtraDriverFee || 0).toFixed(2);
+                } else {
+                    document.getElementById('summDriverServiceRow').classList.add('hidden');
+                    document.getElementById('summCarDriverRow').classList.add('hidden');
+                }
+
                 if (data.discountAmount > 0) {
                     document.getElementById('summPromoRow').classList.remove('hidden');
                     document.getElementById('summDiscount').innerText = "-$" + data.discountAmount.toFixed(2);
                     document.getElementById('summPromoName').innerText = promo;
                 } else {
                     document.getElementById('summPromoRow').classList.add('hidden');
-                    // Check if promo was entered but no discount returned
-                    if (promo && promo.length > 0) {
-                         if(window.showPopup) window.showPopup("Promocode not found or not applicable.", "error");
-                         else alert("Promocode not found or not applicable.");
-                         document.getElementById('promocode').value = ''; // Clear invalid
-                    }
                 }
             }
         } catch(e) { console.error(e); }
@@ -671,5 +877,41 @@
             btn.disabled = false;
             btn.innerHTML = orig;
         }
-    });
+    }); 
+
+    function updateDriverToggleState() {
+        if (!selStart || !selEnd) return;
+        
+        let driverAvailableForRange = true;
+        let check = new Date(selStart);
+        let limit = new Date(selEnd);
+        
+        while (check <= limit) {
+            if (driverUnavailableSet.has(toISODate(check))) {
+                driverAvailableForRange = false;
+                break;
+            }
+            check.setDate(check.getDate() + 1);
+        }
+
+        const toggle = document.getElementById('driverToggle');
+        const status = document.getElementById('driverAvailabilityStatus');
+        
+        if (!driverAvailableForRange) {
+            if (toggle.checked) {
+                toggle.checked = false;
+                toggle.dispatchEvent(new Event('change'));
+            }
+            toggle.disabled = true;
+            status.innerText = "Driver service unavailable for selected dates.";
+            status.className = "text-xs text-red-500 font-bold";
+        } else {
+            if (isDriverServiceAvailable) {
+                toggle.disabled = false;
+                if (!hasDriver) {
+                     status.innerText = "";
+                }
+            }
+        }
+    }
 </script>

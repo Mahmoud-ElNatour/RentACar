@@ -31,7 +31,7 @@
                                 @foreach (var driver in Model.Drivers)
                                 {
                                     <option value="@driver.DriverId" selected="@(Model.DriverId == driver.DriverId ? "selected" : null)">
-                                        @driver.FullName (@driver.DriverCode)
+                                        @driver.FullName
                                     </option>
                                 }
                             </select>

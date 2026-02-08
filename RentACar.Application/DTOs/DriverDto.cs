@@ -17,13 +17,9 @@ public class DriverDto
 
     public string? Phone { get; set; }
 
-    public string DriverCode { get; set; } = string.Empty;
-
     public bool IsActive { get; set; }
 
     public decimal DailyFeePerDay { get; set; }
-
-    public decimal? Rating { get; set; }
 
     public List<int> AllowedCategoryIds { get; set; } = new();
 
@@ -69,11 +65,12 @@ public class DriverCreateDto
 public class DriverDisplayDto
 {
     public int DriverId { get; set; }
-    public string DriverCode { get; set; } = string.Empty;
     public string FullName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string? Phone { get; set; }
     public bool IsActive { get; set; }
+    public List<int> AllowedCategoryIds { get; set; } = new();
+    public decimal? DailyFeePerDay { get; set; }
 }
 
 public class DriverAvailabilityDto

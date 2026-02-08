@@ -13,7 +13,7 @@ public interface IDriverRepository
     Task<List<Driver>> GetActiveAsync();
     Task<List<Driver>> GetEligibleDriversAsync(DateTime start, DateTime end);
     Task<List<Driver>> GetAvailableDriversForBookingAsync(DateOnly start, DateOnly end, int categoryId);
-    Task<bool> DriverCodeExistsAsync(string driverCode);
+
     Task AddAsync(Driver driver);
     Task UpdateAsync(Driver driver);
     Task DeleteAsync(int id);

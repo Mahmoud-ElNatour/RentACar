@@ -117,10 +117,7 @@ public class DriverRepository : IDriverRepository
             .ToListAsync();
     }
 
-    public async Task<bool> DriverCodeExistsAsync(string driverCode)
-    {
-        return await _dbContext.Drivers.AnyAsync(d => d.DriverCode == driverCode);
-    }
+
 
     public async Task AddAsync(Driver driver)
     {

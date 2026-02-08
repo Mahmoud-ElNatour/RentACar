@@ -19,20 +19,9 @@ public partial class Driver
     [Column("employeeID")]
     public int EmployeeId { get; set; }
 
-    [Column("driverCode")]
-    [StringLength(20)]
-    public string DriverCode { get; set; } = null!;
-
     [Column("fullName")]
     [StringLength(120)]
     public string FullName { get; set; } = null!;
-
-    [Column("phone")]
-    [StringLength(30)]
-    public string? Phone { get; set; }
-
-    [StringLength(256)]
-    public string Email { get; set; } = null!;
 
     [Column("isActive")]
     public bool IsActive { get; set; }
@@ -45,9 +34,6 @@ public partial class Driver
 
     [Column("updatedAt")]
     public DateTime? UpdatedAt { get; set; }
-
-    [Column("rating", TypeName = "decimal(3, 2)")]
-    public decimal? Rating { get; set; }
 
     [Column("licenseNumber")]
     [StringLength(50)]

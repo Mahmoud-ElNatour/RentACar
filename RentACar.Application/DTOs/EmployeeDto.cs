@@ -31,12 +31,10 @@ namespace RentACar.Application.DTOs
         public List<string> Roles { get; set; } = new();
 
         public int? DriverId { get; set; }
-        public string? DriverCode { get; set; }
         public string? DriverFullName { get; set; }
         public string? DriverPhone { get; set; }
         public string? DriverEmail { get; set; }
         public decimal? DriverDailyFeePerDay { get; set; }
-        public decimal? DriverRating { get; set; }
         public string? DriverLicenseNumber { get; set; }
         public DateOnly? DriverLicenseExpiry { get; set; }
         public string? DriverLanguages { get; set; }
@@ -71,12 +69,8 @@ namespace RentACar.Application.DTOs
         // Added for multi-role and driver support
         public List<string>? Roles { get; set; }
 
-        public string? DriverCode { get; set; }
         public string? DriverFullName { get; set; }
-        public string? DriverPhone { get; set; }
-        public string? DriverEmail { get; set; }
         public decimal? DriverDailyFeePerDay { get; set; }
-        public decimal? DriverRating { get; set; }
         public string? DriverLicenseNumber { get; set; }
         public DateOnly? DriverLicenseExpiry { get; set; }
         public string? DriverLanguages { get; set; }

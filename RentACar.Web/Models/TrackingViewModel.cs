@@ -8,7 +8,6 @@ public class CustomerTrackingViewModel
     public string BookingStatus { get; set; } = string.Empty;
     public string CustomerName { get; set; } = string.Empty;
     public string DriverName { get; set; } = string.Empty;
-    public string DriverCode { get; set; } = string.Empty;
     public string CarName { get; set; } = string.Empty;
     public string CarPlate { get; set; } = string.Empty;
     public string PickupAddress { get; set; } = string.Empty;

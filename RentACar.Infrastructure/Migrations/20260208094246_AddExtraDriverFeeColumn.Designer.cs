@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RentACar.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using RentACar.Infrastructure.Data;
 namespace RentACar.Infrastructure.Migrations
 {
     [DbContext(typeof(RentACarDbContext))]
-    partial class RentACarDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260208094246_AddExtraDriverFeeColumn")]
+    partial class AddExtraDriverFeeColumn
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -871,6 +874,17 @@ namespace RentACar.Infrastructure.Migrations
                         .HasColumnType("decimal(10, 2)")
                         .HasColumnName("dailyFeePerDay");
 
+                    b.Property<string>("DriverCode")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasColumnName("driverCode");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
                     b.Property<int>("EmployeeId")
                         .HasColumnType("int")
                         .HasColumnName("employeeID");
@@ -904,6 +918,15 @@ namespace RentACar.Infrastructure.Migrations
                     b.Property<string>("Notes")
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("notes");
+
+                    b.Property<string>("Phone")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)")
+                        .HasColumnName("phone");
+
+                    b.Property<decimal?>("Rating")
+                        .HasColumnType("decimal(3, 2)")
+                        .HasColumnName("rating");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2")

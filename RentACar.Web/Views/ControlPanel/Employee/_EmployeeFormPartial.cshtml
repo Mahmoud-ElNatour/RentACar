@@ -97,11 +97,8 @@
                             <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Driver Details</span>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs font-medium text-gray-500 uppercase mb-1.5 ml-1">Driver Code</label>
-                                <input asp-for="DriverCode" class="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-[#d4af37]/50 transition-all font-mono" placeholder="Auto-generated if empty" />
-                            </div>
-                            <div>
+
+                            <div class="md:col-span-2">
                                 <label class="block text-xs font-medium text-gray-500 uppercase mb-1.5 ml-1">License Number</label>
                                 <input asp-for="DriverLicenseNumber" class="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-[#d4af37]/50 transition-all" />
                             </div>
@@ -250,7 +247,7 @@
             isActive: form.querySelector('[name="IsActive"]').checked,
             roles: requestedRoles,
             // Driver specific fields
-            driverCode: f['DriverCode'] ? f['DriverCode'].value : null,
+
             driverLicenseNumber: f['DriverLicenseNumber'] ? f['DriverLicenseNumber'].value : null,
             driverLicenseExpiry: f['DriverLicenseExpiry'] ? f['DriverLicenseExpiry'].value : null,
             driverLanguages: f['DriverLanguages'] ? f['DriverLanguages'].value : null,

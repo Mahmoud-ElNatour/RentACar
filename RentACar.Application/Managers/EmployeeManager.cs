@@ -76,35 +76,58 @@ namespace RentACar.Application.Managers
 
             if (result.Succeeded)
             {
-                // 2. Assign Identity Roles
-                foreach (var role in requestedRoles)
+                Employee? employee = null;
+                try
                 {
-                    if (!await _roleManager.RoleExistsAsync(role))
+                    // 2. Assign Identity Roles
+                    foreach (var role in requestedRoles)
                     {
-                        await _roleManager.CreateAsync(new IdentityRole(role));
+                        if (!await _roleManager.RoleExistsAsync(role))
+                        {
+                            await _roleManager.CreateAsync(new IdentityRole(role));
+                        }
+                        await _userManager.AddToRoleAsync(user, role);
                     }
-                    await _userManager.AddToRoleAsync(user, role);
+
+                    employee = _mapper.Map<Employee>(createDto);
+                    employee.IsActive = createDto.IsActive;
+                    employee.aspNetUserId = user.Id;
+                    await _employeeRepository.AddAsync(employee);
+
+                    // 3. Handle Driver Sync
+                    if (requestedRoles.Contains("Driver", StringComparer.OrdinalIgnoreCase))
+                    {
+                        var driver = await SyncDriverRecord(employee, createDto, user.Id);
+                        if (driver != null)
+                        {
+                            await _driverAllowedCategoryRepository.SetAllowedCategoriesAsync(driver.DriverId, createDto.AllowedCategoryIds);
+                        }
+                    }
+
+                    _logger.LogInformation("Employee created with id {Id}", employee.EmployeeId);
+                    await _auditLogManager.LogAsync("Create", "Employee", employee.EmployeeId.ToString(), $"Created new employee: {employee.Name} with roles [{string.Join(", ", requestedRoles)}]");
+
+                    return await GetEmployeeById(employee.EmployeeId);
                 }
-
-                var employee = _mapper.Map<Employee>(createDto);
-                employee.IsActive = createDto.IsActive;
-                employee.aspNetUserId = user.Id;
-                await _employeeRepository.AddAsync(employee);
-
-                // 3. Handle Driver Sync
-                if (requestedRoles.Contains("Driver", StringComparer.OrdinalIgnoreCase))
+                catch (Exception ex)
                 {
-                    var driver = await SyncDriverRecord(employee, createDto, user.Id);
-                    if (driver != null)
-                    {
-                        await _driverAllowedCategoryRepository.SetAllowedCategoriesAsync(driver.DriverId, createDto.AllowedCategoryIds);
+                    _logger.LogError(ex, "Failed to complete employee creation for {Email}. Rolling back.", createDto.Email);
+                    
+                    // Attempt to rollback to avoid orphaned account
+                    try 
+                    { 
+                        if (employee != null && employee.EmployeeId > 0)
+                        {
+                             await _employeeRepository.DeleteAsync(employee.EmployeeId);
+                        }
+                        await _userManager.DeleteAsync(user); 
                     }
+                    catch (Exception rollbackEx) 
+                    { 
+                        _logger.LogError(rollbackEx, "Rollback failed for {Email}", createDto.Email);
+                    }
+                    throw;
                 }
-
-                _logger.LogInformation("Employee created with id {Id}", employee.EmployeeId);
-                await _auditLogManager.LogAsync("Create", "Employee", employee.EmployeeId.ToString(), $"Created new employee: {employee.Name} with roles [{string.Join(", ", requestedRoles)}]");
-
-                return await GetEmployeeById(employee.EmployeeId);
             }
 
             var errorMessage = string.Join("; ", result.Errors.Select(e => e.Description));
@@ -242,12 +265,8 @@ namespace RentACar.Application.Managers
             var driver = await _driverRepository.GetByEmployeeIdAsync(employee.EmployeeId);
 
             // Map common fields from object (DTO or CreateDTO)
-            string? driverCode = GetPropValue(dto, "DriverCode")?.ToString();
             string? fullName = GetPropValue(dto, "DriverFullName")?.ToString() ?? employee.Name;
-            string? phone = GetPropValue(dto, "DriverPhone")?.ToString();
-            string? email = GetPropValue(dto, "DriverEmail")?.ToString();
             decimal? dailyFee = GetPropValue(dto, "DriverDailyFeePerDay") as decimal?;
-            decimal? rating = GetPropValue(dto, "DriverRating") as decimal?;
             string? license = GetPropValue(dto, "DriverLicenseNumber")?.ToString();
             DateOnly? expiry = GetPropValue(dto, "DriverLicenseExpiry") as DateOnly?;
             string? languages = GetPropValue(dto, "DriverLanguages")?.ToString();
@@ -259,12 +278,8 @@ namespace RentACar.Application.Managers
                 {
                     EmployeeId = employee.EmployeeId,
                     AspNetUserId = aspNetUserId,
-                    DriverCode = driverCode ?? $"DR-{DateTime.Now.Ticks % 100000:D5}",
                     FullName = fullName,
-                    Phone = phone,
-                    Email = email ?? employee.User?.Email ?? "N/A",
                     DailyFeePerDay = dailyFee ?? 20m,
-                    Rating = rating,
                     LicenseNumber = license,
                     LicenseExpiry = expiry,
                     Languages = languages,
@@ -279,10 +294,7 @@ namespace RentACar.Application.Managers
                 if (shouldBeActive)
                 {
                     driver.FullName = fullName;
-                    driver.Phone = phone;
-                    driver.Email = email ?? driver.Email;
                     driver.DailyFeePerDay = dailyFee ?? driver.DailyFeePerDay;
-                    driver.Rating = rating ?? driver.Rating;
                     driver.LicenseNumber = license ?? driver.LicenseNumber;
                     driver.LicenseExpiry = expiry ?? driver.LicenseExpiry;
                     driver.Languages = languages ?? driver.Languages;
@@ -670,12 +682,10 @@ namespace RentACar.Application.Managers
                 .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.User.PhoneNumber))
                 .ForMember(dest => dest.EmployeeId, opt => opt.MapFrom(src => src.EmployeeId)) // Explicit map
                 .ForMember(dest => dest.DriverId, opt => opt.MapFrom(src => src.Driver != null ? (int?)src.Driver.DriverId : null))
-                .ForMember(dest => dest.DriverCode, opt => opt.MapFrom(src => src.Driver != null ? src.Driver.DriverCode : null))
                 .ForMember(dest => dest.DriverFullName, opt => opt.MapFrom(src => src.Driver != null ? src.Driver.FullName : null))
-                .ForMember(dest => dest.DriverPhone, opt => opt.MapFrom(src => src.Driver != null ? src.Driver.Phone : null))
-                .ForMember(dest => dest.DriverEmail, opt => opt.MapFrom(src => src.Driver != null ? src.Driver.Email : null))
+                .ForMember(dest => dest.DriverPhone, opt => opt.MapFrom(src => src.User != null ? src.User.PhoneNumber : null))
+                .ForMember(dest => dest.DriverEmail, opt => opt.MapFrom(src => src.User != null ? src.User.Email : null))
                 .ForMember(dest => dest.DriverDailyFeePerDay, opt => opt.MapFrom(src => src.Driver != null ? src.Driver.DailyFeePerDay : (decimal?)null))
-                .ForMember(dest => dest.DriverRating, opt => opt.MapFrom(src => src.Driver != null ? src.Driver.Rating : null))
                 .ForMember(dest => dest.DriverLicenseNumber, opt => opt.MapFrom(src => src.Driver != null ? src.Driver.LicenseNumber : null))
                 .ForMember(dest => dest.DriverLicenseExpiry, opt => opt.MapFrom(src => src.Driver != null ? src.Driver.LicenseExpiry : null))
                 .ForMember(dest => dest.DriverLanguages, opt => opt.MapFrom(src => src.Driver != null ? src.Driver.Languages : null))
