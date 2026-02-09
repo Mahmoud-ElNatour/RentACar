@@ -156,8 +156,19 @@ namespace RentACar.Application.Managers
         public async Task<EmployeeDto?> GetEmployeeById(int id)
         {
             var employee = await _employeeRepository.GetByIdAsync(id);
+            if (employee == null) return null;
+
             var dto = _mapper.Map<EmployeeDto>(employee);
-            if (employee?.Driver != null)
+
+            // Populate Roles
+            var user = await _userManager.FindByIdAsync(employee.aspNetUserId);
+            if (user != null)
+            {
+                var roles = await _userManager.GetRolesAsync(user);
+                dto.Roles = roles.ToList();
+            }
+
+            if (employee.Driver != null)
             {
                 dto.AllowedCategoryIds = await _driverAllowedCategoryRepository.GetAllowedCategoryIdsByDriverIdAsync(employee.Driver.DriverId);
             }
