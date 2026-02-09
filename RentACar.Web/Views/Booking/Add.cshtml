@@ -718,7 +718,12 @@
                 }
 
                 document.getElementById('summDays').innerText = data.days + (data.days === 1 ? " Day" : " Days");
-                document.getElementById('summSubtotal').innerText = "$" + finalSubtotal.toFixed(2); // Updated subtotal
+                
+                // Fix: Subtotal should only be the rental cost (Price * Days)
+                // The API returns 'subtotal' as (Rent + Fees). We want to display Rent only here so the breakdown makes sense.
+                let rentalSubtotal = data.days * data.pricePerDay;
+                document.getElementById('summSubtotal').innerText = "$" + rentalSubtotal.toFixed(2); 
+
                 document.getElementById('summTotal').innerText = "$" + finalTotal.toFixed(2);       // Updated total
 
                 if (data.discountAmount > 0) {
