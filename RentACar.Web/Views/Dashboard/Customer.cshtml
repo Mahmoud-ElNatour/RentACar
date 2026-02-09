@@ -234,7 +234,7 @@
                 <div class="space-y-3">
                     @foreach (var car in Model.SuggestedCars)
                     {
-                        <a href="/Browse/Details/@car.CarId" class="flex gap-3 rounded-xl bg-black/50 p-3 hover:bg-white/5 border border-white/5 hover:border-gold/30 transition-all cursor-pointer group">
+                        <a href="/Booking/add?carId=@car.CarId" class="flex gap-3 rounded-xl bg-black/50 p-3 hover:bg-white/5 border border-white/5 hover:border-gold/30 transition-all cursor-pointer group">
                             <div class="h-16 w-20 rounded-lg bg-gray-700 bg-cover bg-center shrink-0" style='background-image: url("@car.ImageUrl");'></div>
                             <div class="flex flex-col justify-center w-full">
                                 <div class="flex justify-between items-start">
