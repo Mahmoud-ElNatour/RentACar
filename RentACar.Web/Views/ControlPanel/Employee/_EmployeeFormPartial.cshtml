@@ -249,7 +249,7 @@
             // Driver specific fields
 
             driverLicenseNumber: f['DriverLicenseNumber'] ? f['DriverLicenseNumber'].value : null,
-            driverLicenseExpiry: f['DriverLicenseExpiry'] ? f['DriverLicenseExpiry'].value : null,
+            driverLicenseExpiry: f['DriverLicenseExpiry'] && f['DriverLicenseExpiry'].value ? f['DriverLicenseExpiry'].value : null,
             driverLanguages: f['DriverLanguages'] ? f['DriverLanguages'].value : null,
             driverDailyFeePerDay: f['DriverDailyFeePerDay'] && f['DriverDailyFeePerDay'].value ? parseFloat(f['DriverDailyFeePerDay'].value) : null,
             allowedCategoryIds: selectedCategories
