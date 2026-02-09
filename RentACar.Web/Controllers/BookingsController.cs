@@ -26,14 +26,18 @@ namespace RentACar.Web.Controllers
             PaymentManager paymentManager,
             CarManager carManager,
             CustomerManager customerManager,
-            UserManager<IdentityUser> userManager)
+            UserManager<IdentityUser> userManager,
+            CustomerRatingManager ratingManager)
         {
             _bookingManager = bookingManager;
             _paymentManager = paymentManager;
             _carManager = carManager;
             _customerManager = customerManager;
             _userManager = userManager;
+            _ratingManager = ratingManager;
         }
+
+        private readonly CustomerRatingManager _ratingManager;
 
         private async Task<int?> GetCurrentCustomerId()
         {
@@ -57,6 +61,9 @@ namespace RentACar.Web.Controllers
             if (customerId == null) return Unauthorized();
 
             var bookings = await _bookingManager.GetBookingHistoryAsync(customerId.Value);
+            var ratings = await _ratingManager.GetRatingsByUserIdAsync(customerId.Value);
+            var ratedBookingIds = ratings.Select(r => r.BookingId).ToHashSet();
+
             var result = new List<object>();
             foreach (var b in bookings)
             {
@@ -78,7 +85,8 @@ namespace RentACar.Web.Controllers
                     totalPrice = b.TotalPrice,
                     employeeId = b.EmployeebookerId,
                     bookingStatus = b.BookingStatus,
-                    hasDriver = b.HasDriver
+                    hasDriver = b.HasDriver,
+                    isRated = ratedBookingIds.Contains(b.BookingId)
                 });
             }
             return Ok(result);
@@ -207,7 +215,59 @@ namespace RentACar.Web.Controllers
                 PaymentAmount = payment?.Amount
             };
 
+            // Rating Login
+            var rating = await _ratingManager.GetRatingByBookingIdAsync(booking.BookingId);
+            if (rating != null)
+            {
+                dto.IsRated = true;
+                dto.VerifiedRatingStars = rating.Stars;
+            }
+            else
+            {
+                dto.IsRated = false;
+            }
+
             return PartialView("~/Views/Bookings/_CustomerBookingDetailsPartial.cshtml", dto);
+        }
+
+        [HttpPost("Rate")]
+        public async Task<IActionResult> Rate([FromBody] RateBookingRequestDto request)
+        {
+            var customerId = await GetCurrentCustomerId();
+            if (customerId == null) return Unauthorized();
+
+            var booking = await _bookingManager.GetBookingByIdAsync(request.BookingId);
+            if (booking == null || booking.CustomerId != customerId.Value) return NotFound();
+
+            // Check timing
+            var today = DateOnly.FromDateTime(DateTime.Now);
+            if (booking.Startdate > today)
+            {
+                return BadRequest("You can only rate a booking after it has started.");
+            }
+
+            if (booking.BookingStatus == "Cancelled")
+            {
+                return BadRequest("You cannot rate a cancelled booking.");
+            }
+
+            // Check if already rated
+            var existing = await _ratingManager.GetRatingByBookingIdAsync(request.BookingId);
+            if (existing != null)
+            {
+                return BadRequest("This booking has already been rated.");
+            }
+
+            var ratingId = await _ratingManager.AddRatingAsync(customerId.Value, request.BookingId, request.Stars, null); 
+
+            // Verify persistence
+            var check = await _ratingManager.GetRatingByBookingIdAsync(request.BookingId);
+            if (check == null)
+            {
+               return StatusCode(500, "Rating could not be saved due to an internal error.");
+            }
+
+            return Ok(new { success = true, ratingId = ratingId });
         }
         [HttpGet("~/Bookings/Receipt/{id}")]
         public async Task<IActionResult> Receipt(int id)

@@ -121,6 +121,118 @@
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Rating Section -->
+                        @if(Model.StartDate <= DateOnly.FromDateTime(DateTime.Now))
+                        {
+                            <div id="ratingSection_@Model.BookingId">
+                                <h6 class="text-gold text-xs font-bold uppercase tracking-wider mb-4 flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-sm">star</span> Rating
+                                </h6>
+                                
+                                <div class="bg-[#262626] rounded-xl p-4 border border-white/5">
+                                    @if(Model.IsRated)
+                                    {
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex gap-1">
+                                                @for(int i=1; i<=5; i++)
+                                                {
+                                                    <span class="material-symbols-outlined text-xl @(i <= (Model.VerifiedRatingStars ?? 0) ? "text-gold filled" : "text-gray-600")">star</span>
+                                                }
+                                            </div>
+                                            <button disabled class="px-3 py-1.5 rounded-lg bg-white/5 text-gray-400 text-xs font-bold border border-white/5 cursor-not-allowed">
+                                                Already Rated
+                                            </button>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="flex flex-col gap-3">
+                                            <div class="flex justify-center gap-2" id="starContainer_@Model.BookingId">
+                                                @for(int i=1; i<=5; i++)
+                                                {
+                                                    <button type="button" onclick="selectStar(@Model.BookingId, @i)" class="star-btn transition-transform hover:scale-110 focus:outline-none" data-value="@i">
+                                                        <span class="material-symbols-outlined text-3xl text-gray-600 hover:text-gold" id="star_@Model.BookingId@("_")@i">star</span>
+                                                    </button>
+                                                }
+                                            </div>
+                                            <input type="hidden" id="ratingValue_@Model.BookingId" value="0" />
+                                            
+                                            <button type="button" onclick="submitRating(@Model.BookingId)" id="btnRate_@Model.BookingId" disabled 
+                                                class="w-full py-2 rounded-lg bg-gold/10 text-gold font-bold text-sm border border-gold/20 hover:bg-gold hover:text-black transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-gold/10 disabled:hover:text-gold">
+                                                Submit Rating
+                                            </button>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                            
+                            <script>
+                                function selectStar(bookingId, value) {
+                                    document.getElementById(`ratingValue_${bookingId}`).value = value;
+                                    document.getElementById(`btnRate_${bookingId}`).disabled = false;
+                                    
+                                    for(let i=1; i<=5; i++) {
+                                        const el = document.getElementById(`star_${bookingId}_${i}`);
+                                        if(i <= value) {
+                                            el.classList.add('text-gold', 'filled');
+                                            el.classList.remove('text-gray-600');
+                                        } else {
+                                            el.classList.remove('text-gold', 'filled');
+                                            el.classList.add('text-gray-600');
+                                        }
+                                    }
+                                }
+
+                                async function submitRating(bookingId) {
+                                    const stars = document.getElementById(`ratingValue_${bookingId}`).value;
+                                    const btn = document.getElementById(`btnRate_${bookingId}`);
+                                    
+                                    if(stars < 1) return;
+
+                                    btn.disabled = true;
+                                    btn.innerText = "Submitting...";
+
+                                    try {
+                                        const resp = await fetch('/api/Bookings/Rate', {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({ bookingId: bookingId, stars: parseInt(stars) })
+                                        });
+
+                                        if(resp.ok) {
+                                            // Refresh content or update UI to Read-Only state
+                                            const container = document.getElementById(`ratingSection_${bookingId}`);
+                                            container.innerHTML = `
+                                                <h6 class="text-gold text-xs font-bold uppercase tracking-wider mb-4 flex items-center gap-2">
+                                                    <span class="material-symbols-outlined text-sm">star</span> Rating
+                                                </h6>
+                                                <div class="bg-[#262626] rounded-xl p-4 border border-white/5">
+                                                    <div class="flex items-center justify-between">
+                                                        <div class="flex gap-1">
+                                                            ${Array(5).fill(0).map((_, i) => 
+                                                                `<span class="material-symbols-outlined text-xl ${i < stars ? 'text-gold filled' : 'text-gray-600'}">star</span>`
+                                                            ).join('')}
+                                                        </div>
+                                                        <button disabled class="px-3 py-1.5 rounded-lg bg-white/5 text-gray-400 text-xs font-bold border border-white/5 cursor-not-allowed">
+                                                            Already Rated
+                                                        </button>
+                                                    </div>
+                                                </div>`;
+                                        } else {
+                                            const txt = await resp.text();
+                                            alert("Error: " + txt);
+                                            btn.disabled = false;
+                                            btn.innerText = "Submit Rating";
+                                        }
+                                    } catch(e) {
+                                        console.error(e);
+                                        btn.disabled = false;
+                                        btn.innerText = "Submit Rating";
+                                    }
+                                }
+                            </script>
+                        }
                     </div>
                 </div>
             </div>
@@ -138,3 +250,12 @@
         </div>
     </div>
 </div>
+
+<style>
+    .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .material-symbols-outlined.filled {
+        font-variation-settings: 'FILL' 1 !important;
+    }
+</style>

@@ -203,7 +203,7 @@
 
                 // --- Actions Column ---
                 const showPayButton = paymentStatus !== 'paid' && paymentStatus !== 'cancelled' && paymentStatus !== 'refunded';
-                const showRateButton = bookingStatus === 'InProgress' || bookingStatus === 'Completed';
+                const showRateButton = !b.isRated && (bookingStatus === 'InProgress' || bookingStatus === 'Completed');
                 const showReceiptButton = paymentStatus === 'paid';
 
                 const actionsHtml = `

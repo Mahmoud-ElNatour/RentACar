@@ -11,6 +11,7 @@ namespace RentACar.Core.Repositories
         Task<List<CustomerRating>> GetByCustomerIdAsync(int customerId);
         Task<List<CustomerRating>> GetAllAsync(string? searchTerm = null, string? sortColumn = null, string? sortDirection = null);
         Task AddAsync(CustomerRating rating);
+        Task<CustomerRating?> GetByBookingIdAsync(int bookingId);
         Task DeleteAsync(int ratingId);
     }
 }

@@ -113,5 +113,12 @@ namespace RentACar.Infrastructure.Data.Repository
                 await _dbContext.SaveChangesAsync();
             }
         }
+
+        public async Task<CustomerRating?> GetByBookingIdAsync(int bookingId)
+        {
+            return await _dbContext.Set<CustomerRating>()
+                                   .AsNoTracking()
+                                   .FirstOrDefaultAsync(r => r.BookingId == bookingId);
+        }
     }
 }

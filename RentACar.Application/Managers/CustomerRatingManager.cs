@@ -27,6 +27,12 @@ namespace RentACar.Application.Managers
             return MapToDisplayDto(rating);
         }
 
+        public async Task<CustomerRatingDisplayDto?> GetRatingByBookingIdAsync(int bookingId)
+        {
+            var rating = await _ratingRepository.GetByBookingIdAsync(bookingId);
+            return rating == null ? null : MapToDisplayDto(rating);
+        }
+
         public async Task<List<CustomerRatingDisplayDto>> GetRatingsByEmployeeIdAsync(int employeeId)
         {
             var ratings = await _ratingRepository.GetByEmployeeIdAsync(employeeId);

@@ -26,5 +26,7 @@ namespace RentACar.Application.DTOs
         public decimal? PaymentAmount { get; set; }
         public string? PromocodeName { get; set; }
         public decimal? PromocodeDiscount { get; set; }
+        public int? VerifiedRatingStars { get; set; }
+        public bool IsRated { get; set; }
     }
 }
