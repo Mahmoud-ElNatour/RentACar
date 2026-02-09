@@ -730,7 +730,11 @@
             if(resp.ok) {
                 const data = await resp.json();
                 document.getElementById('summDays').innerText = data.days + " Days";
-                document.getElementById('summSubtotal').innerText = "$" + data.subtotal.toFixed(2);
+                
+                // Fix: Subtotal should only be the rental cost
+                let rentalSubtotal = data.days * data.pricePerDay;
+                document.getElementById('summSubtotal').innerText = "$" + rentalSubtotal.toFixed(2);
+
                 document.getElementById('summTotal').innerText = "$" + data.total.toFixed(2);
                 
                 if (hasDriver) {
