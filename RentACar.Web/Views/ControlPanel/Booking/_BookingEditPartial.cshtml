@@ -1,4 +1,4 @@
-@model RentACar.Application.DTOs.BookingDto
+﻿@model RentACar.Application.DTOs.BookingDto
 @{
     var statuses = new[] { "Pending", "Confirmed", "Booked", "InProgress", "AwaitingReturn", "Completed", "Cancelled", "Rejected" };
 }
@@ -83,56 +83,61 @@
 </div>
 
 <script>
-    document.getElementById('editBookingForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        
-        const id = this.querySelector('[name="bookingId"]').value;
-        const errorAlert = document.getElementById('editBookingError');
-        const btn = this.querySelector('button[type="submit"]');
-        const originalText = btn.innerHTML;
-        
-        btn.disabled = true;
-        btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-sm mr-2">sync</span> Saving...';
-        
-        if(errorAlert) errorAlert.classList.add('d-none');
-        
+    document.getElementById('editBookingForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      const id = this.querySelector('[name="bookingId"]').value;
+      const errorAlert = document.getElementById('editBookingError');
+      const btn = this.querySelector('button[type="submit"]');
+      const originalText = btn.innerHTML;
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-sm mr-2">sync</span> Saving...';
+      if (errorAlert) errorAlert.classList.add('d-none');
+
+      try {
+        const statusEl = this.querySelector('[name="BookingStatus"]'); // ✅ correct
+        if (!statusEl) throw new Error('BookingStatus field not found in form');
+
         const dto = {
-            BookingId: parseInt(id),
-            CarId: parseInt(this.querySelector('[name="carId"]').value),
-            CustomerId: parseInt(this.querySelector('[name="customerId"]').value),
-            Startdate: this.querySelector('[name="startdate"]').value,
-            Enddate: this.querySelector('[name="enddate"]').value,
-            BookingStatus: this.querySelector('[name="bookingStatus"]').value,
-            TotalPrice: parseFloat(this.querySelector('[name="totalPrice"]').value)
+          BookingId: parseInt(id),
+          CarId: parseInt(this.querySelector('[name="carId"]').value),
+          CustomerId: parseInt(this.querySelector('[name="customerId"]').value),
+          Startdate: this.querySelector('[name="startdate"]').value,
+          Enddate: this.querySelector('[name="enddate"]').value,
+          BookingStatus: statusEl.value,
+          TotalPrice: parseFloat(this.querySelector('[name="totalPrice"]').value)
         };
-        
-        try {
-            const res = await fetch('/api/Booking/' + id, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(dto)
-            });
-            
-            if(!res.ok) {
-                 throw new Error(await res.text() || 'Failed to update');
-            }
-            
-            const modalEl = document.getElementById('editBookingModal');
-            const modal = bootstrap.Modal.getInstance(modalEl);
-            modal.hide();
-            
-            if(window.showPopup) window.showPopup('Booking updated successfully', 'success');
-            if(window.loadBookings) loadBookings();
-            
-        } catch(err) {
-            console.error(err);
-             if(errorAlert) {
-                errorAlert.textContent = "Error: " + err.message;
-                errorAlert.classList.remove('d-none');
-            }
-        } finally {
-            btn.disabled = false;
-            btn.innerHTML = originalText;
+
+        const res = await fetch('/api/Booking/' + id, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin', // ✅ important if you use cookies for auth
+          body: JSON.stringify(dto)
+        });
+
+        if (!res.ok) {
+          const txt = await res.text();
+          throw new Error(txt || `Failed to update (HTTP ${res.status})`);
         }
+
+        const modalEl = document.getElementById('editBookingModal');
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        modal.hide();
+
+        if (window.showPopup) window.showPopup('Booking updated successfully', 'success');
+        if (window.loadBookings) loadBookings();
+
+      } catch (err) {
+        console.error(err);
+        if (errorAlert) {
+          errorAlert.textContent = "Error: " + err.message;
+          errorAlert.classList.remove('d-none');
+        }
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }
     });
 </script>
+
