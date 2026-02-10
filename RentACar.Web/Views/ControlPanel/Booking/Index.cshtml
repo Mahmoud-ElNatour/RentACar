@@ -334,6 +334,9 @@
         if(urlParams.has('search')) {
             document.getElementById('searchInput').value = urlParams.get('search');
         }
+        if(urlParams.has('status')) {
+            document.getElementById('statusFilter').value = urlParams.get('status');
+        }
 
         loadBookings();
 

@@ -261,6 +261,14 @@ namespace RentACar.Web.Controllers
             return Ok(new { message = "Password reset successfully and email sent." });
         }
 
+        [HttpPost("{id}/verify")]
+        [Authorize(Roles = "Admin,Employee")]
+        public async Task<IActionResult> Verify(int id)
+        {
+            await _customerManager.UpdateVerificationStatus(id, true);
+            return Ok(new { message = "Customer verified successfully." });
+        }
+
         [HttpPost("{id}/resend-verification")]
         [Authorize(Roles = "Admin,Employee")]
         public async Task<IActionResult> ResendVerification(int id)

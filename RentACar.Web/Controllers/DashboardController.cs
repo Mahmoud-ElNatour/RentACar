@@ -185,7 +185,7 @@ namespace RentACar.Web.Controllers
         }
 
         [HttpGet("GetChartData")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Employee")]
         public async Task<IActionResult> GetChartData(int year)
         {
             var monthly = await _dbContext.Bookings
@@ -231,7 +231,7 @@ namespace RentACar.Web.Controllers
             if (employee == null) return RedirectToAction("Index", "Home");
 
             var monthCountsData = await _dbContext.Bookings
-                .Where(b => b.IsBookedByEmployee == true && b.EmployeebookerId == employee.EmployeeId && b.Startdate.Year == DateTime.UtcNow.Year)
+                .Where(b => b.Startdate.Year == DateTime.UtcNow.Year)
                 .GroupBy(b => b.Startdate.Month)
                 .Select(g => new { Month = g.Key, Count = g.Count() })
                 .ToListAsync();
