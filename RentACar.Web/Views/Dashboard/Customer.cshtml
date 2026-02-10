@@ -55,7 +55,7 @@
             <div class="relative z-10">
                 <p class="text-xs font-medium uppercase tracking-wider text-gray-500">Total Spent</p>
                 <div class="mt-2 flex items-baseline gap-2">
-                    <h3 class="text-3xl font-black text-white">@Model.TotalSpent.ToString("C0")</h3>
+                    <h3 class="text-3xl font-black text-white">$@Model.TotalSpent.ToString("")</h3>
                 </div>
             </div>
             <span class="material-symbols-outlined absolute -right-2 -top-2 text-6xl text-white/5 group-hover:text-white/10 transition-colors">payments</span>
@@ -64,7 +64,7 @@
             <div class="relative z-10">
                 <p class="text-xs font-medium uppercase tracking-wider text-gray-500">Total Savings</p>
                 <div class="mt-2 flex items-baseline gap-2">
-                    <h3 class="text-3xl font-black text-gold">@Model.DiscountSavings.ToString("C0")</h3>
+                    <h3 class="text-3xl font-black text-gold">$@Model.DiscountSavings.ToString("")</h3>
                     <span class="text-xs font-bold text-gray-500">Lifetime</span>
                 </div>
             </div>
@@ -170,7 +170,7 @@
                                                 @item.Status
                                             </span>
                                         </td>
-                                        <td class="py-3 text-right font-bold text-white text-xs sm:text-sm">@item.TotalPrice.ToString("C0")</td>
+                                        <td class="py-3 text-right font-bold text-white text-xs sm:text-sm">$@item.TotalPrice.ToString("")</td>
                                     </tr>
                                 }
                             </tbody>
@@ -239,7 +239,7 @@
                             <div class="flex flex-col justify-center w-full">
                                 <div class="flex justify-between items-start">
                                     <h4 class="text-sm font-bold text-white group-hover:text-gold transition-colors">@car.ModelName</h4>
-                                    <span class="text-xs font-bold text-gold">@car.PricePerDay.ToString("C0")</span>
+                                    <span class="text-xs font-bold text-gold">$@car.PricePerDay.ToString("")</span>
                                 </div>
                                 <div class="flex items-center gap-2 mt-1.5">
                                     <span class="px-1.5 py-0.5 rounded bg-white/5 text-[10px] text-gray-400 border border-white/10">@car.Transmission</span>
