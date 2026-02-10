@@ -67,10 +67,13 @@
                 Home
             </a>
             
-            <a href="/Browse" class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors group text-gray-400 hover:text-white hover:bg-white/5">
-                <span class="material-symbols-outlined text-[22px] group-hover:scale-110 transition-transform">directions_car</span>
-                Browse Cars
-            </a>
+            @if (!User.IsInRole("Driver"))
+            {
+                <a href="/Browse" class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors group text-gray-400 hover:text-white hover:bg-white/5">
+                    <span class="material-symbols-outlined text-[22px] group-hover:scale-110 transition-transform">directions_car</span>
+                    Browse Cars
+                </a>
+            }
 
             <!-- Customer Section -->
             @if (User.IsInRole("Customer"))
@@ -82,6 +85,18 @@
                 <a href="/Support" class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors group @(ViewContext.RouteData.Values["controller"]?.ToString() == "Support" ? "bg-gold/10 text-gold shadow-glow" : "text-gray-400 hover:text-white hover:bg-white/5")">
                     <span class="material-symbols-outlined text-[22px] group-hover:scale-110 transition-transform">support_agent</span>
                     Help & Support
+                </a>
+            }
+
+            @if (User.IsInRole("Driver"))
+            {
+                <a href="/DriverPortal/Dashboard" class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors group @(ViewContext.RouteData.Values["controller"]?.ToString() == "DriverPortal" && ViewContext.RouteData.Values["action"]?.ToString() == "Dashboard" ? "bg-gold/10 text-gold shadow-glow" : "text-gray-400 hover:text-white hover:bg-white/5")">
+                    <span class="material-symbols-outlined text-[22px] group-hover:scale-110 transition-transform">dashboard</span>
+                    My Dashboard
+                </a>
+                <a href="/DriverPortal/Schedule" class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors group @(ViewContext.RouteData.Values["controller"]?.ToString() == "DriverPortal" && ViewContext.RouteData.Values["action"]?.ToString() == "Schedule" ? "bg-gold/10 text-gold shadow-glow" : "text-gray-400 hover:text-white hover:bg-white/5")">
+                    <span class="material-symbols-outlined text-[22px] group-hover:scale-110 transition-transform">calendar_today</span>
+                    Schedule
                 </a>
             }
 

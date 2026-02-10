@@ -58,15 +58,29 @@ namespace RentACar.Web.Controllers
                     PickupLocationLabel = b.PickupLocationLabel ?? "N/A",
                     StartDate = b.Startdate,
                     EndDate = b.Enddate,
-                    BookingStatus = b.BookingStatus ?? "Pending"
+                    BookingStatus = b.BookingStatus ?? "Pending",
+                    CustomerPhone = b.Customer?.User?.PhoneNumber ?? "N/A"
                 }).ToList();
+
+            // Stats
+            var completedTrips = bookings.Count(b => b.BookingStatus == "Completed");
+            var totalHours = bookings
+                .Where(b => b.BookingStatus == "Completed")
+                .Sum(b => (b.Enddate.ToDateTime(TimeOnly.MinValue) - b.Startdate.ToDateTime(TimeOnly.MinValue)).TotalHours);
+            
+            var completedTripsMonth = bookings.Count(b => b.BookingStatus == "Completed" && b.Enddate.Month == today.Month && b.Enddate.Year == today.Year);
+            var upcomingTripsMonth = bookings.Count(b => b.Startdate >= today && b.Startdate.Month == today.Month && b.Startdate.Year == today.Year);
 
             var model = new DriverDashboardViewModel
             {
                 DriverId = driver.DriverId,
                 DriverName = driver.FullName,
                 IsAvailable = driver.IsActive,
-                TodayBookings = todayBookings
+                TodayBookings = todayBookings,
+                TotalTrips = completedTrips,
+                TotalHours = Math.Round(totalHours, 1),
+                CompletedTripsMonth = completedTripsMonth,
+                UpcomingTripsMonth = upcomingTripsMonth
             };
 
             ViewBag.GoogleMapsKey = _config["GOOGLE_MAPS_API_KEY"] ?? Environment.GetEnvironmentVariable("GOOGLE_MAPS_API_KEY");
@@ -118,7 +132,8 @@ namespace RentACar.Web.Controllers
                         PickupLocationLabel = b.PickupLocationLabel ?? "N/A",
                         StartDate = b.Startdate,
                         EndDate = b.Enddate,
-                        BookingStatus = b.BookingStatus ?? "Pending"
+                        BookingStatus = b.BookingStatus ?? "Pending",
+                        CustomerPhone = b.Customer?.User?.PhoneNumber ?? "N/A"
                     }).ToList()
             };
 
