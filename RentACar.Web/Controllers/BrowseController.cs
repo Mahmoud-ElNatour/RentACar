@@ -27,11 +27,12 @@ namespace RentACar.Web.Controllers
             DateOnly? startDate = null, 
             DateOnly? endDate = null,
             string? sortOrder = null,
+            string? category = null,
             int page = 1)
         {
             var categories = await _categoryManager.GetAllActiveCategoriesAsync();
 
-            var cars = await GetFilteredCarsInternal(name, categoryIds, minPrice, maxPrice, startDate, endDate, sortOrder);
+            var cars = await GetFilteredCarsInternal(name, categoryIds, minPrice, maxPrice, startDate, endDate, sortOrder, category);
             
             int pageSize = 12;
             int totalCount = cars.Count;
@@ -66,9 +67,10 @@ namespace RentACar.Web.Controllers
             DateOnly? startDate = null,
             DateOnly? endDate = null,
             string? sortOrder = null,
+            string? category = null,
             int page = 1)
         {
-            var cars = await GetFilteredCarsInternal(name, categoryIds, minPrice, maxPrice, startDate, endDate, sortOrder);
+            var cars = await GetFilteredCarsInternal(name, categoryIds, minPrice, maxPrice, startDate, endDate, sortOrder, category);
 
             int pageSize = 12;
             var pagedCars = cars.Skip((page - 1) * pageSize).Take(pageSize).ToList();
@@ -85,7 +87,8 @@ namespace RentACar.Web.Controllers
             decimal? maxPrice, 
             DateOnly? startDate, 
             DateOnly? endDate,
-            string? sortOrder)
+            string? sortOrder,
+            string? categoryName)
         {
             // Initial Fetch (Lightweight DTOs)
             var cars = await _carManager.SearchCarsForListAsync(modelName: name);
@@ -98,6 +101,17 @@ namespace RentACar.Web.Controllers
             cars = cars.Where(c => c.CategoryId.HasValue && activeCategoryIds.Contains(c.CategoryId.Value)).ToList();
 
             // Filter by Categories
+            if (!string.IsNullOrEmpty(categoryName))
+            {
+                var catDto = await _categoryManager.GetCategoryByNameAsync(categoryName);
+                if (catDto != null)
+                {
+                    var newIds = (categoryIds ?? Array.Empty<int>()).ToList();
+                    newIds.Add(catDto.CategoryId);
+                    categoryIds = newIds.ToArray();
+                }
+            }
+
             if (categoryIds != null && categoryIds.Any())
             {
                 cars = cars.Where(c => c.CategoryId.HasValue && categoryIds.Contains(c.CategoryId.Value)).ToList();

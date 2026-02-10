@@ -360,10 +360,17 @@ namespace RentACar.Web.Controllers
                         DateRange = $"{b.Startdate:MMM dd} - {b.Enddate:MMM dd}",
                         TotalPrice = b.TotalPrice,
                         Status = b.BookingStatus,
-                        StatusColorClass = b.BookingStatus == "Booked" ? "text-green-500 bg-green-500/10" :
-                                           b.BookingStatus == "Pending" ? "text-yellow-500 bg-yellow-500/10" :
-                                           b.BookingStatus == "Returned" ? "text-blue-500 bg-blue-500/10" :
-                                           "text-red-500 bg-red-500/10"
+                        StatusColorClass = b.BookingStatus switch
+                        {
+                            "Pending" => "text-yellow-500 bg-yellow-500/10",
+                            "Confirmed" => "text-sky-500 bg-sky-500/10",
+                            "InProgress" => "text-purple-500 bg-purple-500/10",
+                            "Completed" => "text-green-500 bg-green-500/10",
+                            "Cancelled" => "text-red-500 bg-red-500/10",
+                            "Rejected" => "text-red-500 bg-red-500/10",
+                            "AwaitingReturn" => "text-orange-500 bg-orange-500/10",
+                            _ => "text-gray-500 bg-gray-500/10"
+                        }
                     };
                 })
                 .ToList();
