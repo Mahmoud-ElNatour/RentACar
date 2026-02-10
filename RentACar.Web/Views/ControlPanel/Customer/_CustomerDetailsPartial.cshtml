@@ -43,7 +43,7 @@
             </div>
             <div class="modal-footer">
                 @if(!Model.IsVerified) {
-                    <a href="/Customer/Verify/@Model.UserId" class="btn btn-primary">Verify Customer</a>
+                    <button type="button" onclick="verifyCustomer(@Model.UserId)" class="btn btn-primary">Verify Customer</button>
                 }
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>

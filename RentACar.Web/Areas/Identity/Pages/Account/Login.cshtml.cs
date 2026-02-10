@@ -173,6 +173,24 @@ namespace RentACar.Web.Areas.Identity.Pages.Account
                     string roleStr = roles.Any() ? string.Join(", ", roles) : "User";
                     await _auditLogManager.LogAsync("Login", "User", user?.Id ?? "Unknown", $"User {Input.Email} logged in successfully.", "Success", Input.Email, roleStr);
                     
+                    // Role-based redirection
+                    if (roles.Contains("Admin"))
+                    {
+                        return RedirectToAction("Admin", "Dashboard");
+                    }
+                    if (roles.Contains("Employee"))
+                    {
+                        return RedirectToAction("Employee", "Dashboard");
+                    }
+                    if (roles.Contains("Driver"))
+                    {
+                        return RedirectToAction("Dashboard", "DriverPortal");
+                    }
+                    if (roles.Contains("Customer"))
+                    {
+                        return RedirectToAction("Customer", "Dashboard");
+                    }
+
                     return LocalRedirect(returnUrl);
                 }
                 if (result.RequiresTwoFactor)
