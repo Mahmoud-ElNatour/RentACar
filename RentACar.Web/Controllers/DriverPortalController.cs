@@ -63,13 +63,14 @@ namespace RentACar.Web.Controllers
                 }).ToList();
 
             // Stats
-            var completedTrips = bookings.Count(b => b.BookingStatus == "Completed");
+            var activeStatuses = new[] { "Completed", "InProgress", "PickedUp", "Confirmed" };
+            var completedTrips = bookings.Count(b => activeStatuses.Contains(b.BookingStatus));
             var totalHours = bookings
                 .Where(b => b.BookingStatus == "Completed")
                 .Sum(b => (b.Enddate.ToDateTime(TimeOnly.MinValue) - b.Startdate.ToDateTime(TimeOnly.MinValue)).TotalHours);
             
-            var completedTripsMonth = bookings.Count(b => b.BookingStatus == "Completed" && b.Enddate.Month == today.Month && b.Enddate.Year == today.Year);
-            var upcomingTripsMonth = bookings.Count(b => b.Startdate >= today && b.Startdate.Month == today.Month && b.Startdate.Year == today.Year);
+            var completedTripsMonth = bookings.Count(b => activeStatuses.Contains(b.BookingStatus) && b.Enddate.Month == today.Month && b.Enddate.Year == today.Year);
+            var upcomingTripsMonth = bookings.Count(b => b.Startdate >= today && b.BookingStatus == "Confirmed" && b.Startdate.Month == today.Month && b.Startdate.Year == today.Year);
 
             var model = new DriverDashboardViewModel
             {
