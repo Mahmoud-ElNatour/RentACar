@@ -28,5 +28,6 @@ namespace RentACar.Application.DTOs
         public decimal? PromocodeDiscount { get; set; }
         public int? VerifiedRatingStars { get; set; }
         public bool IsRated { get; set; }
+        public string? RatingFeedback { get; set; }
     }
 }

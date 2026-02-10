@@ -133,16 +133,24 @@
                                 <div class="bg-[#262626] rounded-xl p-4 border border-white/5">
                                     @if(Model.IsRated)
                                     {
-                                        <div class="flex items-center justify-between">
-                                            <div class="flex gap-1">
-                                                @for(int i=1; i<=5; i++)
-                                                {
-                                                    <span class="material-symbols-outlined text-xl @(i <= (Model.VerifiedRatingStars ?? 0) ? "text-gold filled" : "text-gray-600")">star</span>
-                                                }
+                                        <div class="flex flex-col gap-3">
+                                            <div class="flex items-center justify-between">
+                                                <div class="flex gap-1">
+                                                    @for(int i=1; i<=5; i++)
+                                                    {
+                                                        <span class="material-symbols-outlined text-xl @(i <= (Model.VerifiedRatingStars ?? 0) ? "text-gold filled" : "text-gray-600")">star</span>
+                                                    }
+                                                </div>
+                                                <span class="px-3 py-1.5 rounded-lg bg-white/5 text-gray-400 text-xs font-bold border border-white/5">
+                                                    Already Rated
+                                                </span>
                                             </div>
-                                            <button disabled class="px-3 py-1.5 rounded-lg bg-white/5 text-gray-400 text-xs font-bold border border-white/5 cursor-not-allowed">
-                                                Already Rated
-                                            </button>
+                                            @if(!string.IsNullOrEmpty(Model.RatingFeedback))
+                                            {
+                                                <div class="mt-2 p-3 rounded-lg bg-white/5 border border-white/10 italic text-gray-400 text-sm">
+                                                    "@Model.RatingFeedback"
+                                                </div>
+                                            }
                                         </div>
                                     }
                                     else
@@ -157,6 +165,10 @@
                                                 }
                                             </div>
                                             <input type="hidden" id="ratingValue_@Model.BookingId" value="0" />
+                                            
+                                            <textarea id="ratingFeedback_@Model.BookingId" 
+                                                class="w-full bg-[#1a1a1a] border border-white/10 rounded-lg p-3 text-sm text-gray-300 placeholder-gray-600 focus:outline-none focus:border-gold/50 transition-colors"
+                                                placeholder="Write your feedback here (optional)..." rows="3"></textarea>
                                             
                                             <button type="button" onclick="submitRating(@Model.BookingId)" id="btnRate_@Model.BookingId" disabled 
                                                 class="w-full py-2 rounded-lg bg-gold/10 text-gold font-bold text-sm border border-gold/20 hover:bg-gold hover:text-black transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-gold/10 disabled:hover:text-gold">

@@ -150,14 +150,14 @@
 
             if (filtered.length === 0) {
                 tbody.innerHTML = `
-                        <tr>
-                            <td colspan="5" class="p-16 text-center text-gray-500">
-                                <div class="flex flex-col items-center gap-4">
-                                    <span class="material-symbols-outlined text-6xl opacity-20">no_crash</span>
-                                    <p class="text-xl">No rentals found in this category.</p>
-                                </div>
-                            </td>
-                        </tr>`;
+                            <tr>
+                                <td colspan="5" class="p-16 text-center text-gray-500">
+                                    <div class="flex flex-col items-center gap-4">
+                                        <span class="material-symbols-outlined text-6xl opacity-20">no_crash</span>
+                                        <p class="text-xl">No rentals found in this category.</p>
+                                    </div>
+                                </td>
+                            </tr>`;
                 return;
             }
 
@@ -167,25 +167,25 @@
 
                 // --- Vehicle Column ---
                 const vehicleHtml = `
-                        <div class="flex items-center gap-4">
-                            <div class="flex flex-col">
-                                <span class="text-white font-bold text-lg">${b.carName ?? 'Unknown Car'}</span>
+                            <div class="flex items-center gap-4">
+                                <div class="flex flex-col">
+                                    <span class="text-white font-bold text-lg">${b.carName ?? 'Unknown Car'}</span>
+                                </div>
                             </div>
-                        </div>
-                    `;
+                        `;
 
                 // --- Dates Column ---
                 const start = new Date(b.startdate);
                 const end = new Date(b.enddate);
                 const dateOptions = { month: 'short', day: '2-digit' };
                 const datesHtml = `
-                        <div class="flex flex-col">
-                            <span class="text-white font-medium text-sm">
-                                ${start.toLocaleDateString('en-US', dateOptions)} - ${end.toLocaleDateString('en-US', dateOptions)}
-                            </span>
-                            <span class="text-xs text-gray-500">${end.getFullYear()}</span>
-                        </div>
-                    `;
+                            <div class="flex flex-col">
+                                <span class="text-white font-medium text-sm">
+                                    ${start.toLocaleDateString('en-US', dateOptions)} - ${end.toLocaleDateString('en-US', dateOptions)}
+                                </span>
+                                <span class="text-xs text-gray-500">${end.getFullYear()}</span>
+                            </div>
+                        `;
 
                 // --- Status Column (Badge) ---
                 let statusBadgeClass = '';
@@ -207,50 +207,50 @@
                 const showReceiptButton = paymentStatus === 'paid';
 
                 const actionsHtml = `
-                        <div class="flex items-center justify-end gap-2">
-                            <button onclick="openDetailsModal(${b.bookingId})" title="View Details"
-                                    class="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors">
-                                <span class="material-symbols-outlined text-[20px]">visibility</span>
-                            </button>
-
-                            ${showPayButton ? `
-                                <button onclick="processDirectPay(${b.bookingId}, ${b.totalPrice})" title="Pay Now"
-                                        class="p-2 text-gold hover:text-[#b5952f] hover:bg-gold/10 rounded-lg transition-colors">
-                                    <span class="material-symbols-outlined text-[20px]">credit_card</span>
+                            <div class="flex items-center justify-end gap-2">
+                                <button onclick="openDetailsModal(${b.bookingId})" title="View Details"
+                                        class="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors">
+                                    <span class="material-symbols-outlined text-[20px]">visibility</span>
                                 </button>
-                            ` : ''}
 
-                            ${showReceiptButton && b.paymentId ? `
-                                <button onclick="window.open('/Bookings/Receipt/${b.paymentId}', '_blank', 'width=500,height=700')" title="Download Receipt"
-                                   class="p-2 text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 rounded-lg transition-colors">
-                                    <span class="material-symbols-outlined text-[20px]">receipt_long</span>
-                                </button>
-                            ` : ''}
+                                ${showPayButton ? `
+                                    <button onclick="processDirectPay(${b.bookingId}, ${b.totalPrice})" title="Pay Now"
+                                            class="p-2 text-gold hover:text-[#b5952f] hover:bg-gold/10 rounded-lg transition-colors">
+                                        <span class="material-symbols-outlined text-[20px]">credit_card</span>
+                                    </button>
+                                ` : ''}
 
-                             ${showRateButton ? `
-                                <button onclick="showRatingPopup(${b.bookingId})" title="Rate Experience"
-                                        class="p-2 text-yellow-400 hover:text-yellow-300 hover:bg-yellow-400/10 rounded-lg transition-colors">
-                                    <span class="material-symbols-outlined text-[20px]">star</span>
-                                </button>
-                            ` : ''}
+                                ${showReceiptButton && b.paymentId ? `
+                                    <button onclick="window.open('/Bookings/Receipt/${b.paymentId}', '_blank', 'width=500,height=700')" title="Download Receipt"
+                                       class="p-2 text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 rounded-lg transition-colors">
+                                        <span class="material-symbols-outlined text-[20px]">receipt_long</span>
+                                    </button>
+                                ` : ''}
 
-                            ${b.hasDriver && b.bookingStatus === 'InProgress' ? `
-                                 <a href="/Tracking/CustomerLive/${b.bookingId}" title="Track Driver"
-                                    class="p-2 text-emerald-400 hover:text-emerald-300 hover:bg-emerald-400/10 rounded-lg transition-colors">
-                                    <span class="material-symbols-outlined text-[20px]">location_on</span>
-                                </a>
-                            ` : ''}
-                        </div>
-                    `;
+                                 ${showRateButton ? `
+                                    <button onclick="showRatingPopup(${b.bookingId})" title="Rate Experience"
+                                            class="p-2 text-yellow-400 hover:text-yellow-300 hover:bg-yellow-400/10 rounded-lg transition-colors">
+                                        <span class="material-symbols-outlined text-[20px]">star</span>
+                                    </button>
+                                ` : ''}
+
+                                ${b.hasDriver && b.bookingStatus === 'InProgress' ? `
+                                     <a href="/Tracking/CustomerLive/${b.bookingId}" title="Track Driver"
+                                        class="p-2 text-emerald-400 hover:text-emerald-300 hover:bg-emerald-400/10 rounded-lg transition-colors">
+                                        <span class="material-symbols-outlined text-[20px]">location_on</span>
+                                    </a>
+                                ` : ''}
+                            </div>
+                        `;
 
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-white/5 transition-colors group border-b border-[#262626] last:border-0 align-middle";
                 tr.innerHTML = `
-                        <td class="px-6 py-4">${vehicleHtml}</td>
-                        <td class="px-6 py-4">${datesHtml}</td>
-                        <td class="px-6 py-4">${statusHtml}</td>
-                        <td class="px-6 py-4">${priceHtml}</td>
-                        <td class="px-6 py-4 text-right">${actionsHtml}</td>`;
+                            <td class="px-6 py-4">${vehicleHtml}</td>
+                            <td class="px-6 py-4">${datesHtml}</td>
+                            <td class="px-6 py-4">${statusHtml}</td>
+                            <td class="px-6 py-4">${priceHtml}</td>
+                            <td class="px-6 py-4 text-right">${actionsHtml}</td>`;
                 tbody.appendChild(tr);
             });
         }
@@ -265,11 +265,11 @@
             const overlay = document.createElement('div');
             overlay.className = "fixed inset-0 z-50 bg-black/80 flex items-center justify-center";
             overlay.innerHTML = `
-                    <div class="bg-[#16181a] p-8 rounded-2xl border border-[#262626] text-center">
-                        <span class="material-symbols-outlined text-4xl text-gold animate-spin mb-4">progress_activity</span>
-                        <h3 class="text-xl font-bold text-white">Redirecting to Payment...</h3>
-                    </div>
-                `;
+                        <div class="bg-[#16181a] p-8 rounded-2xl border border-[#262626] text-center">
+                            <span class="material-symbols-outlined text-4xl text-gold animate-spin mb-4">progress_activity</span>
+                            <h3 class="text-xl font-bold text-white">Redirecting to Payment...</h3>
+                        </div>
+                    `;
             document.body.appendChild(overlay);
 
             try {
@@ -305,7 +305,7 @@
             await loadPaymentMethods();
             await loadBookings();
         });
-                function selectStar(bookingId, value) {
+        function selectStar(bookingId, value) {
             document.getElementById(`ratingValue_${bookingId}`).value = value;
             document.getElementById(`btnRate_${bookingId}`).disabled = false;
 
@@ -323,6 +323,7 @@
 
         async function submitRating(bookingId) {
             const stars = document.getElementById(`ratingValue_${bookingId}`).value;
+            const feedback = document.getElementById(`ratingFeedback_${bookingId}`).value;
             const btn = document.getElementById(`btnRate_${bookingId}`);
 
             if (stars < 1) return;
@@ -334,28 +335,39 @@
                 const resp = await fetch('/api/Bookings/Rate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ bookingId: bookingId, stars: parseInt(stars) })
+                    body: JSON.stringify({
+                        bookingId: bookingId,
+                        stars: parseInt(stars),
+                        feedback: feedback
+                    })
                 });
 
                 if (resp.ok) {
                     // Refresh content or update UI to Read-Only state
                     const container = document.getElementById(`ratingSection_${bookingId}`);
                     container.innerHTML = `
-                                                        <h6 class="text-gold text-xs font-bold uppercase tracking-wider mb-4 flex items-center gap-2">
-                                                            <span class="material-symbols-outlined text-sm">star</span> Rating
-                                                        </h6>
-                                                        <div class="bg-[#262626] rounded-xl p-4 border border-white/5">
-                                                            <div class="flex items-center justify-between">
-                                                                <div class="flex gap-1">
-                                                                    ${Array(5).fill(0).map((_, i) =>
+                                                            <h6 class="text-gold text-xs font-bold uppercase tracking-wider mb-4 flex items-center gap-2">
+                                                                <span class="material-symbols-outlined text-sm">star</span> Rating
+                                                            </h6>
+                                                            <div class="bg-[#262626] rounded-xl p-4 border border-white/5">
+                                                                <div class="flex flex-col gap-3">
+                                                                    <div class="flex items-center justify-between">
+                                                                        <div class="flex gap-1">
+                                                                            ${Array(5).fill(0).map((_, i) =>
                         `<span class="material-symbols-outlined text-xl ${i < stars ? 'text-gold filled' : 'text-gray-600'}">star</span>`
                     ).join('')}
+                                                                        </div>
+                                                                        <span class="px-3 py-1.5 rounded-lg bg-white/5 text-gray-400 text-xs font-bold border border-white/5">
+                                                                            Already Rated
+                                                                        </span>
+                                                                    </div>
+                                                                    ${feedback ? `
+                                                                        <div class="mt-2 p-3 rounded-lg bg-white/5 border border-white/10 italic text-gray-400 text-sm">
+                                                                            "${feedback}"
+                                                                        </div>
+                                                                    ` : ''}
                                                                 </div>
-                                                                <button disabled class="px-3 py-1.5 rounded-lg bg-white/5 text-gray-400 text-xs font-bold border border-white/5 cursor-not-allowed">
-                                                                    Already Rated
-                                                                </button>
-                                                            </div>
-                                                        </div>`;
+                                                            </div>`;
                 } else {
                     const txt = await resp.text();
                     alert("Error: " + txt);
