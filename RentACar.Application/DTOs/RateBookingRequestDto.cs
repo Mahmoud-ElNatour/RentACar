@@ -6,5 +6,6 @@ namespace RentACar.Application.DTOs
     {
         public int BookingId { get; set; }
         public int Stars { get; set; }
+        public string? Feedback { get; set; }
     }
 }

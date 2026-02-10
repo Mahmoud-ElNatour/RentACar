@@ -221,6 +221,7 @@ namespace RentACar.Web.Controllers
             {
                 dto.IsRated = true;
                 dto.VerifiedRatingStars = rating.Stars;
+                dto.RatingFeedback = rating.Feedback;
             }
             else
             {
@@ -258,13 +259,13 @@ namespace RentACar.Web.Controllers
                 return BadRequest("This booking has already been rated.");
             }
 
-            var ratingId = await _ratingManager.AddRatingAsync(customerId.Value, request.BookingId, request.Stars, null); 
+            var ratingId = await _ratingManager.AddRatingAsync(customerId.Value, request.BookingId, request.Stars, request.Feedback);
 
             // Verify persistence
             var check = await _ratingManager.GetRatingByBookingIdAsync(request.BookingId);
             if (check == null)
             {
-               return StatusCode(500, "Rating could not be saved due to an internal error.");
+                return StatusCode(500, "Rating could not be saved due to an internal error.");
             }
 
             return Ok(new { success = true, ratingId = ratingId });

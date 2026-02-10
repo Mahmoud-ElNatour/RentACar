@@ -133,16 +133,24 @@
                                 <div class="bg-[#262626] rounded-xl p-4 border border-white/5">
                                     @if(Model.IsRated)
                                     {
-                                        <div class="flex items-center justify-between">
-                                            <div class="flex gap-1">
-                                                @for(int i=1; i<=5; i++)
-                                                {
-                                                    <span class="material-symbols-outlined text-xl @(i <= (Model.VerifiedRatingStars ?? 0) ? "text-gold filled" : "text-gray-600")">star</span>
-                                                }
+                                        <div class="flex flex-col gap-3">
+                                            <div class="flex items-center justify-between">
+                                                <div class="flex gap-1">
+                                                    @for(int i=1; i<=5; i++)
+                                                    {
+                                                        <span class="material-symbols-outlined text-xl @(i <= (Model.VerifiedRatingStars ?? 0) ? "text-gold filled" : "text-gray-600")">star</span>
+                                                    }
+                                                </div>
+                                                <span class="px-3 py-1.5 rounded-lg bg-white/5 text-gray-400 text-xs font-bold border border-white/5">
+                                                    Already Rated
+                                                </span>
                                             </div>
-                                            <button disabled class="px-3 py-1.5 rounded-lg bg-white/5 text-gray-400 text-xs font-bold border border-white/5 cursor-not-allowed">
-                                                Already Rated
-                                            </button>
+                                            @if(!string.IsNullOrEmpty(Model.RatingFeedback))
+                                            {
+                                                <div class="mt-2 p-3 rounded-lg bg-white/5 border border-white/10 italic text-gray-400 text-sm">
+                                                    "@Model.RatingFeedback"
+                                                </div>
+                                            }
                                         </div>
                                     }
                                     else
@@ -158,6 +166,10 @@
                                             </div>
                                             <input type="hidden" id="ratingValue_@Model.BookingId" value="0" />
                                             
+                                            <textarea id="ratingFeedback_@Model.BookingId" 
+                                                class="w-full bg-[#1a1a1a] border border-white/10 rounded-lg p-3 text-sm text-gray-300 placeholder-gray-600 focus:outline-none focus:border-gold/50 transition-colors"
+                                                placeholder="Write your feedback here (optional)..." rows="3"></textarea>
+                                            
                                             <button type="button" onclick="submitRating(@Model.BookingId)" id="btnRate_@Model.BookingId" disabled 
                                                 class="w-full py-2 rounded-lg bg-gold/10 text-gold font-bold text-sm border border-gold/20 hover:bg-gold hover:text-black transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-gold/10 disabled:hover:text-gold">
                                                 Submit Rating
@@ -166,72 +178,8 @@
                                     }
                                 </div>
                             </div>
-                            
-                            <script>
-                                function selectStar(bookingId, value) {
-                                    document.getElementById(`ratingValue_${bookingId}`).value = value;
-                                    document.getElementById(`btnRate_${bookingId}`).disabled = false;
-                                    
-                                    for(let i=1; i<=5; i++) {
-                                        const el = document.getElementById(`star_${bookingId}_${i}`);
-                                        if(i <= value) {
-                                            el.classList.add('text-gold', 'filled');
-                                            el.classList.remove('text-gray-600');
-                                        } else {
-                                            el.classList.remove('text-gold', 'filled');
-                                            el.classList.add('text-gray-600');
-                                        }
-                                    }
-                                }
+                          
 
-                                async function submitRating(bookingId) {
-                                    const stars = document.getElementById(`ratingValue_${bookingId}`).value;
-                                    const btn = document.getElementById(`btnRate_${bookingId}`);
-                                    
-                                    if(stars < 1) return;
-
-                                    btn.disabled = true;
-                                    btn.innerText = "Submitting...";
-
-                                    try {
-                                        const resp = await fetch('/api/Bookings/Rate', {
-                                            method: 'POST',
-                                            headers: { 'Content-Type': 'application/json' },
-                                            body: JSON.stringify({ bookingId: bookingId, stars: parseInt(stars) })
-                                        });
-
-                                        if(resp.ok) {
-                                            // Refresh content or update UI to Read-Only state
-                                            const container = document.getElementById(`ratingSection_${bookingId}`);
-                                            container.innerHTML = `
-                                                <h6 class="text-gold text-xs font-bold uppercase tracking-wider mb-4 flex items-center gap-2">
-                                                    <span class="material-symbols-outlined text-sm">star</span> Rating
-                                                </h6>
-                                                <div class="bg-[#262626] rounded-xl p-4 border border-white/5">
-                                                    <div class="flex items-center justify-between">
-                                                        <div class="flex gap-1">
-                                                            ${Array(5).fill(0).map((_, i) => 
-                                                                `<span class="material-symbols-outlined text-xl ${i < stars ? 'text-gold filled' : 'text-gray-600'}">star</span>`
-                                                            ).join('')}
-                                                        </div>
-                                                        <button disabled class="px-3 py-1.5 rounded-lg bg-white/5 text-gray-400 text-xs font-bold border border-white/5 cursor-not-allowed">
-                                                            Already Rated
-                                                        </button>
-                                                    </div>
-                                                </div>`;
-                                        } else {
-                                            const txt = await resp.text();
-                                            alert("Error: " + txt);
-                                            btn.disabled = false;
-                                            btn.innerText = "Submit Rating";
-                                        }
-                                    } catch(e) {
-                                        console.error(e);
-                                        btn.disabled = false;
-                                        btn.innerText = "Submit Rating";
-                                    }
-                                }
-                            </script>
                         }
                     </div>
                 </div>
