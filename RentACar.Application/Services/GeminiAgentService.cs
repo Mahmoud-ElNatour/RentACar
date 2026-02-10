@@ -13,7 +13,7 @@ namespace RentACar.Application.Services
         private readonly string _apiKey;
         private readonly ILogger<GeminiAgentService> _logger;
 
-        private const string ApiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-001:generateContent";
+        private const string ApiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
 
         public GeminiAgentService(HttpClient httpClient, IConfiguration configuration, ILogger<GeminiAgentService> logger)
         {
@@ -56,33 +56,71 @@ namespace RentACar.Application.Services
                 // Construct URL with Key
                 var url = $"{ApiUrl}?key={_apiKey}";
 
-                var response = await _httpClient.PostAsync(url, content);
-                
-                if (!response.IsSuccessStatusCode)
-                {
-                    var error = await response.Content.ReadAsStringAsync();
-                    _logger.LogError("Gemini API Error: {StatusCode} - {Error}", response.StatusCode, error);
-                    return "I apologize, but I am unable to process your request at the moment. Please try again later.";
-                }
+                // Retry Logic
+                int maxRetries = 3;
+                int currentRetry = 0;
+                int milliseconds = 2000;
 
-                var responseString = await response.Content.ReadAsStringAsync();
-                var result = JsonSerializer.Deserialize<GeminiResponse>(responseString);
-
-                var answer = result?.Candidates?.FirstOrDefault()?.Content?.Parts?.FirstOrDefault()?.Text;
-                
-                // Post-processing to enforce "Did this help?" rule if not present 
-                // (Only add if answer is substantial)
-                if (!string.IsNullOrEmpty(answer))
+                while (true)
                 {
-                    if (!answer.Contains("Did this", StringComparison.OrdinalIgnoreCase) && 
-                        !answer.Contains("help", StringComparison.OrdinalIgnoreCase) && 
-                         answer.Length > 50) 
+                    try
                     {
-                        answer += "\n\nDid this answer your question? If not, you can ask to speak to a human agent.";
+                        var response = await _httpClient.PostAsync(url, content);
+
+                        if (response.IsSuccessStatusCode)
+                        {
+                            var responseString = await response.Content.ReadAsStringAsync();
+                            var result = JsonSerializer.Deserialize<GeminiResponse>(responseString);
+
+                            var answer = result?.Candidates?.FirstOrDefault()?.Content?.Parts?.FirstOrDefault()?.Text;
+
+                            // Post-processing to enforce "Did this help?" rule if not present 
+                            // (Only add if answer is substantial)
+                            if (!string.IsNullOrEmpty(answer))
+                            {
+                                if (!answer.Contains("Did this", StringComparison.OrdinalIgnoreCase) &&
+                                    !answer.Contains("help", StringComparison.OrdinalIgnoreCase) &&
+                                     answer.Length > 50)
+                                {
+                                    answer += "\n\nDid this answer your question? If not, you can ask to speak to a human agent.";
+                                }
+                            }
+
+                            return answer ?? "I apologize, I received an empty response. Please try again.";
+                        }
+                        else if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+                        {
+                            currentRetry++;
+                            if (response.Headers.RetryAfter != null && response.Headers.RetryAfter.Delta.HasValue)
+                            {
+                                _logger.LogWarning("Retry-After header present: {Delta}", response.Headers.RetryAfter.Delta);
+                            }
+
+                            if (currentRetry > maxRetries)
+                            {
+                                var error = await response.Content.ReadAsStringAsync();
+                                _logger.LogError("Gemini API Error: {StatusCode} - {Error} (After {Retries} retries)", response.StatusCode, error, maxRetries);
+                                return "I apologize, but I am receiving too many requests at the moment. Please try again in a minute.";
+                            }
+                            
+                            _logger.LogWarning("Gemini API 429 Too Many Requests. Retrying in {Delay}ms... (Attempt {Attempt}/{Max})", milliseconds, currentRetry, maxRetries);
+                            await Task.Delay(milliseconds);
+                            milliseconds *= 2; // Exponential backoff
+                        }
+                        else
+                        {
+                            var error = await response.Content.ReadAsStringAsync();
+                            var headers = string.Join(", ", response.Headers.Select(h => $"{h.Key}={string.Join(",", h.Value)}"));
+                            _logger.LogError("Gemini API Error: {StatusCode} - Body: {Error} - Headers: {Headers}", response.StatusCode, error, headers);
+                            return "I apologize, but I am unable to process your request at the moment. Please try again later.";
+                        }
+                    }
+                    catch (HttpRequestException ex)
+                    {
+                         _logger.LogError(ex, "HttpRequestException calling Gemini API");
+                         return "I apologize, but I am having trouble connecting to the service. Please try again later.";
                     }
                 }
-
-                return answer ?? "I apologize, I received an empty response. Please try again.";
 
             }
             catch (Exception ex)
