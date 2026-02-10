@@ -110,15 +110,15 @@
         <div class="bg-gradient-to-br from-surface-dark to-surface-darker border border-primary/30 rounded-xl p-6 relative overflow-hidden group shadow-lg shadow-primary/5">
             <div class="absolute right-0 top-0 w-24 h-24 bg-primary/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
             <p class="text-gray-400 text-sm font-medium relative z-10">Monthly Income (@DateTime.Now.ToString("MMM"))</p>
-            <p class="text-white text-3xl font-bold mt-2 relative z-10 tracking-tight">@Model.IncomeThisMonth.ToString("C0")</p>
+            <p class="text-white text-3xl font-bold mt-2 relative z-10 tracking-tight">$@Model.IncomeThisMonth.ToString("")</p>
             <div class="mt-4 flex items-center gap-2 relative z-10">
-                <span class="text-gray-500 text-xs">Year Total: @Model.IncomeThisYear.ToString("C0")</span>
+                <span class="text-gray-500 text-xs">Year Total: $@Model.IncomeThisYear.ToString("")</span>
             </div>
         </div>
         <!-- Salaries -->
         <div class="bg-surface-dark border border-white/5 rounded-xl p-6 hover:border-primary/20 transition-all">
             <p class="text-gray-400 text-sm font-medium">Salaries Paid</p>
-            <p class="text-white text-3xl font-bold mt-2 tracking-tight">@Model.SalariesToPay.ToString("C0")</p>
+            <p class="text-white text-3xl font-bold mt-2 tracking-tight">$@Model.SalariesToPay.ToString("")</p>
             <div class="mt-4 flex items-center gap-2">
                 <span class="bg-white/5 text-gray-400 text-xs px-2 py-1 rounded font-medium border border-white/10">Fixed per month</span>
             </div>
@@ -126,7 +126,7 @@
         <!-- Projected -->
         <div class="bg-surface-dark border border-white/5 rounded-xl p-6 hover:border-primary/20 transition-all">
             <p class="text-gray-400 text-sm font-medium">Net Revenue (Est.)</p>
-            <p class="text-primary text-3xl font-bold mt-2 tracking-tight">@Model.ExpectedRevenue.ToString("C0")</p>
+            <p class="text-primary text-3xl font-bold mt-2 tracking-tight">$@Model.ExpectedRevenue.ToString("")</p>
             <div class="mt-4 flex items-center gap-2">
                 <span class="bg-primary/10 text-primary text-xs px-2 py-1 rounded font-bold border border-primary/20">Year to Date</span>
             </div>
