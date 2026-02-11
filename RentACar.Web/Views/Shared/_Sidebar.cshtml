@@ -160,27 +160,30 @@
                      </div> <!-- End Submenu -->
                      </div> <!-- End Control Panel Group -->
 
-                     <!-- Accounting Group -->
-                     <div class="relative group/menu mt-1">
-                         <button onclick="toggleMenu('accountingMenu', 'accArrow')" 
-                            class="w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors group">
-                            <div class="flex items-center gap-3">
-                                 <span class="material-symbols-outlined text-[22px] group-hover:scale-110 transition-transform">account_balance</span>
-                                 Accounting
-                            </div>
-                            <span id="accArrow" class="material-symbols-outlined text-[18px] transition-transform duration-200">expand_more</span>
-                         </button>
+                     @if (User.IsInRole("Admin"))
+                     {
+                         <!-- Accounting Group -->
+                         <div class="relative group/menu mt-1">
+                             <button onclick="toggleMenu('accountingMenu', 'accArrow')" 
+                                class="w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors group">
+                                <div class="flex items-center gap-3">
+                                     <span class="material-symbols-outlined text-[22px] group-hover:scale-110 transition-transform">account_balance</span>
+                                     Accounting
+                                </div>
+                                <span id="accArrow" class="material-symbols-outlined text-[18px] transition-transform duration-200">expand_more</span>
+                             </button>
                       
-                     <!-- Submenu -->
-                     <div id="accountingMenu" class="hidden pl-4 space-y-1 mt-1 border-l border-border-dark ml-5">
-                          <a href="/Expense" class="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md text-gray-500 hover:text-gold hover:bg-gold/5 transition-colors">
-                              <span class="material-symbols-outlined text-[18px]">receipt_long</span> Expenses
-                          </a>
-                          <a href="/Finance" class="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md text-gray-500 hover:text-gold hover:bg-gold/5 transition-colors">
-                              <span class="material-symbols-outlined text-[18px]">monitoring</span> Finance Dashboard
-                          </a>
-                     </div>
-                     </div>
+                         <!-- Submenu -->
+                         <div id="accountingMenu" class="hidden pl-4 space-y-1 mt-1 border-l border-border-dark ml-5">
+                              <a href="/Expense" class="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md text-gray-500 hover:text-gold hover:bg-gold/5 transition-colors">
+                                  <span class="material-symbols-outlined text-[18px]">receipt_long</span> Expenses
+                              </a>
+                              <a href="/Finance" class="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md text-gray-500 hover:text-gold hover:bg-gold/5 transition-colors">
+                                  <span class="material-symbols-outlined text-[18px]">monitoring</span> Finance Dashboard
+                              </a>
+                         </div>
+                         </div>
+                     }
 
                      <!-- Ratings (Moved Outside) -->
                      <a href="/ControlPanel/Ratings" class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors group mt-1 text-gray-400 hover:text-white hover:bg-white/5">
@@ -231,10 +234,13 @@
                      </div> 
                      </div>
 
-                     <a href="/Reports" class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors group mt-1 @(ViewContext.RouteData.Values["controller"]?.ToString() == "Reports" ? "bg-gold/10 text-gold shadow-glow" : "text-gray-400 hover:text-white hover:bg-white/5")">
-                        <span class="material-symbols-outlined text-[22px] group-hover:scale-110 transition-transform">bar_chart</span>
-                        Reports
-                    </a>
+                     @if (User.IsInRole("Admin"))
+                     {
+                         <a href="/Reports/AuditLog" class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors group mt-1 @(ViewContext.RouteData.Values["controller"]?.ToString() == "Reports" && ViewContext.RouteData.Values["action"]?.ToString() == "AuditLog" ? "bg-gold/10 text-gold shadow-glow" : "text-gray-400 hover:text-white hover:bg-white/5")">
+                            <span class="material-symbols-outlined text-[22px] group-hover:scale-110 transition-transform">history</span>
+                            Audit Logs
+                        </a>
+                     }
                 </div>
             }
             

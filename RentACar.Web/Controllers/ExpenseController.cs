@@ -9,7 +9,7 @@ using RentACar.Application.Managers;
 
 namespace RentACar.Web.Controllers;
 
-[Authorize(Roles = "Admin,Employee")]
+[Authorize(Roles = "Admin")]
 public class ExpenseController : Controller
 {
     private readonly ExpenseManager _manager;
