@@ -9,6 +9,12 @@ public class DriverDashboardViewModel
     public string DriverName { get; set; } = string.Empty;
     public bool IsAvailable { get; set; }
     public List<DriverPortalBookingViewModel> TodayBookings { get; set; } = new();
+
+    // Stats
+    public int CompletedTripsMonth { get; set; }
+    public int UpcomingTripsMonth { get; set; }
+    public int TotalTrips { get; set; }
+    public double TotalHours { get; set; }
 }
 
 public class DriverScheduleViewModel
@@ -51,6 +57,7 @@ public class DriverPortalBookingViewModel
     public DateOnly EndDate { get; set; }
     public string BookingStatus { get; set; } = string.Empty;
     public string? TripStatus { get; set; }
+    public string? CustomerPhone { get; set; }
 }
 
 public class DriverScheduleDayViewModel

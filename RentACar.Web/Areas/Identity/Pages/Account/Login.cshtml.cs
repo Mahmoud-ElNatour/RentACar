@@ -184,7 +184,7 @@ namespace RentACar.Web.Areas.Identity.Pages.Account
                     }
                     if (roles.Contains("Driver"))
                     {
-                        return RedirectToAction("Dashboard", "DriverPortal");
+                        return RedirectToAction("Dashboard", "DriverPortal", new { area = "" });
                     }
                     if (roles.Contains("Customer"))
                     {

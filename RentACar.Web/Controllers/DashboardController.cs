@@ -79,9 +79,20 @@ namespace RentACar.Web.Controllers
                 .Where(p => p.PaymentDate.Year == now.Year)
                 .Sum(p => p.Amount);
             
+            // Real Expenses
+            var expenses = await _dbContext.Expenses.ToListAsync();
+            var totalExpensesMonth = expenses
+                .Where(e => e.ExpenseDate.Year == now.Year && e.ExpenseDate.Month == now.Month && e.Status == "Paid")
+                .Sum(e => e.Amount);
+            
+            var totalExpensesYear = expenses
+                .Where(e => e.ExpenseDate.Year == now.Year && e.Status == "Paid")
+                .Sum(e => e.Amount);
+
             var employees = await _employeeManager.GetAllEmployees();
             var salaries = employees.Sum(e => e.Salary ?? 0m);
-            var expectedRevenue = incomeYear - salaries;
+            var expectedRevenue = incomeYear - totalExpensesYear; // Yearly Profit
+            var profitMonth = incomeMonth - totalExpensesMonth; // Monthly Profit
 
             // Chart Data
             var monthly = await _dbContext.Bookings
@@ -176,6 +187,9 @@ namespace RentACar.Web.Controllers
                 IncomeThisMonth = incomeMonth,
                 IncomeThisYear = incomeYear,
                 SalariesToPay = salaries,
+                TotalExpensesThisMonth = totalExpensesMonth,
+                TotalExpensesThisYear = totalExpensesYear,
+                ProfitThisMonth = profitMonth,
                 ExpectedRevenue = expectedRevenue,
                 MonthlyBookings = monthCounts,
                 AvailableYears = availableYears,

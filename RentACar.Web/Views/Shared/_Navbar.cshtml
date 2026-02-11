@@ -59,57 +59,58 @@
                 </a>
             </div>
 
-            <!-- Middle Section: Global Links (Desktop) -->
-            <nav class="hidden md:flex flex-1 justify-center px-8">
-                <div class="flex items-center gap-1 bg-background-dark/50 rounded-full p-1">
-                     @if (User.IsInRole("Customer"))
-                     {
-                        <a asp-area="" asp-controller="Browse" asp-action="Index" 
-                           class="px-4 py-1.5 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 rounded-full transition-all duration-200 @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Browse" ? "text-gold bg-gold/10 border border-[1px] border-gold/20" : "")">
-                            Browse Cars
-                        </a>
-                        <a asp-area="" asp-controller="Bookings" asp-action="MyBookings"
-                           class="px-4 py-1.5 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 rounded-full transition-all duration-200 @(ViewContext.RouteData.Values["Action"]?.ToString() == "MyBookings" ? "text-gold bg-gold/10 border border-[1px] border-gold/20" : "")">
-                            My Bookings
-                        </a>
-                     }
-                     
-                     @if (SignInManager.IsSignedIn(User)&&!User.IsInRole("Driver"))
-                     {
-                        <a asp-area="" asp-controller="Dashboard" asp-action="Index"
-                           class="px-4 py-1.5 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 rounded-full transition-all duration-200 @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Dashboard" ? "text-gold bg-gold/10 border border-[1px] border-gold/20" : "")">
-                            Dashboard
-                        </a>
-                     }
-                     
-                     @if (User.IsInRole("Admin") || User.IsInRole("Employee"))
-                     {
-                        <a asp-area="" asp-controller="ControlPanel" asp-action="Index"
-                           class="px-4 py-1.5 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 rounded-full transition-all duration-200 @(ViewContext.RouteData.Values["Controller"]?.ToString() == "ControlPanel" ? "text-gold bg-gold/10 border border-[1px] border-gold/20" : "")">
-                            Control Panel
-                        </a>
-                        <a asp-area="" asp-controller="EmailServices" asp-action="EmailServicesHub"
-                           class="px-4 py-1.5 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 rounded-full transition-all duration-200 @(ViewContext.RouteData.Values["Controller"]?.ToString() == "EmailServices" ? "text-gold bg-gold/10 border border-[1px] border-gold/20" : "")">
-                            Email Hub
-                        </a>
-                        <a asp-area="" asp-controller="Reports" asp-action="Index"
-                           class="px-4 py-1.5 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 rounded-full transition-all duration-200 @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Reports" ? "text-gold bg-gold/10 border border-[1px] border-gold/20" : "")">
-                            Reports
-                        </a>
-                     }
-                     @if (User.IsInRole("Driver"))
-                     {
-                        <a asp-area="" asp-controller="DriverPortal" asp-action="Dashboard" 
-                           class="px-4 py-1.5 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 rounded-full transition-all duration-200 @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Browse" ? "text-gold bg-gold/10 border border-[1px] border-gold/20" : "")">
-                            Dashboard
-                        </a>
-                        <a asp-area="" asp-controller="DriverPortal" asp-action="Schedule"
-                           class="px-4 py-1.5 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 rounded-full transition-all duration-200 @(ViewContext.RouteData.Values["Action"]?.ToString() == "MyBookings" ? "text-gold bg-gold/10 border border-[1px] border-gold/20" : "")">
-                            Schedule
-                        </a>
-                     }
-                </div>
-            </nav>
+            <!-- Middle Section: Search Bar (Admin/Employee/Customer) -->
+            @if (SignInManager.IsSignedIn(User) && !User.IsInRole("Driver"))
+            {
+                <nav class="hidden md:flex flex-1 justify-center px-8">
+                    <div class="flex items-center gap-1 bg-background-dark/50 rounded-full p-1 w-full max-w-lg">
+                         @if (User.IsInRole("Admin") || User.IsInRole("Employee") || User.IsInRole("Customer"))
+                         {
+                            <!-- Search Bar for Admin/Employee/Customer -->
+                            <div class="relative w-full group">
+                                <div class="relative flex items-center bg-background-dark/20 rounded-full border border-border-dark group-focus-within:border-gold/50 transition-all duration-300">
+                                    <span class="material-symbols-outlined absolute left-4 text-gray-400 group-focus-within:text-gold transition-colors">search</span>
+                                    <input type="text" id="navbarSearchInput" placeholder="Quick find page... (press '/' to focus)" 
+                                           class="w-full bg-transparent border-none py-1.5 pl-12 pr-4 text-sm text-white placeholder-gray-500 focus:ring-0 focus:outline-none" />
+                                </div>
+                                
+                                <!-- Results Dropdown -->
+                                <div id="navbarSearchResults" 
+                                     class="hidden absolute top-full left-0 right-0 mt-3 bg-surface-dark border border-border-dark rounded-xl shadow-2xl overflow-hidden z-[60] backdrop-blur-md">
+                                     <!-- Results injected by JS -->
+                                </div>
+                            </div>
+                            
+                            <script>
+                                document.addEventListener('DOMContentLoaded', () => {
+                                    const role = "@(User.IsInRole("Admin") ? "Admin" : User.IsInRole("Employee") ? "Employee" : "Customer")";
+                                    if (typeof initNavbarSearch === 'function') {
+                                        initNavbarSearch(role);
+                                    }
+                                    
+                                    // Keyboard shortcut
+                                    document.addEventListener('keydown', (e) => {
+                                        if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+                                            e.preventDefault();
+                                            document.getElementById('navbarSearchInput')?.focus();
+                                        }
+                                    });
+                                });
+                            </script>
+                         }
+                         else
+                         {
+                            @if (SignInManager.IsSignedIn(User))
+                            {
+                                <a asp-area="" asp-controller="Dashboard" asp-action="Index"
+                                   class="px-4 py-1.5 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 rounded-full transition-all duration-200 @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Dashboard" ? "text-gold bg-gold/10 border border-[1px] border-gold/20" : "")">
+                                    Dashboard
+                                </a>
+                            }
+                         }
+                    </div>
+                </nav>
+            }
 
             <!-- Right Section: Actions & Profile -->
             <div class="flex items-center gap-4 sm:gap-6">

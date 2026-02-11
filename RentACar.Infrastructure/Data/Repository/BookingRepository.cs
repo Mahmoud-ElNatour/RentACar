@@ -44,6 +44,7 @@ namespace RentACar.Infrastructure.Data.Repository
         {
             return await _dbContext.Bookings
                 .Include(b => b.Customer)
+                    .ThenInclude(c => c.User)
                 .Include(b => b.Car)
                 .FirstOrDefaultAsync(b => b.BookingId == id);
         }
@@ -57,6 +58,7 @@ namespace RentACar.Infrastructure.Data.Repository
         {
             return await _dbContext.Bookings
                 .Include(b => b.Customer)
+                    .ThenInclude(c => c.User)
                 .Include(b => b.Car)
                 .Where(b => b.DriverId == driverId)
                 .ToListAsync();

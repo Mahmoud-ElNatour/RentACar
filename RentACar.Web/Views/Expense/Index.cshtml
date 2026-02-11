@@ -1,0 +1,531 @@
+@{
+    ViewData["Title"] = "Expenses Management";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<!-- Main Content Area -->
+<div class="flex flex-col min-h-screen">
+    <main class="flex-1 p-6 lg:p-10 max-w-7xl mx-auto w-full">
+        <!-- Header Section -->
+        <header class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+            <div>
+                <h1 class="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+                    Expenses
+                </h1>
+                <p class="text-slate-500 dark:text-slate-400 mt-1">
+                    Track and manage operational expenses across all categories
+                </p>
+            </div>
+            <div class="flex gap-3">
+                 <button onclick="openCategoryModal()" class="bg-slate-200 hover:bg-slate-300 dark:bg-surface-dark-lighter dark:hover:bg-border-dark text-slate-700 dark:text-slate-300 font-bold py-2.5 px-6 rounded-lg flex items-center gap-2 transition-all">
+                    <span class="material-symbols-outlined text-lg">category</span>
+                    Categories
+                </button>
+                <button onclick="generateSalaries()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-6 rounded-lg flex items-center gap-2 transition-all shadow-lg shadow-indigo-600/20">
+                    <span class="material-symbols-outlined text-lg">payments</span>
+                    Generate Salaries
+                </button>
+                <a href="/Expense/Add" class="bg-[#eecd2b] hover:bg-[#eecd2b]/90 text-background-dark font-bold py-2.5 px-6 rounded-lg flex items-center gap-2 transition-all shadow-lg shadow-[#eecd2b]/10">
+                    <span class="material-symbols-outlined text-lg">add</span>
+                    Add Expense
+                </a>
+            </div>
+        </header>
+
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8" id="statsContainer">
+             <!-- Loaded via JS -->
+            <div class="bg-white dark:bg-surface-dark p-5 rounded-xl border border-slate-200 dark:border-border-dark shadow-sm animate-pulse">
+                <div class="h-4 bg-slate-200 dark:bg-white/10 rounded w-1/3 mb-4"></div>
+                <div class="h-8 bg-slate-200 dark:bg-white/10 rounded w-1/2"></div>
+            </div>
+        </div>
+
+        <!-- Filters Bar -->
+        <div class="bg-white dark:bg-surface-dark border border-slate-200 dark:border-border-dark p-4 rounded-xl mb-6 shadow-sm">
+            <div class="flex flex-col lg:flex-row items-center gap-4">
+                <!-- Search Input -->
+                <div class="relative w-full lg:max-w-xs">
+                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">search</span>
+                    <input id="searchInput" onkeyup="debounce(loadExpenses(), 500)" class="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-background-dark/50 border border-slate-200 dark:border-border-dark rounded-lg focus:ring-2 focus:ring-[#eecd2b]/50 focus:border-[#eecd2b] outline-none transition-all dark:text-white" placeholder="Search expenses..." type="text"/>
+                </div>
+                <!-- Category Dropdown -->
+                <div class="w-full lg:w-48">
+                    <select id="categoryFilter" onchange="loadExpenses()" class="w-full px-4 py-2 bg-slate-50 dark:bg-background-dark/50 border border-slate-200 dark:border-border-dark rounded-lg focus:ring-2 focus:ring-[#eecd2b]/50 focus:border-[#eecd2b] outline-none transition-all dark:text-white appearance-none">
+                        <option value="">All Categories</option>
+                        <!-- Populated via JS -->
+                    </select>
+                </div>
+                <!-- Status Dropdown -->
+                <div class="w-full lg:w-48">
+                    <select id="statusFilter" onchange="loadExpenses()" class="w-full px-4 py-2 bg-slate-50 dark:bg-background-dark/50 border border-slate-200 dark:border-border-dark rounded-lg focus:ring-2 focus:ring-[#eecd2b]/50 focus:border-[#eecd2b] outline-none transition-all dark:text-white appearance-none">
+                        <option value="">All Statuses</option>
+                        <option value="Paid">Paid</option>
+                        <option value="Planned">Planned</option>
+                        <option value="Cancelled">Cancelled</option>
+                    </select>
+                </div>
+                <!-- Date Range -->
+                <div class="flex items-center gap-2 w-full lg:w-auto">
+                    <div class="relative w-full">
+                         <input type="date" id="startDate" onchange="loadExpenses()" class="w-full px-4 py-2 bg-slate-50 dark:bg-background-dark/50 border border-slate-200 dark:border-border-dark rounded-lg focus:ring-2 focus:ring-[#eecd2b]/50 focus:border-[#eecd2b] outline-none transition-all dark:text-white [color-scheme:dark]" />
+                    </div>
+                    <span class="text-slate-400">-</span>
+                     <div class="relative w-full">
+                         <input type="date" id="endDate" onchange="loadExpenses()" class="w-full px-4 py-2 bg-slate-50 dark:bg-background-dark/50 border border-slate-200 dark:border-border-dark rounded-lg focus:ring-2 focus:ring-[#eecd2b]/50 focus:border-[#eecd2b] outline-none transition-all dark:text-white [color-scheme:dark]" />
+                    </div>
+                </div>
+                
+                <!-- Reset/Export buttons -->
+                <div class="flex items-center gap-2 ml-auto">
+                    <button onclick="resetFilters()" class="p-2 text-slate-500 hover:text-[#eecd2b] transition-colors dark:text-slate-400" title="Reset Filters">
+                        <span class="material-symbols-outlined">filter_alt_off</span>
+                    </button>
+                    <!-- <button class="p-2 text-slate-500 hover:text-[#eecd2b] transition-colors dark:text-slate-400" title="Download Report">
+                        <span class="material-icons-round">file_download</span>
+                    </button> -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Expenses Table -->
+        <div class="bg-white dark:bg-surface-dark border border-slate-200 dark:border-border-dark rounded-xl shadow-sm overflow-hidden">
+            <div class="overflow-x-auto custom-scrollbar">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50 dark:bg-background-dark/80 border-b border-slate-200 dark:border-border-dark">
+                            <th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Date</th>
+                            <th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Title</th>
+                            <th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Category</th>
+                            <th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">Amount</th>
+                            <th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="expensesTableBody" class="divide-y divide-slate-100 dark:divide-border-dark">
+                         <!-- Loaded via JS -->
+                    </tbody>
+                </table>
+            </div>
+            <!-- Pagination -->
+            <div class="px-6 py-4 border-t border-slate-200 dark:border-border-dark flex items-center justify-between bg-slate-50 dark:bg-background-dark/50" id="paginationControls">
+                 <!-- Loaded via JS -->
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Category Modal -->
+<div id="categoryModal" class="fixed inset-0 z-50 hidden transition-opacity duration-300" aria-modal="true">
+    <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeCategoryModal()"></div>
+    <div class="relative z-50 w-full max-w-lg mx-auto mt-20 bg-white dark:bg-surface-dark rounded-xl shadow-2xl border border-slate-200 dark:border-border-dark overflow-hidden transform transition-all">
+        <div class="px-6 py-4 border-b border-slate-200 dark:border-border-dark flex justify-between items-center bg-slate-50 dark:bg-background-dark/50">
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white">Manage Categories</h3>
+            <button onclick="closeCategoryModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        
+        <div class="p-6">
+            <div class="flex gap-2 mb-6">
+                <input type="text" id="newCategoryName" placeholder="New Category Name" class="flex-1 bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-border-dark rounded-lg px-4 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#eecd2b] focus:border-transparent outline-none">
+                <button onclick="createCategory()" class="bg-[#eecd2b] hover:bg-[#eecd2b]/90 text-black font-bold px-4 py-2 rounded-lg transition-colors">Add</button>
+            </div>
+
+            <div class="max-h-60 overflow-y-auto custom-scrollbar space-y-2 pr-2" id="categoriesList">
+                <!-- Loaded via JS -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Expense Details Modal -->
+<div id="detailsModal" class="fixed inset-0 z-50 hidden transition-opacity duration-300">
+     <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeDetailsModal()"></div>
+     <div class="relative z-50 w-full max-w-2xl mx-auto mt-10 md:mt-20 bg-background-light dark:bg-surface-dark rounded-xl shadow-2xl border border-white/5 dark:border-border-dark overflow-hidden" id="detailsModalContent">
+         <!-- Content injected via JS -->
+     </div>
+</div>
+
+
+@section Scripts {
+    <script>
+        let currentPage = 1;
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCategories(); 
+            loadExpenses();
+        });
+
+        async function loadExpenses(page = 1) {
+            currentPage = page;
+            const search = document.getElementById('searchInput').value;
+            const status = document.getElementById('statusFilter').value;
+            const category = document.getElementById('categoryFilter').value;
+            const start = document.getElementById('startDate').value;
+            const end = document.getElementById('endDate').value;
+
+            try {
+                const params = new URLSearchParams({
+                    page,
+                    pageSize: 10,
+                    searchTerm: search,
+                    status,
+                    categoryId: category,
+                    startDate: start,
+                    endDate: end
+                });
+
+                const response = await fetch(`/api/Expense?${params}`);
+                const data = await response.json();
+
+                renderTable(data.items);
+                renderPagination(data);
+                if(data.stats) renderStats(data.stats);
+
+            } catch (error) {
+                console.error('Error loading expenses:', error);
+            }
+        }
+
+        function resetFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('categoryFilter').value = '';
+            document.getElementById('startDate').value = '';
+            document.getElementById('endDate').value = '';
+            loadExpenses();
+        }
+
+        function renderTable(items) {
+            const tbody = document.getElementById('expensesTableBody');
+            if (items.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-12 text-center text-slate-500 dark:text-slate-400">
+                    <div class="flex flex-col items-center justify-center">
+                        <div class="w-16 h-16 bg-slate-100 dark:bg-white/5 rounded-full flex items-center justify-center mb-4">
+                            <span class="material-symbols-outlined text-3xl text-slate-300 dark:text-slate-600">receipt_long</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-slate-900 dark:text-white">No expenses found</h3>
+                        <p class="text-sm">Try adjusting your filters.</p>
+                    </div>
+                </td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = items.map(item => `
+                <tr class="hover:bg-slate-50 dark:hover:bg-[#eecd2b]/5 transition-colors group border-b border-slate-100 dark:border-border-dark/50 last:border-0">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-300">
+                        ${item.expenseDate}
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="text-sm font-semibold text-slate-900 dark:text-white">${item.title}</div>
+                        <div class="text-xs text-slate-400">ID: EXP-${item.expenseId}</div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="px-2.5 py-1 text-xs font-medium rounded-md bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300">
+                            ${item.categoryName}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        <span class="text-sm font-bold text-[#eecd2b]">$${item.amount.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                    </td>
+                    <td class="px-6 py-4">
+                        ${getStatusBadge(item.status)}
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        <div class="flex justify-end gap-2 transition-opacity">
+                            <button onclick="viewDetails(${item.expenseId})" class="p-1.5 text-slate-400 hover:text-[#eecd2b] transition-colors rounded-lg hover:bg-[#eecd2b]/10" title="View Details">
+                                <span class="material-symbols-outlined text-lg">visibility</span>
+                            </button>
+                            <a href="/Expense/Edit/${item.expenseId}" class="p-1.5 text-slate-400 hover:text-[#eecd2b] transition-colors rounded-lg hover:bg-[#eecd2b]/10" title="Edit">
+                                <span class="material-symbols-outlined text-lg">edit</span>
+                            </a>
+                            <button onclick="deleteExpense(${item.expenseId})" class="p-1.5 text-slate-400 hover:text-rose-500 transition-colors rounded-lg hover:bg-rose-500/10" title="Delete">
+                                <span class="material-symbols-outlined text-lg">delete</span>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function getStatusBadge(status) {
+            switch(status) {
+                case 'Paid': 
+                    return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-400">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5"></span>Paid
+                            </span>`;
+                case 'Planned': 
+                    return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-[#eecd2b]/20 dark:text-[#eecd2b]">
+                                <span class="w-1.5 h-1.5 rounded-full bg-[#eecd2b] mr-1.5"></span>Planned
+                            </span>`;
+                case 'Cancelled': 
+                    return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-rose-100 text-rose-800 dark:bg-rose-500/10 dark:text-rose-400">
+                                <span class="w-1.5 h-1.5 rounded-full bg-rose-500 mr-1.5"></span>Cancelled
+                            </span>`;
+                default: 
+                    return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800 dark:bg-slate-500/10 dark:text-slate-400">
+                                ${status}
+                            </span>`;
+            }
+        }
+
+        function renderStats(stats) {
+            const container = document.getElementById('statsContainer');
+            const total = stats.totalPaidExpenses + stats.totalPlannedExpenses + stats.totalCancelledExpenses; // Approximation
+            
+            container.innerHTML = `
+                <!-- Paid -->
+                <div class="bg-white dark:bg-surface-dark p-5 rounded-xl border border-slate-200 dark:border-border-dark shadow-sm relative overflow-hidden group">
+                    <div class="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500"></div>
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">Paid Expenses</p>
+                            <h3 class="text-2xl font-bold text-slate-900 dark:text-white">$${stats.totalPaidExpenses.toLocaleString()}</h3>
+                        </div>
+                        <div class="p-2 bg-emerald-500/10 rounded-lg">
+                            <span class="material-symbols-outlined text-emerald-500">check_circle</span>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex items-center text-xs text-emerald-500 font-medium">
+                        <span class="material-symbols-outlined text-sm mr-1">receipt</span>
+                        <span>${stats.paidCount} transactions</span>
+                    </div>
+                </div>
+
+                <!-- Planned -->
+                <div class="bg-white dark:bg-surface-dark p-5 rounded-xl border border-slate-200 dark:border-border-dark shadow-sm relative overflow-hidden group">
+                    <div class="absolute left-0 top-0 bottom-0 w-1 bg-[#eecd2b]"></div>
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">Planned Expenses</p>
+                            <h3 class="text-2xl font-bold text-slate-900 dark:text-white">$${stats.totalPlannedExpenses.toLocaleString()}</h3>
+                        </div>
+                        <div class="p-2 bg-[#eecd2b]/10 rounded-lg">
+                            <span class="material-symbols-outlined text-[#eecd2b]">schedule</span>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex items-center text-xs text-[#eecd2b] font-medium">
+                         <span class="material-symbols-outlined text-sm mr-1">update</span>
+                        <span>${stats.plannedCount} pending</span>
+                    </div>
+                </div>
+
+                <!-- Cancelled -->
+                <div class="bg-white dark:bg-surface-dark p-5 rounded-xl border border-slate-200 dark:border-border-dark shadow-sm relative overflow-hidden group">
+                    <div class="absolute left-0 top-0 bottom-0 w-1 bg-rose-500"></div>
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">Cancelled Expenses</p>
+                            <h3 class="text-2xl font-bold text-slate-900 dark:text-white">$${stats.totalCancelledExpenses.toLocaleString()}</h3>
+                        </div>
+                        <div class="p-2 bg-rose-500/10 rounded-lg">
+                            <span class="material-symbols-outlined text-rose-500">cancel</span>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex items-center text-xs text-rose-500 font-medium">
+                        <span class="material-symbols-outlined text-sm mr-1">info</span>
+                        <span>${stats.cancelledCount} voided</span>
+                    </div>
+                </div>
+
+                <!-- Total Count -->
+                <div class="bg-white dark:bg-surface-dark p-5 rounded-xl border border-slate-200 dark:border-border-dark shadow-sm relative overflow-hidden group">
+                    <div class="absolute left-0 top-0 bottom-0 w-1 bg-slate-400 dark:bg-slate-600"></div>
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">Total Expenses Count</p>
+                            <h3 class="text-2xl font-bold text-slate-900 dark:text-white">${(stats.paidCount + stats.plannedCount + stats.cancelledCount)}</h3>
+                        </div>
+                        <div class="p-2 bg-slate-500/10 rounded-lg">
+                            <span class="material-symbols-outlined text-slate-400">receipt_long</span>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex items-center text-xs text-slate-500 font-medium">
+                        <span class="material-symbols-outlined text-sm mr-1">history</span>
+                        <span>Updated just now</span>
+                    </div>
+                </div>
+            `;
+        }
+        
+        async function loadCategories() {
+            try {
+                // Fetch ALL for management, but filter for the main view dropdown
+                const res = await fetch('/api/ExpenseCategory');
+                const data = await res.json();
+                
+                const filter = document.getElementById('categoryFilter');
+                // Preserve first option, only show active in the SEARCH filter
+                filter.innerHTML = '<option value="">All Categories</option>' + 
+                     data.filter(c => c.isActive).map(c => `<option value="${c.expenseCategoryId}">${c.name}</option>`).join('');
+
+                 renderCategoriesList(data);
+            } catch(e) { console.error(e); }
+        }
+
+        // Category Modal Logic
+        function openCategoryModal() {
+            document.getElementById('categoryModal').classList.remove('hidden');
+        }
+        function closeCategoryModal() {
+             document.getElementById('categoryModal').classList.add('hidden');
+        }
+        
+        async function createCategory() {
+            const name = document.getElementById('newCategoryName').value;
+            if(!name) return;
+
+            try {
+                await fetch('/api/ExpenseCategory', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, isActive: true })
+                });
+                document.getElementById('newCategoryName').value = '';
+                loadCategories();
+            } catch(e) { alert('Error adding category'); }
+        }
+
+        function renderCategoriesList(categories) {
+            const container = document.getElementById('categoriesList');
+            container.innerHTML = categories.map(c => `
+                <div class="flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-background-dark/50 border border-slate-100 dark:border-border-dark">
+                    <div class="flex flex-col">
+                        <span class="text-sm font-medium text-slate-700 dark:text-slate-300">${c.name}</span>
+                        <span class="text-[10px] uppercase font-bold ${c.isActive ? 'text-emerald-500' : 'text-slate-500'}">
+                            ${c.isActive ? 'Active' : 'Inactive'}
+                        </span>
+                    </div>
+                    <button onclick="toggleCategory(${c.expenseCategoryId})" class="px-3 py-1 rounded text-xs font-bold ${c.isActive ? 'bg-rose-500/10 text-rose-500 hover:bg-rose-500/20' : 'bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20'} transition-colors">
+                        ${c.isActive ? 'Deactivate' : 'Activate'}
+                    </button>
+                </div>
+            `).join('');
+        }
+        
+        async function toggleCategory(id) {
+             await fetch(`/api/ExpenseCategory/${id}/toggle`, { method: 'PUT' });
+             loadCategories();
+        }
+
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func(...args), wait);
+            };
+        }
+        
+        async function deleteExpense(id) {
+            if(!confirm('Are you sure you want to delete this expense?')) return;
+            await fetch(`/api/Expense/${id}`, { method: 'DELETE' });
+            loadExpenses();
+        }
+
+        async function generateSalaries() {
+            if(!confirm('Generate salary expenses for all active employees for this month?')) return;
+            try {
+                const res = await fetch('/api/Expense/generate-salaries', { method: 'POST' });
+                const data = await res.json();
+                alert(`Generated ${data.count} salary records.`);
+                loadExpenses();
+            } catch(e) {
+                console.error(e);
+                alert('Error generating salaries');
+            }
+        }
+
+        function renderPagination(data) {
+             document.getElementById('paginationControls').innerHTML = `
+                <span class="text-sm text-slate-500 dark:text-slate-400">Showing page ${currentPage} of ${data.totalPages}</span>
+                <div class="flex items-center gap-1">
+                    <button ${currentPage === 1 ? 'disabled' : ''} onclick="loadExpenses(${currentPage - 1})" class="p-1 rounded-md border border-slate-200 dark:border-border-dark text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#eecd2b]/10 transition-colors disabled:opacity-50">
+                        <span class="material-symbols-outlined">chevron_left</span>
+                    </button>
+                    <!-- Simple pagination buttons -->
+                    <button class="w-8 h-8 rounded-md bg-[#eecd2b] text-background-dark font-bold text-sm">${currentPage}</button>
+                    
+                    <button ${currentPage >= data.totalPages ? 'disabled' : ''} onclick="loadExpenses(${currentPage + 1})" class="p-1 rounded-md border border-slate-200 dark:border-border-dark text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#eecd2b]/10 transition-colors disabled:opacity-50">
+                        <span class="material-symbols-outlined">chevron_right</span>
+                    </button>
+                </div>
+             `;
+        }
+
+        // Details Modal
+        async function viewDetails(id) {
+             try {
+                const res = await fetch(`/api/Expense/${id}`);
+                if(!res.ok) throw new Error();
+                const data = await res.json();
+                
+                const modalContent = document.getElementById('detailsModalContent');
+                modalContent.innerHTML = `
+                    <div class="px-8 py-6 border-b border-slate-200 dark:border-border-dark flex justify-between items-center bg-slate-50 dark:bg-background-dark/50">
+                        <div class="flex items-center gap-4">
+                            <h2 class="text-2xl font-extrabold text-slate-800 dark:text-white tracking-tight">Expense Details</h2>
+                            ${getStatusBadge(data.status)}
+                        </div>
+                        <button onclick="closeDetailsModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-[#eecd2b] transition-colors">
+                            <span class="material-symbols-outlined">close</span>
+                        </button>
+                    </div>
+                    <div class="p-8">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-y-8 gap-x-12">
+                            <div class="flex flex-col gap-1">
+                                <span class="text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">Category</span>
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-[#eecd2b] text-sm">settings_suggest</span>
+                                    <span class="text-lg font-medium text-slate-700 dark:text-slate-200">${data.categoryName}</span>
+                                </div>
+                            </div>
+                            <div class="flex flex-col gap-1">
+                                <span class="text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">Amount</span>
+                                <span class="text-2xl font-extrabold text-[#eecd2b]">$${data.amount.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                            </div>
+                            <div class="flex flex-col gap-1">
+                                <span class="text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">Vendor</span>
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-slate-400 text-sm">store</span>
+                                    <span class="text-lg font-medium text-slate-700 dark:text-slate-200">${data.vendor || '-'}</span>
+                                </div>
+                            </div>
+                           <div class="flex flex-col gap-1">
+                                <span class="text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">Date</span>
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-slate-400 text-sm">event</span>
+                                    <span class="text-lg font-medium text-slate-700 dark:text-slate-200">${data.expenseDate}</span>
+                                </div>
+                            </div>
+                            <div class="flex flex-col gap-1">
+                                <span class="text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">Reference</span>
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-slate-400 text-sm">tag</span>
+                                    <code class="text-md font-mono text-slate-700 dark:text-[#eecd2b]/90 bg-[#eecd2b]/5 px-2 py-0.5 rounded">${data.referenceNumber || '-'}</code>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-10 pt-8 border-t border-slate-100 dark:border-border-dark">
+                            <span class="text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400 block mb-3">Full Description</span>
+                            <div class="bg-slate-50 dark:bg-black/20 p-5 rounded-lg border border-slate-100 dark:border-white/5">
+                                <p class="text-slate-600 dark:text-slate-400 leading-relaxed">
+                                    ${data.description || 'No description provided.'}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('detailsModal').classList.remove('hidden');
+             } catch(e) { console.error(e); }
+        }
+
+        function closeDetailsModal() {
+             document.getElementById('detailsModal').classList.add('hidden');
+        }
+    </script>
+}

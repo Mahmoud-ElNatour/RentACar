@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace RentACar.Web.Controllers
 {
-    [Authorize(Roles = "Admin,Employee")]
+    [Authorize(Roles = "Admin")]
     public class ReportsController : Controller
     {
         private readonly AuditLogManager _auditLogManager;

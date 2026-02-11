@@ -1,545 +1,541 @@
 @model RentACar.Web.Models.DriverDashboardViewModel
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
-    ViewData["Title"] = "Driver Dashboard";
+    ViewData["Title"] = "Driver Command Center";
     var googleMapsKey = ViewBag.GoogleMapsKey as string;
 }
 
-<style>
-    :root {
-        --gold-primary: #D4AF37;
-        --gold-glow: rgba(212, 175, 55, 0.4);
-        --surface-deep: #0f172a;
-    }
+@section Styles {
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
+    <style>
+        .glass {
+            background: rgba(22, 22, 22, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
 
+        .pulse-gold {
+            box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.4);
+            animation: pulse-animation 2s infinite;
+        }
 
+        @@keyframes pulse-animation {
+            0% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.7);
+            }
 
-    .booking-card.is-selected {
-        border-color: var(--gold-primary);
-        background: rgba(212, 175, 55, 0.05);
-        box-shadow: 0 0 20px rgba(212, 175, 55, 0.1);
-    }
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 10px rgba(212, 175, 55, 0);
+            }
 
-    .map-preview-container {
-        height: 300px;
-        background: #0f172a;
-        border-radius: 32px;
-        overflow: hidden;
-        position: relative;
-        border: 1px solid rgba(255, 255, 255, 0.05);
-    }
+            100% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(212, 175, 55, 0);
+            }
+        }
+        
+        .glowing-dot-container {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-    .status-badge-active {
-        background: rgba(16, 185, 129, 0.1);
-        color: #10b981;
-        border: 1px solid rgba(16, 185, 129, 0.2);
-    }
-</style>
+        .font-display { font-family: 'Outfit', sans-serif; }
+    </style>
+}
 
-<div class="max-w-[1400px] mx-auto p-6 lg:px-20 py-10">
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
-        <!-- Left: Bookings & Status -->
-        <div class="lg:col-span-7 space-y-8">
-            <div class="flex items-end justify-between">
-                <div>
-                    <h1 class="text-4xl font-black text-white tracking-tight">Dashboard</h1>
-                    <p class="text-gray-400 mt-1 italic">Welcome back, <span
-                            class="text-white font-bold">@Model.DriverName</span></p>
-                </div>
-                <div class="flex items-center gap-3 px-4 py-2 bg-white/5 rounded-2xl border border-white/5">
-                    <div
-                        class="w-2 h-2 rounded-full @(Model.IsAvailable ? "bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" : "bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]")">
-                    </div>
-                    <span class="text-[10px] font-black uppercase tracking-widest text-white/70">@(Model.IsAvailable ?
-                        "Active" : "Offline")</span>
-                </div>
-            </div>
-
-            <div class="space-y-4">
-                <h2 class="text-sm font-black text-gray-500 uppercase tracking-[0.2em] mb-4">Today's Missions</h2>
-
-                @if (!Model.TodayBookings.Any())
-                {
-                    <div
-                        class="p-16 text-center bg-white/2 rounded-[40px] border border-dashed border-white/5 shadow-inner">
-                        <span class="material-symbols-outlined text-5xl text-gray-800 mb-4 opacity-50">task_alt</span>
-                        <p class="text-gray-500 font-medium">Clear schedule for today.</p>
-                        <p class="text-xs text-gray-600 mt-2 uppercase tracking-widest">Enjoy your day off</p>
-                    </div>
-                }
-                else
-                {
-                    @foreach (var booking in Model.TodayBookings)
-                    {
-                        <div class="booking-card group relative p-6 bg-surface-dark/40 backdrop-blur-md rounded-[32px] border border-white/5 hover:border-white/10 transition-all cursor-pointer"
-                            onclick="selectBooking(@booking.BookingId)" data-booking-id="@booking.BookingId">
-
-                            <div class="flex flex-col md:flex-row gap-6">
-                                <div class="flex-1">
-                                    <div class="flex items-center justify-between mb-4">
-                                        <div class="flex items-center gap-3">
-                                            <div
-                                                class="w-12 h-12 rounded-2xl bg-gold-primary/10 flex items-center justify-center">
-                                                <span
-                                                    class="material-symbols-outlined text-gold-primary text-2xl">directions_car</span>
-                                            </div>
-                                            <div>
-                                                <h3 class="text-lg font-bold text-white">#@booking.BookingId</h3>
-                                                <p class="text-xs text-gray-500 font-medium uppercase tracking-tighter">
-                                                    @booking.CustomerName</p>
-                                            </div>
-                                        </div>
-                                        <span
-                                            class="px-3 py-1 bg-white/5 rounded-lg text-[10px] font-black text-gold-primary uppercase tracking-widest">@booking.BookingStatus</span>
-                                    </div>
-
-                                    <div class="grid grid-cols-2 gap-4 py-4 border-t border-white/5">
-                                        <div class="flex items-start gap-2">
-                                            <span
-                                                class="material-symbols-outlined text-sm text-gold-primary opacity-50">location_on</span>
-                                            <div class="flex-1 min-w-0">
-                                                <p class="text-[10px] text-gray-600 font-black uppercase tracking-widest">Pickup
-                                                </p>
-                                                <p class="text-xs text-gray-300 font-medium truncate">
-                                                    @booking.PickupLocationLabel</p>
-                                            </div>
-                                        </div>
-                                        <div class="flex items-start gap-2 text-right">
-                                            <div class="flex-1">
-                                                <p class="text-[10px] text-gray-600 font-black uppercase tracking-widest">Timing
-                                                </p>
-                                                <p class="text-xs text-gray-300 font-medium">Today,
-                                                    @booking.StartDate.ToString("MMM dd")</p>
-                                            </div>
-                                            <span
-                                                class="material-symbols-outlined text-sm text-gold-primary opacity-50">schedule</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="flex items-center justify-center md:border-l md:border-white/5 md:pl-6">
-                                    <button onclick="event.stopPropagation(); openMapModal(@booking.BookingId)"
-                                        class="w-14 h-14 rounded-3xl bg-gold-primary text-black flex items-center justify-center hover:scale-110 active:scale-95 transition-all shadow-2xl shadow-gold-glow group-hover:bg-yellow-500">
-                                        <span class="material-symbols-outlined font-black">map</span>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    }
-                }
-            </div>
+<div class="max-w-[1440px] mx-auto py-10 px-6 lg:px-10">
+    <header class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+        <div>
+            <h1 class="text-4xl font-display font-bold tracking-tight text-white">Dashboard</h1>
+            <p class="text-slate-400 mt-1">Welcome back, <span class="text-primary italic font-medium">@Model.DriverName</span></p>
         </div>
-
-        <!-- Right: Map & Actions -->
-        <div class="lg:col-span-5 space-y-8">
-            <div class="p-8 bg-surface-dark border border-white/5 rounded-[48px] shadow-2xl relative overflow-hidden">
-                <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-xl font-bold text-white tracking-tight">Live Center</h2>
-                    <div id="trackingStatus"
-                        class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/5">
-                        <div class="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse"></div>
-                        <span class="text-[10px] font-black text-white/50 uppercase tracking-[0.2em]">Cold</span>
-                    </div>
-                </div>
-
-                <div id="miniMap" class="map-preview-container group cursor-pointer" onclick="openMapModal(null)">
-                    <div
-                        class="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[1px] z-10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                        <div class="px-4 py-2 bg-black/80 rounded-2xl border border-white/10 flex items-center gap-2">
-                            <span class="material-symbols-outlined text-sm text-gold-primary">zoom_in</span>
-                            <span class="text-[10px] font-black text-white uppercase tracking-widest">Expand Map</span>
-                        </div>
-                    </div>
-                    <div id="miniMapCanvas" class="w-full h-full"></div>
-                </div>
-
-                <div class="mt-8 grid grid-cols-2 gap-4">
-                    <button id="toggleTrackingBtn" onclick="toggleTracking()"
-                        class="col-span-2 py-5 rounded-3xl bg-white/5 border border-white/10 text-white font-bold text-sm flex items-center justify-center gap-3 hover:bg-white/10 transition-all active:scale-95">
-                        <span class="material-symbols-outlined text-gold-primary" id="gpsIcon">gps_not_fixed</span>
-                        <span id="trackingBtnLabel">GO ONLINE</span>
-                    </button>
-
-                    <a href="@Url.Action("Schedule", "DriverPortal")"
-                        class="py-4 rounded-2xl bg-white text-black font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-gray-100 transition-all active:scale-95">
-                        Schedule
-                    </a>
-
-                    <button onclick="openMapModal(null)"
-                        class="py-4 rounded-2xl bg-white/5 border border-white/10 text-white font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-white/10 transition-all active:scale-95">
-                        Map
-                    </button>
-                </div>
-            </div>
-
-            <!-- Health/Performance Card -->
-            <div class="p-1 bg-gradient-to-br from-gold-primary/20 to-transparent rounded-[32px] border border-white/5">
-                <div class="p-6 bg-surface-deep/90 backdrop-blur-xl rounded-[30px] flex items-center gap-5">
-                    <div class="w-14 h-14 rounded-2xl bg-gold-primary flex items-center justify-center rotate-3">
-                        <span class="material-symbols-outlined text-black text-3xl font-black">verified</span>
-                    </div>
-                    <div>
-                        <h4 class="text-white font-bold">Driver ID #@Model.DriverId</h4>
-                        <p class="text-xs text-gray-500 font-medium">System status: <span
-                                class="text-emerald-400">Verfied & Active</span></p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Dynamic Map Modal (Expanded View) -->
-<div id="mapModal"
-    class="fixed inset-0 z-[100] bg-black/95 backdrop-blur-2xl opacity-0 invisible transition-all duration-500 flex items-center justify-center">
-    <div class="w-full h-full md:w-[94%] md:h-[90%] bg-[#080c14] md:rounded-[48px] border border-white/10 overflow-hidden flex flex-col relative shadow-[0_0_100px_rgba(0,0,0,0.8)] scale-95 transition-all duration-500"
-        id="modalContent">
-        <div class="absolute top-8 right-8 z-[110] flex gap-3">
-            <button onclick="closeMapModal()"
-                class="w-14 h-14 bg-black/40 backdrop-blur-xl text-white rounded-[20px] flex items-center justify-center border border-white/10 hover:bg-white/10 transition-all">
-                <span class="material-symbols-outlined text-2xl">close</span>
+        <div class="flex items-center bg-card-dark p-1.5 rounded-full border border-white/5">
+            <button onclick="window.location.href='@Url.Action("Schedule", "DriverPortal")'" class="px-6 py-2 rounded-full text-sm font-semibold transition-all duration-300 shadow-sm @(Model.IsAvailable ? "bg-primary text-slate-900" : "text-slate-500 hover:text-slate-300")">
+                ONLINE
+            </button>
+            <button onclick="window.location.href='@Url.Action("Schedule", "DriverPortal")'" class="px-6 py-2 rounded-full text-sm font-semibold transition-all duration-300 shadow-sm @(!Model.IsAvailable ? "bg-primary text-slate-900" : "text-slate-500 hover:text-slate-300")">
+                OFFLINE
             </button>
         </div>
-        <div id="modalBody" class="w-full h-full">
-            <div class="flex items-center justify-center h-full">
-                <div
-                    class="animate-spin h-10 w-10 border-4 border-gold-primary border-t-transparent rounded-full shadow-[0_0_20px_var(--gold-glow)]">
+    </header>
+    
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+        <!-- Total Trips -->
+        <div class="glass p-5 rounded-2xl flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                <span class="material-icons-round">route</span>
+            </div>
+            <div>
+                <p class="text-xs uppercase tracking-wider text-slate-500 font-semibold">Total Trips</p>
+                <p class="text-2xl font-display font-bold text-white">@Model.TotalTrips</p>
+            </div>
+        </div>
+        
+        <!-- Upcoming Month -->
+        <div class="glass p-5 rounded-2xl flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500">
+                <span class="material-icons-round">upcoming</span>
+            </div>
+            <div>
+                <p class="text-xs uppercase tracking-wider text-slate-500 font-semibold">Upcoming (Month)</p>
+                <p class="text-2xl font-display font-bold text-white">@Model.UpcomingTripsMonth</p>
+            </div>
+        </div>
+        
+        <!-- Completed Month -->
+        <div class="glass p-5 rounded-2xl flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500">
+                <span class="material-icons-round">task_alt</span>
+            </div>
+            <div>
+                <p class="text-xs uppercase tracking-wider text-slate-500 font-semibold">Completed (Month)</p>
+                <p class="text-2xl font-display font-bold text-white">@Model.CompletedTripsMonth</p>
+            </div>
+        </div>
+        
+        <!-- Hours -->
+        <div class="glass p-5 rounded-2xl flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-500">
+                <span class="material-icons-round">schedule</span>
+            </div>
+            <div>
+                <p class="text-xs uppercase tracking-wider text-slate-500 font-semibold">Driving Hours</p>
+                <p class="text-2xl font-display font-bold text-white">@Model.TotalHours<span class="text-sm text-slate-500 font-normal">h</span></p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="lg:col-span-2 space-y-6">
+            <div class="flex items-center justify-between mb-2">
+                <h2 class="text-xs uppercase tracking-[0.2em] font-bold text-slate-500">Today's Missions</h2>
+                <a href="@Url.Action("Schedule", "DriverPortal")" class="text-xs font-semibold text-primary hover:underline">View History</a>
+            </div>
+            
+            @if (Model.TodayBookings.Any())
+            {
+                @foreach (var booking in Model.TodayBookings)
+                {
+                    var statusColor = booking.BookingStatus == "Completed" ? "emerald" :
+                                      booking.BookingStatus == "Cancelled" ? "red" : 
+                                      booking.BookingStatus == "InProgress" ? "primary" : "slate";
+                    
+                    var badgeClass = booking.BookingStatus == "Completed" ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" :
+                                     booking.BookingStatus == "Cancelled" ? "bg-red-500/10 text-red-500 border-red-500/20" :
+                                     "bg-primary/10 text-primary border-primary/20";
+
+                    <div class="glass rounded-2xl p-6 border-l-4 border-@statusColor-500 group transition-all duration-300 hover:bg-white/5 cursor-pointer" onclick="openMapModal(@booking.BookingId)">
+                        <div class="flex flex-wrap items-start justify-between gap-4 mb-6">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center">
+                                    <span class="material-icons-round text-slate-400">directions_car</span>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-bold font-display text-white">#@booking.BookingId</h3>
+                                    <p class="text-sm text-slate-400 uppercase font-semibold">@booking.CustomerName</p>
+                                    @if (!string.IsNullOrEmpty(booking.CustomerPhone))
+                                    {
+                                        <p class="text-xs text-primary/80 font-medium">@booking.CustomerPhone</p>
+                                    }
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="px-3 py-1 rounded-full text-[10px] font-bold tracking-widest border @badgeClass">@booking.BookingStatus.ToUpper()</span>
+                                <button class="w-10 h-10 rounded-full flex items-center justify-center bg-slate-800 text-slate-400 hover:text-white transition-colors">
+                                    <span class="material-icons-round text-sm">map</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="grid md:grid-cols-2 gap-8 mb-6">
+                            <div class="space-y-4">
+                                <div class="flex gap-3">
+                                    <span class="material-icons-round text-primary text-base">location_on</span>
+                                    <div>
+                                        <p class="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Pickup</p>
+                                        <p class="text-sm font-medium text-slate-200">@booking.PickupLocationLabel</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="space-y-4">
+                                <div class="flex gap-3">
+                                    <span class="material-icons-round text-slate-500 text-base">access_time</span>
+                                    <div>
+                                        <p class="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Timing</p>
+                                        <p class="text-sm font-medium text-slate-200">@booking.StartDate.ToString("MMM dd") - @booking.EndDate.ToString("MMM dd")</p>
+                                    </div>
+                                </div>
+                                 <button onclick="event.stopPropagation(); openMapModal(@booking.BookingId)" class="w-full bg-primary hover:bg-opacity-90 text-slate-900 font-bold py-3 rounded-xl transition-all flex items-center justify-center gap-2 uppercase tracking-wider">
+                                    <span class="material-icons-round text-lg">navigation</span>
+                                    Navigate
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="glass rounded-2xl p-10 flex flex-col items-center justify-center text-center opacity-60">
+                     <span class="material-icons-round text-6xl text-slate-600 mb-4">event_busy</span>
+                     <p class="text-lg font-medium text-slate-400">No missions scheduled for today.</p>
+                </div>
+            }
+        </div>
+        
+        <div class="space-y-6">
+             <!-- Live Center (Map) -->
+            <div class="glass rounded-3xl p-6 relative overflow-hidden">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl font-display font-bold text-white">Live Center</h2>
+                    <div id="trackingStatus" class="flex items-center gap-2 bg-orange-500/10 px-2 py-1 rounded-full">
+                        <div class="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></div>
+                        <span class="text-[10px] font-bold text-orange-500 tracking-tighter">COLD</span>
+                    </div>
+                </div>
+                <div class="relative w-full aspect-square rounded-2xl bg-slate-900 overflow-hidden mb-6 border border-white/5">
+                    <div id="miniMapCanvas" class="w-full h-full bg-[#111827]"></div>
+                    
+                    <div class="absolute bottom-4 left-4 right-4 z-10">
+                        <button id="toggleTrackingBtn" onclick="toggleTracking()" class="w-full py-3 bg-slate-900/90 backdrop-blur-md text-white rounded-xl font-bold flex items-center justify-center gap-2 border border-white/10 pulse-gold click-sound">
+                            <span class="material-icons-round text-primary" id="gpsIcon">gps_not_fixed</span>
+                            <span class="tracking-wide" id="trackingBtnLabel">GO ONLINE</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Expand Overlay -->
+                     <div class="absolute top-4 right-4 z-10">
+                         <button onclick="openMapModal(null)" class="w-10 h-10 bg-slate-900/80 backdrop-blur rounded-xl border border-white/10 flex items-center justify-center hover:bg-white/10 text-white transition-all">
+                             <span class="material-icons-round">fullscreen</span>
+                         </button>
+                     </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <a href="@Url.Action("Schedule", "DriverPortal")" class="py-2.5 rounded-xl bg-white text-slate-900 text-xs font-bold tracking-widest shadow-lg text-center flex items-center justify-center">SCHEDULE</a>
+                    <button onclick="openMapModal(null)" class="py-2.5 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold tracking-widest">SYSTEM MAP</button>
+                </div>
+            </div>
+
+            <!-- Assigned Vehicle -->
+            <div class="glass rounded-3xl p-6">
+                <h2 class="text-xs uppercase tracking-[0.2em] font-bold text-slate-500 mb-4">Assigned Vehicle</h2>
+                <div class="flex items-center gap-5">
+                    <div class="w-20 h-20 rounded-2xl bg-slate-900 flex items-center justify-center border border-white/5 overflow-hidden">
+                         <span class="material-icons-round text-4xl text-slate-600">directions_car</span>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="font-display font-bold text-lg leading-tight text-white">My Vehicle</h3>
+                        <p class="text-primary font-mono text-sm tracking-widest mt-0.5">ACTIVE</p>
+                        <div class="mt-3">
+                            <div class="flex justify-between text-[10px] font-bold text-slate-400 mb-1 uppercase">
+                                <span>Status</span>
+                                <span class="text-emerald-500">Ready</span>
+                            </div>
+                            <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                                <div class="h-full bg-emerald-500" style="width: 100%"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+<!-- Map Modal (Hidden) -->
+<div id="mapModal" class="fixed inset-0 z-[100] bg-black/95 backdrop-blur-2xl opacity-0 invisible transition-all duration-300 flex items-center justify-center p-4">
+    <div class="w-full h-full max-w-[95vw] max-h-[90vh] bg-[#0F1218] rounded-[32px] border border-white/10 overflow-hidden flex flex-col relative shadow-[0_0_100px_rgba(0,0,0,0.8)] scale-95 transition-all duration-300" id="modalContent">
+         <div class="flex-1 relative" id="modalBody">
+             <!-- Content handled by JS -->
+            <div class="flex items-center justify-center h-full text-white/50">
+                 <div class="flex flex-col items-center gap-4">
+                     <span class="material-icons-round text-4xl animate-spin">sync</span>
+                     <p>Loading Trip Data...</p>
+                 </div>
+            </div>
+         </div>
+         <button onclick="closeMapModal()" class="absolute top-6 right-6 z-[120] w-10 h-10 rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-white flex items-center justify-center hover:bg-white/10 transition-all">
+            <span class="material-icons-round">close</span>
+        </button>
+    </div>
+</div>
 
-<script>
-    // Global state
-    window.miniMap = null;
-    window.modalMap = null;
-    let driverMarkerElement = null;
-    let directionsService = null;
-    let directionsRenderer = null;
-    let currentPos = null;
-    let isTracking = false;
-    let watchId = null;
-    let selectedBookingId = localStorage.getItem('selectedBookingId');
-    let hubConnection = null;
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
 
-    const mapStyles = [
-        { "elementType": "geometry", "stylers": [{ "color": "#0f172a" }] },
-        { "elementType": "labels.text.stroke", "stylers": [{ "color": "#0f172a" }, { "weight": 2 }] },
-        { "elementType": "labels.text.fill", "stylers": [{ "color": "#475569" }] },
-        { "featureType": "road", "elementType": "geometry", "stylers": [{ "color": "#1e293b" }] },
-        { "featureType": "road", "elementType": "geometry.stroke", "stylers": [{ "color": "#334155" }] },
-        { "featureType": "water", "elementType": "geometry", "stylers": [{ "color": "#020617" }] }
-    ];
+    <script>
+        // Global state
+        window.miniMap = null;
+        window.modalMap = null;
+        let driverMarkerElement = null;
+        let directionsService = null;
+        let directionsRenderer = null;
+        let currentPos = null;
+        let isTracking = false;
+        let watchId = null;
+        let selectedBookingId = localStorage.getItem('selectedBookingId');
+        let hubConnection = null;
 
-    async function initSignalR() {
-        if (hubConnection) return;
-        hubConnection = new signalR.HubConnectionBuilder()
-            .withUrl('/hubs/driverTracking')
-            .withAutomaticReconnect()
-            .build();
-        await hubConnection.start();
-    }
+        const mapStyles = [
+            { "elementType": "geometry", "stylers": [{ "color": "#111827" }] },
+            { "elementType": "labels.text.stroke", "stylers": [{ "color": "#111827" }, { "weight": 2 }] },
+            { "elementType": "labels.text.fill", "stylers": [{ "color": "#6b7280" }] },
+            { "featureType": "road", "elementType": "geometry", "stylers": [{ "color": "#1f2937" }] },
+            { "featureType": "road", "elementType": "geometry.stroke", "stylers": [{ "color": "#374151" }] },
+            { "featureType": "water", "elementType": "geometry", "stylers": [{ "color": "#000000" }] }
+        ];
 
-    // Define CustomMarker before it's used in initMaps
-    let CustomMarkerClass = null;
+        async function initSignalR() {
+            if (hubConnection) return;
+            hubConnection = new signalR.HubConnectionBuilder()
+                .withUrl('/hubs/driverTracking')
+                .withAutomaticReconnect()
+                .build();
+            await hubConnection.start();
+        }
 
-    function defineCustomMarker() {
-        if (CustomMarkerClass) return;
-        CustomMarkerClass = class extends google.maps.OverlayView {
-            constructor(pos, map) {
-                super();
-                this.pos = pos;
-                this.setMap(map);
-            }
-            onAdd() {
-                const div = document.createElement('div');
-                div.className = 'glowing-dot-container';
-                div.style.position = 'absolute';
-                div.innerHTML = '<div class="glowing-pulse"></div><div class="glowing-dot"></div>';
-                this.div = div;
-                const panes = this.getPanes();
-                panes.overlayMouseTarget.appendChild(div);
-            }
-            draw() {
-                const overlayProjection = this.getProjection();
-                const sw = overlayProjection.fromLatLngToDivPixel(this.pos);
-                const div = this.div;
-                if (sw && div) {
-                    div.style.left = (sw.x - 16) + 'px';
-                    div.style.top = (sw.y - 16) + 'px';
+        // Define CustomMarker before it's used in initMaps
+        let CustomMarkerClass = null;
+
+        function defineCustomMarker() {
+            if (CustomMarkerClass) return;
+            CustomMarkerClass = class extends google.maps.OverlayView {
+                constructor(pos, map) {
+                    super();
+                    this.pos = pos;
+                    this.setMap(map);
                 }
-            }
-            onRemove() {
-                if (this.div) {
-                    this.div.parentNode.removeChild(this.div);
-                    this.div = null;
+                onAdd() {
+                    const div = document.createElement('div');
+                    div.className = 'glowing-dot-container';
+                    div.style.position = 'absolute';
+                    div.innerHTML = '<div class="w-4 h-4 rounded-full bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.8)] border-2 border-white relative z-10"></div><div class="absolute inset-0 rounded-full bg-emerald-500 animate-ping opacity-75"></div>';
+                    this.div = div;
+                    const panes = this.getPanes();
+                    panes.overlayMouseTarget.appendChild(div);
                 }
+                draw() {
+                    const overlayProjection = this.getProjection();
+                    const sw = overlayProjection.fromLatLngToDivPixel(this.pos);
+                    const div = this.div;
+                    if (sw && div) {
+                        div.style.left = (sw.x - 16) + 'px'; // Center 32px element
+                        div.style.top = (sw.y - 16) + 'px';
+                    }
+                }
+                onRemove() {
+                    if (this.div) {
+                        this.div.parentNode.removeChild(this.div);
+                        this.div = null;
+                    }
+                }
+                updatePosition(pos) {
+                    this.pos = pos;
+                    this.draw();
+                }
+            };
+        }
+
+        // GLOBAL callback for Google Maps API
+        window.initMaps = function () {
+            defineCustomMarker();
+
+            window.miniMap = new google.maps.Map(document.getElementById('miniMapCanvas'), {
+                center: { lat: 33.8938, lng: 35.5018 }, // Default to Beirut
+                zoom: 13,
+                styles: mapStyles,
+                disableDefaultUI: true,
+                gestureHandling: 'none'
+            });
+
+            directionsService = new google.maps.DirectionsService();
+
+            // Now that map is ready, initial location fetch
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(pos => {
+                    updatePosition(pos.coords.latitude, pos.coords.longitude);
+                }, (err) => console.warn("Initial geo fetch failed", err));
             }
-            updatePosition(pos) {
-                this.pos = pos;
-                this.draw();
+            
+            // Re-init partials form handling
+             document.getElementById('modalBody').addEventListener('submit', async function(e) {
+                if (e.target.matches('.trip-action-form')) {
+                    e.preventDefault();
+                    await handleTripAction(e.target);
+                }
+            });
+        };
+
+        function updatePosition(lat, lng) {
+            if (!window.miniMap) return;
+
+            currentPos = { lat, lng };
+            if (!driverMarkerElement) {
+                if(CustomMarkerClass) driverMarkerElement = new CustomMarkerClass(currentPos, window.miniMap);
+            } else {
+                driverMarkerElement.updatePosition(currentPos);
+            }
+            window.miniMap.panTo(currentPos);
+
+            const statusEl = document.getElementById('trackingStatus');
+            if (statusEl && isTracking) {
+                 statusEl.innerHTML = `
+                    <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                    <span class="text-[10px] font-bold text-emerald-500 tracking-tighter">LIVE</span>
+                `;
+            }
+        }
+
+        async function openMapModal(bookingId) {
+            const modal = document.getElementById('mapModal');
+            const content = document.getElementById('modalContent');
+            modal.classList.remove('invisible', 'opacity-0');
+            content.classList.remove('scale-95');
+
+            const bidValue = bookingId || selectedBookingId;
+            const url = bidValue ? `/DriverPortal/TripDetailsPartial?bookingId=${bidValue}` : '/DriverPortal/MapPanel';
+
+            try {
+                const resp = await fetch(url);
+                if (!resp.ok) throw new Error("Failed to load");
+                const html = await resp.text();
+                
+                const modalBody = document.getElementById('modalBody');
+                modalBody.innerHTML = html;
+
+                 // Map Init from Partial Data
+                const root = modalBody.querySelector('#mapPanelRoot');
+                if (root) {
+                    const lat = root.getAttribute('data-pickup-lat');
+                    const lng = root.getAttribute('data-pickup-lng');
+                    const bid = root.getAttribute('data-booking-id');
+
+                    const pickup = (lat && lng) ? { lat: parseFloat(lat), lng: parseFloat(lng) } : null;
+                    const bookingId = bid ? parseInt(bid) : null;
+                    selectedBookingId = bookingId;
+
+                    // Small delay to ensure DOM parsing is complete
+                    setTimeout(() => {
+                        if (window.initModalMap) {
+                            window.initModalMap(pickup, bookingId);
+                        }
+                    }, 100);
+                }
+            } catch(e) {
+                console.error(e);
+                document.getElementById('modalBody').innerHTML = "<div class='h-full flex items-center justify-center text-white/50'>Error loading details.</div>";
+            }
+        }
+
+        window.closeMapModal = function () {
+            document.getElementById('mapModal').classList.add('invisible', 'opacity-0');
+            document.getElementById('modalContent').classList.add('scale-95');
+        };
+
+        window.initModalMap = function (pickup, bookingId) {
+            const mapEl = document.getElementById('modal-map-inner');
+            if (!mapEl) return;
+            window.modalMap = new google.maps.Map(mapEl, {
+                center: currentPos || { lat: 33.8938, lng: 35.5018 },
+                zoom: 14,
+                styles: mapStyles,
+                disableDefaultUI: false
+            });
+
+            if (CustomMarkerClass) {
+                new CustomMarkerClass(currentPos || { lat: 33.8938, lng: 35.5018 }, window.modalMap);
+            }
+
+            if (directionsRenderer) directionsRenderer.setMap(null);
+            directionsRenderer = new google.maps.DirectionsRenderer({
+                map: window.modalMap,
+                suppressMarkers: false,
+                polylineOptions: { strokeColor: '#D4AF37', strokeWeight: 6, strokeOpacity: 0.8 }
+            });
+
+            if (pickup && currentPos) {
+                directionsService.route({ origin: currentPos, destination: pickup, travelMode: 'DRIVING' }, (res, status) => {
+                    if (status === 'OK') {
+                        directionsRenderer.setDirections(res);
+                        
+                        // Update overlay info
+                         const leg = res.routes[0].legs[0];
+                         const distVal = document.getElementById('dist-val');
+                         const timeVal = document.getElementById('time-val');
+                         if (distVal) distVal.textContent = leg.distance.text;
+                         if (timeVal) timeVal.textContent = leg.duration.text;
+                    }
+                });
             }
         };
-    }
 
-    // GLOBAL callback for Google Maps API
-    window.initMaps = function () {
-        defineCustomMarker();
-
-        window.miniMap = new google.maps.Map(document.getElementById('miniMapCanvas'), {
-            center: { lat: 25.2, lng: 55.2 },
-            zoom: 15,
-            styles: mapStyles,
-            disableDefaultUI: true,
-            gestureHandling: 'none'
-        });
-
-        directionsService = new google.maps.DirectionsService();
-
-        if (selectedBookingId) selectBooking(selectedBookingId);
-
-        // Now that map is ready, initial location fetch
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(pos => {
-                updatePosition(pos.coords.latitude, pos.coords.longitude);
-            }, (err) => console.warn("Initial geo fetch failed", err));
-        }
-
-        // Init Event Delegation for Partial Forms
-        document.getElementById('modalBody').addEventListener('submit', async function(e) {
-            if (e.target.matches('.trip-action-form')) {
-                e.preventDefault();
-                await handleTripAction(e.target);
-            }
-        });
-    };
-
-    function updatePosition(lat, lng) {
-        if (!window.miniMap) return;
-
-        currentPos = { lat, lng };
-        if (!driverMarkerElement) {
-            driverMarkerElement = new CustomMarkerClass(currentPos, window.miniMap);
-        } else {
-            driverMarkerElement.updatePosition(currentPos);
-        }
-        window.miniMap.panTo(currentPos);
-
-        const statusEl = document.getElementById('trackingStatus');
-        if (statusEl && isTracking) {
-             statusEl.innerHTML = `
-                <div class="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"></div>
-                <span class="text-[10px] font-black text-emerald-400/90 uppercase tracking-[0.2em]">Live Tracking</span>
-            `;
-        }
-    }
-
-    function selectBooking(id) {
-        selectedBookingId = id;
-        localStorage.setItem('selectedBookingId', id);
-        document.querySelectorAll('.booking-card').forEach(c => c.classList.remove('is-selected'));
-        const card = document.querySelector(`[data-booking-id="${id}"]`);
-        if (card) card.classList.add('is-selected');
-    }
-
-    async function openMapModal(bookingId) {
-        const modal = document.getElementById('mapModal');
-        const content = document.getElementById('modalContent');
-        modal.classList.remove('invisible', 'opacity-0');
-        content.classList.remove('scale-95');
-
-        const bidValue = bookingId || selectedBookingId;
-        // Use TripDetailsPartial if a booking is selected, otherwise MapPanel (fallback)
-        const url = bidValue ? `/DriverPortal/TripDetailsPartial?bookingId=${bidValue}` : '/DriverPortal/MapPanel';
-
-        try {
-            const resp = await fetch(url);
-            if (!resp.ok) throw new Error("Failed to load");
-            const html = await resp.text();
-            
-            const modalBody = document.getElementById('modalBody');
-            modalBody.innerHTML = html;
-
-             // Map Init from Partial Data
-            const root = modalBody.querySelector('#mapPanelRoot');
-            if (root) {
-                const lat = root.getAttribute('data-pickup-lat');
-                const lng = root.getAttribute('data-pickup-lng');
-                const bid = root.getAttribute('data-booking-id');
-
-                const pickup = (lat && lng) ? { lat: parseFloat(lat), lng: parseFloat(lng) } : null;
-                const bookingId = bid ? parseInt(bid) : null;
-                selectedBookingId = bookingId; // Update global selection
-
-                // Small delay to ensure DOM parsing is complete
-                setTimeout(() => {
-                    if (window.initModalMap) {
-                        window.initModalMap(pickup, bookingId);
-                    }
-                }, 50);
-            }
-        } catch(e) {
-            console.error(e);
-            document.getElementById('modalBody').innerHTML = "<div class='p-10 text-white'>Error loading details.</div>";
-        }
-    }
-
-    window.closeMapModal = function () {
-        document.getElementById('mapModal').classList.add('invisible', 'opacity-0');
-        document.getElementById('modalContent').classList.add('scale-95');
-        // Refresh list when closing, to ensure status badges are up to date
-        refreshActiveTrips();
-    };
-
-    window.initModalMap = function (pickup, bookingId) {
-        const mapEl = document.getElementById('modal-map-inner');
-        if (!mapEl) return;
-        window.modalMap = new google.maps.Map(mapEl, {
-            center: currentPos || { lat: 25.2, lng: 55.2 },
-            zoom: 15,
-            styles: mapStyles,
-            disableDefaultUI: false
-        });
-
-        if (CustomMarkerClass) {
-            new CustomMarkerClass(currentPos || { lat: 25.2, lng: 55.2 }, window.modalMap);
-        }
-
-        if (directionsRenderer) directionsRenderer.setMap(null);
-        directionsRenderer = new google.maps.DirectionsRenderer({
-            map: window.modalMap,
-            suppressMarkers: false,
-            polylineOptions: { strokeColor: '#D4AF37', strokeWeight: 6, strokeOpacity: 0.8 }
-        });
-
-        if (pickup && currentPos) {
-            directionsService.route({ origin: currentPos, destination: pickup, travelMode: 'DRIVING' }, (res, status) => {
-                if (status === 'OK') {
-                    directionsRenderer.setDirections(res);
-                    const leg = res.routes[0].legs[0];
-                    const overlay = document.getElementById('directions-overlay');
-                    if (overlay) overlay.classList.remove('hidden');
-                    const distVal = document.getElementById('dist-val');
-                    if (distVal) distVal.textContent = leg.distance.text;
-                    const timeVal = document.getElementById('time-val');
-                    if (timeVal) timeVal.textContent = leg.duration.text;
-                }
-            });
-        }
-    };
-
-    async function toggleTracking() {
-        if (isTracking) {
-            isTracking = false;
-            document.getElementById('trackingBtnLabel').textContent = "GO ONLINE";
-            document.getElementById('gpsIcon').textContent = "gps_not_fixed";
-            document.getElementById('toggleTrackingBtn').classList.remove('bg-emerald-500/10', 'border-emerald-500/50', 'text-emerald-500');
-            
-            const statusEl = document.getElementById('trackingStatus');
-            if(statusEl) statusEl.innerHTML = `<div class="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse"></div><span class="text-[10px] font-black text-white/50 uppercase tracking-[0.2em]">Cold</span>`;
-
-            if (watchId) navigator.geolocation.clearWatch(watchId);
-        } else {
-            if (!navigator.geolocation) return;
-            isTracking = true;
-            document.getElementById('trackingBtnLabel').textContent = "STOP TRACKING";
-            document.getElementById('gpsIcon').textContent = "gps_fixed";
-             document.getElementById('toggleTrackingBtn').classList.add('bg-emerald-500/10', 'border-emerald-500/50', 'text-emerald-500');
-
-            await initSignalR();
-            
-            watchId = navigator.geolocation.watchPosition(pos => {
-                const { latitude, longitude, speed, heading, accuracy } = pos.coords;
-                updatePosition(latitude, longitude);
+        async function toggleTracking() {
+            if (isTracking) {
+                isTracking = false;
+                document.getElementById('trackingBtnLabel').textContent = "GO ONLINE";
+                document.getElementById('gpsIcon').textContent = "gps_not_fixed";
                 
-                // FANOUT UPDATE: Send to all active trips
-                if (hubConnection) {
-                     hubConnection.invoke('UpdateLocationForActiveTrips', latitude, longitude, new Date().toISOString(), speed, heading, accuracy)
-                     .catch(err => console.error("Hub invocation failed", err));
-                }
-            }, (err) => console.warn("Watch position error", err), { enableHighAccuracy: true });
-        }
-    }
+                const statusEl = document.getElementById('trackingStatus');
+                if(statusEl) statusEl.innerHTML = `<div class="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></div><span class="text-[10px] font-bold text-orange-500 tracking-tighter">COLD</span>`;
 
-    // Dynamic Form Handling
-    async function handleTripAction(form) {
-        const url = form.action;
-        const formData = new FormData(form);
-        const submitBtn = form.querySelector('button[type="submit"]');
-        const originalText = submitBtn.innerText;
-        submitBtn.disabled = true;
-        submitBtn.innerText = "Processing...";
-
-        try {
-            const resp = await fetch(url, {
-                method: 'POST',
-                body: formData,
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            });
-            const result = await resp.json();
-            
-            if (result.success) {
-                // Refresh Modal Content
-                const hiddenId = form.querySelector('input[name="bookingId"]').value;
-                await openMapModal(hiddenId); 
-                // Refresh Sidebar List
-                refreshActiveTrips();
+                if (watchId) navigator.geolocation.clearWatch(watchId);
             } else {
-                alert("Error: " + result.message);
-            }
-        } catch (error) {
-            console.error("Action failed", error);
-            alert("Action failed. Please check connection.");
-        } finally {
-             // If modal refreshed, btn is gone, so no need to reset unless error
-             if(document.body.contains(submitBtn)) {
-                 submitBtn.disabled = false;
-                 submitBtn.innerText = originalText;
-             }
-        }
-    }
+                if (!navigator.geolocation) return;
+                isTracking = true;
+                document.getElementById('trackingBtnLabel').textContent = "STOP TRACKING";
+                document.getElementById('gpsIcon').textContent = "gps_fixed";
 
-    // Refresh Sidebar List
-    async function refreshActiveTrips() {
-        try {
-            const resp = await fetch('/DriverPortal/GetActiveTrips');
-            const bookings = await resp.json();
-            
-            // This assumes we only want to update status badges or remove completed items.
-            // For simplicity, we just reload page if list length mismatches or complex changes to DOM needed,
-            // OR we iterate and update badges.
-            // Requirement says "Refresh active booking groups list... If trip becomes Completed -> stop receiving".
-            // Since fanout queries active trips on server, we don't need client group management for sending.
-            // Client only needs UI update.
-            
-            bookings.forEach(b => {
-                // Update badge in sidebar
-                const card = document.querySelector(`[data-booking-id="${b.bookingId}"]`);
-                if(card) {
-                    const badge = card.querySelector('.text-gold-primary.uppercase'); // This selector is fragile based on current DOM
-                    // Assuming structure: <span class="... text-gold-primary ...">STATUS</span>
-                    // Let's use a more robust search if possible or just reload if needed.
-                    // Given DOM complexity, simple reload of page is bad UX.
-                    // Let's try to find the badge.
-                    // In current DOM: span with class text-gold-primary
-                    // We can match by text content or structure.
-
+                await initSignalR();
+                
+                watchId = navigator.geolocation.watchPosition(pos => {
+                    const { latitude, longitude, speed, heading, accuracy } = pos.coords;
+                    updatePosition(latitude, longitude);
                     
-                    // Actually, easiest way is finding the span inside the card.
-                   const statusSpan = Array.from(card.querySelectorAll('span')).find(s => s.classList.contains('text-gold-primary') && s.classList.contains('uppercase') && s.textContent !== 'DIRECTIONS_CAR' && s.textContent !== 'LOCATION_ON' && s.textContent !== 'SCHEDULE');
-                   if(statusSpan) statusSpan.textContent = b.status;
-                }
-            });
-            
-        } catch (e) { console.error("Refresh active trips failed", e); }
-    }
-</script>
+                    if (hubConnection) {
+                         hubConnection.invoke('UpdateLocationForActiveTrips', latitude, longitude, new Date().toISOString(), speed, heading, accuracy)
+                         .catch(err => console.error("Hub invocation failed", err));
+                    }
+                }, (err) => console.warn("Watch position error", err), { enableHighAccuracy: true });
+            }
+        }
+        
+        async function handleTripAction(form) {
+            const url = form.action;
+            const formData = new FormData(form);
+            const submitBtn = form.querySelector('button[type="submit"]');
+            if(submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="material-icons-round animate-spin text-sm">sync</span>';
+            }
 
-@if (!string.IsNullOrEmpty(googleMapsKey))
-{
-    <script async defer
-        src="https://maps.googleapis.com/maps/api/js?key=@googleMapsKey&callback=initMaps&loading=async"></script>
+            try {
+                const resp = await fetch(url, {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                const result = await resp.json();
+                
+                if (result.success) {
+                    const hiddenId = form.querySelector('input[name="bookingId"]').value;
+                    await openMapModal(hiddenId); 
+                } else {
+                    alert("Error: " + result.message);
+                }
+            } catch (error) {
+                console.error("Action failed", error);
+            }
+        }
+    </script>
+
+    @if (!string.IsNullOrEmpty(googleMapsKey))
+    {
+        <script async defer
+            src="https://maps.googleapis.com/maps/api/js?key=@googleMapsKey&callback=initMaps&loading=async"></script>
+    }
 }

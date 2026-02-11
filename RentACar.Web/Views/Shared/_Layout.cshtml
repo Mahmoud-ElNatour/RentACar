@@ -5,7 +5,7 @@
     var displayName = User.FindFirst("display_name")?.Value ?? User.Identity?.Name ?? "User";
 }
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -133,6 +133,7 @@
 
     <!-- Site scripts -->
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/NavbarSearch.js" asp-append-version="true"></script>
     <script src="~/js/index-script.js" asp-append-version="true"></script>
 
     <partial name="_SupportActionPopup" />

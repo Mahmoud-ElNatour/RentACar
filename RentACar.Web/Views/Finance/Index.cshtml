@@ -1,0 +1,366 @@
+@{
+    ViewData["Title"] = "Finance Dashboard";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<!-- Main Content Area -->
+<div class="flex flex-col min-h-screen">
+    <main class="flex-1 p-6 lg:p-10 max-w-7xl mx-auto w-full">
+        <!-- Header -->
+        <header class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
+            <div>
+                <h1 class="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+                    Finance Dashboard
+                </h1>
+                <p class="text-slate-500 dark:text-slate-400 mt-1">
+                    Real-time analysis of revenue, expenses, and profitability
+                </p>
+            </div>
+            <div class="flex items-center gap-3 bg-white dark:bg-surface-dark border border-slate-200 dark:border-border-dark p-1.5 rounded-lg shadow-sm">
+                <button id="viewYearly" onclick="switchView('Yearly')" class="px-4 py-2 text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 rounded-md transition-all">Yearly</button>
+                <button id="viewMonthly" onclick="switchView('Monthly')" class="px-4 py-2 text-sm font-bold text-black bg-[#eecd2b] rounded-md shadow-sm">Monthly</button>
+                <div class="h-6 w-px bg-slate-200 dark:bg-white/10 mx-1"></div>
+                 <input type="month" id="startMonth" onchange="loadDashboard()" class="bg-transparent border-none text-sm font-bold text-slate-700 dark:text-white outline-none cursor-pointer hover:text-[#eecd2b] transition-colors [color-scheme:dark]" />
+            </div>
+        </header>
+
+        <!-- KPI Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8" id="kpiContainer">
+            <!-- Revenue -->
+            <div class="bg-white dark:bg-surface-dark p-6 rounded-2xl border border-slate-200 dark:border-border-dark shadow-sm relative overflow-hidden group">
+                <div class="absolute right-0 top-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <span class="material-symbols-outlined text-9xl text-emerald-500">trending_up</span>
+                </div>
+                <p class="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Total Revenue</p>
+                <h3 class="text-4xl font-black text-slate-900 dark:text-white mb-2" id="totalRevenue">...</h3>
+                <div class="flex items-center text-sm font-bold text-emerald-500">
+                    <span class="material-symbols-outlined text-lg mr-1">arrow_upward</span>
+                    <span>12.5%</span>
+                    <span class="text-slate-400 font-medium ml-2">vs last month</span>
+                </div>
+            </div>
+
+            <!-- Expenses -->
+            <div class="bg-white dark:bg-surface-dark p-6 rounded-2xl border border-slate-200 dark:border-border-dark shadow-sm relative overflow-hidden group">
+                <div class="absolute right-0 top-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <span class="material-symbols-outlined text-9xl text-rose-500">trending_down</span>
+                </div>
+                <p class="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Total Expenses</p>
+                <h3 class="text-4xl font-black text-slate-900 dark:text-white mb-2" id="totalExpenses">...</h3>
+                <div class="flex items-center text-sm font-bold text-rose-500">
+                     <span class="material-symbols-outlined text-lg mr-1">arrow_upward</span>
+                    <span>4.2%</span>
+                    <span class="text-slate-400 font-medium ml-2">vs last month</span>
+                </div>
+            </div>
+
+            <!-- Net Profit -->
+            <div class="bg-gradient-to-br from-slate-900 to-slate-800 dark:from-[#eecd2b] dark:to-[#c5a922] p-6 rounded-2xl shadow-xl relative overflow-hidden group text-white dark:text-black">
+                 <div class="absolute right-0 top-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <span class="material-symbols-outlined text-9xl text-white dark:text-black">account_balance_wallet</span>
+                </div>
+                <p class="text-sm font-bold text-slate-300 dark:text-black/60 uppercase tracking-wider mb-2">Net Profit</p>
+                <h3 class="text-4xl font-black mb-2" id="netProfit">...</h3>
+                <div class="w-full bg-white/20 dark:bg-black/10 h-1.5 rounded-full mt-4 mb-2 overflow-hidden">
+                    <div class="bg-emerald-400 dark:bg-black h-full rounded-full" style="width: 75%"></div>
+                </div>
+                <p class="text-xs font-medium text-slate-300 dark:text-black/70">75% of annual target reached</p>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <!-- Main Chart -->
+            <div class="lg:col-span-2 bg-white dark:bg-surface-dark p-6 rounded-2xl border border-slate-200 dark:border-border-dark shadow-sm">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-lg font-bold text-slate-900 dark:text-white">Revenue vs Expenses</h3>
+                    <button class="text-slate-400 hover:text-[#eecd2b] transition-colors">
+                        <span class="material-symbols-outlined">more_horiz</span>
+                    </button>
+                </div>
+                <div class="relative h-80 w-full">
+                    <canvas id="financeChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Breakdown -->
+            <div class="bg-white dark:bg-surface-dark p-6 rounded-2xl border border-slate-200 dark:border-border-dark shadow-sm flex flex-col">
+                <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-6">Expense Breakdown</h3>
+                <div class="relative flex-grow min-h-[250px] w-full mb-6">
+                    <canvas id="expensePieChart"></canvas>
+                </div>
+                
+                 <!-- Dynamic Breakdown Bars -->
+                 <div id="breakdownBarsContainer" class="mt-auto space-y-4 pt-4 border-t border-slate-100 dark:border-border-dark">
+                     <!-- Injected via JS -->
+                 </div>
+            </div>
+        </div>
+
+        <!-- Recent Transactions Table -->
+        <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-4">Recent Transactions</h3>
+        <div class="bg-white dark:bg-surface-dark border border-slate-200 dark:border-border-dark rounded-xl shadow-sm overflow-hidden">
+            <div class="overflow-x-auto custom-scrollbar">
+                <table class="w-full text-left border-collapse">
+                     <thead>
+                        <tr class="bg-slate-50 dark:bg-background-dark/80 border-b border-slate-200 dark:border-border-dark">
+                            <th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Date</th>
+                            <th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Description</th>
+                            <th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Type</th>
+                            <th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">Amount</th>
+                            <th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recentTransactionsBody" class="divide-y divide-slate-100 dark:divide-border-dark">
+                        <!-- Loaded via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let financeChart = null;
+        let pieChart = null;
+        let currentView = 'Monthly';
+
+        document.addEventListener('DOMContentLoaded', () => {
+             // Set default month to current month
+             const date = new Date();
+             const monthStr = date.toISOString().slice(0, 7); // YYYY-MM
+             document.getElementById('startMonth').value = monthStr;
+             loadDashboard();
+        });
+
+        function switchView(view) {
+            currentView = view;
+            const yearlyBtn = document.getElementById('viewYearly');
+            const monthlyBtn = document.getElementById('viewMonthly');
+            const monthInput = document.getElementById('startMonth');
+
+            if (view === 'Yearly') {
+                yearlyBtn.className = "px-4 py-2 text-sm font-bold text-black bg-[#eecd2b] rounded-md shadow-sm";
+                monthlyBtn.className = "px-4 py-2 text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 rounded-md transition-all";
+                monthInput.classList.add('opacity-50', 'pointer-events-none');
+            } else {
+                monthlyBtn.className = "px-4 py-2 text-sm font-bold text-black bg-[#eecd2b] rounded-md shadow-sm";
+                yearlyBtn.className = "px-4 py-2 text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 rounded-md transition-all";
+                monthInput.classList.remove('opacity-50', 'pointer-events-none');
+            }
+            loadDashboard();
+        }
+
+        async function loadDashboard() {
+            const startMonth = document.getElementById('startMonth').value;
+            let query = '';
+            
+            if (currentView === 'Yearly') {
+                const year = startMonth.split('-')[0];
+                query = `startDate=${year}-01-01&endDate=${year}-12-31`;
+            } else {
+                const [y, m] = startMonth.split('-');
+                const daysInMonth = new Date(y, m, 0).getDate();
+                query = `startDate=${startMonth}-01&endDate=${startMonth}-${daysInMonth}`;
+            }
+
+            try {
+                const response = await fetch(`/api/Finance/Summary?${query}`);
+                if(!response.ok) throw new Error("Failed to load stats");
+                const data = await response.json();
+                
+                renderKPIs(data);
+                renderChart(data.monthly);
+                renderRecentTransactions(data.recentTransactions);
+                renderPieChart(data.expenseBreakdown);
+                
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+            }
+        }
+
+        function renderKPIs(summary) {
+            document.getElementById('totalRevenue').textContent = formatCurrency(summary.totalRevenuePaid);
+            document.getElementById('totalExpenses').textContent = formatCurrency(summary.totalExpensesPaid);
+            document.getElementById('netProfit').textContent = formatCurrency(summary.netProfit);
+        }
+
+        function renderChart(monthlyData) {
+            const ctx = document.getElementById('financeChart').getContext('2d');
+            if (financeChart) financeChart.destroy();
+
+            const gradientRevenue = ctx.createLinearGradient(0, 0, 0, 300);
+            gradientRevenue.addColorStop(0, 'rgba(16, 185, 129, 0.2)'); 
+            gradientRevenue.addColorStop(1, 'rgba(16, 185, 129, 0)');
+
+             const gradientExpenses = ctx.createLinearGradient(0, 0, 0, 300);
+            gradientExpenses.addColorStop(0, 'rgba(244, 63, 94, 0.2)'); 
+            gradientExpenses.addColorStop(1, 'rgba(244, 63, 94, 0)');
+
+            financeChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: monthlyData.map(d => d.monthLabel),
+                    datasets: [
+                        {
+                            label: 'Revenue',
+                            data: monthlyData.map(d => d.revenuePaid),
+                            borderColor: '#10b981',
+                            backgroundColor: gradientRevenue,
+                            borderWidth: 2,
+                            tension: 0.4,
+                             fill: true,
+                             pointBackgroundColor: '#10b981',
+                             pointBorderColor: '#fff',
+                             pointBorderWidth: 2,
+                             pointRadius: 4
+                        },
+                        {
+                            label: 'Expenses',
+                            data: monthlyData.map(d => d.expensesPaid),
+                            borderColor: '#f43f5e',
+                             backgroundColor: gradientExpenses,
+                            borderWidth: 2,
+                            tension: 0.4,
+                            fill: true,
+                            pointBackgroundColor: '#f43f5e',
+                            pointBorderColor: '#fff',
+                             pointBorderWidth: 2,
+                             pointRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top', labels: { color: '#94a3b8', usePointStyle: true } }
+                    },
+                    scales: {
+                        y: { 
+                            beginAtZero: true, 
+                            ticks: { color: '#94a3b8', callback: v => '$' + v.toLocaleString() },
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                        },
+                        x: { ticks: { color: '#94a3b8' }, grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        function renderPieChart(breakdown) {
+            const ctx = document.getElementById('expensePieChart').getContext('2d');
+            if (pieChart) pieChart.destroy();
+
+            if (!breakdown || breakdown.length === 0) {
+                 // Handle empty state if needed
+                 return;
+            }
+
+            const colors = ['#eecd2b', '#f43f5e', '#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#06b6d4'];
+
+            pieChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: breakdown.map(b => b.categoryName),
+                    datasets: [{
+                        data: breakdown.map(b => b.amount),
+                        backgroundColor: colors,
+                        borderColor: 'transparent',
+                        hoverOffset: 15
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: '#94a3b8',
+                                padding: 20,
+                                font: { size: 11, weight: 600 },
+                                usePointStyle: true
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.raw;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return ` ${context.label}: ${formatCurrency(value)} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            renderBreakdownBars(breakdown);
+        }
+
+        function renderBreakdownBars(breakdown) {
+            const container = document.getElementById('breakdownBarsContainer');
+            if (!breakdown || breakdown.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+
+            const colors = ['#eecd2b', '#f43f5e', '#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#06b6d4'];
+            const displayData = breakdown.slice(0, 4);
+
+            container.innerHTML = displayData.map((b, i) => `
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider">
+                        <span class="text-slate-500 dark:text-slate-400">${b.categoryName}</span>
+                        <span class="${i === 0 ? 'text-[#eecd2b]' : 'text-slate-500 dark:text-slate-400'}">${b.percentage.toFixed(0)}%</span>
+                    </div>
+                    <div class="h-1.5 w-full bg-slate-100 dark:bg-background-dark/80 rounded-full overflow-hidden">
+                        <div class="h-full rounded-full transition-all duration-1000" 
+                             style="width: ${b.percentage}%; background-color: ${colors[i % colors.length]}"></div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function renderRecentTransactions(transactions) {
+            const tbody = document.getElementById('recentTransactionsBody');
+            if(!transactions || transactions.length === 0) {
+                 tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-slate-500 dark:text-slate-400 text-sm">No recent transactions found</td></tr>`;
+                 return;
+            }
+            
+            tbody.innerHTML = transactions.map(t => `
+                  <tr class="hover:bg-slate-50 dark:hover:bg-[#eecd2b]/5 transition-colors border-b border-slate-100 dark:border-border-dark/50 last:border-0">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-300">${new Date(t.date).toLocaleDateString()}</td>
+                    <td class="px-6 py-4">
+                        <div class="text-sm font-semibold text-slate-900 dark:text-white">${t.description}</div>
+                    </td>
+                     <td class="px-6 py-4">
+                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${t.type === 'Income' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-400' : 'bg-rose-100 text-rose-800 dark:bg-rose-500/10 dark:text-rose-400'}">
+                            ${t.type}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        <span class="text-sm font-bold ${t.type === 'Income' ? 'text-emerald-500' : 'text-rose-500'}">
+                            ${t.type === 'Income' ? '+' : '-'}${formatCurrency(t.amount)}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4">
+                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800 dark:bg-slate-500/10 dark:text-slate-400">
+                                ${t.status}
+                        </span>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+        }
+    </script>
+}
