@@ -1,0 +1,190 @@
+@{
+    ViewData["Title"] = "Add Expense";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="flex-grow flex items-center justify-center p-6 md:p-16">
+    <div class="w-full max-w-4xl">
+        <div class="bg-white dark:bg-surface-dark border border-slate-200 dark:border-[#eecd2b]/30 shadow-2xl rounded-xl overflow-hidden">
+            <div class="px-8 py-8 border-b border-slate-200 dark:border-white/5 flex justify-between items-center bg-slate-50 dark:bg-white/5">
+                <div>
+                    <h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Expense Details</h1>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Fill in the information below to record a new business expense.</p>
+                </div>
+                <div class="bg-[#eecd2b]/10 px-3 py-1 rounded-full border border-[#eecd2b]/20">
+                    <span class="text-xs font-bold text-[#eecd2b] uppercase tracking-wider">New Entry</span>
+                </div>
+            </div>
+            
+            <div class="p-8">
+                <form id="addExpenseForm" class="space-y-8" onsubmit="submitExpense(event)">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
+                        <div class="space-y-6">
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 dark:text-white/90 mb-2" for="title">Expense Title <span class="text-[#eecd2b]">*</span></label>
+                                <input class="w-full bg-white dark:bg-[#242729] border border-slate-300 dark:border-white/10 rounded-lg px-4 py-2.5 text-slate-900 dark:text-white focus:ring-1 focus:ring-[#eecd2b] focus:border-[#eecd2b] outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-white/20" id="title" name="Title" placeholder="e.g. Monthly Maintenance" required type="text"/>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 dark:text-white/90 mb-2" for="category">Category <span class="text-[#eecd2b]">*</span></label>
+                                <select class="w-full bg-white dark:bg-[#242729] border border-slate-300 dark:border-white/10 rounded-lg px-4 py-2.5 text-slate-900 dark:text-white focus:ring-1 focus:ring-[#eecd2b] focus:border-[#eecd2b] outline-none transition-all appearance-none cursor-pointer" id="category" name="ExpenseCategoryId" required>
+                                    <option disabled selected value="">Select a category</option>
+                                    <!-- Populated via JS -->
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 dark:text-white/90 mb-2" for="amount">Amount <span class="text-[#eecd2b]">*</span></label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <span class="text-[#eecd2b] font-bold">$</span>
+                                    </div>
+                                    <input class="w-full bg-white dark:bg-[#242729] border border-slate-300 dark:border-white/10 rounded-lg pl-10 pr-4 py-2.5 text-slate-900 dark:text-white focus:ring-1 focus:ring-[#eecd2b] focus:border-[#eecd2b] outline-none transition-all font-mono" id="amount" name="Amount" placeholder="0.00" required step="0.01" type="number"/>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 dark:text-white/90 mb-2" for="date">Expense Date <span class="text-[#eecd2b]">*</span></label>
+                                <div class="relative">
+                                    <input class="w-full bg-white dark:bg-[#242729] border border-slate-300 dark:border-white/10 rounded-lg px-4 py-2.5 text-slate-900 dark:text-white focus:ring-1 focus:ring-[#eecd2b] focus:border-[#eecd2b] outline-none transition-all [color-scheme:dark]" id="date" name="ExpenseDate" required type="date"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="space-y-6">
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 dark:text-white/90 mb-2" for="status">Payment Status <span class="text-[#eecd2b]">*</span></label>
+                                <select class="w-full bg-white dark:bg-[#242729] border border-slate-300 dark:border-white/10 rounded-lg px-4 py-2.5 text-slate-900 dark:text-white focus:ring-1 focus:ring-[#eecd2b] focus:border-[#eecd2b] outline-none transition-all cursor-pointer" id="status" name="Status" required>
+                                    <option value="Paid">Paid</option>
+                                    <option value="Planned">Planned</option>
+                                    <option value="Cancelled">Cancelled</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 dark:text-white/90 mb-2" for="vendor">Vendor (Optional)</label>
+                                <div class="relative">
+                                    <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-white/30 text-lg">storefront</span>
+                                    <input class="w-full bg-white dark:bg-[#242729] border border-slate-300 dark:border-white/10 rounded-lg pl-12 pr-4 py-2.5 text-slate-900 dark:text-white focus:ring-1 focus:ring-[#eecd2b] focus:border-[#eecd2b] outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-white/20" id="vendor" name="Vendor" placeholder="e.g. QuickFix Auto Service" type="text"/>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 dark:text-white/90 mb-2" for="reference">Reference Number (Optional)</label>
+                                <div class="relative">
+                                    <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-white/30 text-lg">tag</span>
+                                    <input class="w-full bg-white dark:bg-[#242729] border border-slate-300 dark:border-white/10 rounded-lg pl-12 pr-4 py-2.5 text-slate-900 dark:text-white focus:ring-1 focus:ring-[#eecd2b] focus:border-[#eecd2b] outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-white/20" id="reference" name="ReferenceNumber" placeholder="e.g. INV-2024-001" type="text"/>
+                                </div>
+                            </div>
+                            <div class="p-4 rounded-lg bg-[#eecd2b]/5 border border-[#eecd2b]/20 flex items-start gap-3 mt-auto">
+                                <span class="material-symbols-outlined text-[#eecd2b] text-xl">info</span>
+                                <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                                    Optional fields like Vendor and Reference Number help in easier reconciliation during the quarterly audit process.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pt-2">
+                        <label class="block text-sm font-semibold text-slate-700 dark:text-white/90 mb-2" for="description">Description / Internal Notes</label>
+                        <textarea class="w-full bg-white dark:bg-[#242729] border border-slate-300 dark:border-white/10 rounded-lg px-4 py-3 text-slate-900 dark:text-white focus:ring-1 focus:ring-[#eecd2b] focus:border-[#eecd2b] outline-none transition-all resize-none placeholder:text-slate-400 dark:placeholder:text-white/20" id="description" name="Description" placeholder="Provide additional context regarding this expense..." rows="4"></textarea>
+                    </div>
+                    
+                     <div class="px-8 py-6 -mx-8 -mb-8 bg-slate-50 dark:bg-black/60 border-t border-slate-200 dark:border-white/5 flex items-center justify-between rounded-b-xl">
+                        <button class="flex items-center gap-2 text-sm font-bold text-slate-500 dark:text-slate-400 hover:text-red-500 transition-colors" type="button" onclick="window.location.href='/Expense'">
+                            <span class="material-symbols-outlined text-lg">delete_outline</span>
+                            Discard Draft
+                        </button>
+                        <div class="flex gap-4">
+                            <button class="px-6 py-2.5 text-sm font-bold text-slate-700 dark:text-white bg-transparent border border-slate-300 dark:border-white/20 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 transition-all" type="button" onclick="window.location.href='/Expense'">
+                                Cancel
+                            </button>
+                            <button class="px-8 py-2.5 text-sm font-bold text-black bg-[#eecd2b] rounded-lg hover:shadow-[0_0_25px_rgba(238,205,43,0.4)] hover:brightness-110 active:scale-[0.98] transition-all flex items-center gap-2" type="submit">
+                                <span class="material-symbols-outlined text-lg">save</span>
+                                Save Expense
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="flex gap-4 p-2">
+                <div class="flex-shrink-0 w-10 h-10 rounded-full border border-[#eecd2b]/30 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-[#eecd2b]">security</span>
+                </div>
+                <div>
+                    <h4 class="text-sm font-bold text-slate-900 dark:text-white">Secure Records</h4>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Encrypted storage according to compliance standards.</p>
+                </div>
+            </div>
+            <div class="flex gap-4 p-2">
+                 <div class="flex-shrink-0 w-10 h-10 rounded-full border border-[#eecd2b]/30 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-[#eecd2b]">cloud_upload</span>
+                </div>
+                <div>
+                    <h4 class="text-sm font-bold text-slate-900 dark:text-white">Receipt Matching</h4>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Attachments can be added after saving the entry.</p>
+                </div>
+            </div>
+            <div class="flex gap-4 p-2">
+                 <div class="flex-shrink-0 w-10 h-10 rounded-full border border-[#eecd2b]/30 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-[#eecd2b]">assessment</span>
+                </div>
+                <div>
+                    <h4 class="text-sm font-bold text-slate-900 dark:text-white">Auto-Reporting</h4>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Included in automated monthly tax summaries.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCategories();
+            document.getElementById('date').valueAsDate = new Date();
+        });
+
+        async function loadCategories() {
+            try {
+                const res = await fetch('/api/ExpenseCategory/active');
+                const categories = await res.json();
+                const select = document.getElementById('category');
+                
+                categories.forEach(c => {
+                    const option = document.createElement('option');
+                    option.value = c.expenseCategoryId;
+                    option.textContent = c.name;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading categories', error);
+            }
+        }
+
+        async function submitExpense(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+            
+            // Adjust types
+            data.Amount = parseFloat(data.Amount);
+            data.ExpenseCategoryId = parseInt(data.ExpenseCategoryId);
+
+            try {
+                const response = await fetch('/api/Expense', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    window.location.href = '/Expense';
+                } else {
+                    const error = await response.text();
+                    alert('Error creating expense: ' + error);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred.');
+            }
+        }
+    </script>
+}

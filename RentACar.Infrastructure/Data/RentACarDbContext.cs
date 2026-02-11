@@ -58,6 +58,8 @@ public partial class RentACarDbContext : DbContext
     public virtual DbSet<SupportMessage> SupportMessages { get; set; }
     public virtual DbSet<AiConversation> AiConversations { get; set; }
     public virtual DbSet<AiMessage> AiMessages { get; set; }
+    public virtual DbSet<ExpenseCategory> ExpenseCategories { get; set; }
+    public virtual DbSet<Expense> Expenses { get; set; }
 
 
 
@@ -340,6 +342,29 @@ public partial class RentACarDbContext : DbContext
 
             entity.Property(e => e.Sender)
                 .HasConversion<string>(); // Store Enum as String for readability
+        });
+
+        modelBuilder.Entity<ExpenseCategory>(entity =>
+        {
+            entity.HasIndex(e => e.Name).IsUnique();
+        });
+
+        modelBuilder.Entity<Expense>(entity =>
+        {
+            entity.HasOne(d => d.ExpenseCategory)
+                .WithMany(p => p.Expenses)
+                .HasForeignKey(d => d.ExpenseCategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(d => d.CreatedByUser)
+                .WithMany()
+                .HasForeignKey(d => d.CreatedByUserId)
+                .OnDelete(DeleteBehavior.ClientSetNull);
+            
+            // Indexes for performance
+            entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => e.ExpenseDate);
+            entity.HasIndex(e => e.ExpenseCategoryId);
         });
 
         OnModelCreatingPartial(modelBuilder);

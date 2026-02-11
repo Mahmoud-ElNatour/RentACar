@@ -117,6 +117,8 @@ builder.Services.AddScoped<IDriverRepository, DriverRepository>();
 builder.Services.AddScoped<IDriverAvailabilityRepository, DriverAvailabilityRepository>();
 builder.Services.AddScoped<IDriverAllowedCategoryRepository, DriverAllowedCategoryRepository>();
 builder.Services.AddScoped<ITripRepository, TripRepository>();
+builder.Services.AddScoped<IExpenseCategoryRepository, ExpenseCategoryRepository>();
+builder.Services.AddScoped<IExpenseRepository, ExpenseRepository>();
 builder.Services.AddScoped<CustomerRatingManager>();
 builder.Services.AddHttpClient<RentACar.Application.Services.IStripePaymentService, RentACar.Application.Services.StripePaymentService>(client =>
 {
@@ -149,6 +151,9 @@ builder.Services.AddScoped<EmailRoutingService>();
 builder.Services.AddScoped<NotificationProcessingService>();
 builder.Services.AddScoped<EmailLogManager>();
 builder.Services.AddScoped<SupportManager>();
+builder.Services.AddScoped<ExpenseCategoryManager>();
+builder.Services.AddScoped<ExpenseManager>();
+builder.Services.AddScoped<FinanceManager>();
 
 
 // // ✅ HTTPS redirection

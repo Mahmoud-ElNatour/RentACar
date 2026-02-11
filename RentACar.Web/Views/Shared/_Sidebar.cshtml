@@ -107,18 +107,21 @@
                      <p class="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Management</p>
                      
                      <!-- Control Panel Group -->
-                     <div class="relative group/menu" onmouseenter="openMenu('controlPanelMenu', 'cpArrow')" onmouseleave="closeMenu('controlPanelMenu', 'cpArrow')">
-                         <a href="/ControlPanel" 
+                     <div class="relative group/menu">
+                         <button onclick="toggleMenu('controlPanelMenu', 'cpArrow')" 
                             class="w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors group">
                             <div class="flex items-center gap-3">
                                  <span class="material-symbols-outlined text-[22px] group-hover:scale-110 transition-transform">settings</span>
                                  Control Panel
                             </div>
                             <span id="cpArrow" class="material-symbols-outlined text-[18px] transition-transform duration-200">expand_more</span>
-                         </a>
+                         </button>
                      
                      <!-- Submenu -->
                      <div id="controlPanelMenu" class="hidden pl-4 space-y-1 mt-1 border-l border-border-dark ml-5">
+                          <a href="/ControlPanel" class="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md text-gold bg-gold/5 border border-gold/10 transition-colors">
+                              <span class="material-symbols-outlined text-[18px]">dashboard_customize</span> CP Overview
+                          </a>
                           <a href="/Blacklist" class="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md text-gray-500 hover:text-gold hover:bg-gold/5 transition-colors">
                               <span class="material-symbols-outlined text-[18px]">block</span> Blacklist
                           </a>
@@ -139,7 +142,7 @@
                               <span class="material-symbols-outlined text-[18px]">badge</span> Employees
                           </a>
                           <a href="/Payment" class="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md text-gray-500 hover:text-gold hover:bg-gold/5 transition-colors">
-                              <span class="material-symbols-outlined text-[18px]">payments</span> Financials
+                              <span class="material-symbols-outlined text-[18px]">payments</span> Bookings Payments
                           </a>
                           <a href="/PaymentMethod" class="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md text-gray-500 hover:text-gold hover:bg-gold/5 transition-colors">
                               <span class="material-symbols-outlined text-[18px]">account_balance_wallet</span> Payment Methods
@@ -155,7 +158,29 @@
                               </a>
                           }
                      </div> <!-- End Submenu -->
-                     </div> <!-- End Hover Group -->
+                     </div> <!-- End Control Panel Group -->
+
+                     <!-- Accounting Group -->
+                     <div class="relative group/menu mt-1">
+                         <button onclick="toggleMenu('accountingMenu', 'accArrow')" 
+                            class="w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors group">
+                            <div class="flex items-center gap-3">
+                                 <span class="material-symbols-outlined text-[22px] group-hover:scale-110 transition-transform">account_balance</span>
+                                 Accounting
+                            </div>
+                            <span id="accArrow" class="material-symbols-outlined text-[18px] transition-transform duration-200">expand_more</span>
+                         </button>
+                      
+                     <!-- Submenu -->
+                     <div id="accountingMenu" class="hidden pl-4 space-y-1 mt-1 border-l border-border-dark ml-5">
+                          <a href="/Expense" class="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md text-gray-500 hover:text-gold hover:bg-gold/5 transition-colors">
+                              <span class="material-symbols-outlined text-[18px]">receipt_long</span> Expenses
+                          </a>
+                          <a href="/Finance" class="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md text-gray-500 hover:text-gold hover:bg-gold/5 transition-colors">
+                              <span class="material-symbols-outlined text-[18px]">monitoring</span> Finance Dashboard
+                          </a>
+                     </div>
+                     </div>
 
                      <!-- Ratings (Moved Outside) -->
                      <a href="/ControlPanel/Ratings" class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors group mt-1 text-gray-400 hover:text-white hover:bg-white/5">
@@ -169,16 +194,16 @@
                         Support Inbox
                      </a>
 
-                     <!-- Email Services Group -->
-                     <div class="relative group/menu mt-1" onmouseenter="openMenu('emailServicesMenu', 'esArrow')" onmouseleave="closeMenu('emailServicesMenu', 'esArrow')">
-                         <a href="/EmailServices/EmailServicesHub" 
-                                 class="w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors group">
-                            <div class="flex items-center gap-3">
-                                 <span class="material-symbols-outlined text-[22px] group-hover:scale-110 transition-transform">mail</span>
-                                 Email Services
-                            </div>
-                            <span id="esArrow" class="material-symbols-outlined text-[18px] transition-transform duration-200">expand_more</span>
-                         </a>
+                      <!-- Email Services Group -->
+                      <div class="relative group/menu mt-1">
+                          <button onclick="toggleMenu('emailServicesMenu', 'esArrow')" 
+                                  class="w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors group">
+                             <div class="flex items-center gap-3">
+                                  <span class="material-symbols-outlined text-[22px] group-hover:scale-110 transition-transform">mail</span>
+                                  Email Services
+                             </div>
+                             <span id="esArrow" class="material-symbols-outlined text-[18px] transition-transform duration-200">expand_more</span>
+                          </button>
                      
                      <!-- Email Services Submenu -->
                      <div id="emailServicesMenu" class="hidden pl-4 space-y-1 mt-1 border-l border-border-dark ml-5">
@@ -247,17 +272,21 @@
         </div>
     </aside>
 <script>
-    function openMenu(menuId, arrowId) {
+    function toggleMenu(menuId, arrowId) {
         const menu = document.getElementById(menuId);
         const arrow = document.getElementById(arrowId);
-        if (menu) menu.classList.remove('hidden');
-        if (arrow) arrow.style.transform = 'rotate(180deg)';
-    }
-
-    function closeMenu(menuId, arrowId) {
-        const menu = document.getElementById(menuId);
-        const arrow = document.getElementById(arrowId);
-        if (menu) menu.classList.add('hidden');
-        if (arrow) arrow.style.transform = 'rotate(0deg)';
+        if (menu) {
+            const isHidden = menu.classList.contains('hidden');
+            
+            // Optional: Close other menus first (keeping it simple for now as requested)
+            
+            if (isHidden) {
+                menu.classList.remove('hidden');
+                if (arrow) arrow.style.transform = 'rotate(180deg)';
+            } else {
+                menu.classList.add('hidden');
+                if (arrow) arrow.style.transform = 'rotate(0deg)';
+            }
+        }
     }
 </script>
