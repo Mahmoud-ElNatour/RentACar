@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using RentACar.Core.Enums;
 
 namespace RentACar.Application.DTOs
 {
@@ -24,6 +25,17 @@ namespace RentACar.Application.DTOs
         public DateOnly? FilterStartDate { get; set; }
         public DateOnly? FilterEndDate { get; set; }
         public string? SortOrder { get; set; }
+
+        // New Specifications Filters
+        public IEnumerable<TransmissionType>? FilterTransmissionTypes { get; set; }
+        public IEnumerable<FuelType>? FilterFuelTypes { get; set; }
+        public int? FilterMinSeats { get; set; }
+        public int? FilterMinLuggage { get; set; }
+        public bool? FilterHasInfotainment { get; set; }
+        public bool? FilterHasGPS { get; set; }
+        public bool? FilterHasSunroof { get; set; }
+        public bool? FilterHasParkingSensors { get; set; }
+        public bool? FilterHasRearCamera { get; set; }
     }
 }
 

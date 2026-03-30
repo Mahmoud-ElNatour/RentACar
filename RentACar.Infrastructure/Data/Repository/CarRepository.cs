@@ -1,4 +1,4 @@
-﻿// review later GetAvailabilityInTimelineAsyn
+// review later GetAvailabilityInTimelineAsyn
 
 using System;
 using System.Collections.Generic;
@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using RentACar.Core.Entities;
 using RentACar.Core.Repositories;
 using RentACar.Infrastructure.Data.Repository.Base;
+using RentACar.Core.Enums;
 
 namespace RentACar.Infrastructure.Data.Repositories
 {
@@ -42,7 +43,20 @@ namespace RentACar.Infrastructure.Data.Repositories
 
 
 
-        public async Task<List<Car>> SearchByFilterAsync(string? modelName = null, int? modelYear = null, int? categoryId = null, bool? isAvailable = null)
+        public async Task<List<Car>> SearchByFilterAsync(
+            string? modelName = null, 
+            int? modelYear = null, 
+            int? categoryId = null, 
+            bool? isAvailable = null,
+            TransmissionType[]? transmissionTypes = null,
+            FuelType[]? fuelTypes = null,
+            int? minSeats = null,
+            int? minLuggage = null,
+            bool? hasInfotainment = null,
+            bool? hasGPS = null,
+            bool? hasSunroof = null,
+            bool? hasParkingSensors = null,
+            bool? hasRearCamera = null)
         {
             var query = _dbContext.Cars
                 .Include(c => c.Category)
@@ -67,6 +81,23 @@ namespace RentACar.Infrastructure.Data.Repositories
             {
                 query = query.Where(c => c.IsAvailable == isAvailable.Value);
             }
+            if (transmissionTypes != null && transmissionTypes.Any())
+                query = query.Where(c => transmissionTypes.Contains(c.TransmissionType));
+
+            if (fuelTypes != null && fuelTypes.Any())
+                query = query.Where(c => fuelTypes.Contains(c.FuelType));
+
+            if (minSeats.HasValue)
+                query = query.Where(c => c.SeatsCapacity >= minSeats.Value);
+
+            if (minLuggage.HasValue)
+                query = query.Where(c => c.LuggageCapacity >= minLuggage.Value);
+
+            if (hasInfotainment == true) query = query.Where(c => c.HasInfotainmentScreen);
+            if (hasGPS == true) query = query.Where(c => c.HasGPS);
+            if (hasSunroof == true) query = query.Where(c => c.HasSunroof);
+            if (hasParkingSensors == true) query = query.Where(c => c.HasParkingSensors);
+            if (hasRearCamera == true) query = query.Where(c => c.HasRearCamera);
 
             return await query.ToListAsync();
         }

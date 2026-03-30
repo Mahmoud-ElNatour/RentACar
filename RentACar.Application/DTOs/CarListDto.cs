@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using RentACar.Core.Enums;
 
 namespace RentACar.Application.DTOs
 {
@@ -25,5 +26,16 @@ namespace RentACar.Application.DTOs
         // Ideally we ONLY serve metadata here.
         // public byte[]? CarImage { get; set; } // EXCLUDED for performance
         public string? CategoryName { get; set; }
+
+        public int SeatsCapacity { get; set; }
+        public int Doors { get; set; }
+        public TransmissionType TransmissionType { get; set; }
+        public FuelType FuelType { get; set; }
+        public int? LuggageCapacity { get; set; }
+        public bool HasInfotainmentScreen { get; set; }
+        public bool HasGPS { get; set; }
+        public bool HasSunroof { get; set; }
+        public bool HasParkingSensors { get; set; }
+        public bool HasRearCamera { get; set; }
     }
 }

@@ -1,9 +1,10 @@
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Identity;
 using RentACar.Application.DTOs;
 using RentACar.Core.Entities;
 using RentACar.Core.Repositories;
+using RentACar.Core.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using AspNetUser = RentACar.Core.Entities.AspNetUser;
@@ -102,9 +103,22 @@ namespace RentACar.Application.Managers
             return _mapper.Map<List<CarDto>>(cars);
         }
 
-        public async Task<List<CarDto>> SearchCarsByFilterAsync(string? modelName = null, int? modelYear = null, int? categoryId = null, bool? isAvailable = null)
+        public async Task<List<CarDto>> SearchCarsByFilterAsync(
+            string? modelName = null, 
+            int? modelYear = null, 
+            int? categoryId = null, 
+            bool? isAvailable = null,
+            TransmissionType[]? transmissionTypes = null,
+            FuelType[]? fuelTypes = null,
+            int? minSeats = null,
+            int? minLuggage = null,
+            bool? hasInfotainment = null,
+            bool? hasGPS = null,
+            bool? hasSunroof = null,
+            bool? hasParkingSensors = null,
+            bool? hasRearCamera = null)
         {
-            var cars = await _carRepository.SearchByFilterAsync(modelName, modelYear, categoryId, isAvailable);
+            var cars = await _carRepository.SearchByFilterAsync(modelName, modelYear, categoryId, isAvailable, transmissionTypes, fuelTypes, minSeats, minLuggage, hasInfotainment, hasGPS, hasSunroof, hasParkingSensors, hasRearCamera);
             return _mapper.Map<List<CarDto>>(cars);
         }
 
@@ -202,9 +216,22 @@ namespace RentACar.Application.Managers
                 await _auditLogManager.LogAsync("Deactivate", "Car", id.ToString(), "Deactivated car (Soft Delete) due to existing records");
             }
         }
-        public async Task<List<CarListDto>> SearchCarsForListAsync(string? modelName = null, int? modelYear = null, int? categoryId = null, bool? isAvailable = null)
+        public async Task<List<CarListDto>> SearchCarsForListAsync(
+            string? modelName = null, 
+            int? modelYear = null, 
+            int? categoryId = null, 
+            bool? isAvailable = null,
+            TransmissionType[]? transmissionTypes = null,
+            FuelType[]? fuelTypes = null,
+            int? minSeats = null,
+            int? minLuggage = null,
+            bool? hasInfotainment = null,
+            bool? hasGPS = null,
+            bool? hasSunroof = null,
+            bool? hasParkingSensors = null,
+            bool? hasRearCamera = null)
         {
-            var cars = await _carRepository.SearchByFilterAsync(modelName, modelYear, categoryId, isAvailable);
+            var cars = await _carRepository.SearchByFilterAsync(modelName, modelYear, categoryId, isAvailable, transmissionTypes, fuelTypes, minSeats, minLuggage, hasInfotainment, hasGPS, hasSunroof, hasParkingSensors, hasRearCamera);
             return _mapper.Map<List<CarListDto>>(cars);
         }
 

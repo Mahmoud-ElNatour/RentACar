@@ -1,10 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using RentACar.Core.Entities;
 using RentACar.Core.Repositories.Base;
+using RentACar.Core.Enums;
 
 namespace RentACar.Core.Repositories
 {
@@ -17,7 +18,20 @@ namespace RentACar.Core.Repositories
         Task<List<Car>> GetByModelAsync(string modelName);
         Task<List<Car>> GetByYearAsync(int modelYear);
         Task<List<Car>> GetAvailabilityInTimelineAsync(DateTime startTime, DateTime endTime);
-        Task<List<Car>> SearchByFilterAsync(string? modelName = null, int? modelYear = null, int? categoryId = null, bool? isAvailable = null);
+        Task<List<Car>> SearchByFilterAsync(
+            string? modelName = null, 
+            int? modelYear = null, 
+            int? categoryId = null, 
+            bool? isAvailable = null,
+            TransmissionType[]? transmissionTypes = null,
+            FuelType[]? fuelTypes = null,
+            int? minSeats = null,
+            int? minLuggage = null,
+            bool? hasInfotainment = null,
+            bool? hasGPS = null,
+            bool? hasSunroof = null,
+            bool? hasParkingSensors = null,
+            bool? hasRearCamera = null);
         Task<List<Car>> BrowseAllCarsAsync();
         Task UpdateCarAvailabilityAsync(int carId, bool isAvailable);
         Task DeleteAsync(int id);

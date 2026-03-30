@@ -1,4 +1,4 @@
-﻿@{
+@{
     ViewData["Title"] = "Vehicle Fleet";
     Layout = "_Layout";
     ViewData["BodyClass"] = "bg-background-dark";
@@ -397,6 +397,9 @@
                     ${isAdmin ? `
                     <td class="px-6 py-4 text-right">
                         <div class="flex items-center justify-end gap-2">
+                             <button class="info-btn p-2 text-blue-400 hover:text-white hover:bg-blue-500/10 rounded-lg transition-colors" data-id="${car.carId}" title="Info">
+                                <span class="material-symbols-outlined text-[20px]">info</span>
+                            </button>
                              <button class="edit-btn p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors" data-id="${car.carId}" title="Edit">
                                 <span class="material-symbols-outlined text-[20px]">edit</span>
                             </button>
@@ -409,6 +412,7 @@
                 `;
                 
                 if(isAdmin) {
+                    tr.querySelector('.info-btn')?.addEventListener('click', () => loadModal('/Car/Info/' + car.carId));
                     tr.querySelector('.edit-btn')?.addEventListener('click', () => loadModal('/Car/Edit/' + car.carId));
                     tr.querySelector('.delete-btn')?.addEventListener('click', () => loadModal('/Car/Delete/' + car.carId));
                 }
@@ -552,7 +556,18 @@
                     pricePerDay: Number(data.PricePerDay || 0),
                     extraDriverFeePerDay: data.ExtraDriverFeePerDay ? Number(data.ExtraDriverFeePerDay) : null,
                     categoryId: Number(data.CategoryId || 0),
-                    isAvailable: !!carForm.querySelector('[name="IsAvailable"]')?.checked
+                    isAvailable: !!carForm.querySelector('[name="IsAvailable"]')?.checked,
+                    seatsCapacity: Number(data.SeatsCapacity || 0),
+                    doors: Number(data.Doors || 0),
+                    luggageCapacity: data.LuggageCapacity ? Number(data.LuggageCapacity) : null,
+                    transmissionType: Number(data.TransmissionType || 0),
+                    fuelType: Number(data.FuelType || 0),
+                    supportsBabySeat: !!carForm.querySelector('[name="SupportsBabySeat"]')?.checked,
+                    hasInfotainmentScreen: !!carForm.querySelector('[name="HasInfotainmentScreen"]')?.checked,
+                    hasGPS: !!carForm.querySelector('[name="HasGPS"]')?.checked,
+                    hasSunroof: !!carForm.querySelector('[name="HasSunroof"]')?.checked,
+                    hasParkingSensors: !!carForm.querySelector('[name="HasParkingSensors"]')?.checked,
+                    hasRearCamera: !!carForm.querySelector('[name="HasRearCamera"]')?.checked
                 };
                 
                 if(imageInput && imageInput.files.length > 0) {

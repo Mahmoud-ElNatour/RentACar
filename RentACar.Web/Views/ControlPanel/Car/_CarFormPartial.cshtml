@@ -89,6 +89,65 @@
                         </div>
                     </div>
 
+                    <!-- Specifications Section -->
+                    <div class="pt-4 border-t border-[#262626]">
+                        <h6 class="text-gold font-bold uppercase tracking-widest text-sm mb-4">Specifications</h6>
+                        
+                        <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                            <!-- Numeric / Selects -->
+                            <div>
+                                <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Seats</label>
+                                <input asp-for="SeatsCapacity" type="number" min="1" class="w-full bg-[#0a0a0a] border border-[#262626] rounded-xl py-2 px-3 text-white focus:outline-none focus:border-gold transition-all" />
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Doors</label>
+                                <input asp-for="Doors" type="number" min="1" class="w-full bg-[#0a0a0a] border border-[#262626] rounded-xl py-2 px-3 text-white focus:outline-none focus:border-gold transition-all" />
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Bags</label>
+                                <input asp-for="LuggageCapacity" type="number" min="0" class="w-full bg-[#0a0a0a] border border-[#262626] rounded-xl py-2 px-3 text-white focus:outline-none focus:border-gold transition-all" />
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Transmission</label>
+                                <select asp-for="TransmissionType" class="w-full bg-[#0a0a0a] border border-[#262626] rounded-xl py-2 px-3 text-white focus:outline-none focus:border-gold transition-all" asp-items="Html.GetEnumSelectList<RentACar.Core.Enums.TransmissionType>()">
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Fuel Type</label>
+                                <select asp-for="FuelType" class="w-full bg-[#0a0a0a] border border-[#262626] rounded-xl py-2 px-3 text-white focus:outline-none focus:border-gold transition-all" asp-items="Html.GetEnumSelectList<RentACar.Core.Enums.FuelType>()">
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Checkboxes Features -->
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
+                            <label class="flex items-center gap-2 cursor-pointer group">
+                                <input asp-for="SupportsBabySeat" type="checkbox" class="w-4 h-4 rounded text-gold bg-[#0a0a0a] border-[#262626] focus:ring-gold" />
+                                <span class="text-xs font-bold text-gray-400 group-hover:text-white transition-colors">Baby Seat Supported</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer group">
+                                <input asp-for="HasInfotainmentScreen" type="checkbox" class="w-4 h-4 rounded text-gold bg-[#0a0a0a] border-[#262626] focus:ring-gold" />
+                                <span class="text-xs font-bold text-gray-400 group-hover:text-white transition-colors">Infotainment Screen</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer group">
+                                <input asp-for="HasGPS" type="checkbox" class="w-4 h-4 rounded text-gold bg-[#0a0a0a] border-[#262626] focus:ring-gold" />
+                                <span class="text-xs font-bold text-gray-400 group-hover:text-white transition-colors">Built-in GPS</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer group">
+                                <input asp-for="HasSunroof" type="checkbox" class="w-4 h-4 rounded text-gold bg-[#0a0a0a] border-[#262626] focus:ring-gold" />
+                                <span class="text-xs font-bold text-gray-400 group-hover:text-white transition-colors">Sunroof/Moonroof</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer group">
+                                <input asp-for="HasParkingSensors" type="checkbox" class="w-4 h-4 rounded text-gold bg-[#0a0a0a] border-[#262626] focus:ring-gold" />
+                                <span class="text-xs font-bold text-gray-400 group-hover:text-white transition-colors">Parking Sensors</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer group">
+                                <input asp-for="HasRearCamera" type="checkbox" class="w-4 h-4 rounded text-gold bg-[#0a0a0a] border-[#262626] focus:ring-gold" />
+                                <span class="text-xs font-bold text-gray-400 group-hover:text-white transition-colors">Rear Camera</span>
+                            </label>
+                        </div>
+                    </div>
+
                     <div class="flex items-center justify-between pt-4 border-t border-[#262626]">
                          <label class="flex items-center gap-3 cursor-pointer group">
                              <div class="relative">

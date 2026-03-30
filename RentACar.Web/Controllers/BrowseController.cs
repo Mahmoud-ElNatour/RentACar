@@ -1,7 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using RentACar.Application.DTOs;
 using RentACar.Application.Managers;
 using RentACar.Core.Entities;
+using RentACar.Core.Enums;
 using System.Linq;
 
 namespace RentACar.Web.Controllers
@@ -28,11 +29,20 @@ namespace RentACar.Web.Controllers
             DateOnly? endDate = null,
             string? sortOrder = null,
             string? category = null,
+            TransmissionType[]? transmissionTypes = null,
+            FuelType[]? fuelTypes = null,
+            int? minSeats = null,
+            int? minLuggage = null,
+            bool? hasInfotainment = null,
+            bool? hasGPS = null,
+            bool? hasSunroof = null,
+            bool? hasParkingSensors = null,
+            bool? hasRearCamera = null,
             int page = 1)
         {
             var categories = await _categoryManager.GetAllActiveCategoriesAsync();
 
-            var cars = await GetFilteredCarsInternal(name, categoryIds, minPrice, maxPrice, startDate, endDate, sortOrder, category);
+            var cars = await GetFilteredCarsInternal(name, categoryIds, minPrice, maxPrice, startDate, endDate, sortOrder, category, transmissionTypes, fuelTypes, minSeats, minLuggage, hasInfotainment, hasGPS, hasSunroof, hasParkingSensors, hasRearCamera);
             
             int pageSize = 12;
             int totalCount = cars.Count;
@@ -51,6 +61,15 @@ namespace RentACar.Web.Controllers
                 FilterStartDate = startDate,
                 FilterEndDate = endDate,
                 SortOrder = sortOrder,
+                FilterTransmissionTypes = transmissionTypes,
+                FilterFuelTypes = fuelTypes,
+                FilterMinSeats = minSeats,
+                FilterMinLuggage = minLuggage,
+                FilterHasInfotainment = hasInfotainment,
+                FilterHasGPS = hasGPS,
+                FilterHasSunroof = hasSunroof,
+                FilterHasParkingSensors = hasParkingSensors,
+                FilterHasRearCamera = hasRearCamera,
                 CurrentPage = page,
                 TotalPages = totalPages
             };
@@ -68,9 +87,18 @@ namespace RentACar.Web.Controllers
             DateOnly? endDate = null,
             string? sortOrder = null,
             string? category = null,
+            TransmissionType[]? transmissionTypes = null,
+            FuelType[]? fuelTypes = null,
+            int? minSeats = null,
+            int? minLuggage = null,
+            bool? hasInfotainment = null,
+            bool? hasGPS = null,
+            bool? hasSunroof = null,
+            bool? hasParkingSensors = null,
+            bool? hasRearCamera = null,
             int page = 1)
         {
-            var cars = await GetFilteredCarsInternal(name, categoryIds, minPrice, maxPrice, startDate, endDate, sortOrder, category);
+            var cars = await GetFilteredCarsInternal(name, categoryIds, minPrice, maxPrice, startDate, endDate, sortOrder, category, transmissionTypes, fuelTypes, minSeats, minLuggage, hasInfotainment, hasGPS, hasSunroof, hasParkingSensors, hasRearCamera);
 
             int pageSize = 12;
             var pagedCars = cars.Skip((page - 1) * pageSize).Take(pageSize).ToList();
@@ -88,10 +116,29 @@ namespace RentACar.Web.Controllers
             DateOnly? startDate, 
             DateOnly? endDate,
             string? sortOrder,
-            string? categoryName)
+            string? categoryName,
+            TransmissionType[]? transmissionTypes,
+            FuelType[]? fuelTypes,
+            int? minSeats,
+            int? minLuggage,
+            bool? hasInfotainment,
+            bool? hasGPS,
+            bool? hasSunroof,
+            bool? hasParkingSensors,
+            bool? hasRearCamera)
         {
             // Initial Fetch (Lightweight DTOs)
-            var cars = await _carManager.SearchCarsForListAsync(modelName: name);
+            var cars = await _carManager.SearchCarsForListAsync(
+                modelName: name, 
+                transmissionTypes: transmissionTypes, 
+                fuelTypes: fuelTypes, 
+                minSeats: minSeats, 
+                minLuggage: minLuggage, 
+                hasInfotainment: hasInfotainment, 
+                hasGPS: hasGPS, 
+                hasSunroof: hasSunroof, 
+                hasParkingSensors: hasParkingSensors, 
+                hasRearCamera: hasRearCamera);
 
             cars = cars.Where(c => c.IsAvailable).ToList();
 

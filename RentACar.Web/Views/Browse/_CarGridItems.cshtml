@@ -31,6 +31,13 @@
             <div class="flex-1">
                 <h3 class="text-xl font-bold text-white mb-1">@car.ModelName</h3>
                 <p class="text-gray-400 text-sm mb-4">@car.ModelYear Model</p>
+
+                <div class="grid grid-cols-2 gap-y-2 gap-x-1 text-xs font-bold text-gray-400 mb-4 bg-[#0a0a0a] border border-[#262626] p-2 rounded-xl">
+                    <div class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px] text-gold">airline_seat_recline_normal</span> @car.SeatsCapacity Seats</div>
+                    <div class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px] text-gold">settings</span> @car.TransmissionType</div>
+                    <div class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px] text-gold">local_gas_station</span> @car.FuelType</div>
+                    <div class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px] text-gold">luggage</span> @(car.LuggageCapacity?.ToString() ?? "N/A") Bags</div>
+                </div>
             </div>
 
             <!-- Footer -->

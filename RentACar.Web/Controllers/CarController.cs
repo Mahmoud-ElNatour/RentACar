@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -64,6 +64,22 @@ namespace RentACar.Web.Controllers
 
             await PopulateCategories();
             return PartialView("~/Views/ControlPanel/Car/_CarFormPartial.cshtml", car);
+        }
+
+        [HttpGet("~/Car/Info/{id}")]
+        [Authorize(Roles = "Admin,Employee")]
+        [ApiExplorerSettings(IgnoreApi = true)]
+        public async Task<IActionResult> InfoForm(int id)
+        {
+            _logger.LogInformation("ℹ️ [InfoForm] Fetching car info for ID {Id}", id);
+            var car = await _carManager.GetCarByIdAsync(id);
+            if (car == null)
+            {
+                _logger.LogWarning("❌ [InfoForm] Car with ID {Id} not found", id);
+                return NotFound();
+            }
+
+            return PartialView("~/Views/ControlPanel/Car/_CarInfoModalPartial.cshtml", car);
         }
 
         [HttpGet("~/Car/Delete/{id}")]
