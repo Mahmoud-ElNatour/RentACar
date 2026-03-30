@@ -116,10 +116,10 @@
                             ? Url.Action("Index", "Browse", new { categoryIds = cat.CategoryId })
                             : Url.Page("/Account/Login", new { area = "Identity", returnUrl = Url.Action("Index", "Browse", new { categoryIds = cat.CategoryId }) });
 
-            <a href="@targetUrl" class="group relative overflow-hidden rounded-2xl aspect-[4/3] cursor-pointer block">
+            <a href="@targetUrl" class="group relative overflow-hidden rounded-2xl aspect-[4/3] cursor-pointer block border-2 border-transparent hover:border-primary transition-all duration-500">
                 <img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="@cat.Name" src="@imageSrc" loading="lazy" />
                 <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex flex-col justify-end p-4 md:p-8">
-                    <h3 class="text-white text-2xl font-bold mb-1">@cat.Name</h3>
+                    <h3 class="text-white text-2xl font-bold mb-1 group-hover:text-primary transition-colors">@cat.Name</h3>
                     <p class="text-gray-300 text-sm">@description</p>
                 </div>
             </a>
@@ -137,29 +137,29 @@
     </div>
 
     <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
-        <div class="group p-4 md:p-8 rounded-3xl bg-surface-dark border border-white/5 hover:border-primary/30 transition-all duration-500 hover:-translate-y-2">
+        <div class="group p-4 md:p-8 rounded-3xl bg-surface-dark border border-white/5 hover:border-primary transition-all duration-500 hover:-translate-y-2">
             <div class="w-10 h-10 md:w-14 md:h-14 bg-primary/10 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-colors">
                 <span class="material-symbols-outlined text-primary text-2xl md:text-3xl">directions_car</span>
             </div>
-            <h3 class="text-white text-lg md:text-xl font-bold mb-4">Pristine Fleet</h3>
+            <h3 class="text-white text-lg md:text-xl font-bold mb-4 group-hover:text-primary transition-colors">Pristine Fleet</h3>
             <p class="text-gray-400 text-xs md:text-sm leading-relaxed mb-6">Our collection represents the pinnacle of engineering, featuring the latest models meticulously maintained.</p>
             <div class="h-1 w-12 bg-primary/20 rounded-full group-hover:w-20 transition-all duration-500"></div>
         </div>
 
-        <div class="group p-4 md:p-8 rounded-3xl bg-surface-dark border border-white/5 hover:border-primary/30 transition-all duration-500 hover:-translate-y-2">
+        <div class="group p-4 md:p-8 rounded-3xl bg-surface-dark border border-white/5 hover:border-primary transition-all duration-500 hover:-translate-y-2">
             <div class="w-10 h-10 md:w-14 md:h-14 bg-primary/10 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-colors">
                 <span class="material-symbols-outlined text-primary text-2xl md:text-3xl">verified_user</span>
             </div>
-            <h3 class="text-white text-lg md:text-xl font-bold mb-4">Absolute Trust</h3>
+            <h3 class="text-white text-lg md:text-xl font-bold mb-4 group-hover:text-primary transition-colors">Absolute Trust</h3>
             <p class="text-gray-400 text-xs md:text-sm leading-relaxed mb-6">Security and transparency are at our core, with verified protection for your peace of mind.</p>
             <div class="h-1 w-12 bg-primary/20 rounded-full group-hover:w-20 transition-all duration-500"></div>
         </div>
 
-        <div class="group p-4 md:p-8 rounded-3xl bg-surface-dark border border-white/5 hover:border-primary/30 transition-all duration-500 hover:-translate-y-2">
+        <div class="group p-4 md:p-8 rounded-3xl bg-surface-dark border border-white/5 hover:border-primary transition-all duration-500 hover:-translate-y-2">
             <div class="w-10 h-10 md:w-14 md:h-14 bg-primary/10 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-colors">
                 <span class="material-symbols-outlined text-primary text-2xl md:text-3xl">speed</span>
             </div>
-            <h3 class="text-white text-lg md:text-xl font-bold mb-4">Seamless Flow</h3>
+            <h3 class="text-white text-lg md:text-xl font-bold mb-4 group-hover:text-primary transition-colors">Seamless Flow</h3>
             <p class="text-gray-400 text-xs md:text-sm leading-relaxed mb-6">From swift digital bookings to real-time availability, optimized for your convenience.</p>
             <div class="h-1 w-12 bg-primary/20 rounded-full group-hover:w-20 transition-all duration-500"></div>
         </div>
@@ -176,24 +176,24 @@
         </div>
 
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-6 md:gap-12">
-            <div class="space-y-4">
-                <div class="text-primary/20 font-bold text-3xl md:text-5xl leading-none">01</div>
-                <h3 class="text-white text-base md:text-lg font-bold line-clamp-1">Corporate Travel</h3>
+            <div class="group p-6 rounded-2xl border border-transparent hover:border-primary transition-all duration-500 space-y-4">
+                <div class="text-primary/20 font-bold text-3xl md:text-5xl leading-none group-hover:text-primary/40 transition-colors">01</div>
+                <h3 class="text-white text-base md:text-lg font-bold line-clamp-1 group-hover:text-primary transition-colors">Corporate Travel</h3>
                 <p class="text-gray-400 text-xs md:text-sm leading-relaxed">Elegance meets efficiency with tailored corporate packages for professional transport.</p>
             </div>
-            <div class="space-y-4">
-                <div class="text-primary/20 font-bold text-3xl md:text-5xl leading-none">02</div>
-                <h3 class="text-white text-base md:text-lg font-bold line-clamp-1">Leisure & Style</h3>
+            <div class="group p-6 rounded-2xl border border-transparent hover:border-primary transition-all duration-500 space-y-4">
+                <div class="text-primary/20 font-bold text-3xl md:text-5xl leading-none group-hover:text-primary/40 transition-colors">02</div>
+                <h3 class="text-white text-base md:text-lg font-bold line-clamp-1 group-hover:text-primary transition-colors">Leisure & Style</h3>
                 <p class="text-gray-400 text-xs md:text-sm leading-relaxed">Premium selection of sports and luxury weekend rentals for every journey.</p>
             </div>
-            <div class="space-y-4">
-                <div class="text-primary/20 font-bold text-3xl md:text-5xl leading-none">03</div>
-                <h3 class="text-white text-base md:text-lg font-bold line-clamp-1">Airport Concierge</h3>
+            <div class="group p-6 rounded-2xl border border-transparent hover:border-primary transition-all duration-500 space-y-4">
+                <div class="text-primary/20 font-bold text-3xl md:text-5xl leading-none group-hover:text-primary/40 transition-colors">03</div>
+                <h3 class="text-white text-base md:text-lg font-bold line-clamp-1 group-hover:text-primary transition-colors">Airport Concierge</h3>
                 <p class="text-gray-400 text-xs md:text-sm leading-relaxed">Direct tarmac or terminal access with personalized assistance for your travel.</p>
             </div>
-            <div class="space-y-4">
-                <div class="text-primary/20 font-bold text-3xl md:text-5xl leading-none">04</div>
-                <h3 class="text-white text-base md:text-lg font-bold line-clamp-1">Chauffeur Service</h3>
+            <div class="group p-6 rounded-2xl border border-transparent hover:border-primary transition-all duration-500 space-y-4">
+                <div class="text-primary/20 font-bold text-3xl md:text-5xl leading-none group-hover:text-primary/40 transition-colors">04</div>
+                <h3 class="text-white text-base md:text-lg font-bold line-clamp-1 group-hover:text-primary transition-colors">Chauffeur Service</h3>
                 <p class="text-gray-400 text-xs md:text-sm leading-relaxed">Professional, highly trained chauffeurs provide a secure and relaxing environment.</p>
             </div>
         </div>
@@ -209,7 +209,7 @@
     </div>
 
     <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-10">
-        <div class="bg-surface-dark p-5 md:p-10 rounded-[1.5rem] md:rounded-[2.5rem] relative group border border-white/5 overflow-hidden">
+        <div class="bg-surface-dark p-5 md:p-10 rounded-[1.5rem] md:rounded-[2.5rem] relative group border border-white/5 hover:border-primary transition-all duration-500 overflow-hidden">
             <div class="absolute -top-10 -right-10 w-32 h-32 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-colors"></div>
             <div class="flex gap-1 mb-6">
                 @foreach (var i in Enumerable.Range(0, 5)) { <span class="material-symbols-outlined text-primary text-[10px] md:text-sm fill-1">star</span> }
@@ -218,13 +218,13 @@
             <div class="flex items-center gap-3 md:gap-4">
                 <div class="w-8 h-8 md:w-12 md:h-12 bg-primary/20 rounded-full flex items-center justify-center font-bold text-primary text-xs md:text-base">AH</div>
                 <div>
-                    <h4 class="text-white font-bold text-xs md:text-sm">Ali Hassan</h4>
+                    <h4 class="text-white font-bold text-xs md:text-sm group-hover:text-primary transition-colors">Ali Hassan</h4>
                     <span class="text-gray-500 text-[10px] tracking-wider uppercase">Beirut</span>
                 </div>
             </div>
         </div>
 
-        <div class="bg-surface-dark p-5 md:p-10 rounded-[1.5rem] md:rounded-[2.5rem] relative group border border-white/5 overflow-hidden">
+        <div class="bg-surface-dark p-5 md:p-10 rounded-[1.5rem] md:rounded-[2.5rem] relative group border border-white/5 hover:border-primary transition-all duration-500 overflow-hidden">
             <div class="absolute -top-10 -right-10 w-32 h-32 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-colors"></div>
             <div class="flex gap-1 mb-6">
                 @foreach (var i in Enumerable.Range(0, 5)) { <span class="material-symbols-outlined text-primary text-[10px] md:text-sm fill-1">star</span> }
@@ -233,13 +233,13 @@
             <div class="flex items-center gap-3 md:gap-4">
                 <div class="w-8 h-8 md:w-12 md:h-12 bg-primary/20 rounded-full flex items-center justify-center font-bold text-primary text-xs md:text-base">SA</div>
                 <div>
-                    <h4 class="text-white font-bold text-xs md:text-sm">Sara Ahmad</h4>
+                    <h4 class="text-white font-bold text-xs md:text-sm group-hover:text-primary transition-colors">Sara Ahmad</h4>
                     <span class="text-gray-500 text-[10px] tracking-wider uppercase">Tripoli</span>
                 </div>
             </div>
         </div>
 
-        <div class="bg-surface-dark p-5 md:p-10 rounded-[1.5rem] md:rounded-[2.5rem] relative group border border-white/5 overflow-hidden">
+        <div class="bg-surface-dark p-5 md:p-10 rounded-[1.5rem] md:rounded-[2.5rem] relative group border border-white/5 hover:border-primary transition-all duration-500 overflow-hidden">
             <div class="absolute -top-10 -right-10 w-32 h-32 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-colors"></div>
             <div class="flex gap-1 mb-6">
                 @foreach (var i in Enumerable.Range(0, 5)) { <span class="material-symbols-outlined text-primary text-[10px] md:text-sm fill-1">star</span> }
@@ -248,7 +248,7 @@
             <div class="flex items-center gap-3 md:gap-4">
                 <div class="w-8 h-8 md:w-12 md:h-12 bg-primary/20 rounded-full flex items-center justify-center font-bold text-primary text-xs md:text-base">KM</div>
                 <div>
-                    <h4 class="text-white font-bold text-xs md:text-sm">Khaled Mahmoud</h4>
+                    <h4 class="text-white font-bold text-xs md:text-sm group-hover:text-primary transition-colors">Khaled Mahmoud</h4>
                     <span class="text-gray-500 text-[10px] tracking-wider uppercase">Sidon</span>
                 </div>
             </div>
