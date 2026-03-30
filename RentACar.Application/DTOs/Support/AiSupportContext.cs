@@ -74,6 +74,17 @@ namespace RentACar.Application.DTOs.Support
         public string Color { get; set; }
         public string Category { get; set; }
         
+        // Specs
+        public int SeatsCapacity { get; set; }
+        public string TransmissionType { get; set; }
+        public string FuelType { get; set; }
+        public int? LuggageCapacity { get; set; }
+        public bool HasInfotainmentScreen { get; set; }
+        public bool HasGPS { get; set; }
+        public bool HasSunroof { get; set; }
+        public bool HasParkingSensors { get; set; }
+        public bool HasRearCamera { get; set; }
+        
         // Pickup Details
         public string PickupAddress { get; set; }
         public string PickupLocationLabel { get; set; }

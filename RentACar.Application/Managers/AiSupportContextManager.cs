@@ -138,6 +138,15 @@ namespace RentACar.Application.Managers
 
                     var color = !string.IsNullOrEmpty(car.Color) ? car.Color : "N/A";
                     
+                    var specs = $"{car.SeatsCapacity} Seats, {car.TransmissionType}, {car.FuelType}";
+                    var features = new List<string>();
+                    if (car.HasInfotainmentScreen) features.Add("Infotainment");
+                    if (car.HasGPS) features.Add("GPS");
+                    if (car.HasSunroof) features.Add("Sunroof");
+                    if (car.HasParkingSensors) features.Add("Sensors");
+                    if (car.HasRearCamera) features.Add("Camera");
+                    if (features.Any()) specs += $" [{string.Join(", ", features)}]";
+
                     // Safe Category Lookup
                     var catName = car.Category?.Name;
                     if (string.IsNullOrEmpty(catName) && car.CategoryId > 0)
@@ -153,11 +162,11 @@ namespace RentACar.Application.Managers
                         {
                             statusParts.Add($"Booked {b.Startdate:MM/dd}-{b.Enddate:MM/dd} ({b.BookingStatus})");
                         }
-                        global.FleetAvailability.Add($"{car.ModelName} ({catName}, Color: {color}): {string.Join(", ", statusParts)}");
+                        global.FleetAvailability.Add($"{car.ModelName} ({catName}, Color: {color}, {specs}): {string.Join(", ", statusParts)}");
                     }
                     else
                     {
-                        global.FleetAvailability.Add($"{car.ModelName} ({catName}, Color: {color}): Available Now (Price: ${car.PricePerDay}/day)");
+                        global.FleetAvailability.Add($"{car.ModelName} ({catName}, Color: {color}, {specs}): Available Now (Price: ${car.PricePerDay}/day)");
                     }
                 }
             }
@@ -220,6 +229,15 @@ namespace RentACar.Application.Managers
                     PlateNumber = b.Car?.PlateNumber ?? "N/A",
                     Color = b.Car?.Color ?? "N/A",
                     Category = b.Car?.Category?.Name ?? "Standard",
+                    SeatsCapacity = b.Car?.SeatsCapacity ?? 5,
+                    TransmissionType = b.Car?.TransmissionType.ToString() ?? "N/A",
+                    FuelType = b.Car?.FuelType.ToString() ?? "N/A",
+                    LuggageCapacity = b.Car?.LuggageCapacity,
+                    HasInfotainmentScreen = b.Car?.HasInfotainmentScreen ?? false,
+                    HasGPS = b.Car?.HasGPS ?? false,
+                    HasSunroof = b.Car?.HasSunroof ?? false,
+                    HasParkingSensors = b.Car?.HasParkingSensors ?? false,
+                    HasRearCamera = b.Car?.HasRearCamera ?? false,
                     PickupAddress = b.PickupAddress ?? "N/A",
                     PickupLocationLabel = b.PickupLocationLabel ?? "N/A",
                     PickupDateTime = b.PickupDateTime ?? DateTime.MinValue,
