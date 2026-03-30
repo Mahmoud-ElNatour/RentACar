@@ -17,29 +17,40 @@
         <div class="row align-items-center min-vh-100">
             <div class="col-lg-6">
                 <div class="hero-content">
-                    <h1 class="hero-title">Rent A Car <span class="text-warning">Anytime, Anywhere</span></h1>
-                    <p class="hero-subtitle">Book your vehicle with confidence and convenience. Experience premium car rental service with our modern fleet and exceptional customer support.</p>
-                    <div class="hero-buttons">
+                  <div class="max-w-2xl mx-auto text-center">
+    <h1 class="text-4xl md:text-6xl font-extrabold text-white">
+        Bravo <span class="text-yellow-500">Rent A Car</span>
+    </h1>
+
+    <p class="mt-3 text-lg text-gray-300 font-medium">
+        Anytime, Anywhere
+    </p>
+
+    <p class="mt-6 text-gray-400 leading-relaxed">
+        A modern car rental experience with reliable vehicles, fast booking, and excellent support.
+    </p>
+</div>
+<div class="hero-buttons mt-4">
                         @if(User.Identity?.IsAuthenticated ?? false)
                         {
-                            <a asp-area="Identity" asp-page="/Account/Register" class="btn btn-warning btn-lg me-3">
-                                <i class="fas fa-car me-2"></i>Get Started
+                            <a asp-controller="Dashboard" asp-action="Index" class="btn btn-warning btn-lg me-3">
+                                <i class="fas fa-th-large me-2"></i>My Dashboard
                             </a>
                             <a asp-controller="Browse" asp-action="Index" class="btn btn-outline-light btn-lg">
-                                <i class="fas fa-search me-2"></i>Browse Cars
+                                <i class="fas fa-search me-2"></i>Browse Fleet
                             </a>
                         }
                         else
                         {
                             <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-warning btn-lg me-3">
-                                <i class="fas fa-car me-2"></i>Get Started
+                                <i class="fas fa-user-plus me-2"></i>Get Started
                             </a>
-                            <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-outline-light btn-lg">
-                                <i class="fas fa-search me-2"></i>Browse Cars
+                            <a asp-controller="Browse" asp-action="Index" class="btn btn-outline-light btn-lg">
+                                <i class="fas fa-search me-2"></i>Explore Fleet
                             </a>
                         }
                     </div>
-                    <div class="hero-stats mt-4">
+                    <div class="hero-stats mt-4 mb-5">
                         <div class="row text-center">
                             <div class="col-4">
                                 <div class="stat-item">
@@ -47,12 +58,12 @@
                                     <small class="text-light">Cars Available</small>
                                 </div>
                             </div>
-                            <div class="col-4">
+                             <div class="col-4">
                                 <div class="stat-item">
-                                    <h3 class="text-warning mb-1">50+</h3>
-                                    <small class="text-light">Locations</small>
+                                    <h3 class="text-warning mb-1">20+</h3>
+                                    <small class="text-light">Years of experience</small>
                                 </div>
-                            </div>
+                            </div> 
                             <div class="col-4">
                                 <div class="stat-item">
                                     <h3 class="text-warning mb-1">10k+</h3>
@@ -72,117 +83,118 @@
     </div>
 </section>
 
+<!-- Categories Section -->
+<section class=" px-6 lg:px-20 max-w-[1440px] mx-auto" id="fleet">
+    <div class="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-6">
+        <div class="space-y-2">
+            <span class="text-primary font-bold tracking-[0.3em] text-xs uppercase">Elite Collection</span>
+            <h2 class="text-white text-4xl font-bold">Browse by Category</h2>
+        </div>
+        <a href="@Url.Action("Index", "Browse")" class="text-primary flex items-center gap-2 font-bold text-sm uppercase tracking-widest border-b border-primary pb-1 text-decoration-none hover:text-white transition-colors">
+            View Full Fleet
+            <span class="material-symbols-outlined text-sm" data-icon="arrow_forward">arrow_forward</span>
+        </a>
+    </div>
+    <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- Category Cards -->
+        @foreach (var cat in categories)
+        {
+            var imageSrc = !string.IsNullOrEmpty(cat.ImageBase64) 
+                           ? $"data:image/jpeg;base64,{cat.ImageBase64}" 
+                           : Url.Content($"~/img/categories/{cat.Name?.ToLower().Replace(" ", "_")}.jpg");
+
+            var description = cat.Name?.ToLower() switch
+            {
+                "sedans" => "Prestige & Comfort",
+                "suvs" => "Dominance & Power",
+                "sports" => "Adrenaline & Speed",
+                "convertibles" => "Freedom & Style",
+                _ => $"{cat.Name} vehicles"
+            };
+
+            var targetUrl = (User.Identity?.IsAuthenticated ?? false) 
+                            ? Url.Action("Index", "Browse", new { categoryIds = cat.CategoryId })
+                            : Url.Page("/Account/Login", new { area = "Identity", returnUrl = Url.Action("Index", "Browse", new { categoryIds = cat.CategoryId }) });
+
+            <a href="@targetUrl" class="group relative overflow-hidden rounded-2xl aspect-[4/3] cursor-pointer block">
+                <img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="@cat.Name" src="@imageSrc" loading="lazy" />
+                <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex flex-col justify-end p-4 md:p-8">
+                    <h3 class="text-white text-2xl font-bold mb-1">@cat.Name</h3>
+                    <p class="text-gray-300 text-sm">@description</p>
+                </div>
+            </a>
+        }
+    </div>
+</section>
+
 <!-- Why Choose Us Section -->
-<section id="why-us" class="py-5 bg-dark">
-    <div class="container">
-        <div class="text-center mb-5">
-            <h2 class="section-title">Why Choose <span class="text-warning">Us?</span></h2>
-            <p class="section-subtitle">Experience the difference with our premium car rental service</p>
+<section id="why-us" class="pt-0 px-6 lg:px-20 max-w-[1440px] my-0 mx-auto">
+    <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-8">
+        <div class="space-y-3">
+            <span class="text-primary font-bold tracking-[0.4em] text-xs uppercase opacity-80">Unmatched Excellence</span>
+            <h2 class="text-white text-4xl font-bold">Why Choose Bravo?</h2>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
+        <div class="group p-4 md:p-8 rounded-3xl bg-surface-dark border border-white/5 hover:border-primary/30 transition-all duration-500 hover:-translate-y-2">
+            <div class="w-10 h-10 md:w-14 md:h-14 bg-primary/10 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-colors">
+                <span class="material-symbols-outlined text-primary text-2xl md:text-3xl">directions_car</span>
+            </div>
+            <h3 class="text-white text-lg md:text-xl font-bold mb-4">Pristine Fleet</h3>
+            <p class="text-gray-400 text-xs md:text-sm leading-relaxed mb-6">Our collection represents the pinnacle of engineering, featuring the latest models meticulously maintained.</p>
+            <div class="h-1 w-12 bg-primary/20 rounded-full group-hover:w-20 transition-all duration-500"></div>
         </div>
 
-        <div class="row g-4">
-            <div class="col-lg-4 col-md-6">
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-car"></i>
-                    </div>
-                    <h5 class="feature-title">Diverse Fleet</h5>
-                    <p class="feature-description">Choose from our extensive collection of vehicles including economy cars, luxury sedans, SUVs, and sports cars - all well-maintained and ready for your journey.</p>
-                </div>
+        <div class="group p-4 md:p-8 rounded-3xl bg-surface-dark border border-white/5 hover:border-primary/30 transition-all duration-500 hover:-translate-y-2">
+            <div class="w-10 h-10 md:w-14 md:h-14 bg-primary/10 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-colors">
+                <span class="material-symbols-outlined text-primary text-2xl md:text-3xl">verified_user</span>
             </div>
+            <h3 class="text-white text-lg md:text-xl font-bold mb-4">Absolute Trust</h3>
+            <p class="text-gray-400 text-xs md:text-sm leading-relaxed mb-6">Security and transparency are at our core, with verified protection for your peace of mind.</p>
+            <div class="h-1 w-12 bg-primary/20 rounded-full group-hover:w-20 transition-all duration-500"></div>
+        </div>
 
-            <div class="col-lg-4 col-md-6">
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-clock"></i>
-                    </div>
-                    <h5 class="feature-title">Real-Time Availability</h5>
-                    <p class="feature-description">Our advanced booking system provides real-time updates on vehicle availability, preventing overbooking and ensuring you get exactly what you need.</p>
-                </div>
+        <div class="group p-4 md:p-8 rounded-3xl bg-surface-dark border border-white/5 hover:border-primary/30 transition-all duration-500 hover:-translate-y-2">
+            <div class="w-10 h-10 md:w-14 md:h-14 bg-primary/10 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-colors">
+                <span class="material-symbols-outlined text-primary text-2xl md:text-3xl">speed</span>
             </div>
-
-            <div class="col-lg-4 col-md-6">
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-shield-alt"></i>
-                    </div>
-                    <h5 class="feature-title">Secure & Reliable</h5>
-                    <p class="feature-description">Enjoy peace of mind with our secure payment processing, comprehensive insurance coverage, and verified customer protection policies.</p>
-                </div>
-            </div>
-
-            <div class="col-lg-4 col-md-6">
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-mobile-alt"></i>
-                    </div>
-                    <h5 class="feature-title">Easy Booking</h5>
-                    <p class="feature-description">Book your car in minutes through our user-friendly website or mobile app. Simple, fast, and hassle-free reservation process.</p>
-                </div>
-            </div>
-
-            <div class="col-lg-4 col-md-6">
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-headset"></i>
-                    </div>
-                    <h5 class="feature-title">24/7 Support</h5>
-                    <p class="feature-description">Our dedicated customer support team is available round the clock to assist you with any questions or concerns during your rental period.</p>
-                </div>
-            </div>
-
-            <div class="col-lg-4 col-md-6">
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-map-marker-alt"></i>
-                    </div>
-                    <h5 class="feature-title">Multiple Locations</h5>
-                    <p class="feature-description">Pick up and drop off your rental car at any of our convenient locations across the city, including airports and major business districts.</p>
-                </div>
-            </div>
+            <h3 class="text-white text-lg md:text-xl font-bold mb-4">Seamless Flow</h3>
+            <p class="text-gray-400 text-xs md:text-sm leading-relaxed mb-6">From swift digital bookings to real-time availability, optimized for your convenience.</p>
+            <div class="h-1 w-12 bg-primary/20 rounded-full group-hover:w-20 transition-all duration-500"></div>
         </div>
     </div>
 </section>
 
 <!-- Services Section -->
-<section id="services" class="py-5">
-    <div class="container">
-        <div class="text-center mb-5">
-            <h2 class="section-title">Our <span class="text-warning">Services</span></h2>
-            <p class="section-subtitle">Comprehensive car rental solutions for every need</p>
+<section id="services" class="py-12 bg-surface-dark">
+    <div class="px-6 lg:px-20 max-w-[1440px] mx-auto">
+        <div class="text-center mb-10 space-y-4">
+            <span class="text-primary font-bold tracking-[0.4em] text-xs uppercase opacity-80">Our Offerings</span>
+            <h2 class="text-white text-4xl font-bold">Premium Solutions for Every Venture</h2>
+            <div class="w-20 h-1 bg-primary mx-auto rounded-full"></div>
         </div>
 
-        <div class="row g-4">
-            <div class="col-lg-3 col-md-6">
-                <div class="service-card">
-                    <i class="fas fa-car service-icon"></i>
-                    <h5>Economy Cars</h5>
-                    <p>Affordable and fuel-efficient vehicles perfect for city driving and budget-conscious travelers.</p>
-                </div>
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-6 md:gap-12">
+            <div class="space-y-4">
+                <div class="text-primary/20 font-bold text-3xl md:text-5xl leading-none">01</div>
+                <h3 class="text-white text-base md:text-lg font-bold line-clamp-1">Corporate Travel</h3>
+                <p class="text-gray-400 text-xs md:text-sm leading-relaxed">Elegance meets efficiency with tailored corporate packages for professional transport.</p>
             </div>
-
-            <div class="col-lg-3 col-md-6">
-                <div class="service-card">
-                    <i class="fas fa-gem service-icon"></i>
-                    <h5>Luxury Vehicles</h5>
-                    <p>Premium cars with advanced features and superior comfort for special occasions and business trips.</p>
-                </div>
+            <div class="space-y-4">
+                <div class="text-primary/20 font-bold text-3xl md:text-5xl leading-none">02</div>
+                <h3 class="text-white text-base md:text-lg font-bold line-clamp-1">Leisure & Style</h3>
+                <p class="text-gray-400 text-xs md:text-sm leading-relaxed">Premium selection of sports and luxury weekend rentals for every journey.</p>
             </div>
-
-            <div class="col-lg-3 col-md-6">
-                <div class="service-card">
-                    <i class="fas fa-truck service-icon"></i>
-                    <h5>SUVs & Trucks</h5>
-                    <p>Spacious vehicles ideal for family trips, moving, and adventures that require extra cargo space.</p>
-                </div>
+            <div class="space-y-4">
+                <div class="text-primary/20 font-bold text-3xl md:text-5xl leading-none">03</div>
+                <h3 class="text-white text-base md:text-lg font-bold line-clamp-1">Airport Concierge</h3>
+                <p class="text-gray-400 text-xs md:text-sm leading-relaxed">Direct tarmac or terminal access with personalized assistance for your travel.</p>
             </div>
-
-            <div class="col-lg-3 col-md-6">
-                <div class="service-card">
-                    <i class="fas fa-plane service-icon"></i>
-                    <h5>Airport Pickup</h5>
-                    <p>Convenient airport pickup and drop-off services to make your travel experience seamless.</p>
-                </div>
+            <div class="space-y-4">
+                <div class="text-primary/20 font-bold text-3xl md:text-5xl leading-none">04</div>
+                <h3 class="text-white text-base md:text-lg font-bold line-clamp-1">Chauffeur Service</h3>
+                <p class="text-gray-400 text-xs md:text-sm leading-relaxed">Professional, highly trained chauffeurs provide a secure and relaxing environment.</p>
             </div>
         </div>
     </div>
@@ -190,109 +202,56 @@
 
 
 <!-- Customer Reviews Section -->
-<section id="reviews" class="py-5">
-    <div class="container">
-        <div class="text-center mb-5">
-            <h2 class="section-title">Customer <span class="text-warning">Reviews</span></h2>
-            <p class="section-subtitle">What our satisfied customers say about us</p>
-        </div>
-
-        <div class="row g-4">
-            <div class="col-lg-4">
-                <div class="testimonial-card">
-                    <div class="stars mb-3">
-                        <i class="fas fa-star text-warning"></i>
-                        <i class="fas fa-star text-warning"></i>
-                        <i class="fas fa-star text-warning"></i>
-                        <i class="fas fa-star text-warning"></i>
-                        <i class="fas fa-star text-warning"></i>
-                    </div>
-                    <p class="testimonial-text">"Excellent service! The booking process was smooth and the car was in perfect condition. The staff was very professional and helpful throughout my rental period."</p>
-                    <div class="testimonial-author">
-                        <strong>Ali Hassan</strong>
-                        <small class="text-muted">Beirut</small>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-lg-4">
-                <div class="testimonial-card">
-                    <div class="stars mb-3">
-                        <i class="fas fa-star text-warning"></i>
-                        <i class="fas fa-star text-warning"></i>
-                        <i class="fas fa-star text-warning"></i>
-                        <i class="fas fa-star text-warning"></i>
-                        <i class="fas fa-star text-warning"></i>
-                    </div>
-                    <p class="testimonial-text">"Finally, a rental service that works! No more double bookings or surprises. The real-time availability feature is a game-changer. Highly recommended!"</p>
-                    <div class="testimonial-author">
-                        <strong>Sara Ahmad</strong>
-                        <small class="text-muted">Tripoli</small>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-lg-4">
-                <div class="testimonial-card">
-                    <div class="stars mb-3">
-                        <i class="fas fa-star text-warning"></i>
-                        <i class="fas fa-star text-warning"></i>
-                        <i class="fas fa-star text-warning"></i>
-                        <i class="fas fa-star text-warning"></i>
-                        <i class="fas fa-star text-warning"></i>
-                    </div>
-                    <p class="testimonial-text">"Great selection of cars and outstanding customer service. I will definitely rent from them again on my next trip!"</p>
-                    <div class="testimonial-author">
-                        <strong>Khaled Mahmoud</strong>
-                        <small class="text-muted">Sidon</small>
-                    </div>
-                </div>
-            </div>
-        </div>
+<section id="reviews" class="py-12 px-6 lg:px-20 max-w-[1440px] mx-auto">
+    <div class="flex flex-col items-center text-center mb-10 space-y-4">
+        <span class="text-primary font-bold tracking-[0.4em] text-xs uppercase opacity-80">Testimonials</span>
+        <h2 class="text-white text-4xl font-bold lowercase">from our prestige clients</h2>
     </div>
-</section>
 
-<!-- Car Gallery Section -->
-<section id="gallery" class="py-5 bg-dark">
-    <div class="container">
-        <div class="text-center mb-5">
-            <h2 class="section-title">Our <span class="text-warning">Fleet</span></h2>
-            <p class="section-subtitle">Explore our premium collection of vehicles</p>
+    <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-10">
+        <div class="bg-surface-dark p-5 md:p-10 rounded-[1.5rem] md:rounded-[2.5rem] relative group border border-white/5 overflow-hidden">
+            <div class="absolute -top-10 -right-10 w-32 h-32 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-colors"></div>
+            <div class="flex gap-1 mb-6">
+                @foreach (var i in Enumerable.Range(0, 5)) { <span class="material-symbols-outlined text-primary text-[10px] md:text-sm fill-1">star</span> }
+            </div>
+            <p class="text-white/80 text-xs md:text-base leading-relaxed mb-8 relative z-10">"Exceptional attention to detail. The Bentley was deliverd in showroom condition."</p>
+            <div class="flex items-center gap-3 md:gap-4">
+                <div class="w-8 h-8 md:w-12 md:h-12 bg-primary/20 rounded-full flex items-center justify-center font-bold text-primary text-xs md:text-base">AH</div>
+                <div>
+                    <h4 class="text-white font-bold text-xs md:text-sm">Ali Hassan</h4>
+                    <span class="text-gray-500 text-[10px] tracking-wider uppercase">Beirut</span>
+                </div>
+            </div>
         </div>
 
-        <div class="row g-4">
-            @foreach (var cat in categories)
-            {
-                var imageSrc = !string.IsNullOrEmpty(cat.ImageBase64) 
-                               ? $"data:image/jpeg;base64,{cat.ImageBase64}" 
-                               : Url.Content($"~/img/categories/{cat.Name?.ToLower().Replace(" ", "_")}.jpg");
-                <div class="col-lg-4 col-md-6">
-                    @if(User.Identity?.IsAuthenticated ?? false)
-                    {
-                        <a asp-controller="Browse" asp-action="Index" asp-route-categoryIds="@cat.CategoryId" class="gallery-item d-block">
-                            <img src="@imageSrc" alt="@cat.Name" class="img-fluid" loading="lazy">
-                            <div class="gallery-overlay">
-                                <div class="gallery-content">
-                                    <h5>@cat.Name</h5>
-                                    <p>@cat.Name vehicles</p>
-                                </div>
-                            </div>
-                        </a>
-                    }
-                    else
-                    {
-                        <a asp-area="Identity" asp-page="/Account/Login" asp-route-returnUrl="@Url.Action("Index","Browse", new { categoryIds = cat.CategoryId })" class="gallery-item d-block">
-                            <img src="@imageSrc" alt="@cat.Name" class="img-fluid" loading="lazy">
-                            <div class="gallery-overlay">
-                                <div class="gallery-content">
-                                    <h5>@cat.Name</h5>
-                                    <p>@cat.Name vehicles</p>
-                                </div>
-                            </div>
-                        </a>
-                    }
+        <div class="bg-surface-dark p-5 md:p-10 rounded-[1.5rem] md:rounded-[2.5rem] relative group border border-white/5 overflow-hidden">
+            <div class="absolute -top-10 -right-10 w-32 h-32 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-colors"></div>
+            <div class="flex gap-1 mb-6">
+                @foreach (var i in Enumerable.Range(0, 5)) { <span class="material-symbols-outlined text-primary text-[10px] md:text-sm fill-1">star</span> }
+            </div>
+            <p class="text-white/80 text-xs md:text-base leading-relaxed mb-8 relative z-10">"The easiest booking experience I've ever had. Transparent pricing."</p>
+            <div class="flex items-center gap-3 md:gap-4">
+                <div class="w-8 h-8 md:w-12 md:h-12 bg-primary/20 rounded-full flex items-center justify-center font-bold text-primary text-xs md:text-base">SA</div>
+                <div>
+                    <h4 class="text-white font-bold text-xs md:text-sm">Sara Ahmad</h4>
+                    <span class="text-gray-500 text-[10px] tracking-wider uppercase">Tripoli</span>
                 </div>
-            }
+            </div>
+        </div>
+
+        <div class="bg-surface-dark p-5 md:p-10 rounded-[1.5rem] md:rounded-[2.5rem] relative group border border-white/5 overflow-hidden">
+            <div class="absolute -top-10 -right-10 w-32 h-32 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-colors"></div>
+            <div class="flex gap-1 mb-6">
+                @foreach (var i in Enumerable.Range(0, 5)) { <span class="material-symbols-outlined text-primary text-[10px] md:text-sm fill-1">star</span> }
+            </div>
+            <p class="text-white/80 text-xs md:text-base leading-relaxed mb-8 relative z-10">"Fantastic selection of sports cars. My go-to for all business trips."</p>
+            <div class="flex items-center gap-3 md:gap-4">
+                <div class="w-8 h-8 md:w-12 md:h-12 bg-primary/20 rounded-full flex items-center justify-center font-bold text-primary text-xs md:text-base">KM</div>
+                <div>
+                    <h4 class="text-white font-bold text-xs md:text-sm">Khaled Mahmoud</h4>
+                    <span class="text-gray-500 text-[10px] tracking-wider uppercase">Sidon</span>
+                </div>
+            </div>
         </div>
     </div>
 </section>
@@ -302,28 +261,32 @@
     <div class="container text-center">
         <div class="row justify-content-center">
             <div class="col-lg-8">
-                <h2 class="cta-title">Ready to Hit the Road?</h2>
-                <p class="cta-subtitle">Join thousands of satisfied customers and experience the best car rental service. Sign up now to explore our full collection and get exclusive deals!</p>
-                <div class="cta-buttons">
-                    @if(User.Identity?.IsAuthenticated ?? false)
-                    {
-                        <a asp-area="Identity" asp-page="/Account/Register" class="btn btn-warning btn-lg me-3">
-                            <i class="fas fa-user-plus me-2"></i>Register Now
+                @if(User.Identity?.IsAuthenticated ?? false)
+                {
+                    <h2 class="cta-title">Ready for Your Next Journey?</h2>
+                    <p class="cta-subtitle">Your next adventure is just a click away. Access your dashboard to manage your rentals or browse our latest elite collection.</p>
+                    <div class="cta-buttons">
+                        <a asp-controller="Dashboard" asp-action="Index" class="btn btn-warning btn-lg me-3">
+                            <i class="fas fa-th-large me-2"></i>My Dashboard
                         </a>
                         <a asp-controller="Browse" asp-action="Index" class="btn btn-outline-light btn-lg">
-                            <i class="fas fa-car me-2"></i>Browse Cars
+                            <i class="fas fa-car me-2"></i>View Fleet
                         </a>
-                    }
-                    else
-                    {
+                    </div>
+                }
+                else
+                {
+                    <h2 class="cta-title">Ready to Hit the Road?</h2>
+                    <p class="cta-subtitle">Join thousands of satisfied customers and experience the best car rental service. Sign up now to explore our full collection and get exclusive deals!</p>
+                    <div class="cta-buttons">
                         <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-warning btn-lg me-3">
-                            <i class="fas fa-user-plus me-2"></i>Register Now
+                            <i class="fas fa-user-plus me-2"></i>Join Now
                         </a>
-                        <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-outline-light btn-lg">
-                            <i class="fas fa-car me-2"></i>Browse Cars
+                        <a asp-controller="Browse" asp-action="Index" class="btn btn-outline-light btn-lg">
+                            <i class="fas fa-car me-2"></i>Explore Fleet
                         </a>
-                    }
-                </div>
+                    </div>
+                }
             </div>
         </div>
     </div>
