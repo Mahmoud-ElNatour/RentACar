@@ -1,4 +1,5 @@
 @using Microsoft.AspNetCore.Identity
+@using System.Security.Claims
 @inject SignInManager<IdentityUser> SignInManager
 @inject UserManager<IdentityUser> UserManager
 @inject RentACar.Application.Managers.CustomerManager CustomerManager
@@ -8,10 +9,10 @@
     bool isVerified = true;
     if (SignInManager.IsSignedIn(User))
     {
-        var user = await UserManager.GetUserAsync(User);
-        if (user != null)
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!string.IsNullOrEmpty(userId))
         {
-            var customer = await CustomerManager.GetCustomerByAspNetUserId(user.Id);
+            var customer = await CustomerManager.GetCustomerByAspNetUserId(userId);
             if (customer != null)
             {
                 isVerified = customer.IsVerified;

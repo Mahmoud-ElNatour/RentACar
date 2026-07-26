@@ -79,7 +79,11 @@
     </div>
 
     <!-- Scripts -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+    <script>
+        if (typeof signalR === 'undefined') {
+            document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"><\/script>');
+        }
+    </script>
     <script>
         let aiConnection = null;
         let aiConversationId = 0;

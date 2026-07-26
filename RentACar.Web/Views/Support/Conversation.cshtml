@@ -21,6 +21,28 @@
             border-radius: 10px;
         }
         .surface-dark { background-color: #1a1a1a; }
+        .msg-bubble-user {
+            background-color: #d4af35;
+            color: #000;
+            border-radius: 1rem;
+            border-top-right-radius: 0;
+            padding: 0.75rem 1.25rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            line-height: 1.625;
+            box-shadow: 0 4px 15px rgba(212,175,55,0.1);
+        }
+        .msg-bubble-agent {
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border-radius: 1rem;
+            border-top-left-radius: 0;
+            padding: 0.75rem 1.25rem;
+            font-size: 0.875rem;
+            line-height: 1.625;
+            backdrop-filter: blur(4px);
+        }
     </style>
 }
 
@@ -49,7 +71,7 @@
                 {
                     <div class="flex flex-col items-end gap-1 ml-auto max-w-[85%]">
                         <div class="relative group flex flex-col items-end">
-                            <p class="text-sm font-medium leading-relaxed rounded-2xl rounded-tr-none px-5 py-3 bg-primary text-black shadow-[0_4px_15px_rgba(212,175,55,0.1)]">
+                            <p class="msg-bubble-user">
                                 @msg.MessageText
                             </p>
                             <span class="text-[10px] text-white/30 mt-1 font-bold tracking-wide mr-1">@msg.CreatedAt.ToLocalTime().ToString("t")</span>
@@ -68,7 +90,7 @@
                                 <span class="text-primary text-[9px] font-black uppercase tracking-wider border border-primary/20 px-1 rounded-sm">Support</span>
                             </div>
                             <div class="relative group">
-                                <p class="text-sm leading-relaxed rounded-2xl rounded-tl-none px-5 py-3 bg-white/5 border border-white/10 text-white shadow-sm backdrop-blur-sm">
+                                <p class="msg-bubble-agent">
                                     @msg.MessageText
                                 </p>
                                 <span class="text-[10px] text-white/30 mt-1 font-bold tracking-wide ml-1">@msg.CreatedAt.ToLocalTime().ToString("t")</span>
@@ -201,7 +223,11 @@
 </main>
 
 @section Scripts {
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
+    <script>
+        if (typeof signalR === 'undefined') {
+            document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"><\/script>');
+        }
+    </script>
     <script>
         const conversationId = @Model.ConversationId;
         const currentUserId = "@userId";

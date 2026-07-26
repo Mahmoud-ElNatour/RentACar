@@ -91,8 +91,12 @@ namespace RentACar.Application.Managers
         public async Task<SupportConversationDetailsDto?> GetConversationDetailsForCustomerAsync(int conversationId, string customerId)
         {
             var conversation = await _conversationRepository.Query()
+                .AsNoTracking()
+                .AsSplitQuery()
                 .Include(c => c.Customer)
+                    .ThenInclude(cu => cu.User)
                 .Include(c => c.AssignedEmployee)
+                .Include(c => c.Booking)
                 .Include(c => c.Messages)
                     .ThenInclude(m => m.Sender)
                 .FirstOrDefaultAsync(c => c.SupportConversationId == conversationId && c.Customer.aspNetUserId == customerId);
@@ -105,6 +109,10 @@ namespace RentACar.Application.Managers
             var dto = _mapper.Map<SupportConversationDetailsDto>(conversation);
             dto.Messages = _mapper.Map<List<SupportMessageDto>>(messages);
             dto.CustomerName = conversation.Customer?.Name ?? "Unknown";
+            dto.CustomerEmail = conversation.Customer?.User?.Email;
+            dto.CustomerPhone = conversation.Customer?.User?.PhoneNumber;
+            dto.IsVerified = conversation.Customer?.IsVerified ?? false;
+            dto.RealCustomerId = conversation.Customer?.UserId ?? 0;
             dto.AssignedEmployeeName = conversation.AssignedEmployee?.Name;
 
             return dto;
@@ -402,6 +410,7 @@ namespace RentACar.Application.Managers
         public async Task<SupportConversationDetailsDto?> GetConversationDetailsForEmployeeAsync(int conversationId, string employeeAspNetUserId)
         {
             var conversation = await _conversationRepository.Query()
+                .AsSplitQuery()
                 .Include(c => c.Customer)
                     .ThenInclude(cu => cu.User)
                 .Include(c => c.AssignedEmployee)
